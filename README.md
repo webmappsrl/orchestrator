@@ -1,6 +1,6 @@
-# Laravel Postgis Boilerplate
+# ORCHESTRATOR
 
-Webmapp's Starting point
+Introduction to ORCHSTRATOR (TBD)
 
 ## Laravel 9 Project based on Nova 4
 
@@ -9,13 +9,12 @@ Boilerplate per Laravel 9 basato su php 8.1 e posgres + postgis. Supporto locale
 ## INSTALL
 
 First of all install the [GEOBOX](https://github.com/webmappsrl/geobox) repo and configure the ALIASES command. 
-Replace `${instance name}` with the instance name (APP_NAME in .env file) 
 
 ```sh
-git clone git@github.com:webmappsrl/${instance name}.git
-cd ${instance name}
+git clone git@github.com:webmappsrl/orchestrator.git
+cd orchestrator
 bash docker/init-docker.sh
-geobox_install ${instance name}
+geobox_install orchestrator
 ```
 
 Important NOTE: remember to checkout the develop branch.
