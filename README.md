@@ -2,9 +2,6 @@
 
 Introduction to ORCHSTRATOR (TBD)
 
-## Laravel 9 Project based on Nova 4
-
-Boilerplate per Laravel 9 basato su php 8.1 e posgres + postgis. Supporto locale per web server php ed xdebug.
 
 ## INSTALL
 
