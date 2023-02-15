@@ -1,0 +1,68 @@
+{
+    "name": "wm/wm-internal",
+    "description": "This is a general purpouse package for webmapp geobox instances",
+    "keywords": [
+        "wm",
+        "laravel",
+        "wm-internal"
+    ],
+    "homepage": "https://github.com/wm/wm-internal",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "marco",
+            "email": "m.baroncini@cyberway.cloud",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "spatie/laravel-package-tools": "^1.14.0",
+        "illuminate/contracts": "^9.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "nunomaduro/collision": "^6.0",
+        "orchestra/testbench": "^7.0",
+        "pestphp/pest": "^1.21",
+        "pestphp/pest-plugin-laravel": "^1.1",
+        "phpunit/phpunit": "^9.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Wm\\WmInternal\\": "src",
+            "Wm\\WmInternal\\Database\\Factories\\": "database/factories"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Wm\\WmInternal\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Wm\\WmInternal\\WmInternalServiceProvider"
+            ],
+            "aliases": {
+                "WmInternal": "Wm\\WmInternal\\Facades\\WmInternal"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

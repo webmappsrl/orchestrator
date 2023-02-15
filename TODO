@@ -1,0 +1,1 @@
+- Manca il comando psql per cui non funziona php artisan db nel docker
