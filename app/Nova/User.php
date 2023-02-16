@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rules;
 use Laravel\Nova\Fields\Gravatar;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Fields\Password;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
@@ -60,8 +61,7 @@ class User extends Resource
                 ->creationRules('unique:users,email')
                 ->updateRules('unique:users,email,{{resourceId}}'),
 
-            // TODO: make it MULTI!!!
-            Select::make('Roles')->options(collect(UserRole::cases())->pluck('name','value')),
+            MultiSelect::make('Roles')->options(collect(UserRole::cases())->pluck('name','value')),
 
             Password::make('Password')
                 ->onlyOnForms()
