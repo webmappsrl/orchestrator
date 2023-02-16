@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -18,7 +19,11 @@ class UserSeeder extends Seeder
         User::factory()->create([
             'name' => 'Webmapp',
             'email' => 'team@webmapp.it',
-            'password' => bcrypt('webmapp')
+            'password' => bcrypt('webmapp'),
+            'roles' => [UserRole::Admin]
         ])->markEmailAsVerified();
+
+        User::factory(100)->create();
     }
+
 }
