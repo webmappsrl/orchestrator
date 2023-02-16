@@ -45,4 +45,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'roles' => AsEnumCollection::class.':'.UserRole::class,
     ];
+
+    /**
+     * Check if user has a specific single role
+     *
+     * @param UserRole $role
+     * @return boolean
+     */
+    public function hasRole(UserRole $role): bool {
+        return $this->roles->contains($role);
+    }
 }
