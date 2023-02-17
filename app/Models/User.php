@@ -61,4 +61,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Story::class);
     }
+
+    public function epics()
+    {
+        return $this->hasMany(Epic::class);
+    }
+
 }

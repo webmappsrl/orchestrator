@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Epic;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class EpicSeeder extends Seeder
 {
@@ -15,6 +16,6 @@ class EpicSeeder extends Seeder
      */
     public function run()
     {
-        Epic::factory(40)->create();
+        Epic::factory(10)->create();
     }
 }

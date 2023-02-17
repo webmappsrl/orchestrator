@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
+use App\Models\Milestone;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,7 +21,8 @@ class EpicFactory extends Factory
         return [
             'name' => $this->faker->name(),
             'description' => $this->faker->text(10),
-
+            'user_id' => User::inRandomOrder()->first()->id,
+            'milestone_id' => Milestone::inRandomOrder()->first()->id,
         ];
     }
 }
