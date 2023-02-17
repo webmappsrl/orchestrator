@@ -57,8 +57,14 @@ class User extends Authenticatable
         return $this->roles->contains($role);
     }
 
+    public function stories()
+    {
+        return $this->hasMany(Story::class);
+    }
+
     public function epics()
     {
         return $this->hasMany(Epic::class);
     }
+
 }

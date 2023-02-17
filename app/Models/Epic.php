@@ -16,6 +16,11 @@ class Epic extends Model
         'user_id'
     ];
 
+    public function stories()
+    {
+        return $this->hasMany(Story::class);
+    }
+    
     public function user()
     {
         return $this->belongsTo(User::class);
