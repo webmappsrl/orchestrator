@@ -45,6 +45,8 @@ class Story extends Resource
             Text::make(__('Name'), 'name')->sortable(),
             Text::make(__('Description'), 'description')->hideFromIndex(),
             Text::make(__('Status'), 'status'),
+            Text::make(__('User Id'), 'user_id'),
+            Text::make(__('Epic Id'), 'epic_id'),
         ];
     }
 
