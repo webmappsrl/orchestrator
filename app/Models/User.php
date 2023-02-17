@@ -43,7 +43,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'roles' => AsEnumCollection::class.':'.UserRole::class,
+        'roles' => AsEnumCollection::class . ':' . UserRole::class,
     ];
 
     /**
@@ -52,7 +52,13 @@ class User extends Authenticatable
      * @param UserRole $role
      * @return boolean
      */
-    public function hasRole(UserRole $role): bool {
+    public function hasRole(UserRole $role): bool
+    {
         return $this->roles->contains($role);
+    }
+
+    public function epics()
+    {
+        return $this->hasMany(Epic::class);
     }
 }

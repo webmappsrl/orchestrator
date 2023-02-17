@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Epic;
 use App\Models\User;
+use App\Enums\UserRole;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class EpicPolicy
@@ -18,7 +19,7 @@ class EpicPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        return UserRole::Admin || UserRole::Developer;
     }
 
     /**
@@ -30,7 +31,7 @@ class EpicPolicy
      */
     public function view(User $user, Epic $epic)
     {
-        //
+        return UserRole::Admin || UserRole::Developer;
     }
 
     /**
@@ -41,7 +42,7 @@ class EpicPolicy
      */
     public function create(User $user)
     {
-        //
+        return UserRole::Admin || UserRole::Developer;
     }
 
     /**
@@ -53,7 +54,7 @@ class EpicPolicy
      */
     public function update(User $user, Epic $epic)
     {
-        //
+        return UserRole::Admin || UserRole::Developer;
     }
 
     /**
@@ -65,7 +66,7 @@ class EpicPolicy
      */
     public function delete(User $user, Epic $epic)
     {
-        //
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**

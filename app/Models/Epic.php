@@ -12,5 +12,17 @@ class Epic extends Model
     protected $fillable = [
         'name',
         'description',
+        'milestone_id',
+        'user_id'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function milestone()
+    {
+        return $this->belongsTo(Milestone::class);
+    }
 }
