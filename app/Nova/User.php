@@ -69,8 +69,9 @@ class User extends Resource
                 ->creationRules('required', Rules\Password::defaults())
                 ->updateRules('nullable', Rules\Password::defaults()),
 
-            HasMany::make('Epics', 'epics'),
-        ];
+                HasMany::make('Epics'),
+                HasMany::make('Stories'),
+            ];
     }
 
     /**

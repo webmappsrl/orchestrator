@@ -24,7 +24,7 @@ class Story extends Resource
      *
      * @var string
      */
-    public static $title = 'id';
+    public static $title = 'name';
 
     /**
      * The columns that should be searched.
@@ -32,7 +32,7 @@ class Story extends Resource
      * @var array
      */
     public static $search = [
-        'id',
+        'id', 'name', 'description'
     ];
 
     /**
@@ -49,7 +49,7 @@ class Story extends Resource
             Text::make(__('Description'), 'description')->hideFromIndex(),
             Text::make(__('Status'), 'status'),
             BelongsTo::make('User'),
-            //BelongsTo::make('Epic')
+            BelongsTo::make('Epic')
         ];
     }
 

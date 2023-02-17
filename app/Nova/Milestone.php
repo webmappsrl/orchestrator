@@ -6,6 +6,7 @@ use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Milestone extends Resource
@@ -30,7 +31,7 @@ class Milestone extends Resource
      * @var array
      */
     public static $search = [
-        'name',
+        'id', 'name', 'description'
     ];
 
     /**
@@ -46,6 +47,7 @@ class Milestone extends Resource
             Text::make(__('Name'), 'name')->sortable(),
             Text::make(__('Description'), 'description')->hideFromIndex(),
             DateTime::make(__('Due Date'), 'due_date')->sortable(),
+            HasMany::make('Epics'),
         ];
     }
 
