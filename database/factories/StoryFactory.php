@@ -21,9 +21,7 @@ class StoryFactory extends Factory
      */
     public function definition()
     {
-        $developerUsers = User::whereJsonContains('roles', UserRole::Developer);
-
-        if ($developerUsers->count() == 0) {
+        if (User::whereJsonContains('roles', UserRole::Developer)->count() == 0) {
             User::factory(10)->create(['roles' => UserRole::Developer]);
         }
 
@@ -31,18 +29,12 @@ class StoryFactory extends Factory
             Epic::factory(10)->create();
         }
 
-        if (Milestone::count() == 0) {
-            Milestone::factory(10)->create();
-        }
-
         return [
             'name' => $this->faker->name(),
             'description' => $this->faker->text(10),
             'status' => collect(StoryStatus::cases())->random(),
-            'user_id' => $developerUsers->get()->random(),
+            'user_id' => User::whereJsonContains('roles', UserRole::Developer)->get()->random(),
             'epic_id' => Epic::inRandomOrder()->first()->id,
-            'milestone_id' => Milestone::inRandomOrder()->first()->id,
-
         ];
     }
 }

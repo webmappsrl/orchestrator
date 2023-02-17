@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Milestone extends Model
 {
@@ -21,6 +22,12 @@ class Milestone extends Model
     ];
 
 
-
-    //Relationship with Epiche to be implemented
+    /**
+     * Returns all the epics that belong to the Milestone
+     *
+     * @return HasMany
+     */
+    public function epics(): HasMany {
+        return $this->hasMany(Epic::class);
+    }
 }

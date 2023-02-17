@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Milestone;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -21,7 +22,7 @@ class MilestonePolicy
      */
     public function viewAny(User $user)
     {
-        return true;
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -33,7 +34,7 @@ class MilestonePolicy
      */
     public function view(User $user, Milestone $milestone)
     {
-        //
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -44,7 +45,7 @@ class MilestonePolicy
      */
     public function create(User $user)
     {
-        //
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -56,7 +57,7 @@ class MilestonePolicy
      */
     public function update(User $user, Milestone $milestone)
     {
-        //
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -68,7 +69,7 @@ class MilestonePolicy
      */
     public function delete(User $user, Milestone $milestone)
     {
-        //
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**

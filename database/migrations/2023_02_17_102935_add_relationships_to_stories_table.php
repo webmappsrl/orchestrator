@@ -16,7 +16,6 @@ return new class extends Migration
         Schema::table('stories', function (Blueprint $table) {
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('epic_id')->constrained()->onDelete('cascade');
-            $table->foreignId('milestone_id')->constrained()->onDelete('cascade');
         });
     }
 
