@@ -2,9 +2,12 @@
 
 namespace App\Nova;
 
+
+use App\Models\Epic;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Story extends Resource
@@ -45,8 +48,8 @@ class Story extends Resource
             Text::make(__('Name'), 'name')->sortable(),
             Text::make(__('Description'), 'description')->hideFromIndex(),
             Text::make(__('Status'), 'status'),
-            Text::make(__('User Id'), 'user_id'),
-            Text::make(__('Epic Id'), 'epic_id'),
+            BelongsTo::make('User'),
+            //BelongsTo::make('Epic')
         ];
     }
 
@@ -92,5 +95,15 @@ class Story extends Resource
     public function actions(NovaRequest $request)
     {
         return [];
+    }
+
+    /**
+     * Get the user that owns the Story
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'foreign_key', 'other_key');
     }
 }

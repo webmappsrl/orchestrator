@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::table('stories', function (Blueprint $table) {
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('epic_id')->constrained()->onDelete('cascade');
+            $table->foreignId('milestone_id')->constrained()->onDelete('cascade');
         });
     }
 
@@ -29,8 +30,10 @@ return new class extends Migration
         Schema::table('stories', function (Blueprint $table) {
             $table->dropForeign('user_id');
             $table->dropForeign('epic_id');
+            $table->dropForeign('milestone_id');
             $table->dropColumn('user_id');
             $table->dropColumn('epic_id');
+            $table->dropColumn('milestone_id');
         });
     }
 };
