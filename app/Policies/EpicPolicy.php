@@ -19,7 +19,7 @@ class EpicPolicy
      */
     public function viewAny(User $user)
     {
-        return UserRole::Admin || UserRole::Developer;
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -31,7 +31,7 @@ class EpicPolicy
      */
     public function view(User $user, Epic $epic)
     {
-        return UserRole::Admin || UserRole::Developer;
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -42,7 +42,7 @@ class EpicPolicy
      */
     public function create(User $user)
     {
-        return UserRole::Admin || UserRole::Developer;
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -54,7 +54,7 @@ class EpicPolicy
      */
     public function update(User $user, Epic $epic)
     {
-        return UserRole::Admin || UserRole::Developer;
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
