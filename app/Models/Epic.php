@@ -13,4 +13,9 @@ class Epic extends Model
         'name',
         'description',
     ];
+
+    public function stories()
+    {
+        return $this->hasMany(Story::class);
+    }
 }

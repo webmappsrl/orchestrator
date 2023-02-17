@@ -17,7 +17,9 @@ class EpicFactory extends Factory
     public function definition()
     {
         return [
-            //
+            'name' => $this->faker->name(),
+            'description' => $this->faker->text(10),
+
         ];
     }
 }

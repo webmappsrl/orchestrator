@@ -2,13 +2,19 @@
 
 namespace App\Policies;
 
-use App\Models\Story;
 use App\Models\User;
+use App\Models\Story;
+use App\Enums\UserRole;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class StoryPolicy
 {
     use HandlesAuthorization;
+
+    public function before(User $user)
+    {
+        return UserRole::Admin || UserRole::Developer;
+    }
 
     /**
      * Determine whether the user can view any models.
@@ -18,7 +24,7 @@ class StoryPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        return  true;
     }
 
     /**

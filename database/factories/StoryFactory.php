@@ -2,6 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Models\Epic;
+use App\Models\User;
+use App\Enums\UserRole;
+use App\Enums\StoryStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,8 +20,22 @@ class StoryFactory extends Factory
      */
     public function definition()
     {
+        $developerUsers = User::whereJsonContains('roles', UserRole::Developer);
+
+
+        if ($developerUsers->count() == 0) {
+            User::factory(10)->create(['roles' => UserRole::Developer]);
+        }
+
+        if (Epic::count() == 0) {
+            Epic::factory(10)->create();
+        }
         return [
-            //
+            'name' => $this->faker->name(),
+            'description' => $this->faker->text(10),
+            'status' => collect(StoryStatus::cases())->random(),
+            'user_id' => User::whereJsonContains('roles', UserRole::Developer)->get()->random(),
+            'epic_id' => Epic::inRandomOrder()->first()->id,
         ];
     }
 }
