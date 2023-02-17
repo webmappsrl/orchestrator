@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum UserRole: string
+enum StoryStatus: string
 {
     case New = 'new';
     case Progress = 'progress';
