@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Story extends Resource
@@ -48,9 +49,9 @@ class Story extends Resource
         return [
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
-            Text::make(__('Description'), 'description')->hideFromIndex(),
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))
                 ->default(StoryStatus::New->value)->displayUsingLabels(),
+            Textarea::make(__('Description'), 'description')->hideFromIndex(),
             BelongsTo::make('User'),
             BelongsTo::make('Epic')
         ];
