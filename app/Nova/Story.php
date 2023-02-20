@@ -50,7 +50,7 @@ class Story extends Resource
             Text::make(__('Name'), 'name')->sortable(),
             Text::make(__('Description'), 'description')->hideFromIndex(),
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))
-                ->default('new')->displayUsingLabels(),
+                ->default(StoryStatus::New->value)->displayUsingLabels(),
             BelongsTo::make('User'),
             BelongsTo::make('Epic')
         ];
