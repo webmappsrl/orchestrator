@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Database\Seeders\AppSeeder;
 use Illuminate\Database\Seeder;
 use Database\Seeders\EpicSeeder;
 use Database\Seeders\UserSeeder;
@@ -22,5 +23,6 @@ class DatabaseSeeder extends Seeder
         $this->call(MilestoneSeeder::class);
         $this->call(EpicSeeder::class);
         $this->call(StorySeeder::class);
+        $this->call(AppSeeder::class);
     }
 }
