@@ -8,9 +8,10 @@ use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Story extends Resource
@@ -52,6 +53,8 @@ class Story extends Resource
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))
                 ->default(StoryStatus::New->value)->displayUsingLabels(),
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
+            Text::make('Pull Request Link', 'pull_request_link')->nullable()->hideFromIndex(),
+
             BelongsTo::make('User'),
             BelongsTo::make('Epic')
         ];
