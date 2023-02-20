@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('status')->default(StoryStatus::New->value);
+            $table->string('pull_request_link')->nullable();
             $table->timestamps();
         });
     }

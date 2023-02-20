@@ -33,6 +33,7 @@ class StoryFactory extends Factory
             'name' => $this->faker->name(),
             'description' => $this->faker->text(10),
             'status' => collect(StoryStatus::cases())->random(),
+            'pull_request_link' => $this->faker->url,
             'user_id' => User::whereJsonContains('roles', UserRole::Developer)->get()->random(),
             'epic_id' => Epic::inRandomOrder()->first()->id,
         ];
