@@ -50,8 +50,6 @@ class Epic extends Resource
                 ->rules('required', 'max:255'),
 
             Textarea::make('Description')
-                ->sortable()
-                ->rules('required')
                 ->hideFromIndex(),
 
             BelongsTo::make('User', 'user'),
