@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Epic extends Resource
@@ -48,9 +49,10 @@ class Epic extends Resource
                 ->sortable()
                 ->rules('required', 'max:255'),
 
-            Text::make('Description')
+            Textarea::make('Description')
                 ->sortable()
-                ->rules('required'),
+                ->rules('required')
+                ->hideFromIndex(),
 
             BelongsTo::make('User', 'user'),
             BelongsTo::make('Milestone', 'milestone'),
