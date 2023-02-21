@@ -4,6 +4,7 @@ namespace App\Nova;
 
 
 use App\Models\Epic;
+use App\Models\User;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -50,12 +51,9 @@ class Story extends Resource
         return [
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
-            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))
-                ->default(StoryStatus::New->value)->displayUsingLabels(),
+            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->default(StoryStatus::New->value)->displayUsingLabels(),
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
-            Text::make('Pull Request Link', 'pull_request_link')->nullable()->hideFromIndex(),
-
-            BelongsTo::make('User'),
+            BelongsTo::make('User')->hideWhenCreating(),
             BelongsTo::make('Epic')
         ];
     }

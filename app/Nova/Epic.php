@@ -52,6 +52,9 @@ class Epic extends Resource
             Textarea::make('Description')
                 ->hideFromIndex(),
 
+            Text::make('URL', function () {
+                return '<a href="' . $this->pull_request_link . '">Link</a>';
+            })->asHtml()->nullable()->hideFromIndex(),
             BelongsTo::make('User', 'user'),
             BelongsTo::make('Milestone', 'milestone'),
             HasMany::make('Stories'),
