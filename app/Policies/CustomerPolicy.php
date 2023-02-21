@@ -13,7 +13,7 @@ class CustomerPolicy
 
     public function before(User $user)
     {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Editor);
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
     }
 
     /**
