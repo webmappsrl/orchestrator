@@ -5,6 +5,7 @@ namespace App\Nova;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
+use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -48,7 +49,8 @@ class App extends Resource
             NovaTabTranslatable::make([
                 Text::make(__('name'), 'name'),
                 Textarea::make(__('description'), 'description')->hideFromIndex(),
-            ])
+            ]),
+            HasMany::make('Layers')->hideFromIndex(), //display the relation with layers in nova field
         ];
     }
 

@@ -13,11 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('apps', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-            $table->json('name');
-            $table->json('description')->nullable();
+        Schema::table('layers', function (Blueprint $table) {
+            $table->unsignedBigInteger('app_id');
+            $table->foreign('app_id')->references('id')->on('apps')->onDelete('cascade');
         });
     }
 
@@ -28,6 +26,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('apps');
+        Schema::table('layer', function (Blueprint $table) {
+            $table->dropForeign(['app_id']);
+            $table->dropColumn('app_id');
+        });
     }
 };

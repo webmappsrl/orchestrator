@@ -5,19 +5,19 @@ namespace App\Nova;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
-class Epic extends Resource
+class Layer extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Epic>
+     * @var class-string<\App\Models\Layer>
      */
-    public static $model = \App\Models\Epic::class;
+    public static $model = \App\Models\Layer::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -32,7 +32,7 @@ class Epic extends Resource
      * @var array
      */
     public static $search = [
-        'id',
+        'id', 'name', 'description'
     ];
 
     /**
@@ -45,17 +45,11 @@ class Epic extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('Name')
-                ->sortable()
-                ->rules('required', 'max:255'),
-
-            Textarea::make('Description')
-                ->hideFromIndex(),
-
-            //display the relations in nova field
-            BelongsTo::make('User', 'user'),
-            BelongsTo::make('Milestone', 'milestone'),
-            HasMany::make('Stories'),
+            NovaTabTranslatable::make([
+                Text::make(__('name'), 'name'),
+                Textarea::make(__('description'), 'description')->hideFromIndex(),
+            ]),
+            BelongsTo::make('App'), //display the relation with App in nova field
         ];
     }
 
