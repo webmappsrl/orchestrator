@@ -54,9 +54,6 @@ class Story extends Resource
                 ->default(StoryStatus::New->value)->displayUsingLabels(),
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
             Text::make('Pull Request Link', function () {
-                if (empty($this->pull_request_link)) {
-                    return '-';
-                }
                 return '<a href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
             })->asHtml()->nullable()->hideFromIndex(),
 
