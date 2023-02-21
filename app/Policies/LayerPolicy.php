@@ -19,7 +19,7 @@ class LayerPolicy
      */
     public function before(User $user)
     {
-        return $user->hasRole(UserRole::Editor);
+        return $user->hasRole(UserRole::Editor) || $user->hasRole(UserRole::Admin);
     }
 
     /**

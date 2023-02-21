@@ -50,7 +50,7 @@ class App extends Resource
                 Text::make(__('name'), 'name'),
                 Textarea::make(__('description'), 'description')->hideFromIndex(),
             ]),
-            HasMany::make('Layers')->hideFromIndex(), //display the relation with layers in nova field
+            HasMany::make('Layers') //display the relation with layers in nova field
         ];
     }
 
