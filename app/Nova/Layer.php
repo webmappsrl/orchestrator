@@ -4,21 +4,20 @@ namespace App\Nova;
 
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
-use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
-
-class App extends Resource
+class Layer extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\App>
+     * @var class-string<\App\Models\Layer>
      */
-    public static $model = \App\Models\App::class;
+    public static $model = \App\Models\Layer::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -50,7 +49,7 @@ class App extends Resource
                 Text::make(__('name'), 'name'),
                 Textarea::make(__('description'), 'description')->hideFromIndex(),
             ]),
-            HasMany::make('Layers') //display the relation with layers in nova field
+            BelongsTo::make('App'), //display the relation with App in nova field
         ];
     }
 

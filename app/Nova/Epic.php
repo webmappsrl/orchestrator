@@ -52,6 +52,7 @@ class Epic extends Resource
             Textarea::make('Description')
                 ->hideFromIndex(),
 
+            //display the relations in nova field
             BelongsTo::make('User', 'user'),
             BelongsTo::make('Milestone', 'milestone'),
             HasMany::make('Stories'),

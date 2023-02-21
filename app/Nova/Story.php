@@ -55,8 +55,8 @@ class Story extends Resource
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
             Text::make('Pull Request Link', 'pull_request_link')->nullable()->hideFromIndex(),
 
-            BelongsTo::make('User'),
-            BelongsTo::make('Epic')
+            BelongsTo::make('User'), //display the relation with user in nova field
+            BelongsTo::make('Epic') //display the relation with epic in nova field
         ];
     }
 
