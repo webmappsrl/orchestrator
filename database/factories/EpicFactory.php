@@ -33,6 +33,7 @@ class EpicFactory extends Factory
             'description' => $this->faker->text(10),
             'user_id' => User::whereJsonContains('roles', UserRole::Developer)->get()->random(),
             'milestone_id' => Milestone::inRandomOrder()->first()->id,
+            'pull_request_link' => $this->faker->url,
         ];
     }
 }
