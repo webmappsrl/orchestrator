@@ -17,6 +17,9 @@ class LayerFactory extends Factory
      */
     public function definition()
     {
+        if (App::all()->count() == 0) {
+            App::factory(10)->create();
+        }
         return [
             'name' => [
                 'it' => $this->faker->name(),
