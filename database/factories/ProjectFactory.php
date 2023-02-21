@@ -17,6 +17,10 @@ class ProjectFactory extends Factory
      */
     public function definition()
     {
+        if (Customer::count() == 0) {
+            Customer::factory(1)->create();
+        }
+
         return [
             'name' => $this->faker->company(),
             'description' => $this->faker->text(10),

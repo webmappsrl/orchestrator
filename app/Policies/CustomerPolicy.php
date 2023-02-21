@@ -11,6 +11,11 @@ class CustomerPolicy
 {
     use HandlesAuthorization;
 
+    public function before(User $user)
+    {
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Editor);
+    }
+
     /**
      * Determine whether the user can view any models.
      *
@@ -19,7 +24,7 @@ class CustomerPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
+        //
     }
 
     /**
@@ -31,7 +36,7 @@ class CustomerPolicy
      */
     public function view(User $user, Customer $customer)
     {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
+        //
     }
 
     /**
@@ -42,7 +47,7 @@ class CustomerPolicy
      */
     public function create(User $user)
     {
-        return $user->hasRole(UserRole::Admin);
+        //
     }
 
     /**
@@ -54,7 +59,7 @@ class CustomerPolicy
      */
     public function update(User $user, Customer $customer)
     {
-        return $user->hasRole(UserRole::Admin);
+        //
     }
 
     /**
@@ -66,7 +71,7 @@ class CustomerPolicy
      */
     public function delete(User $user, Customer $customer)
     {
-        return $user->hasRole(UserRole::Admin);
+        //
     }
 
     /**

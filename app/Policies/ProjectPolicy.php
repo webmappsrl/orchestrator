@@ -11,6 +11,11 @@ class ProjectPolicy
 {
     use HandlesAuthorization;
 
+    public function before(User $user)
+    {
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Editor);
+    }
+
     /**
      * Determine whether the user can view any models.
      *
@@ -19,7 +24,7 @@ class ProjectPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
+        //
     }
 
     /**
@@ -31,7 +36,7 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project)
     {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
+        //
     }
 
     /**
@@ -42,7 +47,7 @@ class ProjectPolicy
      */
     public function create(User $user)
     {
-        return $user->hasRole(UserRole::Admin);
+        //
     }
 
     /**
@@ -54,7 +59,7 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project)
     {
-        return $user->hasRole(UserRole::Admin);
+        //
     }
 
     /**
@@ -66,7 +71,7 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project)
     {
-        return $user->hasRole(UserRole::Admin);
+        //
     }
 
     /**
