@@ -4,20 +4,19 @@ namespace App\Nova;
 
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class Epic extends Resource
+class Customer extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Epic>
+     * @var class-string<\App\Models\Customer>
      */
-    public static $model = \App\Models\Epic::class;
+    public static $model = \App\Models\Customer::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -52,10 +51,7 @@ class Epic extends Resource
             Textarea::make('Description')
                 ->hideFromIndex(),
 
-            //display the relations in nova field
-            BelongsTo::make('User', 'user'),
-            BelongsTo::make('Milestone', 'milestone'),
-            HasMany::make('Stories'),
+            HasMany::make('Projects'),
         ];
     }
 
