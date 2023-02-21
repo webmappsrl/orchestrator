@@ -48,7 +48,7 @@ class Milestone extends Resource
             Text::make(__('Name'), 'name')->sortable(),
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
             DateTime::make(__('Due Date'), 'due_date')->sortable(),
-            HasMany::make('Epics'),
+            HasMany::make('Epics'), //display relation with epic in nova field
         ];
     }
 

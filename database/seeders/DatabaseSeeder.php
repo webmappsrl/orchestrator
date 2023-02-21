@@ -7,6 +7,7 @@ use Database\Seeders\AppSeeder;
 use Illuminate\Database\Seeder;
 use Database\Seeders\EpicSeeder;
 use Database\Seeders\UserSeeder;
+use Database\Seeders\LayerSeeder;
 use Database\Seeders\StorySeeder;
 use Database\Seeders\MilestoneSeeder;
 
@@ -24,5 +25,6 @@ class DatabaseSeeder extends Seeder
         $this->call(EpicSeeder::class);
         $this->call(StorySeeder::class);
         $this->call(AppSeeder::class);
+        $this->call(LayerSeeder::class);
     }
 }
