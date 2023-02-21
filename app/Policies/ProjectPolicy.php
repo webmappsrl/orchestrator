@@ -4,10 +4,10 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Enums\UserRole;
-use App\Models\Customer;
+use App\Models\Project;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class CustomerPolicy
+class ProjectPolicy
 {
     use HandlesAuthorization;
 
@@ -26,10 +26,10 @@ class CustomerPolicy
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Customer  $customer
+     * @param  \App\Models\Project  $project
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Customer $customer)
+    public function view(User $user, Project $project)
     {
         return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
     }
@@ -49,10 +49,10 @@ class CustomerPolicy
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Customer  $customer
+     * @param  \App\Models\Project  $project
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Customer $customer)
+    public function update(User $user, Project $project)
     {
         return $user->hasRole(UserRole::Admin);
     }
@@ -61,10 +61,10 @@ class CustomerPolicy
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Customer  $customer
+     * @param  \App\Models\Project  $project
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Customer $customer)
+    public function delete(User $user, Project $project)
     {
         return $user->hasRole(UserRole::Admin);
     }
@@ -73,10 +73,10 @@ class CustomerPolicy
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Customer  $customer
+     * @param  \App\Models\Project  $project
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, Customer $customer)
+    public function restore(User $user, Project $project)
     {
         //
     }
@@ -85,10 +85,10 @@ class CustomerPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Customer  $customer
+     * @param  \App\Models\Project  $project
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, Customer $customer)
+    public function forceDelete(User $user, Project $project)
     {
         //
     }

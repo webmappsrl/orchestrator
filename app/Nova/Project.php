@@ -4,19 +4,19 @@ namespace App\Nova;
 
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class Customer extends Resource
+class Project extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Customer>
+     * @var class-string<\App\Models\Project>
      */
-    public static $model = \App\Models\Customer::class;
+    public static $model = \App\Models\Project::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -51,7 +51,7 @@ class Customer extends Resource
             Textarea::make('Description')
                 ->hideFromIndex(),
 
-            HasMany::make('Projects'),
+            BelongsTo::make('Customer'),
         ];
     }
 

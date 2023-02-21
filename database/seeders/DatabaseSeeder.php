@@ -8,6 +8,8 @@ use Illuminate\Database\Seeder;
 use Database\Seeders\EpicSeeder;
 use Database\Seeders\UserSeeder;
 use Database\Seeders\StorySeeder;
+use Database\Seeders\ProjectSeeder;
+use Database\Seeders\CustomerSeeder;
 use Database\Seeders\MilestoneSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -24,5 +26,7 @@ class DatabaseSeeder extends Seeder
         $this->call(EpicSeeder::class);
         $this->call(StorySeeder::class);
         $this->call(AppSeeder::class);
+        $this->call(CustomerSeeder::class);
+        $this->call(ProjectSeeder::class);
     }
 }
