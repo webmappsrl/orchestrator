@@ -53,7 +53,10 @@ class Story extends Resource
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))
                 ->default(StoryStatus::New->value)->displayUsingLabels(),
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
-            Text::make('Pull Request Link', 'pull_request_link')->nullable()->hideFromIndex(),
+            Text::make('Pull Request Link', function () {
+                return '<a href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
+            })->asHtml()->nullable()->hideFromIndex(),
+
 
             BelongsTo::make('User'), //display the relation with user in nova field
             BelongsTo::make('Epic') //display the relation with epic in nova field
