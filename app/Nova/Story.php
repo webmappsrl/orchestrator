@@ -54,12 +54,11 @@ class Story extends Resource
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->default(StoryStatus::New->value)->displayUsingLabels(),
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
             BelongsTo::make('User')->default(function ($request) {
-                $epicID = request()->input('viaResourceId');
+                $epicID = $request->input('viaResourceId');
                 $epic = Epic::find($epicID);
                 return $epic->user_id;
             }),
-            BelongsTo::make('Epic')
-            BelongsTo::make('User'), //display the relation with user in nova field
+            BelongsTo::make('Epic'),
         ];
     }
     /**
