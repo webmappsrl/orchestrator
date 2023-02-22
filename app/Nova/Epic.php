@@ -32,7 +32,7 @@ class Epic extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description'
+        'id', 'name', 'description', 'project.name' // <-- searchable by project name
     ];
 
     /**
@@ -57,8 +57,9 @@ class Epic extends Resource
             })->asHtml()->nullable()->hideFromIndex(),
 
             //display the relations in nova field
-            BelongsTo::make('User', 'user'),
-            BelongsTo::make('Milestone', 'milestone'),
+            BelongsTo::make('User'),
+            BelongsTo::make('Milestone'),
+            BelongsTo::make('Project'),
             HasMany::make('Stories'),
         ];
     }
