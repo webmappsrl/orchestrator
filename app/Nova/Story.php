@@ -4,6 +4,7 @@ namespace App\Nova;
 
 
 use App\Models\Epic;
+use App\Models\User;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -50,19 +51,17 @@ class Story extends Resource
         return [
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
-            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))
-                ->default(StoryStatus::New->value)->displayUsingLabels(),
+            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->default(StoryStatus::New->value)->displayUsingLabels(),
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
-            Text::make('Pull Request Link', function () {
-                return '<a href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
-            })->asHtml()->nullable()->hideFromIndex(),
-
-
+            BelongsTo::make('User')->default(function ($request) {
+                $epicID = request()->input('viaResourceId');
+                $epic = Epic::find($epicID);
+                return $epic->user_id;
+            }),
+            BelongsTo::make('Epic')
             BelongsTo::make('User'), //display the relation with user in nova field
-            BelongsTo::make('Epic') //display the relation with epic in nova field
         ];
     }
-
     /**
      * Get the cards available for the request.
      *
