@@ -22,17 +22,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        $this->call(ProjectSeeder::class);
         $this->call(UserSeeder::class);
-
         $this->call(MilestoneSeeder::class);
         $this->call(EpicSeeder::class);
         $this->call(StorySeeder::class);
-        
         $this->call(AppSeeder::class);
         $this->call(LayerSeeder::class);
-        
         $this->call(CustomerSeeder::class);
-        $this->call(ProjectSeeder::class);
-        
     }
 }

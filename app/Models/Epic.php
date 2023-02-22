@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Epic extends Model
 {
@@ -20,7 +21,7 @@ class Epic extends Model
     {
         return $this->hasMany(Story::class);
     }
-    
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -29,5 +30,10 @@ class Epic extends Model
     public function milestone()
     {
         return $this->belongsTo(Milestone::class);
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
     }
 }
