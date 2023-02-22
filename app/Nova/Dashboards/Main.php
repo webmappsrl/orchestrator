@@ -23,7 +23,7 @@ class Main extends Dashboard
     public function cards()
     {
         return [
-            new Help,
+
 
             (new TotCustomers)->canSee(function ($request) {
                 $user = $request->user();
