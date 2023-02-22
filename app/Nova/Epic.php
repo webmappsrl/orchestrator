@@ -32,7 +32,7 @@ class Epic extends Resource
      * @var array
      */
     public static $search = [
-        'id',
+        'id', 'name', 'description'
     ];
 
     /**
@@ -55,6 +55,8 @@ class Epic extends Resource
             Text::make('URL', function () {
                 return '<a href="' . $this->pull_request_link . '">Link</a>';
             })->asHtml()->nullable()->hideFromIndex(),
+
+            //display the relations in nova field
             BelongsTo::make('User', 'user'),
             BelongsTo::make('Milestone', 'milestone'),
             HasMany::make('Stories'),

@@ -13,11 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('apps', function (Blueprint $table) {
+        Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->json('name');
-            $table->json('description')->nullable();
+            $table->string('name');
+            $table->text('description')->nullable();
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('apps');
+        Schema::dropIfExists('customers');
     }
 };

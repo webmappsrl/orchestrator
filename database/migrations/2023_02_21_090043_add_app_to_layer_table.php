@@ -13,11 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('cusstomers', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-            $table->string('name');
-            $table->text('description')->nullable();
+        Schema::table('layers', function (Blueprint $table) {
+            $table->unsignedBigInteger('app_id');
+            $table->foreign('app_id')->references('id')->on('apps')->onDelete('cascade');
         });
     }
 
@@ -28,6 +26,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('cusstomers');
+        Schema::table('layer', function (Blueprint $table) {
+            $table->dropForeign(['app_id']);
+            $table->dropColumn('app_id');
+        });
     }
 };

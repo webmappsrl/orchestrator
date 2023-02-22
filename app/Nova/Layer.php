@@ -2,27 +2,22 @@
 
 namespace App\Nova;
 
-
-use App\Models\Epic;
-use App\Models\User;
-use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Trix;
-use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
-class Story extends Resource
+class Layer extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Story>
+     * @var class-string<\App\Models\Layer>
      */
-    public static $model = \App\Models\Story::class;
+    public static $model = \App\Models\Layer::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -50,18 +45,14 @@ class Story extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make(__('Name'), 'name')->sortable(),
-            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->default(StoryStatus::New->value)->displayUsingLabels(),
-            Textarea::make(__('Description'), 'description')->hideFromIndex(),
-            BelongsTo::make('User')->default(function ($request) {
-                $epicID = request()->input('viaResourceId');
-                $epic = Epic::find($epicID);
-                return $epic->user_id;
-            }),
-            BelongsTo::make('Epic')
-            BelongsTo::make('User'), //display the relation with user in nova field
+            NovaTabTranslatable::make([
+                Text::make(__('name'), 'name'),
+                Textarea::make(__('description'), 'description')->hideFromIndex(),
+            ]),
+            BelongsTo::make('App'), //display the relation with App in nova field
         ];
     }
+
     /**
      * Get the cards available for the request.
      *
@@ -104,15 +95,5 @@ class Story extends Resource
     public function actions(NovaRequest $request)
     {
         return [];
-    }
-
-    /**
-     * Get the user that owns the Story
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'foreign_key', 'other_key');
     }
 }

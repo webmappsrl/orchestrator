@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Layer;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,5 +16,13 @@ class App extends Model
 
     public $fillable = ['name', 'description'];
 
-    //TODO relationship with LAYERS
+
+    /**
+     * relationship with layers
+     * @return hasMany
+     */
+    public function layers()
+    {
+        return $this->hasMany(Layer::class);
+    }
 }

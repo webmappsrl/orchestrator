@@ -13,21 +13,21 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('apps', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-            $table->json('name');
-            $table->json('description')->nullable();
+        Schema::table('projects', function (Blueprint $table) {
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
         });
     }
 
     /**
      * Reverse the migrations.
      *
-     * @return void
+     * @return void 
      */
     public function down()
     {
-        Schema::dropIfExists('apps');
+        Schema::table('projects', function (Blueprint $table) {
+            $table->dropForeign('customer_id');
+            $table->dropColumn('customer_id');
+        });
     }
 };

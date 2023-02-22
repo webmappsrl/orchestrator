@@ -23,7 +23,13 @@ class UserSeeder extends Seeder
             'roles' => [UserRole::Admin]
         ])->markEmailAsVerified();
 
+        User::factory()->create([
+            'name' => 'Editor',
+            'email' => 'editor@webmapp.it',
+            'password' => bcrypt('webmapp'),
+            'roles' => [UserRole::Editor]
+        ])->markEmailAsVerified();
+
         User::factory(100)->create();
     }
-
 }
