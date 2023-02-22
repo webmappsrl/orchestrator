@@ -1,99 +1,31 @@
-# Laravel Postgis Boilerplate
+# ORCHESTRATOR
 
-Webmapp's Starting point
+Introduction to ORCHSTRATOR (TBD)
 
-## Laravel 9 Project based on Nova 4
 
-### Inizializzazione tramite boilerplate
+## INSTALL
 
--   Download del codice del boilerplate in una nuova cartella `nuovoprogetto` e disattivare il collegamento tra locale/remote:
-    ```sh
-    git clone https://github.com/webmappsrl/laravel-postgis-boilerplate.git nuovoprogetto
-    cd nuovoprogetto
-    git remote remove origin
-    ```
--   Effettuare il link tra la repository locale e quella remota (repository vuota github)
+First of all install the [GEOBOX](https://github.com/webmappsrl/geobox) repo and configure the ALIASES command. 
 
-    ```sh
-    git remote add origin git@github.com:username/repo.git
-    ```
+```sh
+git clone git@github.com:webmappsrl/orchestrator.git
+```
+Important NOTE: remember to checkout the develop branch.
 
--   Copy file `.env-example` to `.env`
+```sh
+cd orchestrator
+bash docker/init-docker.sh
+geobox_install orchestrator
+```
+## Run web server from shell outside docker
 
-    Questi valori nel file .env sono necessari per avviare l'ambiente docker. Hanno un valore di default e delle convenzioni associate, valutare la modifica:
+In order to start a web server in local environment use the following command:
+Replace `${instance name}` with the instance name (APP_NAME in .env file) 
 
-    -   `APP_NAME` (it's php container name and - postgrest container name, no space)
-    -   `DOCKER_PHP_PORT` (Incrementing starting from 9100 to 9199 range for MAC check with command "lsof -iTCP -sTCP:LISTEN")
-    -   `DOCKER_SERVE_PORT` (always 8000)
-    -   `DOCKER_PROJECT_DIR_NAME` (it's the folder name of the project)
-    -   `DB_DATABASE`
-    -   `DB_USERNAME`
-    -   `DB_PASSWORD`
-
--   Creare l'ambiente docker
-    ```sh
-    bash docker/init-docker.sh
-    ```
--   Digitare `y` durante l'esecuzione dello script per l'installazione di xdebug
-
--   Verificare che i container si siano avviati
-
-    ```sh
-    docker ps
-    ```
-
--   Avvio di una bash all'interno del container php per installare tutte le dipendenze e lanciare il comando php artisan serve (utilizzare `APP_NAME` al posto di `$nomeApp`):
-
-    ```sh
-    docker exec -it php81_$nomeApp bash
-    composer install
-    php artisan key:generate
-    php artisan optimize
-    php artisan migrate
-    php artisan serve --host 0.0.0.0
-    ```
-
--   A questo punto l'applicativo è in ascolto su <http://127.0.0.1:8000>
-
-### Configurazione xdebug
-
-Una volta avviato il container con xdebug configurare il file `.vscode/launch.json` con la path della cartella del progetto sul sistema host. Eg:
-
-```json
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Listen for Xdebug",
-            "type": "php",
-            "request": "launch",
-            "port": 9200,
-            "pathMappings": {
-                "/var/www/html/geomixer2": "${workspaceRoot}"
-            }
-        }
-    ]
-}
+```sh
+geobox_serve ${instance name}
 ```
 
-Aggiornare `/var/www/html/geomixer2` con la path della cartella sul proprio computer.
-
-### Scripts
-
-Ci sono vari scripts per il deploy nella cartella `scripts`. Per lanciarli basta lanciare una bash con la path dello script dentro il container php, eg (utilizzare `APP_NAME` al posto di `$nomeApp`):
-
-```bash
-docker exec -it php81_$nomeApp bash scripts/deploy_dev.sh
-```
-
-### Artisan commands
-
--   `db:dump_db`
-    Create a new sql file exporting all the current database in the local disk under the `database` directory
--   `db:download`
-    download a dump.sql from server
--   `db:restore`
-    Restore a last-dump.sql file (must be in root dir)
 
 ### Problemi noti
 
@@ -104,8 +36,13 @@ Durante l'esecuzione degli script potrebbero verificarsi problemi di scrittura s
     ```bash
       chown -R 33 storage
     ```
+    NOTA: per eseguire il comando chown potrebbe essere necessario avere i privilegi di root. In questo caso si deve effettuare l'accesso al cointainer del docker utilizzando lo specifico utente root (-u 0). Questo è valido anche sbloccare la possibilità di scrivere nella cartella /var/log per il funzionamento di Xdedug
 
 -   Utilizzare il parametro `-u` per il comando `docker exec` così da specificare l'id utente, eg come utente root (utilizzare `APP_NAME` al posto di `$nomeApp`):
-    ```bash
-    docker exec -u 0 -it php81_$nomeApp bash scripts/deploy_dev.sh
-    ```
+    `bash
+docker exec -u 0 -it php81_$nomeApp bash scripts/deploy_dev.sh
+`
+
+Xdebug potrebbe non trovare il file di log configurato nel .ini, quindi generare vari warnings
+
+-   creare un file in `/var/log/xdebug.log` all'interno del container phpfpm. Eseguire un `chown www-data /var/log/xdebug.log`. Creare questo file solo se si ha esigenze di debug errori xdebug (impossibile analizzare il codice tramite breakpoint) visto che potrebbe crescere esponenzialmente nel tempo

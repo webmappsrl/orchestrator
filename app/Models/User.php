@@ -3,10 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Wm\WmPackage\Model\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Enums\UserRole;
 
 class User extends Authenticatable
 {
@@ -40,5 +43,28 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'roles' => AsEnumCollection::class . ':' . UserRole::class,
     ];
+
+    /**
+     * Check if user has a specific single role
+     *
+     * @param UserRole $role
+     * @return boolean
+     */
+    public function hasRole(UserRole $role): bool
+    {
+        return $this->roles->contains($role);
+    }
+
+    public function stories()
+    {
+        return $this->hasMany(Story::class);
+    }
+
+    public function epics()
+    {
+        return $this->hasMany(Epic::class);
+    }
+
 }
