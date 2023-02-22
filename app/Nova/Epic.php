@@ -52,7 +52,7 @@ class Epic extends Resource
             Textarea::make('Description')
                 ->hideFromIndex(),
 
-            Text::make('URL', function () {
+            Text::make('URL', 'pull_request_link', function () {
                 return '<a href="' . $this->pull_request_link . '">Link</a>';
             })->asHtml()->nullable()->hideFromIndex(),
 
