@@ -48,16 +48,21 @@ class Story extends Resource
      */
     public function fields(NovaRequest $request)
     {
+
+
         return [
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->default(StoryStatus::New->value)->displayUsingLabels(),
             Textarea::make(__('Description'), 'description')->hideFromIndex(),
-            BelongsTo::make('User')->hideWhenCreating(),
+            BelongsTo::make('User')->default(function ($request) {
+                $epicID = request()->input('viaResourceId');
+                $epic = Epic::find($epicID);
+                return $epic->user_id;
+            }),
             BelongsTo::make('Epic')
         ];
     }
-
     /**
      * Get the cards available for the request.
      *

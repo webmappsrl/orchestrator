@@ -16,13 +16,6 @@ class Story extends Model
         return $this->belongsTo(User::class);
     }
 
-    protected static function booted()
-    {
-        static::creating(function ($story) {
-            $story->user_id = $story->epic->user->id;
-        });
-    }
-
     /**
      * It returns the corresponding EPIC
      *
