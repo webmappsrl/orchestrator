@@ -97,7 +97,11 @@ class Epic extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new filters\MilestoneFilter,
+            new filters\ProjectFilter,
+            new filters\EpicStatusFilter,
+        ];
     }
 
     /**
