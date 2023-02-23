@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('epics', function (Blueprint $table) {
-            DB::query('alter table epics alter column description TYPE text;');
+            DB::statement('alter table epics alter column description TYPE text;');
         });
     }
 
