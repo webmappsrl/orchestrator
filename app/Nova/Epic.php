@@ -33,7 +33,7 @@ class Epic extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description', 'project.name' // <-- searchable by project name
+        'id', 'name', 'description', 'milestone.name', 'user.name', 'project.name' // <-- searchable by project name
     ];
 
     /**
