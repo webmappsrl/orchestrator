@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -45,6 +46,8 @@ class Epic extends Resource
     {
         return [
             ID::make()->sortable(),
+            BelongsTo::make('Milestone'),
+            BelongsTo::make('Project'),
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255'),
@@ -58,8 +61,16 @@ class Epic extends Resource
 
             //display the relations in nova field
             BelongsTo::make('User'),
-            BelongsTo::make('Milestone'),
-            BelongsTo::make('Project'),
+
+            Text::make('SAL', function(){
+                if($this->stories()->count() == 0) {
+                    return 'ND';
+                }
+                $tot = $this->stories()->count();
+                $val = $this->stories()->whereIn('status',[StoryStatus::Done->value,StoryStatus::Test->value])->get()->count();
+                return "$val / $tot";
+            })->onlyOnIndex(),
+
             HasMany::make('Stories'),
         ];
     }
