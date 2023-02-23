@@ -40,7 +40,6 @@ class EpicStatusFilter extends Filter
         foreach (EpicStatus::cases() as $value) {
             $options[$value->name] = $value->value;
         }
-
         return $options;
     }
 }

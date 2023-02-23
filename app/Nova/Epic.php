@@ -74,6 +74,8 @@ class Epic extends Resource
                 return "$val / $tot";
             })->onlyOnIndex(),
 
+            Text::make('Status')->hideWhenCreating()->hideWhenUpdating(),
+
             HasMany::make('Stories'),
         ];
     }
