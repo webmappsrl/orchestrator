@@ -62,12 +62,12 @@ class Epic extends Resource
             //display the relations in nova field
             BelongsTo::make('User'),
 
-            Text::make('SAL', function(){
-                if($this->stories()->count() == 0) {
+            Text::make('SAL', function () {
+                if ($this->stories()->count() == 0) {
                     return 'ND';
                 }
                 $tot = $this->stories()->count();
-                $val = $this->stories()->whereIn('status',[StoryStatus::Done->value,StoryStatus::Test->value])->get()->count();
+                $val = $this->stories()->whereIn('status', [StoryStatus::Done->value, StoryStatus::Test->value])->get()->count();
                 return "$val / $tot";
             })->onlyOnIndex(),
 
@@ -116,6 +116,8 @@ class Epic extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            new actions\CreateStoriesFromText
+        ];
     }
 }
