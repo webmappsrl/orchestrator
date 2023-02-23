@@ -55,9 +55,12 @@ class Epic extends Resource
             Textarea::make('Description')
                 ->hideFromIndex(),
 
-            Text::make('URL', 'pull_request_link', function () {
-                return '<a href="' . $this->pull_request_link . '">Link</a>';
-            })->asHtml()->nullable()->hideFromIndex(),
+            // Text::make('URL', 'pull_request_link', function () {
+            //     return '<a href="' . $this->pull_request_link . '">Link</a>';
+            // })->asHtml()->nullable()->hideFromIndex(),
+            Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
+                return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
+            })->asHtml(),
 
             //display the relations in nova field
             BelongsTo::make('User'),
