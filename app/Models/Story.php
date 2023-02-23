@@ -11,6 +11,16 @@ class Story extends Model
 {
     use HasFactory;
 
+    protected static function booted()
+    {
+        //update epic status whenever a story is created or updated
+        static::saved(function (Story $story) {
+            $epic = $story->epic;
+            $epic->status = $epic->getStatusFromStories()->value;
+            $epic->save();
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
