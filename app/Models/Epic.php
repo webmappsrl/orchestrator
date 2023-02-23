@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\EpicStatus;
 use App\Enums\StoryStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Model;
 
 class Epic extends Model
@@ -67,5 +68,9 @@ class Epic extends Model
         }
 
         return EpicStatus::Progress;
+    }
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
     }
 }

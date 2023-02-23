@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -32,7 +33,7 @@ class Epic extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description'
+        'id', 'name', 'description', 'project.name' // <-- searchable by project name
     ];
 
     /**
@@ -45,6 +46,8 @@ class Epic extends Resource
     {
         return [
             ID::make()->sortable(),
+            BelongsTo::make('Milestone'),
+            BelongsTo::make('Project'),
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255'),
@@ -52,13 +55,22 @@ class Epic extends Resource
             Textarea::make('Description')
                 ->hideFromIndex(),
 
-            Text::make('URL', function () {
+            Text::make('URL', 'pull_request_link', function () {
                 return '<a href="' . $this->pull_request_link . '">Link</a>';
             })->asHtml()->nullable()->hideFromIndex(),
 
             //display the relations in nova field
-            BelongsTo::make('User', 'user'),
-            BelongsTo::make('Milestone', 'milestone'),
+            BelongsTo::make('User'),
+
+            Text::make('SAL', function () {
+                if ($this->stories()->count() == 0) {
+                    return 'ND';
+                }
+                $tot = $this->stories()->count();
+                $val = $this->stories()->whereIn('status', [StoryStatus::Done->value, StoryStatus::Test->value])->get()->count();
+                return "$val / $tot";
+            })->onlyOnIndex(),
+
             HasMany::make('Stories'),
         ];
     }
@@ -104,6 +116,8 @@ class Epic extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            new actions\CreateStoriesFromText
+        ];
     }
 }

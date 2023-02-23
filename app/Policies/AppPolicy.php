@@ -20,7 +20,7 @@ class AppPolicy
      */
     public function before(User $user)
     {
-        return $user->hasRole(UserRole::Editor);
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Editor);
     }
 
     /**
