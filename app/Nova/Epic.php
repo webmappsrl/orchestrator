@@ -126,7 +126,8 @@ class Epic extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            new actions\CreateStoriesFromText
+            new actions\CreateStoriesFromText,
+            new actions\EditStoriesFromEpic,
         ];
     }
 }
