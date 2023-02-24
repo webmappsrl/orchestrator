@@ -10,12 +10,18 @@ use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class EditStoriesFromEpic extends Action
 {
     use InteractsWithQueue, Queueable;
+
+    /**
+     * The displayable name of the action.
+     *
+     * @var string
+     */
+    public $name = 'Modifica stato e user delle storie';
 
     /**
      * Perform the action on the given models.
@@ -32,9 +38,6 @@ class EditStoriesFromEpic extends Action
             }
             if (isset($fields['user'])) {
                 $model->user_id = $fields['user']->id;
-            }
-            if (isset($fields['epic'])) {
-                $model->milestone_id = $fields['milestone']->id;
             }
             $model->save();
         }
@@ -56,7 +59,6 @@ class EditStoriesFromEpic extends Action
         return [
             Select::make('Status')->options($statusOptions),
             BelongsTo::make('User')->nullable(),
-            BelongsTo::make('Epic')->nullable(),
         ];
     }
 }

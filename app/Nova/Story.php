@@ -102,7 +102,11 @@ class Story extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            new actions\EditStoriesFromEpic,
+            (new actions\EditStoriesFromEpic)
+                ->confirmText('Seleziona stato e utente da assegnare alle storie che hai selezionato. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
+
         ];
     }
 
