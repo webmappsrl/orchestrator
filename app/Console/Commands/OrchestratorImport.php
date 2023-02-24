@@ -34,8 +34,8 @@ class OrchestratorImport extends Command
         $usersData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/users'), true);
         $this->importUsers($usersData);
 
-        // $customersData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/customers'), true);
-        // $this->importCustomers($customersData);
+        $customersData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/customers'), true);
+        $this->importCustomers($customersData);
 
         // $projectsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/projects'), true);
         // $this->importProjects($projectsData);
@@ -60,6 +60,27 @@ class OrchestratorImport extends Command
                     'roles' => UserRole::Admin
                 ]
             );
+        }
+    }
+
+    private function importCustomers($data)
+    {
+
+        foreach ($data as $element) {
+            Customer::updateOrCreate([
+                'wmpm_id' => $element['id']
+            ], [
+                'name' => $element['name'],
+                'notes' => $element['notes'],
+                'hs_id' => $element['hs_id'],
+                'domain_name' => $element['domain_name'],
+                'full_name' => $element['full_name'],
+                'has_subscription' => $element['has_subscription'],
+                'subscription_amount' => $element['subscription_amount'],
+                'subscription_last_payment' => $element['subscription_last_payment'],
+                'subscription_last_covered_year' => $element['subscription_last_covered_year'],
+                'subscription_last_invoice' => $element['subscription_last_invoice'],
+            ]);
         }
     }
 
@@ -102,24 +123,5 @@ class OrchestratorImport extends Command
     //     }
     // }
 
-    // private function importCustomers($data)
-    // {
 
-    //     foreach ($data as $element) {
-    //         Customer::updateOrCreate([
-    //             'id' => $element['id']
-    //         ], [
-    //             'name' => $element['name'],
-    //             'notes' => $element['notes'],
-    //             'hs_id' => $element['hs_id'],
-    //             'domain_name' => $element['domain_name'],
-    //             'full_name' => $element['full_name'],
-    //             'has_subscription' => $element['has_subscription'],
-    //             'subscription_amount' => $element['subscription_amount'],
-    //             'subscription_last_payment' => $element['subscription_last_payment'],
-    //             'subscription_last_covered_year' => $element['subscription_last_covered_year'],
-    //             'subscription_last_invoice' => $element['subscription_last_invoice'],
-    //         ]);
-    //     }
-    // }
 }
