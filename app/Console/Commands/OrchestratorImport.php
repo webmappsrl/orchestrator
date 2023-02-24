@@ -52,14 +52,14 @@ class OrchestratorImport extends Command
         foreach ($data as $element) {
             User::updateOrCreate(
                 [
-                    'id' => $element['id']
+                    'email' => $element['email'],
                 ],
                 [
                     'name' => $element['name'],
-                    'email' => $element['email'],
                     'password' => bcrypt('webmapp'),
-                    'roles' => [UserRole::Admin]
-                ]);
+                    'roles' => UserRole::Admin
+                ]
+            );
         }
     }
 
@@ -68,17 +68,19 @@ class OrchestratorImport extends Command
 
     //     foreach ($data as $element) {
     //         $epicProps = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epic/' . $element), true);
-    //         Epic::updateOrCreate([
-    //             'id' => $epicProps['id'],
-    //         ], [
-    //             'name' => $epicProps['name'],
-    //             'description' => $epicProps['description'],
-    //             'title' => $epicProps['title'],
-    //             'text2stories' => $epicProps['text2stories'],
-    //             'notes' => $epicProps['notes'],
-    //             'project_id' => $epicProps['project_id'],
+    //         Epic::updateOrCreate(
+    //             [
+    //                  'id' => $epicProps['id'],
 
-    //         ]);
+    //             ],
+    //             [
+    //                 'name' => $epicProps['name'],
+    //                 'description' => $epicProps['description'],
+    //                 'title' => $epicProps['title'],
+    //                 'text2stories' => $epicProps['text2stories'],
+    //                 'notes' => $epicProps['notes'],
+    //                 'project_id' => $epicProps['project_id'],
+    //             ]);
     //     }
     // }
 

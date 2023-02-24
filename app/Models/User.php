@@ -24,6 +24,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'roles'
     ];
 
     /**
@@ -52,10 +53,10 @@ class User extends Authenticatable
      * @param UserRole $role
      * @return boolean
      */
-    // public function hasRole(UserRole $role): bool
-    // {
-    //     return $this->roles->contains($role);
-    // }
+    public function hasRole(UserRole $role): bool
+    {
+        return $this->roles->contains($role);
+    }
 
     public function stories()
     {
