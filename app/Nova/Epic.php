@@ -47,7 +47,7 @@ class Epic extends Resource
         return [
             ID::make()->sortable(),
             BelongsTo::make('Milestone'),
-            BelongsTo::make('Project'),
+            BelongsTo::make('Project')->searchable(),
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255'),
