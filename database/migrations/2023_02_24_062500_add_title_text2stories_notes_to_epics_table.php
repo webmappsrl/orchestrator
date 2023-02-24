@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::table('epics', function (Blueprint $table) {
             $table->string('title')->nullable();
-            $table->text('text2stories');
-            $table->text('notes');
+            $table->text('text2stories')->nullable();
+            $table->text('notes')->nullable();
         });
     }
 

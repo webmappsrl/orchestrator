@@ -40,8 +40,8 @@ class OrchestratorImport extends Command
         $projectsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/projects'), true);
         $this->importProjects($projectsData);
 
-        // $epicsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epics'), true);
-        // $this->importEpics($epicsData);
+        $epicsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epics'), true);
+        $this->importEpics($epicsData);
 
         $this->info('Everything imported correctly');
     }
@@ -102,28 +102,25 @@ class OrchestratorImport extends Command
         }
     }
 
-    // private function importEpics($data)
-    // {
+    private function importEpics($data)
+    {
 
-    //     foreach ($data as $element) {
-    //         $epicProps = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epic/' . $element), true);
-    //         Epic::updateOrCreate(
-    //             [
-    //                  'id' => $epicProps['id'],
+        foreach ($data as $element) {
+            $epicProps = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epic/' . $element), true);
+            Epic::updateOrCreate(
+                [
+                    'wmpm_id' => $epicProps['id'],
 
-    //             ],
-    //             [
-    //                 'name' => $epicProps['name'],
-    //                 'description' => $epicProps['description'],
-    //                 'title' => $epicProps['title'],
-    //                 'text2stories' => $epicProps['text2stories'],
-    //                 'notes' => $epicProps['notes'],
-    //                 'project_id' => $epicProps['project_id'],
-    //             ]);
-    //     }
-    // }
-
-
-
-
+                ],
+                [
+                    'name' => $epicProps['name'],
+                    'description' => $epicProps['description'],
+                    'title' => $epicProps['title'],
+                    'text2stories' => $epicProps['text2stories'],
+                    'notes' => $epicProps['notes'],
+                    'project_id' => $epicProps['project_id'],
+                ]
+            );
+        }
+    }
 }
