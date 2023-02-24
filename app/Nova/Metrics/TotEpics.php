@@ -37,9 +37,4 @@ class TotEpics extends Value
     {
         // return now()->addMinutes(5);
     }
-
-    public function name()
-    {
-        return 'Epics';
-    }
 }

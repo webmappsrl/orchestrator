@@ -37,9 +37,4 @@ class TotStories extends Value
     {
         // return now()->addMinutes(5);
     }
-
-    public function name()
-    {
-        return 'Stories';
-    }
 }
