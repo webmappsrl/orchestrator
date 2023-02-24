@@ -14,8 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::table('epics', function (Blueprint $table) {
-            $table->foreignId('user_id')->onDelete('cascade')->nullable();
-            $table->foreignId('milestone_id')->onDelete('cascade')->nullable();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('milestone_id')->constrained()->onDelete('cascade');
         });
     }
 

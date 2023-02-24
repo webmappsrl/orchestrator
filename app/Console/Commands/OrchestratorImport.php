@@ -7,6 +7,7 @@ use App\Models\Epic;
 use App\Models\User;
 use App\Models\Project;
 use App\Models\Customer;
+use App\Models\Milestone;
 use Illuminate\Console\Command;
 
 class OrchestratorImport extends Command
@@ -40,15 +41,15 @@ class OrchestratorImport extends Command
         $projectsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/projects'), true);
         $this->importProjects($projectsData);
 
-        $epicsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epics'), true);
-        $this->importEpics($epicsData);
+        // $epicsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epics'), true);
+        // $this->importEpics($epicsData);
 
         $this->info('Everything imported correctly');
     }
 
     private function importUsers($data)
     {
-
+        $this->info('Importing User');
         foreach ($data as $element) {
             User::updateOrCreate(
                 [
@@ -65,7 +66,7 @@ class OrchestratorImport extends Command
 
     private function importCustomers($data)
     {
-
+        $this->info('Importing Customers');
         foreach ($data as $element) {
             Customer::updateOrCreate([
                 'wmpm_id' => $element['id']
@@ -86,26 +87,41 @@ class OrchestratorImport extends Command
 
     private function importProjects($data)
     {
-
+        $this->info('Importing Projects');
         foreach ($data as $element) {
-            if (Customer::where('id', $element['customer_id'])->exists()) {
-                Project::updateOrCreate([
-                    'wmpm_id' => $element['id'],
+            $orchestrator_customer_id=Customer::where('wmpm_id', $element['customer_id'])->first()->id();
+            Project::updateOrCreate([
+                'wmpm_id' => $element['id'],
 
-                ], [
-                    'name' => $element['name'],
-                    'description' => $element['description'],
-                    'customer_id' => $element['customer_id']
+            ], [
+                'name' => $element['name'],
+                'description' => $element['description'],
+                'customer_id' => $orchestrator_customer_id
 
-                ]);
-            }
+            ]);
         }
     }
 
     private function importEpics($data)
     {
+        $this->info('Importing Epics');
+
+        $user_team = User::updateOrCreate(['email'=>'team@webmapp.it'],
+                            [
+                                'name' => 'Admin Webmapp',
+                                'password' => bcrypt('webmapp'),
+                                'roles' => [UserRole::Admin],
+                            ]);
+
+        $milestone_2022 = Milestone::updateOrCreate(['name'=>'2022']);
+
+        $tot_epics = count($data);
+        $counter = 1;
 
         foreach ($data as $element) {
+            $this->info("Importing epic $counter / $tot_epics");
+            $counter++;
+
             $epicProps = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epic/' . $element), true);
             Epic::updateOrCreate(
                 [
@@ -119,6 +135,8 @@ class OrchestratorImport extends Command
                     'text2stories' => $epicProps['text2stories'],
                     'notes' => $epicProps['notes'],
                     'project_id' => $epicProps['project_id'],
+                    'user_id' => $user_team->id,
+                    'milestone_id' => $milestone_2022->id,
                 ]
             );
         }
