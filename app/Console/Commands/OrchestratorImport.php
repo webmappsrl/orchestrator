@@ -37,8 +37,8 @@ class OrchestratorImport extends Command
         $customersData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/customers'), true);
         $this->importCustomers($customersData);
 
-        // $projectsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/projects'), true);
-        // $this->importProjects($projectsData);
+        $projectsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/projects'), true);
+        $this->importProjects($projectsData);
 
         // $epicsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epics'), true);
         // $this->importEpics($epicsData);
@@ -84,6 +84,24 @@ class OrchestratorImport extends Command
         }
     }
 
+    private function importProjects($data)
+    {
+
+        foreach ($data as $element) {
+            if (Customer::where('id', $element['customer_id'])->exists()) {
+                Project::updateOrCreate([
+                    'wmpm_id' => $element['id'],
+
+                ], [
+                    'name' => $element['name'],
+                    'description' => $element['description'],
+                    'customer_id' => $element['customer_id']
+
+                ]);
+            }
+        }
+    }
+
     // private function importEpics($data)
     // {
 
@@ -105,23 +123,7 @@ class OrchestratorImport extends Command
     //     }
     // }
 
-    // private function importProjects($data)
-    // {
 
-    //     foreach ($data as $element) {
-    //         if (Customer::where('id', $element['customer_id'])->exists()) {
-    //             Project::updateOrCreate([
-    //                 'id' => $element['id'],
-
-    //             ], [
-    //                 'name' => $element['name'],
-    //                 'description' => $element['description'],
-    //                 'customer_id' => $element['customer_id']
-
-    //             ]);
-    //         }
-    //     }
-    // }
 
 
 }
