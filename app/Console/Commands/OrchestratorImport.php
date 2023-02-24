@@ -31,8 +31,8 @@ class OrchestratorImport extends Command
     public function handle(): void
     {
 
-        // $usersData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/users'), true);
-        // $this->importUsers($usersData);
+        $usersData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/users'), true);
+        $this->importUsers($usersData);
 
         // $customersData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/customers'), true);
         // $this->importCustomers($customersData);
@@ -46,20 +46,22 @@ class OrchestratorImport extends Command
         $this->info('Everything imported correctly');
     }
 
-    // private function importUsers($data)
-    // {
+    private function importUsers($data)
+    {
 
-    //     foreach ($data as $element) {
-    //         User::updateOrCreate([
-    //             'id' => $element['id']
-    //         ], [
-    //             'name' => $element['name'],
-    //             'email' => $element['email'],
-    //             'password' => 'webmapp',
-    //             'roles' => UserRole::Admin->value
-    //         ]);
-    //     }
-    // }
+        foreach ($data as $element) {
+            User::updateOrCreate(
+                [
+                    'id' => $element['id']
+                ],
+                [
+                    'name' => $element['name'],
+                    'email' => $element['email'],
+                    'password' => bcrypt('webmapp'),
+                    'roles' => [UserRole::Admin]
+                ]);
+        }
+    }
 
     // private function importEpics($data)
     // {
