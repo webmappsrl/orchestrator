@@ -13,7 +13,8 @@ class Project extends Model
     protected $fillable = [
         'name',
         'description',
-        'customer_id'
+        'customer_id',
+        'wmpm_id'
     ];
 
     public function customer()

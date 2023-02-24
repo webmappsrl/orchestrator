@@ -24,6 +24,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'roles'
     ];
 
     /**
@@ -66,5 +67,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Epic::class);
     }
-
 }

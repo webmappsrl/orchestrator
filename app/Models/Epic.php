@@ -16,7 +16,10 @@ class Epic extends Model
         'name',
         'description',
         'milestone_id',
-        'user_id'
+        'user_id',
+        'wmpm_id',
+        'text2stories',
+        'notes',
     ];
 
     public function stories()

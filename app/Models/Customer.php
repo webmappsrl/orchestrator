@@ -12,6 +12,17 @@ class Customer extends Model
     protected $fillable = [
         'name',
         'description',
+        'wmpm_id',
+        'notes',
+        'hs_id',
+        'domain_name',
+        'full_name',
+        'has_subscription',
+        'subscription_amount',
+        'subscription_last_payment',
+        'subscription_last_covered_year',
+        'subscription_last_invoice'
+
     ];
 
     public function projects()
