@@ -101,7 +101,9 @@ class Story extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            new actions\EditStoriesFromEpic,
+        ];
     }
 
     /**

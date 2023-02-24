@@ -4,6 +4,7 @@ namespace App\Nova\Actions;
 
 use App\Models\User;
 use App\Enums\EpicStatus;
+use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Actions\Action;
@@ -34,11 +35,8 @@ class EditStoriesFromEpic extends Action
             if (isset($fields['user'])) {
                 $model->user_id = $fields['user']->id;
             }
-            if (isset($fields['milestone'])) {
-                $model->milestone_id = $fields['milestone']->id;
-            }
-            if (isset($fields['project'])) {
-                $model->project_id = $fields['project']->id;
+            if (isset($fields['epic'])) {
+                $model->epic_id = $fields['epic']->id;
             }
             $model->save();
         }
@@ -53,15 +51,14 @@ class EditStoriesFromEpic extends Action
     public function fields(NovaRequest $request)
     {
         $statusOptions = [];
-        foreach (EpicStatus::cases() as $value) {
+        foreach (StoryStatus::cases() as $value) {
             $statusOptions[$value->name] = $value->value;
         }
 
         return [
             Select::make('Status')->options($statusOptions),
             BelongsTo::make('User')->nullable(),
-            BelongsTo::make('Milestone')->nullable(),
-            BelongsTo::make('Project')->nullable(),
+            BelongsTo::make('Epic')->nullable(),
         ];
     }
 }

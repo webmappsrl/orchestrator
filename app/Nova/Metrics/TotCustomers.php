@@ -26,15 +26,6 @@ class TotCustomers extends Value
      */
     public function ranges()
     {
-        // return [
-        //     30 => __('30 Days'),
-        //     60 => __('60 Days'),
-        //     365 => __('365 Days'),
-        //     'TODAY' => __('Today'),
-        //     'MTD' => __('Month To Date'),
-        //     'QTD' => __('Quarter To Date'),
-        //     'YTD' => __('Year To Date'),
-        // ];
     }
 
     /**
@@ -45,5 +36,10 @@ class TotCustomers extends Value
     public function cacheFor()
     {
         // return now()->addMinutes(5);
+    }
+
+    public function name()
+    {
+        return 'Customers';
     }
 }

@@ -127,7 +127,6 @@ class Epic extends Resource
     {
         return [
             new actions\CreateStoriesFromText,
-            new actions\EditStoriesFromEpic,
         ];
     }
 }
