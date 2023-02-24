@@ -33,7 +33,7 @@ class Epic extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description', 'project.name' // <-- searchable by project name
+        'id', 'name', 'description', 'milestone.name', 'user.name', 'project.name' // <-- searchable by project name
     ];
 
     /**
@@ -47,7 +47,7 @@ class Epic extends Resource
         return [
             ID::make()->sortable(),
             BelongsTo::make('Milestone'),
-            BelongsTo::make('Project'),
+            BelongsTo::make('Project')->searchable(),
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255'),
@@ -74,6 +74,8 @@ class Epic extends Resource
                 return "$val / $tot";
             })->onlyOnIndex(),
 
+            Text::make('Status')->hideWhenCreating()->hideWhenUpdating(),
+
             HasMany::make('Stories'),
         ];
     }
@@ -97,7 +99,11 @@ class Epic extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new filters\MilestoneFilter,
+            new filters\ProjectFilter,
+            new filters\EpicStatusFilter,
+        ];
     }
 
     /**
@@ -120,7 +126,7 @@ class Epic extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            new actions\CreateStoriesFromText
+            new actions\CreateStoriesFromText,
         ];
     }
 }
