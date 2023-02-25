@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Enums\StoryStatus;
+use App\Nova\Actions\EpicDoneAction;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -122,6 +123,7 @@ class Epic extends Resource
     {
         return [
             new actions\CreateStoriesFromText,
+            (new EpicDoneAction)->onlyOnDetail(),
         ];
     }
 }
