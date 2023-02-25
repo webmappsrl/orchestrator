@@ -72,7 +72,7 @@ class Epic extends Resource
                 $tot = $this->stories()->count();
                 $val = $this->stories()->whereIn('status', [StoryStatus::Done->value, StoryStatus::Test->value])->get()->count();
                 return "$val / $tot";
-            })->onlyOnIndex(),
+            })->hideWhenCreating()->hideWhenUpdating(),
 
             Text::make('Status')->hideWhenCreating()->hideWhenUpdating(),
 
