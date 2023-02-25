@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Enums\StoryStatus;
+use App\Nova\Actions\EpicDoneAction;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -66,13 +67,8 @@ class Epic extends Resource
             BelongsTo::make('User'),
 
             Text::make('SAL', function () {
-                if ($this->stories()->count() == 0) {
-                    return 'ND';
-                }
-                $tot = $this->stories()->count();
-                $val = $this->stories()->whereIn('status', [StoryStatus::Done->value, StoryStatus::Test->value])->get()->count();
-                return "$val / $tot";
-            })->onlyOnIndex(),
+                return $this->wip();
+            })->hideWhenCreating()->hideWhenUpdating(),
 
             Text::make('Status')->hideWhenCreating()->hideWhenUpdating(),
 
@@ -127,6 +123,7 @@ class Epic extends Resource
     {
         return [
             new actions\CreateStoriesFromText,
+            (new EpicDoneAction)->onlyOnDetail(),
         ];
     }
 }

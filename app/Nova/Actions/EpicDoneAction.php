@@ -2,17 +2,17 @@
 
 namespace App\Nova\Actions;
 
+use App\Enums\EpicStatus;
 use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Actions\Action;
-use Illuminate\Support\Collection;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\ActionFields;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Collection;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class EditStoriesFromEpic extends Action
+class EpicDoneAction extends Action
 {
     use InteractsWithQueue, Queueable;
 
@@ -21,7 +21,7 @@ class EditStoriesFromEpic extends Action
      *
      * @var string
      */
-    public $name = 'Modifica stato e user delle storie';
+    public $name = 'Imposta lo stato della Epica a DONE';
 
     /**
      * Perform the action on the given models.
@@ -32,14 +32,15 @@ class EditStoriesFromEpic extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        foreach ($models as $model) {
-            if (isset($fields['status'])) {
-                $model->status = $fields['status'];
+        foreach ($models as $epic) {
+            if($epic->stories()->count() == 0) {
+                $epic->status=EpicStatus::Done;
+                $epic->save();
             }
-            if (isset($fields['user'])) {
-                $model->user_id = $fields['user']->id;
+            foreach($epic->stories as $s) {
+                $s->status=StoryStatus::Done;
+                $s->save();
             }
-            $model->save();
         }
     }
 
@@ -51,9 +52,6 @@ class EditStoriesFromEpic extends Action
      */
     public function fields(NovaRequest $request)
     {
-        return [
-            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
-            BelongsTo::make('User')->nullable(),
-        ];
+        return [];
     }
 }
