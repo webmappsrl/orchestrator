@@ -51,16 +51,18 @@ class OrchestratorImport extends Command
     {
         $this->info('Importing User');
         foreach ($data as $element) {
-            User::updateOrCreate(
-                [
+            $user = User::where('email',$element['email'])->first();
+            if(is_null($user)) {
+                $this->info("Creating user with email {$element['email']}");
+                User::create([
                     'email' => $element['email'],
-                ],
-                [
                     'name' => $element['name'],
                     'password' => bcrypt('webmapp'),
-                    'roles' => UserRole::Admin
-                ]
-            );
+                    'roles' => UserRole::Admin                    
+                ]);
+            } else {
+                $this->info("User with email {$element['email']} already exist: skipping.");
+            }
         }
     }
 
