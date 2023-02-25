@@ -51,13 +51,8 @@ class EditStoriesFromEpic extends Action
      */
     public function fields(NovaRequest $request)
     {
-        $statusOptions = [];
-        foreach (StoryStatus::cases() as $value) {
-            $statusOptions[$value->name] = $value->value;
-        }
-
         return [
-            Select::make('Status')->options($statusOptions),
+            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
             BelongsTo::make('User')->nullable(),
         ];
     }

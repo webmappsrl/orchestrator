@@ -66,12 +66,7 @@ class Epic extends Resource
             BelongsTo::make('User'),
 
             Text::make('SAL', function () {
-                if ($this->stories()->count() == 0) {
-                    return 'ND';
-                }
-                $tot = $this->stories()->count();
-                $val = $this->stories()->whereIn('status', [StoryStatus::Done->value, StoryStatus::Test->value])->get()->count();
-                return "$val / $tot";
+                return $this->wip();
             })->hideWhenCreating()->hideWhenUpdating(),
 
             Text::make('Status')->hideWhenCreating()->hideWhenUpdating(),

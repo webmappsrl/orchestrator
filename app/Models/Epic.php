@@ -76,4 +76,16 @@ class Epic extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    /**
+     * It returns a string with WIP (Work in Progress)
+     *
+     * @return string
+     */
+    public function wip(): string {
+        if (count($this->stories)==0) {
+            return 'ND';
+        }
+        return $this->stories()->whereIn('status',[StoryStatus::Test,StoryStatus::Done])->count().' / '.$this->stories()->count();
+    }
 }
