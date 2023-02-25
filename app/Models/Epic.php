@@ -16,6 +16,7 @@ class Epic extends Model
         'name',
         'description',
         'milestone_id',
+        'project_id',
         'user_id',
         'wmpm_id',
         'text2stories',

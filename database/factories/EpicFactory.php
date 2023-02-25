@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\UserRole;
 use App\Models\User;
 use App\Models\Milestone;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -28,11 +29,16 @@ class EpicFactory extends Factory
             Milestone::factory(10)->create();
         }
 
+        if(Project::count() == 0) {
+            Project::factory(10)->create();
+        }
+
         return [
             'name' => $this->faker->name(),
             'description' => $this->faker->text(10),
             'user_id' => User::whereJsonContains('roles', UserRole::Developer)->get()->random(),
             'milestone_id' => Milestone::inRandomOrder()->first()->id,
+            'project_id' => Project::inRandomOrder()->first()->id,
             'pull_request_link' => $this->faker->url,
         ];
     }
