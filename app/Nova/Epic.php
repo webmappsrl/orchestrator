@@ -6,9 +6,11 @@ use App\Enums\StoryStatus;
 use App\Nova\Actions\EpicDoneAction;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -54,8 +56,9 @@ class Epic extends Resource
                 ->sortable()
                 ->rules('required', 'max:255'),
 
-            Trix::make('Description')
+            Markdown::make('Description')
                 ->hideFromIndex(),
+
 
             // Text::make('URL', 'pull_request_link', function () {
             //     return '<a href="' . $this->pull_request_link . '">Link</a>';

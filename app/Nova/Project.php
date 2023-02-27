@@ -4,12 +4,15 @@ namespace App\Nova;
 
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Http\Requests\NovaRequest;
+
+
 
 class Project extends Resource
 {
@@ -50,7 +53,7 @@ class Project extends Resource
                 ->sortable()
                 ->rules('required', 'max:255'),
 
-            Trix::make('Description')
+            Markdown::make('Description')
                 ->hideFromIndex(),
 
             BelongsTo::make('Customer'),
