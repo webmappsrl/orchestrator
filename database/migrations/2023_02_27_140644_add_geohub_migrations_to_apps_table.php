@@ -12,13 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('apps', function (Blueprint $table) {
-            $table->string('app_id')->unique();
-            $table->string('customerName');
-            $table->string('user_email');
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreign("user_id")
-                ->references("id")
-                ->on("users");
+            $table->string('app_id')->unique()->nullable();
+            $table->string('customerName')->nullable();
+            $table->string('user_email')->nullable();
+
 
             // MAP section (zoom)
             $table->integer('maxZoom')->default(16);
