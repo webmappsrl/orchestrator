@@ -10,6 +10,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Epic extends Resource
@@ -53,7 +54,7 @@ class Epic extends Resource
                 ->sortable()
                 ->rules('required', 'max:255'),
 
-            Textarea::make('Description')
+            Trix::make('Description')
                 ->hideFromIndex(),
 
             // Text::make('URL', 'pull_request_link', function () {
