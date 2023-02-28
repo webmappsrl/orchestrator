@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Enums\StoryStatus;
 use App\Nova\Actions\EpicDoneAction;
+
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Markdown;
@@ -114,7 +115,9 @@ class Epic extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [];
+        return [
+            new Lenses\MyEpicLens,
+        ];
     }
 
     /**
