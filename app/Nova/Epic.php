@@ -17,6 +17,7 @@ use App\Nova\Actions\EditEpicsFromIndex;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
+use Laravel\Nova\Panel;
 
 class Epic extends Resource
 {
@@ -52,32 +53,40 @@ class Epic extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            ID::make()->sortable(),
-            BelongsTo::make('Milestone'),
-            BelongsTo::make('Project')->searchable(),
-            Text::make('Name')
-                ->sortable()
-                ->rules('required', 'max:255'),
 
-            Markdown::make('Description')
-                ->hideFromIndex()->alwaysShow(),
+            new Panel('MAIN INFO', [
+                ID::make()->sortable(),
+                //display the relations in nova field
+                BelongsTo::make('User'),
+                BelongsTo::make('Milestone'),
+                BelongsTo::make('Project')->searchable(),
+                Text::make('Name')
+                    ->sortable()
+                    ->rules('required', 'max:255'),
+                Text::make('Title')
+                    ->nullable(),
+                Text::make('SAL', function () {
+                    return $this->wip();
+                })->hideWhenCreating()->hideWhenUpdating(),
+                Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
+                    return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
+                })->asHtml(),
+                Text::make('Status')
+                    ->hideWhenCreating()
+                    ->hideWhenUpdating(),
 
+            ]),
 
-            // Text::make('URL', 'pull_request_link', function () {
-            //     return '<a href="' . $this->pull_request_link . '">Link</a>';
-            // })->asHtml()->nullable()->hideFromIndex(),
-            Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
-                return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
-            })->asHtml(),
+            new Panel('DESCRIPTION', [
+                Markdown::make('Description')
+                    ->hideFromIndex()->alwaysShow(),
+            ]),
 
-            //display the relations in nova field
-            BelongsTo::make('User'),
-
-            Text::make('SAL', function () {
-                return $this->wip();
-            })->hideWhenCreating()->hideWhenUpdating(),
-
-            Text::make('Status')->hideWhenCreating()->hideWhenUpdating(),
+            new Panel('NOTES', [
+                Markdown::make('Notes')
+                    ->nullable()
+                    ->alwaysShow(),
+            ]),
 
             HasMany::make('Stories'),
         ];
