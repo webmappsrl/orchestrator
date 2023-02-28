@@ -89,7 +89,10 @@ class Story extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new filters\UserFilter,
+            new filters\StoryStatusFilter,
+        ];
     }
 
     /**
