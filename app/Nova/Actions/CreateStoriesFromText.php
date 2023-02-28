@@ -63,4 +63,9 @@ class CreateStoriesFromText extends Action
             Textarea::make('lines'),
         ];
     }
+
+    public function name()
+    {
+        return 'Crea storie dal testo';
+    }
 }

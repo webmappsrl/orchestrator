@@ -3,18 +3,20 @@
 namespace App\Nova;
 
 use App\Enums\StoryStatus;
-use App\Nova\Actions\EpicDoneAction;
-
 use Laravel\Nova\Fields\ID;
+
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
-use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\Trix;
+use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Markdown;
+use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\BelongsTo;
+use App\Nova\Actions\EpicDoneAction;
+use App\Nova\Actions\EditEpicsFromIndex;
+use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
 
 class Epic extends Resource
 {
@@ -129,8 +131,14 @@ class Epic extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            new actions\CreateStoriesFromText,
-            (new EpicDoneAction)->onlyOnDetail(),
+            (new CreateStoriesFromText)
+                ->onlyOnDetail(),
+            (new EpicDoneAction)
+                ->onlyOnDetail(),
+            (new EditEpicsFromIndex)
+                ->confirmText('Seleziona stato, milestone, project e utente da assegnare alle epiche che hai selezionato. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
         ];
     }
 }
