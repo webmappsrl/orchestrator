@@ -9,6 +9,12 @@ class Customer extends Model
 {
     use HasFactory;
 
+    //Casts of the model dates
+    protected $casts = [
+        'subscription_last_payment' => 'date'
+    ];
+
+
     protected $fillable = [
         'name',
         'description',

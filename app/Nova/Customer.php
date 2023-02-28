@@ -2,12 +2,20 @@
 
 namespace App\Nova;
 
+use DateTime;
+use Nette\Utils\Floats;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\Textarea;
+use Doctrine\DBAL\Types\FloatType;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Panel;
 
 class Customer extends Resource
 {
@@ -43,13 +51,42 @@ class Customer extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            ID::make()->sortable(),
-            Text::make('Name')
-                ->sortable()
-                ->rules('required', 'max:255'),
-            Textarea::make('Notes')
-                ->showOnDetail()
-                ->alwaysShow(),
+            new Panel('MAIN INFO', [
+                ID::make()->sortable(),
+                Text::make('Name')
+                    ->sortable()
+                    ->rules('required', 'max:255'),
+                Text::make('Hubspot ID', 'hs_id')
+                    ->nullable(),
+                Text::make('Domain Name', 'domain_name')
+                    ->nullable(),
+                Text::make('Full Name', 'full_name')
+                    ->nullable(),
+            ]),
+
+            new Panel('SUBSCRIPTION INFO', [
+                Boolean::make('Has Subscription', 'has_subscription')
+                    ->nullable(),
+                Number::make('Subscription Amount')
+                    ->step(0.01)
+                    ->min(0)
+                    ->nullable(),
+                // DateTime::make('Subscription Last Payment', 'subscription_last_payment')
+                //     ->nullable(),
+                Date::make('Subscription Last Payment', 'subscription_last_payment')->nullable(),
+                Number::make('Subscription Last Covered Year')
+                    ->nullable()
+                    ->rules('nullable', 'integer'),
+                Text::make('Subscription Last Invoice', 'subscription_last_invoice')
+                    ->nullable(),
+            ]),
+
+            new Panel('NOTES', [
+                Markdown::make('Notes')
+                    ->showOnDetail()
+                    ->alwaysShow(),
+            ]),
+
             HasMany::make('Projects'),
         ];
     }
