@@ -13,40 +13,41 @@ return new class extends Migration
     {
         Schema::table('apps', function (Blueprint $table) {
             $table->string('app_id')->unique()->nullable();
-            $table->string('customerName')->nullable();
+            $table->string('customer_name')->nullable();
             $table->string('user_email')->nullable();
+            $table->string('page_project', 99999)->nullable();
 
 
             // MAP section (zoom)
-            $table->integer('maxZoom')->default(16);
-            $table->integer('minZoom')->default(12);
-            $table->integer('defZoom')->default(12);
+            $table->integer('map_max_zoom')->default(16);
+            $table->integer('map_min_zoom')->default(12);
+            $table->integer('map_def_zoom')->default(12);
 
             // THEME section
-            $table->string('fontFamilyHeader')->default('Roboto Slab');
-            $table->string('fontFamilyContent')->default('Roboto');
-            $table->string('defaultFeatureColor')->default('#de1b0d');
-            $table->string('primary')->default('#de1b0d');
+            $table->string('font_family_header')->default('Roboto Slab');
+            $table->string('font_family_content')->default('Roboto');
+            $table->string('default_feature_color')->default('#de1b0d');
+            $table->string('primary_color')->default('#de1b0d');
 
             // OPTIONS section
-            $table->string('startUrl')->default('/main/explore');
-            $table->boolean('showEditLink')->default(false);
-            $table->boolean('skipRouteIndexDownload')->default(true);
-            $table->float('poiMinRadius')->default(0.5);
-            $table->float('poiMaxRadius')->default(1.2);
-            $table->float('poiIconZoom')->default(16);
-            $table->float('poiIconRadius')->default(1);
-            $table->float('poiMinZoom')->default(13);
-            $table->float('poiLabelMinZoom')->default(10.5);
-            $table->boolean('showTrackRefLabel')->default(false);
+            $table->string('start_url')->default('/main/explore');
+            $table->boolean('show_edit_link')->default(false);
+            $table->boolean('skip_route_index_download')->default(true);
+            $table->float('poi_min_radius')->default(0.5);
+            $table->float('poi_max_radius')->default(1.2);
+            $table->float('poi_icon_zoom')->default(16);
+            $table->float('poi_icon_radius')->default(1);
+            $table->float('poi_min_zoom')->default(13);
+            $table->float('poi_label_min_zoom')->default(10.5);
+            $table->boolean('show_track_ref_label')->default(false);
 
             // TABLE section
-            $table->boolean('showGpxDownload')->default(false);
-            $table->boolean('showKmlDownload')->default(false);
-            $table->boolean('showRelatedPoi')->default(false);
+            $table->boolean('table_details_show_gpx_download')->default(false);
+            $table->boolean('table_details_show_kml_download')->default(false);
+            $table->boolean('table_details_show_related_poi')->default(false);
 
             // ROUTING
-            $table->boolean('enableRouting')->default(false);
+            $table->boolean('enable_routing')->default(false);
 
             //EXTERNAL OVERLAYS
             $table->text('external_overlays')->nullable();
@@ -68,11 +69,11 @@ return new class extends Migration
             $table->boolean('offline_enable')->default(false);
 
             //OFFLINE FORCE AUTH
-            $table->boolean('offline_force_auth')->default('false');
+            $table->boolean('offline_force_auth')->default(false);
 
 
             //GEOLOCATION RECORD ENABLE
-            $table->boolean('geolocation_record_enable')->default('false');
+            $table->boolean('geolocation_record_enable')->default(false);
 
             //DETAILS TABLE FIELD
             $table->boolean('table_details_show_duration_forward')->default(true);
@@ -110,7 +111,7 @@ return new class extends Migration
             $table->text('android_store_link')->nullable();
 
             //CONFIG HOME
-            $table->text('config_home')->nullable();
+            $table->string('config_home', 99999)->nullable();
 
             //POIS LAYER
             $table->boolean('app_pois_api_layer')->default(false);
@@ -165,7 +166,6 @@ return new class extends Migration
             //POI TYPE OPEN SELECTOR
             $table->string('poi_interaction')->default('popup');
         });
-        DB::statement("UPDATE apps SET default_language = 'it';");
     }
 
     /**
@@ -175,10 +175,10 @@ return new class extends Migration
     {
         Schema::table('apps', function (Blueprint $table) {
             $table->dropColumn([
-                'app_id', 'customerName', 'user_email', 'user_id', 'maxZoom', 'minZoom', 'defZoom',
-                'fontFamilyHeader', 'fontFamilyContent', 'defaultFeatureColor', 'primary', 'startUrl', 'showEditLink',
-                'skipRouteIndexDownload', 'poiMinRadius', 'poiMaxRadius', 'poiIconZoom', 'poiIconRadius', 'poiMinZoom',
-                'poiLabelMinZoom', 'showTrackRefLabel', 'showGpxDownload', 'showKmlDownload', 'showRelatedPoi', 'enableRouting',
+                'app_id', 'customer_name', 'user_email', 'user_id', 'max_zoom', 'min_zoom', 'def_zoom',
+                'font_family_header', 'font_family_content', 'default_feature_color', 'primary', 'start_url', 'show_edit_link',
+                'skip_route_index_download', 'poi_min_radius', 'poi_max_radius', 'poi_icon_zoom', 'poi_icon_radius', 'poi_min_zoom',
+                'poi_label_min_zoom', 'show_track_ref_label', 'show_gpx_download', 'show_kml_download', 'show_related_poi', 'enable_routing',
                 'external_overlays', 'icon', 'splash', 'icon_small', 'feature_image', 'default_language', 'available_languages',
                 'auth_show_at_startup', 'offline_enable', 'offline_force_auth', 'geolocation_record_enable',
                 'table_details_show_duration_forward', 'table_details_show_duration_backward', 'table_details_show_distance',

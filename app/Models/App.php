@@ -6,6 +6,7 @@ use App\Models\Layer;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Arr;
 
 class App extends Model
 {
@@ -14,10 +15,32 @@ class App extends Model
 
 
 
-    //translatable fields
-    public $translatable = ['name', 'description', 'welcome'];
 
-    public $fillable = ['name', 'description', 'welcome'];
+    //translatable fields
+    public $translatable = ['welcome'];
+
+
+    public $fillable = [
+        "id", "created_at", "updated_at", "name", "app_id", "customer_name", "map_max_zoom",
+        "map_min_zoom", "map_def_zoom", "font_family_header", "font_family_content", "default_feature_color",
+        "primary_color", "start_url", "show_edit_link", "skip_route_index_download", "poi_min_radius", "poi_max_radius", "poi_icon_zoom", "poi_icon_radius", "poi_min_zoom", "poi_label_min_zoom", "show_track_ref_label",
+        "table_details_show_gpx_download", "table_details_show_kml_download",  "table_details_show_related_poi", "enable_routing",
+        "user_id", "external_overlays", "icon", "splash", "icon_small", "feature_image", "default_language", "available_languages",
+        "auth_show_at_startup", "offline_enable", "offline_force_auth", "geolocation_record_enable", "table_details_show_duration_forward",
+        "table_details_show_duration_backward", "table_details_show_distance", "table_details_show_ascent", "table_details_show_descent",
+        "table_details_show_ele_max", "table_details_show_ele_min", "table_details_show_ele_from", "table_details_show_ele_to",
+        "table_details_show_scale", "table_details_show_cai_scale", "table_details_show_mtb_scale", "table_details_show_ref",
+        "table_details_show_surface", "table_details_show_geojson_download", "table_details_show_shapefile_download", "api",
+        "icon_notify", "logo_homepage", "map_bbox", "tracks_on_payment", "ios_store_link", "android_store_link",
+        "config_home", "app_pois_api_layer", "page_project", "tiles", "start_end_icons_show", "start_end_icons_min_zoom",
+        "ref_on_track_show", "ref_on_track_min_zoom", "alert_poi_show", "alert_poi_radius", "social_track_text",
+        "draw_track_show", "welcome", "iconmoon_selection", "editing_inline_show", "flow_line_quote_show", "flow_line_quote_orange",  "flow_line_quote_red", "map_max_stroke_width", "map_min_stroke_width", "download_track_enable", "dashboard_show",
+        "print_track_enable", "poi_interaction", "user_email", "page_project"
+    ];
+
+    protected $guarded = [];
+
+
 
 
     /**
@@ -220,5 +243,17 @@ class App extends Model
             throw new Exception(curl_error($curl), curl_errno($curl));
         }
         curl_close($curl);
+    }
+
+
+    /**
+     * Function to retrieve all fillables from App API
+     * @return Arr
+     */
+    private function getAppfillables()
+    {
+        $appsData = json_decode(file_get_contents('https://geohub.webmapp.it/api/v1/app/all'), true);
+
+        $this->fillable(array_keys($appsData[0]));
     }
 }
