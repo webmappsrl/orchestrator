@@ -31,7 +31,7 @@ class Customer extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description'
+        'id', 'name',
     ];
 
     /**
@@ -47,10 +47,9 @@ class Customer extends Resource
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255'),
-
-            Textarea::make('Description')
-                ->hideFromIndex(),
-
+            Textarea::make('Notes')
+                ->showOnDetail()
+                ->alwaysShow(),
             HasMany::make('Projects'),
         ];
     }
