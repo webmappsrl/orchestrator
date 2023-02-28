@@ -108,4 +108,9 @@ class MyEpicLens extends Lens
     {
         return 'my-epic-lens';
     }
+
+    public function name()
+    {
+        return 'Le mie Epiche';
+    }
 }
