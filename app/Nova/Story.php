@@ -62,7 +62,7 @@ class Story extends Resource
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->default(StoryStatus::New->value)->displayUsingLabels(),
-            Markdown::make(__('Description'), 'description')->hideFromIndex(),
+            Markdown::make(__('Description'), 'description')->hideFromIndex()->alwaysShow(),
             BelongsTo::make('User')->default(function ($request) {
                 $epic = Epic::find($request->input('viaResourceId'));
                 return $epic ? $epic->user_id : null;

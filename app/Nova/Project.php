@@ -54,7 +54,8 @@ class Project extends Resource
                 ->rules('required', 'max:255'),
 
             Markdown::make('Description')
-                ->hideFromIndex(),
+                ->hideFromIndex()
+                ->alwaysShow(),
 
             BelongsTo::make('Customer'),
             HasMany::make('Epics'),

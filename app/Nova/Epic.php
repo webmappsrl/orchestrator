@@ -58,7 +58,7 @@ class Epic extends Resource
                 ->rules('required', 'max:255'),
 
             Markdown::make('Description')
-                ->hideFromIndex(),
+                ->hideFromIndex()->alwaysShow(),
 
 
             // Text::make('URL', 'pull_request_link', function () {

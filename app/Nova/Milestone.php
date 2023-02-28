@@ -48,7 +48,7 @@ class Milestone extends Resource
         return [
             ID::make(__('ID'), 'id')->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
-            Markdown::make(__('Description'), 'description')->hideFromIndex(),
+            Markdown::make(__('Description'), 'description')->hideFromIndex()->alwaysShow(),
             DateTime::make(__('Due Date'), 'due_date')->sortable(),
             HasMany::make('Epics'), //display relation with epic in nova field
         ];
