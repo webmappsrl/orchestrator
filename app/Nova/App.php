@@ -234,7 +234,7 @@ class App extends Resource
             'WEBAPP' => $this->webapp_tab(),
             'HOME' => $this->home_tab(),
             'PROJECT' => $this->project_tab(),
-            // 'AUTH' => $this->auth_tab(),
+            'AUTH' => $this->auth_tab(),
             // 'OFFLINE' => $this->offline_tab(),
             // 'ICONS' => $this->icons_tab(),
             // 'LANGUAGES' => $this->languages_tab(),
@@ -358,6 +358,27 @@ class App extends Resource
             NovaTinymce5Editor::make('Page Project', 'page_project'),
             //* working
             Text::make('Page Project', 'page_project')->asHtml()
+
+        ];
+    }
+
+    protected function auth_tab(): array
+    {
+        return [
+            //? should i have to install Davidpiesse\NovaToggle\Toggle or i can do it with Nova Boolean?
+
+            // ! toggle class not found:
+            //return [
+            //     Toggle::make(__('Show Auth at startup'), 'auth_show_at_startup')
+            //     ->trueValue('On')
+            //         ->falseValue('Off')
+            //         ->default(false)
+            //         ->hideFromIndex(),
+            // ];
+
+            // * this works
+            Boolean::make(__('Show Auth at startup'), 'auth_show_at_startup')
+                ->default(false)
 
         ];
     }
