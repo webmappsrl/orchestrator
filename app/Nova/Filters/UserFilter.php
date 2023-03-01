@@ -38,4 +38,9 @@ class UserFilter extends Filter
     {
         return User::pluck('id', 'name')->toArray();
     }
+
+    public function name()
+    {
+        return 'User';
+    }
 }

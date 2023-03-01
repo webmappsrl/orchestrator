@@ -2,22 +2,20 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Panel;
 use App\Enums\StoryStatus;
-use Laravel\Nova\Fields\ID;
 
+use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Markdown;
-use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use App\Nova\Actions\EditEpicsFromIndex;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
-use Laravel\Nova\Panel;
 
 class Epic extends Resource
 {
@@ -74,7 +72,6 @@ class Epic extends Resource
                 Text::make('Status')
                     ->hideWhenCreating()
                     ->hideWhenUpdating(),
-
             ]),
 
             new Panel('DESCRIPTION', [
@@ -112,9 +109,10 @@ class Epic extends Resource
     public function filters(NovaRequest $request)
     {
         return [
+            new filters\UserFilter,
             new filters\MilestoneFilter,
             new filters\ProjectFilter,
-            new filters\EpicStatusFilter,
+            new filters\EpicStatusFilter
         ];
     }
 

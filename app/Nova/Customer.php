@@ -2,8 +2,6 @@
 
 namespace App\Nova;
 
-use DateTime;
-use Nette\Utils\Floats;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Date;
@@ -12,8 +10,6 @@ use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Markdown;
-use Laravel\Nova\Fields\Textarea;
-use Doctrine\DBAL\Types\FloatType;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 
@@ -39,7 +35,7 @@ class Customer extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name',
+        'id', 'name', 'hs_id', 'domain_name', 'full_name', 'subscription_amount', 'subscription_last_payment', 'subscription_last_invoice', 'notes'
     ];
 
     /**
@@ -67,12 +63,10 @@ class Customer extends Resource
             new Panel('SUBSCRIPTION INFO', [
                 Boolean::make('Has Subscription', 'has_subscription')
                     ->nullable(),
-                Number::make('Subscription Amount')
+                Number::make('Subscription Amount', 'subscription_amount')
                     ->step(0.01)
                     ->min(0)
                     ->nullable(),
-                // DateTime::make('Subscription Last Payment', 'subscription_last_payment')
-                //     ->nullable(),
                 Date::make('Subscription Last Payment', 'subscription_last_payment')->nullable(),
                 Number::make('Subscription Last Covered Year')
                     ->nullable()
@@ -82,7 +76,7 @@ class Customer extends Resource
             ]),
 
             new Panel('NOTES', [
-                Markdown::make('Notes')
+                Markdown::make('Notes', 'notes')
                     ->showOnDetail()
                     ->alwaysShow(),
             ]),

@@ -38,4 +38,9 @@ class ProjectFilter extends Filter
     {
         return Project::pluck('id', 'name')->toArray();
     }
+
+    public function name()
+    {
+        return 'Project';
+    }
 }

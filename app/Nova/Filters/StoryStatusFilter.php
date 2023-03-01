@@ -42,4 +42,9 @@ class StoryStatusFilter extends Filter
         }
         return $options;
     }
+
+    public function name()
+    {
+        return 'Story Status';
+    }
 }

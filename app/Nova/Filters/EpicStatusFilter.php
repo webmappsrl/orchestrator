@@ -42,4 +42,9 @@ class EpicStatusFilter extends Filter
         }
         return $options;
     }
+
+    public function name()
+    {
+        return 'Epic Status';
+    }
 }
