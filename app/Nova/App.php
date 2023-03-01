@@ -13,7 +13,6 @@ use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
 
 class App extends Resource
@@ -229,7 +228,7 @@ class App extends Resource
     {
         return [
             'APP' => $this->app_tab(),
-            // 'WEBAPP' => $this->webapp_tab(),
+            'WEBAPP' => $this->webapp_tab(),
             // 'HOME' => $this->home_tab(),
             // 'PROJECT' => $this->project_tab(),
             // 'AUTH' => $this->auth_tab(),
@@ -321,6 +320,17 @@ class App extends Resource
                 ->help(__('Add a description for meta tags of social share. You can customize the description with these keywords: {app.name} e {track.name}'))
                 ->placeholder('Add social Meta Tag for description'),
             Boolean::make('dashboard_show'),
+        ];
+    }
+
+    protected function webapp_tab(): array
+    {
+        return [
+            Boolean::make(__('Show draw track'), 'draw_track_show')
+                ->default(false),
+            Boolean::make(__('Show editing inline'), 'editing_inline_show')
+                ->default(false)
+
         ];
     }
 }
