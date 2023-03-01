@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0a127db6e02d88c35eafbeb6ed418925",
+    "content-hash": "4ea5e72ec24a70083032e7e2ee35d3ec",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1708,6 +1708,51 @@
                 "source": "https://github.com/kongulov/nova-tab-translatable/tree/2.1.1"
             },
             "time": "2023-02-06T07:18:32+00:00"
+        },
+        {
+            "name": "kraftbit/nova-tinymce5-editor",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Kraftbit/nova-tinymce5-editor.git",
+                "reference": "b00ff482dffcbdb425b775f17e69012edab8bf58"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Kraftbit/nova-tinymce5-editor/zipball/b00ff482dffcbdb425b775f17e69012edab8bf58",
+                "reference": "b00ff482dffcbdb425b775f17e69012edab8bf58",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Kraftbit\\NovaTinymce5Editor\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Kraftbit\\NovaTinymce5Editor\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/Kraftbit/nova-tinymce5-editor/issues",
+                "source": "https://github.com/Kraftbit/nova-tinymce5-editor/tree/v1.0.0"
+            },
+            "time": "2020-09-21T15:07:16+00:00"
         },
         {
             "name": "laravel/framework",
