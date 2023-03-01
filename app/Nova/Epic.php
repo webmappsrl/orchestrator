@@ -33,6 +33,13 @@ class Epic extends Resource
      */
     public static $title = 'name';
 
+        /**
+     * The number of resources to show per page via relationships.
+     *
+     * @var int
+     */
+    public static $perPageViaRelationship = 50;
+
     /**
      * The columns that should be searched.
      *
