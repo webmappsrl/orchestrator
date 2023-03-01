@@ -2,9 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\UserRole;
+use App\Models\App;
 use App\Models\Epic;
 use App\Models\User;
+use App\Enums\UserRole;
 use App\Models\Project;
 use App\Models\Customer;
 use App\Models\Milestone;
@@ -31,16 +32,23 @@ class OrchestratorImport extends Command
      */
     public function handle(): void
     {
-
+        //IMPORT USERS
         $usersData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/users'), true);
         $this->importUsers($usersData);
 
+        //IMPORT CUSTOMERS
         $customersData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/customers'), true);
         $this->importCustomers($customersData);
 
+        //IMPORT PROJECTS
         $projectsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/projects'), true);
         $this->importProjects($projectsData);
 
+        //IMPORT APPS
+        $appsData = json_decode(file_get_contents('https://geohub.webmapp.it/api/v1/app/all'), true);
+        $this->importApps($appsData);
+
+        //IMPORT EPICS
         $epicsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epics'), true);
         $this->importEpics($epicsData);
 
@@ -51,14 +59,14 @@ class OrchestratorImport extends Command
     {
         $this->info('Importing User');
         foreach ($data as $element) {
-            $user = User::where('email',$element['email'])->first();
-            if(is_null($user)) {
+            $user = User::where('email', $element['email'])->first();
+            if (is_null($user)) {
                 $this->info("Creating user with email {$element['email']}");
                 User::create([
                     'email' => $element['email'],
                     'name' => $element['name'],
                     'password' => bcrypt('webmapp'),
-                    'roles' => UserRole::Admin                    
+                    'roles' => UserRole::Admin
                 ]);
             } else {
                 $this->info("User with email {$element['email']} already exist: skipping.");
@@ -150,6 +158,29 @@ class OrchestratorImport extends Command
                     'milestone_id' => $milestone_2022->id,
                 ]
             );
+        }
+    }
+
+    private function importApps($data)
+    {
+        $this->info('Importing Apps');
+        $tot_apps = count($data);
+        $counter = 1;
+
+        foreach ($data as $element) {
+            unset($element['user_id']);
+            $element['map_bbox'] = implode(',', json_decode($element['map_bbox'], true));
+            $element['tiles'] = json_encode($element['tiles'], true);
+            $element['name'] = json_encode($element['name']);
+            $this->info("Importing app $counter / $tot_apps");
+            $counter++;
+
+            $app = App::where('app_id', $element['app_id'])->first();
+            if (is_null($app)) {
+                App::create($element);
+            } else {
+                $app->update($element);
+            }
         }
     }
 }
