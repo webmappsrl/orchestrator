@@ -120,6 +120,23 @@ class Story extends Resource
                 ->confirmButtonText('Conferma')
                 ->cancelButtonText('Annulla'),
 
+            (new actions\StoryToProgressStatusAction)
+                ->showInline()
+                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Progress o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
+
+            (new actions\StoryToDoneStatusAction)
+                ->showInline()
+                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Done o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
+
+            (new actions\StoryToTestStatusAction)
+                ->showInline()
+                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Test o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
         ];
     }
 

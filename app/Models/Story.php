@@ -11,6 +11,10 @@ class Story extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'status'
+    ];
+
     protected static function booted()
     {
         //update epic status whenever a story is created or updated
