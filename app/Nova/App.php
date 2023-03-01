@@ -245,7 +245,7 @@ class App extends Resource
             'LANGUAGES' => $this->languages_tab(),
             'MAP' => $this->map_tab(),
             'OPTIONS' => $this->options_tab(),
-            // 'ROUTING' => $this->routing_tab(),
+            'ROUTING' => $this->routing_tab(),
             // 'TABLE' => $this->table_tab(),
             // 'THEME' => $this->theme_tab(),
 
@@ -583,6 +583,17 @@ class App extends Resource
                 ->hideFromIndex()
                 ->help(__('Enable print of ever app track in PDF')),
 
+        ];
+    }
+
+    protected function routing_tab(): array
+    {
+        return [
+            Toggle::make(__('Enable Routing'), 'enable_routing')
+                // ->trueValue('On')
+                //     ->falseValue('Off')
+                ->default(false)
+                ->hideFromIndex(),
         ];
     }
 }
