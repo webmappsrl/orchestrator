@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Color;
 use Laravel\Nova\Fields\Image;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
@@ -247,7 +248,7 @@ class App extends Resource
             'OPTIONS' => $this->options_tab(),
             'ROUTING' => $this->routing_tab(),
             'TABLE' => $this->table_tab(),
-            // 'THEME' => $this->theme_tab(),
+            'THEME' => $this->theme_tab(),
 
         ];
     }
@@ -696,6 +697,43 @@ class App extends Resource
                 // ->falseValue('Off')
                 ->default(false)
                 ->hideFromIndex()
+        ];
+    }
+
+    protected function theme_tab(): array
+    {
+        $fontsOptions = [
+            'Helvetica' => ['label' => 'Helvetica'],
+            'Inter' => ['label' => 'Inter'],
+            'Lato' => ['label' => 'Lato'],
+            'Merriweather' => ['label' => 'Merriweather'],
+            'Montserrat' => ['label' => 'Montserrat'],
+            'Montserrat Light' => ['label' => 'Montserrat Light'],
+            'Monrope' => ['label' => 'Monrope'],
+            'Noto Sans' => ['label' => 'Noto Sans'],
+            'Noto Serif' => ['label' => 'Noto Serif'],
+            'Open Sans' => ['label' => 'Roboto'],
+            'Roboto' => ['label' => 'Noto Serif'],
+            'Roboto Slab' => ['label' => 'Roboto Slab'],
+            'Sora' => ['label' => 'Sora'],
+            'Source Sans Pro' => ['label' => 'Source Sans Pro']
+        ];
+
+        return [
+            Select::make(__('Font Family Header'), 'font_family_header')
+                ->options($fontsOptions)
+                ->default('Roboto Slab')
+                ->hideFromIndex(),
+            Select::make(__('Font Family Content'), 'font_family_content')
+                ->options($fontsOptions)
+                ->default('Roboto')
+                ->hideFromIndex(),
+            Color::make(__('Default Feature Color'), 'default_feature_color')
+                ->default('#de1b0d')
+                ->hideFromIndex(),
+            Color::make(__('Primary color'), 'primary_color')
+                ->default('#de1b0d')
+                ->hideFromIndex(),
         ];
     }
 }
