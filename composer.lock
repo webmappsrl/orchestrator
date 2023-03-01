@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4ea5e72ec24a70083032e7e2ee35d3ec",
+    "content-hash": "b862c20104786780d4431dc28f3664f5",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -262,6 +262,53 @@
                 }
             ],
             "time": "2023-01-15T23:59:01+00:00"
+        },
+        {
+            "name": "davidpiesse/nova-toggle",
+            "version": "4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/davidpiesse/nova-toggle.git",
+                "reference": "757b457bef59849f2a9479fb5ac536a4cc95c51c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/davidpiesse/nova-toggle/zipball/757b457bef59849f2a9479fb5ac536a4cc95c51c",
+                "reference": "757b457bef59849f2a9479fb5ac536a4cc95c51c",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Davidpiesse\\NovaToggle\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Davidpiesse\\NovaToggle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova Toggle field.",
+            "keywords": [
+                "field",
+                "laravel",
+                "nova",
+                "toggle"
+            ],
+            "support": {
+                "issues": "https://github.com/davidpiesse/nova-toggle/issues",
+                "source": "https://github.com/davidpiesse/nova-toggle/tree/4.0"
+            },
+            "time": "2022-07-21T11:23:52+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
