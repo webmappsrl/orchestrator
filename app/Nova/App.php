@@ -9,14 +9,17 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Image;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
+use Davidpiesse\NovaToggle\Toggle;
 use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Kraftbit\NovaTinymce5Editor\NovaTinymce5Editor;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
+
 
 
 class App extends Resource
@@ -240,7 +243,7 @@ class App extends Resource
             'OFFLINE' => $this->offline_tab(),
             'ICONS' => $this->icons_tab(),
             'LANGUAGES' => $this->languages_tab(),
-            // 'MAP' => $this->map_tab(),
+            'MAP' => $this->map_tab(),
             // 'OPTIONS' => $this->options_tab(),
             // 'ROUTING' => $this->routing_tab(),
             // 'TABLE' => $this->table_tab(),
@@ -366,22 +369,13 @@ class App extends Resource
 
     protected function auth_tab(): array
     {
+
+        //? should i have to install Davidpiesse\NovaToggle\Toggle or i can do it with Nova Boolean?
+        //* update: package installed, refactor code
+
+
         return [
-            //? should i have to install Davidpiesse\NovaToggle\Toggle or i can do it with Nova Boolean?
-
-            // ! toggle class not found:
-            //return [
-            //     Toggle::make(__('Show Auth at startup'), 'auth_show_at_startup')
-            //     ->trueValue('On')
-            //         ->falseValue('Off')
-            //         ->default(false)
-            //         ->hideFromIndex(),
-            // ];
-
-            // * this works
-            Boolean::make(__('Show Auth at startup'), 'auth_show_at_startup')
-                ->default(false)
-
+            Toggle::make(__('Show Auth at startup'), 'auth_show_at_startup')
         ];
     }
 
@@ -469,6 +463,86 @@ class App extends Resource
             Text::make(__('Default Language'), 'default_language'),
             //! Multiselect is the same as in the fieldsForCreate() method, but works when App is updated, not when created.
             Multiselect::make(__('Available Languages'), 'available_languages')->options($this->languages, $availableLanguages)
+        ];
+    }
+
+    protected function map_tab(): array
+    {
+        $selectedTileLayers = is_null($this->model()->tiles) ? [] : json_decode($this->model()->tiles, true);
+        $mapTilerApiKey = '0Z7ou7nfFFXipdDXHChf';
+        return [
+            Multiselect::make(__('Tiles'), 'tiles')->options([
+                "{\"notile\":\"\"}" => 'no tile',
+                "{\"webmapp\":\"https://api.webmapp.it/tiles/{z}/{x}/{y}.png\"}" => 'webmapp',
+                "{\"mute\":\"http://tiles.webmapp.it/blankmap/{z}/{x}/{y}.png\"}" => 'mute',
+                "{\"satellite\":\"https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=$mapTilerApiKey\"}" => 'satellite',
+                "{\"GOMBITELLI\":\"https://tiles.webmapp.it/mappa_gombitelli/{z}/{x}/{y}.png\"}" => 'GOMBITELLI',
+            ], $selectedTileLayers)->help(__('seleziona quali tile layer verranno utilizzati dalla app, l\' lordine è il medesimo di inserimento quindi l\'ultimo inserito sarà quello visibile per primo')),
+            Number::make(__('Max Zoom'), 'map_max_zoom')
+                ->min(5)
+                ->max(25)
+                ->default(16)
+                ->onlyOnForms(),
+            Number::make(__('Max Stroke width'), 'map_max_stroke_width')
+                ->min(0)
+                ->max(19)
+                ->default(6)
+                ->help('Set max stoke width of line string, the max stroke width is applyed when the app is on max level zoom'),
+            Number::make(__('Min Zoom'), 'map_min_zoom')
+                ->min(5)
+                ->max(19)
+                ->default(12),
+            Number::make(__('Min Stroke width'), 'map_min_stroke_width')
+                ->min(0)
+                ->max(19)
+                ->default(3)
+                ->help('Set min stoke width of line string, the min stroke width is applyed when the app is on min level zoom'),
+            Number::make(__('Def Zoom'), 'map_def_zoom')
+                ->min(5)
+                ->max(19)
+                ->default(12)
+                ->onlyOnForms(),
+            Text::make(__('Bounding BOX'), 'map_bbox')
+                ->nullable()
+                ->onlyOnForms()
+                ->rules([
+                    function ($attribute, $value, $fail) {
+                        $decoded = json_decode($value);
+                        if (is_array($decoded) == false) {
+                            $fail('The ' . $attribute . ' is invalid. follow the example [9.9456,43.9116,11.3524,45.0186]');
+                        }
+                    }
+                ])->help('Set the bounding box of the map in square [] brackets. example [9.9456,43.9116,11.3524,45.0186]'),
+
+            Number::make(__('Max Zoom'), 'map_max_zoom')->onlyOnDetail(),
+            Number::make(__('Min Zoom'), 'minZoom')->onlyOnDetail(),
+            Number::make(__('Def Zoom'), 'defZoom')->onlyOnDetail(),
+            Text::make(__('Bounding BOX'), 'bbox')->onlyOnDetail(),
+            Number::make(__('start_end_icons_min_zoom'))->min(10)->max(20)
+                ->help('Set minimum zoom at which start and end icons are shown in general maps (start_end_icons_show must be true)'),
+            Number::make(__('ref_on_track_min_zoom'))->min(10)->max(20)
+                ->help('Set minimum zoom at which ref parameter is shown on tracks line in general maps (ref_on_track_show must be true)'),
+            // Text::make(__('POIS API'), function () {
+            //     $url = '/api/v1/app/' . $this->model()->id . '/pois.geojson';
+            //     return "<a class='btn btn-default btn-primary' href='$url' target='_blank'>POIS API</a>";
+            // })->asHtml()->onlyOnDetail(),
+            Toggle::make('start_end_icons_show')
+                ->help('Activate this option if you want to show start and end point of all tracks in the general maps. Use the start_end_icons_min_zoom option to set the minum zoom at which thi feature is activated.'),
+            Toggle::make('ref_on_track_show')
+                ->help('Activate this option if you want to show ref parameter on tracks line. Use the ref_on_track_min_zoom option to set the minum zoom at which thi feature is activated.'),
+            Toggle::make(__('geolocation_record_enable'), 'geolocation_record_enable')
+                //->trueValue('On')
+                //->falseValue('Off') //! error both methods do not exist
+                ->default(false)
+                ->hideFromIndex()
+                ->help('Activate this option if you want enable user track record'),
+            Toggle::make('alert_poi_show')
+                ->help('Activate this option if you want to show a poi proximity alert'),
+            Number::make(__('alert_poi_radius'))->default(100)->help('set the radius(in meters) of the activation circle with center the user position, the nearest poi inside the circle trigger the alert'),
+            Toggle::make('flow_line_quote_show')
+                ->help('Activate this option if you want to color track by quote'),
+            Number::make(__('flow_line_quote_orange'))->default(800)->help('defines the elevation by which the track turns orange'),
+            Number::make(__('flow_line_quote_red'))->default(1500)->help('defines the elevation by which the track turns red'),
         ];
     }
 }
