@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use Eminiarts\Tabs\Tabs;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Boolean;
@@ -13,6 +14,7 @@ use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
 
 class App extends Resource
@@ -229,7 +231,7 @@ class App extends Resource
         return [
             'APP' => $this->app_tab(),
             'WEBAPP' => $this->webapp_tab(),
-            // 'HOME' => $this->home_tab(),
+            'HOME' => $this->home_tab(),
             // 'PROJECT' => $this->project_tab(),
             // 'AUTH' => $this->auth_tab(),
             // 'OFFLINE' => $this->offline_tab(),
@@ -330,6 +332,20 @@ class App extends Resource
                 ->default(false),
             Boolean::make(__('Show editing inline'), 'editing_inline_show')
                 ->default(false)
+
+        ];
+    }
+
+    protected function home_tab(): array
+    {
+        return [
+            NovaTabTranslatable::make([
+                Text::make(__('Welcome'), 'welcome')
+                    ->help(__('This is the welcome message displayed as the first element of the home.')),
+            ]),
+            Code::Make('Config Home')->language('json')->rules('json')->default('{"HOME": []}')
+            //->help(
+            //view('layers', ['layers' => $this->layers])->render()
 
         ];
     }
