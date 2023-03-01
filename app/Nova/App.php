@@ -244,7 +244,7 @@ class App extends Resource
             'ICONS' => $this->icons_tab(),
             'LANGUAGES' => $this->languages_tab(),
             'MAP' => $this->map_tab(),
-            // 'OPTIONS' => $this->options_tab(),
+            'OPTIONS' => $this->options_tab(),
             // 'ROUTING' => $this->routing_tab(),
             // 'TABLE' => $this->table_tab(),
             // 'THEME' => $this->theme_tab(),
@@ -543,6 +543,46 @@ class App extends Resource
                 ->help('Activate this option if you want to color track by quote'),
             Number::make(__('flow_line_quote_orange'))->default(800)->help('defines the elevation by which the track turns orange'),
             Number::make(__('flow_line_quote_red'))->default(1500)->help('defines the elevation by which the track turns red'),
+        ];
+    }
+
+    protected function options_tab(): array
+    {
+        return [
+            Select::make(__('Start Url'), 'start_url')
+                ->options([
+                    '/main/explore' => 'Home',
+                    '/main/map' => 'Map',
+                ])
+                ->default('/main/explore'),
+            Toggle::make(__('Show Edit Link'), 'show_edit_link')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(false)
+                ->onlyOnForms(),
+            Toggle::make(__('Skip Route Index Download'), 'skip_route_index_download')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->onlyOnForms(),
+            Toggle::make(__('Show Track Ref Label'), 'show_track_ref_label')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(false)
+                ->hideFromIndex(),
+            Toggle::make(__('download_track_enable'), 'download_track_enable')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex()
+                ->help(__('Enable download of ever app track in GPX, KML, GEOJSON')),
+            Toggle::make(__('print_track_enable'), 'print_track_enable')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex()
+                ->help(__('Enable print of ever app track in PDF')),
+
         ];
     }
 }
