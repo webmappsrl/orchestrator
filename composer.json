@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
+        "eminiarts/nova-tabs": "^2.2",
         "guzzlehttp/guzzle": "^7.2",
         "kongulov/nova-tab-translatable": "^2.1",
         "laravel/framework": "^10.0",
@@ -18,8 +19,8 @@
         "league/flysystem-aws-s3-v3": "^3.12",
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-translatable": "^6.3",
-        "wm/wm-package": "*",
-        "wm/wm-internal": "*"
+        "wm/wm-internal": "*",
+        "wm/wm-package": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
