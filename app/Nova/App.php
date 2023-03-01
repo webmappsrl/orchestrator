@@ -235,7 +235,7 @@ class App extends Resource
             'HOME' => $this->home_tab(),
             'PROJECT' => $this->project_tab(),
             'AUTH' => $this->auth_tab(),
-            // 'OFFLINE' => $this->offline_tab(),
+            'OFFLINE' => $this->offline_tab(),
             // 'ICONS' => $this->icons_tab(),
             // 'LANGUAGES' => $this->languages_tab(),
             // 'MAP' => $this->map_tab(),
@@ -380,6 +380,19 @@ class App extends Resource
             Boolean::make(__('Show Auth at startup'), 'auth_show_at_startup')
                 ->default(false)
 
+        ];
+    }
+
+    protected function offline_tab(): array
+    {
+        return [
+            //* with Boolean field
+            Boolean::make(__('Enable Offline'), 'offline_enable')
+                ->default(false),
+            Boolean::make(__('Force Auth'), 'offline_force_auth')
+                ->default(false),
+            Boolean::make(__('Tracks on payment'), 'tracks_on_payment')
+                ->default(false)
         ];
     }
 }
