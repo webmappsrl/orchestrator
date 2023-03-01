@@ -2,13 +2,14 @@
 
 namespace App\Nova;
 
+use Eminiarts\Tabs\Tabs;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
-use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
 
 class App extends Resource
@@ -65,11 +66,15 @@ class App extends Resource
             HasMany::make('Layers'), //display the relation with layers in nova field
             Text::make('API type', 'api')->sortable()->onlyOnDetail(),
             Text::make('Customer Name'),
-            Text::make(__('APP'), function () {
-                $urlAny = 'https://' . $this->model()->id . '.app.webmapp.it';
-                $urlDesktop = 'https://' . $this->model()->id . '.app.geohub.webmapp.it';
-                $urlMobile = 'https://' . $this->model()->id . '.mobile.webmapp.it';
-                return "
+
+            Tabs::make('App', [
+                'General' => [
+                    Text::make('App ID')->sortable(),
+                    Text::make(__('APP'), function () {
+                        $urlAny = 'https://' . $this->model()->id . '.app.webmapp.it';
+                        $urlDesktop = 'https://' . $this->model()->id . '.app.geohub.webmapp.it';
+                        $urlMobile = 'https://' . $this->model()->id . '.mobile.webmapp.it';
+                        return "
                <a style='display: inline-flex;
                         align-items: center;
                         justify-content: center;
@@ -120,9 +125,11 @@ class App extends Resource
                         onmouseover='this.style.backgroundColor = \"#5a9c3f\";'
                         onmouseout='this.style.backgroundColor = \"#79c35b\";'
                         href='$urlMobile' target='_blank'>MOBILE</a>";
-            })->asHtml(),
+                    })->asHtml(),
 
 
+                ]
+            ])
         ];
     }
 
