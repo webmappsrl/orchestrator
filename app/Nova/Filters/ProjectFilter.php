@@ -36,6 +36,11 @@ class ProjectFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return Project::pluck('id', 'name')->toArray();;
+        return Project::pluck('id', 'name')->toArray();
+    }
+
+    public function name()
+    {
+        return 'Project';
     }
 }

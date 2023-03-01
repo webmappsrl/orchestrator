@@ -2,11 +2,11 @@
 
 namespace App\Nova\Filters;
 
-use App\Models\Milestone;
+use App\Models\Customer;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class MilestoneFilter extends Filter
+class CustomerFilter extends Filter
 {
     /**
      * The filter's component.
@@ -25,7 +25,7 @@ class MilestoneFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-        return $query->where('milestone_id', $value);
+        return $query->where('customer_id', $value);
     }
 
     /**
@@ -36,11 +36,11 @@ class MilestoneFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return Milestone::pluck('id', 'name')->toArray();
+        return Customer::pluck('id', 'name')->toArray();
     }
 
     public function name()
     {
-        return 'Milestone';
+        return 'Customer';
     }
 }

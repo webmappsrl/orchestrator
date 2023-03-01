@@ -14,6 +14,7 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Fields\Markdown;
 
 class Story extends Resource
 {
@@ -61,7 +62,7 @@ class Story extends Resource
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->default(StoryStatus::New->value)->displayUsingLabels(),
-            Textarea::make(__('Description'), 'description')->hideFromIndex(),
+            Markdown::make(__('Description'), 'description')->hideFromIndex()->alwaysShow(),
             BelongsTo::make('User')->default(function ($request) {
                 $epic = Epic::find($request->input('viaResourceId'));
                 return $epic ? $epic->user_id : null;
@@ -88,7 +89,10 @@ class Story extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new filters\UserFilter,
+            new filters\StoryStatusFilter,
+        ];
     }
 
     /**
@@ -116,6 +120,23 @@ class Story extends Resource
                 ->confirmButtonText('Conferma')
                 ->cancelButtonText('Annulla'),
 
+            (new actions\StoryToProgressStatusAction)
+                ->showInline()
+                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Progress o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
+
+            (new actions\StoryToDoneStatusAction)
+                ->showInline()
+                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Done o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
+
+            (new actions\StoryToTestStatusAction)
+                ->showInline()
+                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Test o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
         ];
     }
 

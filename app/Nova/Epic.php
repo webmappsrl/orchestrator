@@ -2,15 +2,20 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Panel;
 use App\Enums\StoryStatus;
-use App\Nova\Actions\EpicDoneAction;
+
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\Markdown;
+use Laravel\Nova\Fields\BelongsTo;
+use App\Nova\Actions\EpicDoneAction;
+use App\Nova\Actions\EditEpicsFromIndex;
+use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
 
 class Epic extends Resource
 {
@@ -46,31 +51,39 @@ class Epic extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            ID::make()->sortable(),
-            BelongsTo::make('Milestone'),
-            BelongsTo::make('Project')->searchable(),
-            Text::make('Name')
-                ->sortable()
-                ->rules('required', 'max:255'),
 
-            Textarea::make('Description')
-                ->hideFromIndex(),
+            new Panel('MAIN INFO', [
+                ID::make()->sortable(),
+                //display the relations in nova field
+                BelongsTo::make('User'),
+                BelongsTo::make('Milestone'),
+                BelongsTo::make('Project')->searchable(),
+                Text::make('Name')
+                    ->sortable()
+                    ->rules('required', 'max:255'),
+                Text::make('Title')
+                    ->nullable(),
+                Text::make('SAL', function () {
+                    return $this->wip();
+                })->hideWhenCreating()->hideWhenUpdating(),
+                Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
+                    return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
+                })->asHtml(),
+                Text::make('Status')
+                    ->hideWhenCreating()
+                    ->hideWhenUpdating(),
+            ]),
 
-            // Text::make('URL', 'pull_request_link', function () {
-            //     return '<a href="' . $this->pull_request_link . '">Link</a>';
-            // })->asHtml()->nullable()->hideFromIndex(),
-            Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
-                return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
-            })->asHtml(),
+            new Panel('DESCRIPTION', [
+                Markdown::make('Description')
+                    ->hideFromIndex()->alwaysShow(),
+            ]),
 
-            //display the relations in nova field
-            BelongsTo::make('User'),
-
-            Text::make('SAL', function () {
-                return $this->wip();
-            })->hideWhenCreating()->hideWhenUpdating(),
-
-            Text::make('Status')->hideWhenCreating()->hideWhenUpdating(),
+            new Panel('NOTES', [
+                Markdown::make('Notes')
+                    ->nullable()
+                    ->alwaysShow(),
+            ]),
 
             HasMany::make('Stories'),
         ];
@@ -96,9 +109,10 @@ class Epic extends Resource
     public function filters(NovaRequest $request)
     {
         return [
+            new filters\UserFilter,
             new filters\MilestoneFilter,
             new filters\ProjectFilter,
-            new filters\EpicStatusFilter,
+            new filters\EpicStatusFilter
         ];
     }
 
@@ -110,7 +124,9 @@ class Epic extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [];
+        return [
+            new Lenses\MyEpicLens,
+        ];
     }
 
     /**
@@ -122,8 +138,14 @@ class Epic extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            new actions\CreateStoriesFromText,
-            (new EpicDoneAction)->onlyOnDetail(),
+            (new CreateStoriesFromText)
+                ->onlyOnDetail(),
+            (new EpicDoneAction)
+                ->onlyOnDetail(),
+            (new EditEpicsFromIndex)
+                ->confirmText('Seleziona stato, milestone, project e utente da assegnare alle epiche che hai selezionato. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
         ];
     }
 }

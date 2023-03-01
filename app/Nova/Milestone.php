@@ -8,7 +8,9 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Fields\Markdown;
 
 class Milestone extends Resource
 {
@@ -46,7 +48,7 @@ class Milestone extends Resource
         return [
             ID::make(__('ID'), 'id')->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
-            Textarea::make(__('Description'), 'description')->hideFromIndex(),
+            Markdown::make(__('Description'), 'description')->hideFromIndex()->alwaysShow(),
             DateTime::make(__('Due Date'), 'due_date')->sortable(),
             HasMany::make('Epics'), //display relation with epic in nova field
         ];

@@ -2,11 +2,11 @@
 
 namespace App\Nova\Filters;
 
-use App\Models\Milestone;
+use App\Enums\StoryStatus;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class MilestoneFilter extends Filter
+class StoryStatusFilter extends Filter
 {
     /**
      * The filter's component.
@@ -25,7 +25,7 @@ class MilestoneFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-        return $query->where('milestone_id', $value);
+        return $query->where('status', $value);
     }
 
     /**
@@ -36,11 +36,15 @@ class MilestoneFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return Milestone::pluck('id', 'name')->toArray();
+        $options = [];
+        foreach (StoryStatus::cases() as $value) {
+            $options[$value->name] = $value->value;
+        }
+        return $options;
     }
 
     public function name()
     {
-        return 'Milestone';
+        return 'Story Status';
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Nova\Actions;
 
-use App\Enums\StoryStatus;
+use App\Enums\EpicStatus;
 use Illuminate\Bus\Queueable;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Actions\Action;
@@ -10,18 +10,12 @@ use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class EditStoriesFromEpic extends Action
+class EditEpicsFromIndex extends Action
 {
     use InteractsWithQueue, Queueable;
-
-    /**
-     * The displayable name of the action.
-     *
-     * @var string
-     */
-    public $name = 'Modifica stato e user delle storie';
 
     /**
      * Perform the action on the given models.
@@ -35,6 +29,12 @@ class EditStoriesFromEpic extends Action
         foreach ($models as $model) {
             if (isset($fields['status'])) {
                 $model->status = $fields['status'];
+            }
+            if (isset($fields['milestone'])) {
+                $model->user_id = $fields['milestone']->id;
+            }
+            if (isset($fields['project'])) {
+                $model->user_id = $fields['project']->id;
             }
             if (isset($fields['user'])) {
                 $model->user_id = $fields['user']->id;
@@ -52,13 +52,15 @@ class EditStoriesFromEpic extends Action
     public function fields(NovaRequest $request)
     {
         return [
-            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
+            Select::make('Status')->options(collect(EpicStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
+            BelongsTo::make('Milestone')->nullable(),
+            BelongsTo::make('Project')->nullable(),
             BelongsTo::make('User')->nullable(),
         ];
     }
 
     public function name()
     {
-        return 'Modifica storie';
+        return 'Modifica epiche';
     }
 }

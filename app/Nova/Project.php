@@ -2,13 +2,17 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
+
+
 
 class Project extends Resource
 {
@@ -32,7 +36,7 @@ class Project extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description'
+        'id', 'name', 'description', 'customer.name'
     ];
 
     /**
@@ -44,15 +48,27 @@ class Project extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            ID::make()->sortable(),
-            Text::make('Name')
-                ->sortable()
-                ->rules('required', 'max:255'),
+            new Panel('MAIN INFO', [
+                ID::make()->sortable(),
+                Text::make('Name')
+                    ->sortable()
+                    ->rules('required', 'max:255'),
+                BelongsTo::make('Customer'),
+            ]),
 
-            Textarea::make('Description')
-                ->hideFromIndex(),
+            new panel('DESCRIPTION', [
+                Markdown::make('Description')
+                    ->hideFromIndex()
+                    ->alwaysShow(),
+            ]),
 
-            BelongsTo::make('Customer'),
+            new Panel('NOTE', [
+                Markdown::make('Note')
+                    ->hideFromIndex()
+                    ->nullable()
+                    ->alwaysShow(),
+            ]),
+
             HasMany::make('Epics'),
         ];
     }
@@ -76,7 +92,9 @@ class Project extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new filters\CustomerFilter
+        ];
     }
 
     /**
