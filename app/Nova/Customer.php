@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -52,26 +53,34 @@ class Customer extends Resource
                 Text::make('Name')
                     ->sortable()
                     ->rules('required', 'max:255'),
-                Text::make('Hubspot ID', 'hs_id')
+                Text::make('HS', 'hs_id')
+                    ->sortable()
                     ->nullable(),
                 Text::make('Domain Name', 'domain_name')
+                    ->sortable()
                     ->nullable(),
                 Text::make('Full Name', 'full_name')
+                    ->sortable()
                     ->nullable(),
             ]),
 
             new Panel('SUBSCRIPTION INFO', [
-                Boolean::make('Has Subscription', 'has_subscription')
+                Boolean::make('Subs.', 'has_subscription')
+                    ->sortable()
                     ->nullable(),
-                Number::make('Subscription Amount', 'subscription_amount')
-                    ->step(0.01)
-                    ->min(0)
+                Currency::make('S/Amount', 'subscription_amount')
+                    ->sortable()
+                    ->currency('EUR')
                     ->nullable(),
-                Date::make('Subscription Last Payment', 'subscription_last_payment')->nullable(),
-                Number::make('Subscription Last Covered Year')
+                Date::make('S/Payment', 'subscription_last_payment')
+                    ->sortable()
+                    ->nullable(),
+                Number::make('S/year', 'subscription_last_covered_year')
+                    ->sortable()
                     ->nullable()
                     ->rules('nullable', 'integer'),
-                Text::make('Subscription Last Invoice', 'subscription_last_invoice')
+                Text::make('S/invoice', 'subscription_last_invoice')
+                    ->sortable()
                     ->nullable(),
             ]),
 
