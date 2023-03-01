@@ -246,7 +246,7 @@ class App extends Resource
             'MAP' => $this->map_tab(),
             'OPTIONS' => $this->options_tab(),
             'ROUTING' => $this->routing_tab(),
-            // 'TABLE' => $this->table_tab(),
+            'TABLE' => $this->table_tab(),
             // 'THEME' => $this->theme_tab(),
 
         ];
@@ -594,6 +594,108 @@ class App extends Resource
                 //     ->falseValue('Off')
                 ->default(false)
                 ->hideFromIndex(),
+        ];
+    }
+
+    protected function table_tab(): array
+    {
+        return [
+            Toggle::make(__('Show Related POI'), 'table_details_show_related_poi')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(false)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Duration'), 'table_details_show_duration_forward')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Duration Backward'), 'table_details_show_duration_backward')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex()
+                ->hideFromIndex(),
+            Toggle::make(__('Show Distance'), 'table_details_show_distance')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Ascent'), 'table_details_show_ascent')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Descent'), 'table_details_show_descent')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Ele Max'), 'table_details_show_ele_max')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Ele Min'), 'table_details_show_ele_min')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Ele From'), 'table_details_show_ele_from')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Ele To'), 'table_details_show_ele_to')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Scale'), 'table_details_show_scale')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Cai Scale'), 'table_details_show_cai_scale')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Mtb Scale'), 'table_details_show_mtb_scale')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Ref'), 'table_details_show_ref')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(true)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Surface'), 'table_details_show_surface')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(false)
+                ->hideFromIndex(),
+            Toggle::make(__('Show GPX Download'), 'table_details_show_gpx_download')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(false)
+                ->hideFromIndex(),
+            Toggle::make(__('Show KML Download'), 'table_details_show_kml_download')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(false)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Geojson Download'), 'table_details_show_geojson_download')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(false)
+                ->hideFromIndex(),
+            Toggle::make(__('Show Shapefile Download'), 'table_details_show_shapefile_download')
+                // ->trueValue('On')
+                // ->falseValue('Off')
+                ->default(false)
+                ->hideFromIndex()
         ];
     }
 }
