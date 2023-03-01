@@ -170,6 +170,7 @@ class App extends Resource
             Text::make(__('Customer Name'), 'customer_name')->sortable()->required(),
             Select::make(__('Default Language'), 'default_language')->hideFromIndex()->options($this->languages)->displayUsingLabels()->required(),
             //todo: fix multiselect (array to string conversion error)
+            //! update: works on update. Doesn't work on create
             Multiselect::make(__('Available Languages'), 'available_languages')->hideFromIndex()->options($this->languages, $availableLanguages)
         ];
     }
@@ -238,7 +239,7 @@ class App extends Resource
             'AUTH' => $this->auth_tab(),
             'OFFLINE' => $this->offline_tab(),
             'ICONS' => $this->icons_tab(),
-            // 'LANGUAGES' => $this->languages_tab(),
+            'LANGUAGES' => $this->languages_tab(),
             // 'MAP' => $this->map_tab(),
             // 'OPTIONS' => $this->options_tab(),
             // 'ROUTING' => $this->routing_tab(),
@@ -456,6 +457,18 @@ class App extends Resource
             Code::Make(__('iconmoon selection.json'), 'iconmoon_selection')->language('json')->rules('nullable', 'json')->help(
                 'import icoonmoon selection.json file'
             )
+        ];
+    }
+
+    protected function languages_tab(): array
+    {
+
+        $availableLanguages = is_null($this->model()->available_languages) ? [] : json_decode($this->model()->available_languages, true);
+
+        return [
+            Text::make(__('Default Language'), 'default_language'),
+            //! Multiselect is the same as in the fieldsForCreate() method, but works when App is updated, not when created.
+            Multiselect::make(__('Available Languages'), 'available_languages')->options($this->languages, $availableLanguages)
         ];
     }
 }
