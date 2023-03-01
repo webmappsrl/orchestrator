@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Image;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\HasMany;
@@ -236,7 +237,7 @@ class App extends Resource
             'PROJECT' => $this->project_tab(),
             'AUTH' => $this->auth_tab(),
             'OFFLINE' => $this->offline_tab(),
-            // 'ICONS' => $this->icons_tab(),
+            'ICONS' => $this->icons_tab(),
             // 'LANGUAGES' => $this->languages_tab(),
             // 'MAP' => $this->map_tab(),
             // 'OPTIONS' => $this->options_tab(),
@@ -393,6 +394,68 @@ class App extends Resource
                 ->default(false),
             Boolean::make(__('Tracks on payment'), 'tracks_on_payment')
                 ->default(false)
+        ];
+    }
+
+    protected function icons_tab(): array
+    {
+        return [
+            Image::make(__('Icon'), 'icon')
+                ->rules('image', 'mimes:png', 'dimensions:width=1024,height=1024')
+                ->disk('public')
+                ->path('api/app/' . $this->model()->id . '/resources')
+                ->storeAs(function () {
+                    return 'icon.png';
+                })
+                ->help(__('Required size is :widthpx:heightpx', ['width' => 1024, 'height' => 1024])),
+            Image::make(__('Splash image'), 'splash')
+                ->rules('image', 'mimes:png', 'dimensions:width=2732,height=2732')
+                ->disk('public')
+                ->path('api/app/' . $this->model()->id . '/resources')
+                ->storeAs(function () {
+                    return 'splash.png';
+                })
+                ->help(__('Required size is :widthpx:heightpx', ['width' => 2732, 'height' => 2732])),
+            Image::make(__('Icon small'), 'icon_small')
+                ->rules('image', 'mimes:png', 'dimensions:width=512,height=512')
+                ->disk('public')
+                ->path('api/app/' . $this->model()->id . '/resources')
+                ->storeAs(function () {
+                    return 'icon_small.png';
+                })
+                ->help(__('Required size is :widthpx:heightpx', ['width' => 512, 'height' => 512])),
+
+            Image::make(__('Feature image'), 'feature_image')
+                ->rules('image', 'mimes:png', 'dimensions:width=1024,height=500')
+                ->disk('public')
+                ->path('api/app/' . $this->model()->id . '/resources')
+                ->storeAs(function () {
+                    return 'feature_image.png';
+                })
+                ->help(__('Required size is :widthpx:heightpx', ['width' => 1024, 'height' => 500])),
+
+            Image::make(__('Icon Notify'), 'icon_notify')
+                ->rules('image', 'mimes:png', 'dimensions:ratio=1')
+                ->disk('public')
+                ->path('api/app/' . $this->model()->id . '/resources')
+                ->storeAs(function () {
+                    return 'icon_notify.png';
+                })
+                ->help(__('Required square png. Transparency is allowed and recommended for the background')),
+
+            Image::make(__('Logo Homepage'), 'logo_homepage')
+                ->rules('image', 'mimes:svg')
+                ->disk('public')
+                ->path('api/app/' . $this->model()->id . '/resources')
+                ->storeAs(function () {
+                    return 'logo_homepage.svg';
+                })
+                ->help(__('Required svg image'))
+                ->hideFromIndex(),
+
+            Code::Make(__('iconmoon selection.json'), 'iconmoon_selection')->language('json')->rules('nullable', 'json')->help(
+                'import icoonmoon selection.json file'
+            )
         ];
     }
 }
