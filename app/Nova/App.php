@@ -14,6 +14,7 @@ use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Kraftbit\NovaTinymce5Editor\NovaTinymce5Editor;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
 
@@ -232,7 +233,7 @@ class App extends Resource
             'APP' => $this->app_tab(),
             'WEBAPP' => $this->webapp_tab(),
             'HOME' => $this->home_tab(),
-            // 'PROJECT' => $this->project_tab(),
+            'PROJECT' => $this->project_tab(),
             // 'AUTH' => $this->auth_tab(),
             // 'OFFLINE' => $this->offline_tab(),
             // 'ICONS' => $this->icons_tab(),
@@ -346,6 +347,17 @@ class App extends Resource
             Code::Make('Config Home')->language('json')->rules('json')->default('{"HOME": []}')
             //->help(
             //view('layers', ['layers' => $this->layers])->render()
+
+        ];
+    }
+
+    protected function project_tab(): array
+    {
+        return [
+            //!not working
+            NovaTinymce5Editor::make('Page Project', 'page_project'),
+            //* working
+            Text::make('Page Project', 'page_project')->asHtml()
 
         ];
     }
