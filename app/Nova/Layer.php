@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Fields\Color;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -32,7 +33,7 @@ class Layer extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description'
+        'id', 'name', 'description', 'title', 'color', 'query_string', 'app.name'
     ];
 
     /**
@@ -46,9 +47,15 @@ class Layer extends Resource
         return [
             ID::make()->sortable(),
             NovaTabTranslatable::make([
-                Text::make(__('name'), 'name'),
-                Textarea::make(__('description'), 'description')->hideFromIndex(),
+                Text::make(__('Title'), 'title'),
+                Textarea::make(__('Description'), 'description')
+                    ->hideFromIndex()
+                    ->alwaysShow(),
             ]),
+            Text::make(__('Name'), 'name'),
+            Text::make(__('Query string'), 'query_string'),
+            Color::make(__('Color'), 'color')
+                ->default('#de1b0d'),
             BelongsTo::make('App'), //display the relation with App in nova field
         ];
     }

@@ -361,7 +361,7 @@ class App extends Resource
     {
         return [
             //!not working
-            NovaTinymce5Editor::make('Page Project', 'page_project'),
+            //NovaTinymce5Editor::make('Page Project', 'page_project'),
             //* working
             Text::make('Page Project', 'page_project')->asHtml()
 

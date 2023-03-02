@@ -21,13 +21,7 @@ class LayerFactory extends Factory
             App::factory(10)->create();
         }
         return [
-            'name' => [
-                'it' => $this->faker->name(),
-                'en' => $this->faker->name(),
-                'de' => $this->faker->name(),
-                'fr' => $this->faker->name(),
-                'es' => $this->faker->name(),
-            ],
+            'name' => $this->faker->name(),
             'description' => [
                 'it' => $this->faker->text(),
                 'en' => $this->faker->text(),
@@ -35,6 +29,14 @@ class LayerFactory extends Factory
                 'fr' => $this->faker->text(),
                 'es' => $this->faker->text(),
             ],
+            'title' => [
+                'it' => $this->faker->text(),
+                'en' => $this->faker->text(),
+                'de' => $this->faker->text(),
+                'fr' => $this->faker->text(),
+                'es' => $this->faker->text(),
+            ],
+            'color' => $this->faker->hexColor(),
             'app_id' => App::inRandomOrder()->first()->id,
         ];
     }
