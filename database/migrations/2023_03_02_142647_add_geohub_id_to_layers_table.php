@@ -12,9 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('layers', function (Blueprint $table) {
-            $table->text('title')->nullable();
-            $table->string('color')->default('#de1b0d')->nullable();
-            $table->text('query_string')->nullable();
+            $table->string('geohub_id')->unique()->nullable();
         });
     }
 
@@ -24,9 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('layers', function (Blueprint $table) {
-            $table->dropColumn('title');
-            $table->dropColumn('color');
-            $table->dropColumn('query_string');
+            $table->dropColumn('geohub_id');
         });
     }
 };
