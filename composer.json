@@ -9,7 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
-        "davidpiesse/nova-toggle": "^4.0",
+        "davidpiesse/nova-toggle": "v4.x-dev",
         "eminiarts/nova-tabs": "^2.2",
         "guzzlehttp/guzzle": "^7.2",
         "kongulov/nova-tab-translatable": "^2.1",

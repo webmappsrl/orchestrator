@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b862c20104786780d4431dc28f3664f5",
+    "content-hash": "fec45cdcf0032697f8efbe0320094c65",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -265,16 +265,16 @@
         },
         {
             "name": "davidpiesse/nova-toggle",
-            "version": "4.0",
+            "version": "v4.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/davidpiesse/nova-toggle.git",
-                "reference": "757b457bef59849f2a9479fb5ac536a4cc95c51c"
+                "reference": "3b21f7979a692faacb32ec51d065b2a6f74a36bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/davidpiesse/nova-toggle/zipball/757b457bef59849f2a9479fb5ac536a4cc95c51c",
-                "reference": "757b457bef59849f2a9479fb5ac536a4cc95c51c",
+                "url": "https://api.github.com/repos/davidpiesse/nova-toggle/zipball/3b21f7979a692faacb32ec51d065b2a6f74a36bf",
+                "reference": "3b21f7979a692faacb32ec51d065b2a6f74a36bf",
                 "shasum": ""
             },
             "require": {
@@ -306,9 +306,9 @@
             ],
             "support": {
                 "issues": "https://github.com/davidpiesse/nova-toggle/issues",
-                "source": "https://github.com/davidpiesse/nova-toggle/tree/4.0"
+                "source": "https://github.com/davidpiesse/nova-toggle/tree/v4"
             },
-            "time": "2022-07-21T11:23:52+00:00"
+            "time": "2022-09-23T16:22:52+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
@@ -7149,7 +7149,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feature/Model_APP_integration_V1",
+            "version": "dev-feature/Orchestrator_hardening_APP",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -9704,7 +9704,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "davidpiesse/nova-toggle": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
