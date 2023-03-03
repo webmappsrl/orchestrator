@@ -3,19 +3,16 @@
 namespace App\Nova;
 
 use Laravel\Nova\Panel;
-use App\Enums\StoryStatus;
-
 use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
+use Stepanenko3\NovaMarkdown\Markdown;
 use App\Nova\Actions\EditEpicsFromIndex;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
+
 
 class Epic extends Resource
 {
@@ -33,7 +30,7 @@ class Epic extends Resource
      */
     public static $title = 'name';
 
-        /**
+    /**
      * The number of resources to show per page via relationships.
      *
      * @var int
@@ -81,15 +78,16 @@ class Epic extends Resource
                     ->hideWhenUpdating(),
             ]),
 
+
             new Panel('DESCRIPTION', [
-                Markdown::make('Description')
-                    ->hideFromIndex()->alwaysShow(),
+                Markdown::make('Description'),
+
             ]),
 
             new Panel('NOTES', [
                 Markdown::make('Notes')
                     ->nullable()
-                    ->alwaysShow(),
+
             ]),
 
             HasMany::make('Stories'),
