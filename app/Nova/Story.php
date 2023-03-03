@@ -137,6 +137,12 @@ class Story extends Resource
                 ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Test o "Annulla" per annullare.')
                 ->confirmButtonText('Conferma')
                 ->cancelButtonText('Annulla'),
+
+            (new actions\StoryToRejectedStatusAction)
+                ->showInline()
+                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Rejected o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
         ];
     }
 
