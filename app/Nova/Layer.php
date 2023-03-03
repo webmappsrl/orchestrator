@@ -2,10 +2,10 @@
 
 namespace App\Nova;
 
+use Laravel\Nova\Fields\Color;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
@@ -32,7 +32,7 @@ class Layer extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description'
+        'id', 'name', 'title', 'query_string', 'app.name'
     ];
 
     /**
@@ -45,10 +45,14 @@ class Layer extends Resource
     {
         return [
             ID::make()->sortable(),
+            Text::make(__('Name'), 'name'),
             NovaTabTranslatable::make([
-                Text::make(__('name'), 'name'),
-                Textarea::make(__('description'), 'description')->hideFromIndex(),
+                Text::make(__('Title'), 'title'),
             ]),
+            Text::make(__('Query string'), 'query_string')->hideFromIndex(),
+            Color::make(__('Color'), 'color')
+                ->default('#de1b0d')
+                ->hideFromIndex(),
             BelongsTo::make('App'), //display the relation with App in nova field
         ];
     }
@@ -72,7 +76,9 @@ class Layer extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new filters\AppFilter
+        ];
     }
 
     /**

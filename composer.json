@@ -10,10 +10,10 @@
     "require": {
         "php": "^8.0.2",
         "davidpiesse/nova-toggle": "^4.0",
+        "emilianotisato/nova-tinymce": "^2.0",
         "eminiarts/nova-tabs": "^2.2",
         "guzzlehttp/guzzle": "^7.2",
         "kongulov/nova-tab-translatable": "^2.1",
-        "kraftbit/nova-tinymce5-editor": "^1.0",
         "laravel/framework": "^10.0",
         "laravel/nova": "^4.0",
         "laravel/sanctum": "^3.0",
