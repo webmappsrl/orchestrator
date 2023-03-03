@@ -171,7 +171,7 @@ class OrchestratorImport extends Command
             unset($element['user_id']);
             $element['map_bbox'] = implode(',', json_decode($element['map_bbox'], true));
             $element['tiles'] = json_encode($element['tiles'], true);
-            $element['name'] = json_encode($element['name']);
+            $element['name'] = str_replace('"', '', json_encode($element['name']));
             $this->info("Importing app $counter / $tot_apps");
             $counter++;
 
