@@ -13,12 +13,11 @@ class Layer extends Model
 
 
     //translatable fields
-    public $translatable = ['description', 'title'];
+    public $translatable = ['title'];
 
 
     public $fillable = [
         'name',
-        'description',
         'app_id',
         'title',
         'color',

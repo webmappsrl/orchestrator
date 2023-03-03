@@ -22,22 +22,23 @@ class LayerFactory extends Factory
         }
         return [
             'name' => $this->faker->name(),
-            'description' => [
-                'it' => $this->faker->text(),
-                'en' => $this->faker->text(),
-                'de' => $this->faker->text(),
-                'fr' => $this->faker->text(),
-                'es' => $this->faker->text(),
-            ],
+            // 'description' => [
+            //     'it' => $this->faker->text(),
+            //     'en' => $this->faker->text(),
+            //     'de' => $this->faker->text(),
+            //     'fr' => $this->faker->text(),
+            //     'es' => $this->faker->text(),
+            // ],
             'title' => [
-                'it' => $this->faker->text(),
-                'en' => $this->faker->text(),
-                'de' => $this->faker->text(),
-                'fr' => $this->faker->text(),
-                'es' => $this->faker->text(),
+                'it' => $this->faker->text(20),
+                'en' => $this->faker->text(20),
+                'de' => $this->faker->text(20),
+                'fr' => $this->faker->text(20),
+                'es' => $this->faker->text(20),
             ],
             'color' => $this->faker->hexColor(),
             'app_id' => App::inRandomOrder()->first()->id,
+            'query_string' => $this->faker->text(10)
         ];
     }
 }
