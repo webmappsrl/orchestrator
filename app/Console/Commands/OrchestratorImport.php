@@ -198,7 +198,6 @@ class OrchestratorImport extends Command
             ], [
                 'name' => $element['name'],
                 'title' => $element['title'],
-                //'description' => $element['description'],
                 'color' => $element['color'],
                 'query_string' => $element['query_string'],
                 'app_id' => $element['app_id']

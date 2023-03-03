@@ -22,13 +22,6 @@ class LayerFactory extends Factory
         }
         return [
             'name' => $this->faker->name(),
-            // 'description' => [
-            //     'it' => $this->faker->text(),
-            //     'en' => $this->faker->text(),
-            //     'de' => $this->faker->text(),
-            //     'fr' => $this->faker->text(),
-            //     'es' => $this->faker->text(),
-            // ],
             'title' => [
                 'it' => $this->faker->text(20),
                 'en' => $this->faker->text(20),

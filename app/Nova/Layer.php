@@ -47,9 +47,6 @@ class Layer extends Resource
             ID::make()->sortable(),
             NovaTabTranslatable::make([
                 Text::make(__('Title'), 'title'),
-                // Textarea::make(__('Description'), 'description')
-                //     ->hideFromIndex()
-                //     ->alwaysShow(),
             ]),
             Text::make(__('Name'), 'name'),
             Text::make(__('Query string'), 'query_string'),
