@@ -45,13 +45,14 @@ class Layer extends Resource
     {
         return [
             ID::make()->sortable(),
+            Text::make(__('Name'), 'name'),
             NovaTabTranslatable::make([
                 Text::make(__('Title'), 'title'),
             ]),
-            Text::make(__('Name'), 'name'),
-            Text::make(__('Query string'), 'query_string'),
+            Text::make(__('Query string'), 'query_string')->hideFromIndex(),
             Color::make(__('Color'), 'color')
-                ->default('#de1b0d'),
+                ->default('#de1b0d')
+                ->hideFromIndex(),
             BelongsTo::make('App'), //display the relation with App in nova field
         ];
     }

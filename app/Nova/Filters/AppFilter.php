@@ -36,7 +36,7 @@ class AppFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return App::pluck('id', 'name')->toArray();
+        return App::all()->sortBy('name')->pluck('id', 'name')->toArray();
     }
 
     public function name()

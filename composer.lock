@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b862c20104786780d4431dc28f3664f5",
+    "content-hash": "2d40666e5f7a11893a4eec4991354810",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1021,6 +1021,53 @@
             "time": "2023-01-14T14:17:03+00:00"
         },
         {
+            "name": "emilianotisato/nova-tinymce",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/emilianotisato/nova-tinymce.git",
+                "reference": "faceec828be3b71281497ef86fcd8c5eb56ce5e0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/emilianotisato/nova-tinymce/zipball/faceec828be3b71281497ef86fcd8c5eb56ce5e0",
+                "reference": "faceec828be3b71281497ef86fcd8c5eb56ce5e0",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Emilianotisato\\NovaTinyMCE\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Emilianotisato\\NovaTinyMCE\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "This Nova package allow you to use TinyMCE editor for text areas.You can customize the editor options and... you can upload images to your server and put them rigth there on the text without leaving the text editor!",
+            "keywords": [
+                "editor",
+                "laravel",
+                "nova",
+                "tiny"
+            ],
+            "support": {
+                "issues": "https://github.com/emilianotisato/nova-tinymce/issues",
+                "source": "https://github.com/emilianotisato/nova-tinymce/tree/2.0.0"
+            },
+            "time": "2022-04-21T21:56:00+00:00"
+        },
+        {
             "name": "eminiarts/nova-tabs",
             "version": "2.2.3",
             "source": {
@@ -1755,51 +1802,6 @@
                 "source": "https://github.com/kongulov/nova-tab-translatable/tree/2.1.1"
             },
             "time": "2023-02-06T07:18:32+00:00"
-        },
-        {
-            "name": "kraftbit/nova-tinymce5-editor",
-            "version": "v1.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Kraftbit/nova-tinymce5-editor.git",
-                "reference": "b00ff482dffcbdb425b775f17e69012edab8bf58"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Kraftbit/nova-tinymce5-editor/zipball/b00ff482dffcbdb425b775f17e69012edab8bf58",
-                "reference": "b00ff482dffcbdb425b775f17e69012edab8bf58",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Kraftbit\\NovaTinymce5Editor\\FieldServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Kraftbit\\NovaTinymce5Editor\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A Laravel Nova field.",
-            "keywords": [
-                "laravel",
-                "nova"
-            ],
-            "support": {
-                "issues": "https://github.com/Kraftbit/nova-tinymce5-editor/issues",
-                "source": "https://github.com/Kraftbit/nova-tinymce5-editor/tree/v1.0.0"
-            },
-            "time": "2020-09-21T15:07:16+00:00"
         },
         {
             "name": "laravel/framework",
@@ -7149,7 +7151,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feature/Model_APP_integration_V1",
+            "version": "dev-feature/Layer_V1",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",

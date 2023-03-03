@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('layers', function (Blueprint $table) {
-            DB::statement('alter table layers alter column name TYPE text;');
+            DB::statement('alter table layers alter column name TYPE VARCHAR(255);');
         });
     }
 
