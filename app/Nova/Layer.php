@@ -6,7 +6,6 @@ use Laravel\Nova\Fields\Color;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
@@ -33,7 +32,7 @@ class Layer extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description', 'title', 'color', 'query_string', 'app.name'
+        'id', 'name', 'title', 'query_string', 'app.name'
     ];
 
     /**
@@ -79,7 +78,9 @@ class Layer extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new filters\AppFilter
+        ];
     }
 
     /**
