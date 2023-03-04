@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Nova\App;
 use App\Nova\Customer;
+use App\Nova\DoneEpic;
 use App\Nova\Epic;
 use App\Nova\NewEpic;
 use App\Nova\Layer;
@@ -57,6 +58,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(NewEpic::class),
                     MenuItem::resource(ProgressEpic::class),
                     MenuItem::resource(TestEpic::class),
+                    MenuItem::resource(DoneEpic::class),
                 ])->icon('code')->collapsable(),
             ];
         });
