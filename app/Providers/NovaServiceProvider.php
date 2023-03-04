@@ -5,9 +5,12 @@ namespace App\Providers;
 use App\Nova\App;
 use App\Nova\Customer;
 use App\Nova\Epic;
+use App\Nova\NewEpic;
 use App\Nova\Layer;
 use App\Nova\Milestone;
+use App\Nova\ProgressEpic;
 use App\Nova\Project;
+use App\Nova\TestEpic;
 use App\Nova\User;
 use Illuminate\Http\Request;
 use Laravel\Nova\Nova;
@@ -51,6 +54,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('DEV', [
                     MenuItem::resource(Milestone::class),
                     MenuItem::resource(Epic::class),
+                    MenuItem::resource(NewEpic::class),
+                    MenuItem::resource(ProgressEpic::class),
+                    MenuItem::resource(TestEpic::class),
                 ])->icon('code')->collapsable(),
             ];
         });

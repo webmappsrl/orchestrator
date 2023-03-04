@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\EpicStatus;
 use Laravel\Nova\Panel;
 use App\Enums\StoryStatus;
 
@@ -17,7 +18,7 @@ use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
 
-class Epic extends Resource
+class TestEpic extends Resource
 {
     /**
      * The model the resource corresponds to.
@@ -50,6 +51,18 @@ class Epic extends Resource
     ];
 
     /**
+     * Build an "index" query for the given resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        return $query->where('status', EpicStatus::Test);
+    }
+
+    /**
      * Get the fields displayed by the resource.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
@@ -76,9 +89,8 @@ class Epic extends Resource
                 Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
                     return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
                 })->asHtml(),
-                Text::make('Status')
-                    ->hideWhenCreating()
-                    ->hideWhenUpdating(),
+                Text::make('Status')->onlyOnDetail(),
+
             ]),
 
             new Panel('DESCRIPTION', [
@@ -119,7 +131,6 @@ class Epic extends Resource
             new filters\UserFilter,
             new filters\MilestoneFilter,
             new filters\ProjectFilter,
-            new filters\EpicStatusFilter
         ];
     }
 
@@ -132,7 +143,6 @@ class Epic extends Resource
     public function lenses(NovaRequest $request)
     {
         return [
-            new Lenses\MyEpicLens,
         ];
     }
 
