@@ -53,15 +53,19 @@ class Customer extends Resource
                 Text::make('Name')
                     ->sortable()
                     ->rules('required', 'max:255'),
-                Text::make('HS', 'hs_id')
-                    ->sortable()
-                    ->nullable(),
-                Text::make('Domain Name', 'domain_name')
-                    ->sortable()
-                    ->nullable(),
                 Text::make('Full Name', 'full_name')
                     ->sortable()
-                    ->nullable(),
+                    ->nullable()
+                    ->hideFromIndex(),
+                Text::make('HS', 'hs_id')
+                    ->sortable()
+                    ->nullable()
+                    ->hideFromIndex(),
+                Text::make('Domain Name', 'domain_name')
+                    ->sortable()
+                    ->nullable()
+                    ->hideFromIndex(),
+
             ]),
 
             new Panel('SUBSCRIPTION INFO', [
