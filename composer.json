@@ -19,6 +19,7 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.12",
+        "outl1ne/nova-multiselect-field": "^4.2",
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-translatable": "^6.3",
         "stepanenko3/nova-markdown": "^1.1",
