@@ -6,15 +6,13 @@ namespace App\Nova;
 use App\Models\Epic;
 use App\Models\User;
 use App\Enums\StoryStatus;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Fields\Markdown;
+
 
 class Story extends Resource
 {
@@ -62,7 +60,7 @@ class Story extends Resource
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->default(StoryStatus::New->value)->displayUsingLabels(),
-            Markdown::make(__('Description'), 'description')->hideFromIndex()->alwaysShow(),
+            MarkdownTui::make(__('Description'), 'description')->hideFromIndex(),
             BelongsTo::make('User')->default(function ($request) {
                 $epic = Epic::find($request->input('viaResourceId'));
                 return $epic ? $epic->user_id : null;

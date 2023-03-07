@@ -3,14 +3,13 @@
 namespace App\Nova;
 
 use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Markdown;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 
@@ -89,9 +88,9 @@ class Customer extends Resource
             ]),
 
             new Panel('NOTES', [
-                Markdown::make('Notes', 'notes')
+                MarkdownTui::make('Notes', 'notes')
                     ->showOnDetail()
-                    ->alwaysShow(),
+
             ]),
 
             HasMany::make('Projects'),

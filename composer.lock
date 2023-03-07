@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "52458b6fa121acc08b99168dafa85f52",
+    "content-hash": "8bb46f7150bba706e4514241dc46aa01",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -262,6 +262,70 @@
                 }
             ],
             "time": "2023-01-15T23:59:01+00:00"
+        },
+        {
+            "name": "datomatic/nova-markdown-tui",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/datomatic/nova-markdown-tui.git",
+                "reference": "59d66ce9ef4bc464743af77680f7b32f6742f72c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/datomatic/nova-markdown-tui/zipball/59d66ce9ef4bc464743af77680f7b32f6742f72c",
+                "reference": "59d66ce9ef4bc464743af77680f7b32f6742f72c",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.1",
+                "nova-kit/nova-packages-tool": "^1.0.1",
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Datomatic\\NovaMarkdownTui\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Datomatic\\NovaMarkdownTui\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Roberto Negro",
+                    "email": "roberto@datomatic.io",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Alberto Peripolli",
+                    "email": "alberto@datomatic.io",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Laravel Nova field for markdown management via ToastUI editor.",
+            "keywords": [
+                "field",
+                "fields",
+                "laravel",
+                "markdown",
+                "nova",
+                "toast-ui",
+                "tui"
+            ],
+            "support": {
+                "issues": "https://github.com/datomatic/nova-markdown-tui/issues",
+                "source": "https://github.com/datomatic/nova-markdown-tui/tree/v1.2.0"
+            },
+            "time": "2022-12-16T21:04:59+00:00"
         },
         {
             "name": "davidpiesse/nova-toggle",
@@ -4712,52 +4776,6 @@
                 }
             ],
             "time": "2022-04-21T12:23:20+00:00"
-        },
-        {
-            "name": "stepanenko3/nova-markdown",
-            "version": "v1.1.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/stepanenko3/nova-markdown.git",
-                "reference": "105b095a60d6b70e364181d4ddf9f93155bdd1a0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/stepanenko3/nova-markdown/zipball/105b095a60d6b70e364181d4ddf9f93155bdd1a0",
-                "reference": "105b095a60d6b70e364181d4ddf9f93155bdd1a0",
-                "shasum": ""
-            },
-            "require": {
-                "laravel/nova": "^4.0",
-                "php": ">=8.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Stepanenko3\\NovaMarkdown\\FieldServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Stepanenko3\\NovaMarkdown\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Nova Markdown advanced field",
-            "keywords": [
-                "laravel",
-                "nova"
-            ],
-            "support": {
-                "issues": "https://github.com/stepanenko3/nova-markdown/issues",
-                "source": "https://github.com/stepanenko3/nova-markdown/tree/v1.1.2"
-            },
-            "time": "2022-05-17T19:09:20+00:00"
         },
         {
             "name": "symfony/console",

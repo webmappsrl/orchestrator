@@ -8,8 +8,8 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
-use Stepanenko3\NovaMarkdown\Markdown;
 use App\Nova\Actions\EditEpicsFromIndex;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -80,12 +80,12 @@ class Epic extends Resource
 
 
             new Panel('DESCRIPTION', [
-                Markdown::make('Description'),
+                MarkdownTui::make('Description'),
 
             ]),
 
             new Panel('NOTES', [
-                Markdown::make('Notes')
+                MarkdownTui::make('Notes')
                     ->nullable()
 
             ]),

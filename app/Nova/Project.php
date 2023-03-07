@@ -2,13 +2,11 @@
 
 namespace App\Nova;
 
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Markdown;
-use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -57,16 +55,14 @@ class Project extends Resource
             ]),
 
             new panel('DESCRIPTION', [
-                Markdown::make('Description')
-                    ->hideFromIndex()
-                    ->alwaysShow(),
+                MarkdownTui::make('Description')
+                    ->hideFromIndex(),
             ]),
 
             new Panel('NOTE', [
-                Markdown::make('Note')
+                MarkdownTui::make('Note')
                     ->hideFromIndex()
-                    ->nullable()
-                    ->alwaysShow(),
+                    ->nullable(),
             ]),
 
             HasMany::make('Epics'),
