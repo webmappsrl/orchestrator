@@ -174,18 +174,11 @@ class OrchestratorImport extends Command
 
         foreach ($data as $element) {
             unset($element['user_id']);
-            $element['map_bbox'] = implode(',', json_decode($element['map_bbox'], true));
             $element['tiles'] = json_encode($element['tiles'], true);
-            $element['name'] = json_encode($element['name']);
             $this->info("Importing app $counter / $tot_apps");
             $counter++;
 
-            $app = App::where('app_id', $element['app_id'])->first();
-            if (is_null($app)) {
-                App::create($element);
-            } else {
-                $app->update($element);
-            }
+            App::updateOrCreate(['app_id' => $element['app_id']], $element);
         }
     }
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2d40666e5f7a11893a4eec4991354810",
+    "content-hash": "8bb46f7150bba706e4514241dc46aa01",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -264,17 +264,81 @@
             "time": "2023-01-15T23:59:01+00:00"
         },
         {
-            "name": "davidpiesse/nova-toggle",
-            "version": "4.0",
+            "name": "datomatic/nova-markdown-tui",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/davidpiesse/nova-toggle.git",
-                "reference": "757b457bef59849f2a9479fb5ac536a4cc95c51c"
+                "url": "https://github.com/datomatic/nova-markdown-tui.git",
+                "reference": "59d66ce9ef4bc464743af77680f7b32f6742f72c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/davidpiesse/nova-toggle/zipball/757b457bef59849f2a9479fb5ac536a4cc95c51c",
-                "reference": "757b457bef59849f2a9479fb5ac536a4cc95c51c",
+                "url": "https://api.github.com/repos/datomatic/nova-markdown-tui/zipball/59d66ce9ef4bc464743af77680f7b32f6742f72c",
+                "reference": "59d66ce9ef4bc464743af77680f7b32f6742f72c",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.1",
+                "nova-kit/nova-packages-tool": "^1.0.1",
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Datomatic\\NovaMarkdownTui\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Datomatic\\NovaMarkdownTui\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Roberto Negro",
+                    "email": "roberto@datomatic.io",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Alberto Peripolli",
+                    "email": "alberto@datomatic.io",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Laravel Nova field for markdown management via ToastUI editor.",
+            "keywords": [
+                "field",
+                "fields",
+                "laravel",
+                "markdown",
+                "nova",
+                "toast-ui",
+                "tui"
+            ],
+            "support": {
+                "issues": "https://github.com/datomatic/nova-markdown-tui/issues",
+                "source": "https://github.com/datomatic/nova-markdown-tui/tree/v1.2.0"
+            },
+            "time": "2022-12-16T21:04:59+00:00"
+        },
+        {
+            "name": "davidpiesse/nova-toggle",
+            "version": "v4.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/davidpiesse/nova-toggle.git",
+                "reference": "3b21f7979a692faacb32ec51d065b2a6f74a36bf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/davidpiesse/nova-toggle/zipball/3b21f7979a692faacb32ec51d065b2a6f74a36bf",
+                "reference": "3b21f7979a692faacb32ec51d065b2a6f74a36bf",
                 "shasum": ""
             },
             "require": {
@@ -306,9 +370,9 @@
             ],
             "support": {
                 "issues": "https://github.com/davidpiesse/nova-toggle/issues",
-                "source": "https://github.com/davidpiesse/nova-toggle/tree/4.0"
+                "source": "https://github.com/davidpiesse/nova-toggle/tree/v4"
             },
-            "time": "2022-07-21T11:23:52+00:00"
+            "time": "2022-09-23T16:22:52+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
@@ -3471,6 +3535,123 @@
                 }
             ],
             "time": "2023-01-19T13:22:14+00:00"
+        },
+        {
+            "name": "outl1ne/nova-multiselect-field",
+            "version": "4.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/outl1ne/nova-multiselect-field.git",
+                "reference": "b9a1977dd94a8c172af62578ae700546061d5d35"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/outl1ne/nova-multiselect-field/zipball/b9a1977dd94a8c172af62578ae700546061d5d35",
+                "reference": "b9a1977dd94a8c172af62578ae700546061d5d35",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.1",
+                "nova-kit/nova-packages-tool": "^1.0.1",
+                "outl1ne/nova-translations-loader": "^5.0",
+                "php": ">=8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Outl1ne\\MultiselectField\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Outl1ne\\MultiselectField\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Tarvo Reinpalu",
+                    "email": "tarvoreinpalu@gmail.com",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Optimist Digital",
+                    "email": "info@optimistdigital.com",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "A multiple select field for Laravel Nova.",
+            "keywords": [
+                "laravel",
+                "multiselect",
+                "nova",
+                "select"
+            ],
+            "support": {
+                "issues": "https://github.com/outl1ne/nova-multiselect-field/issues",
+                "source": "https://github.com/outl1ne/nova-multiselect-field/tree/4.2.3"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/outl1ne",
+                    "type": "github"
+                }
+            ],
+            "time": "2022-11-23T14:04:58+00:00"
+        },
+        {
+            "name": "outl1ne/nova-translations-loader",
+            "version": "5.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/outl1ne/nova-translations-loader.git",
+                "reference": "c547009e8b3fd28d4cd2c034b6ac745785ddeca6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/outl1ne/nova-translations-loader/zipball/c547009e8b3fd28d4cd2c034b6ac745785ddeca6",
+                "reference": "c547009e8b3fd28d4cd2c034b6ac745785ddeca6",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/framework": "^8.0|^9.0|^10.0",
+                "laravel/nova": "^4.0",
+                "php": ">=8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [],
+                    "aliases": []
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Outl1ne\\NovaTranslationsLoader\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "This Laravel Nova package helps developers load translations into their packages.",
+            "keywords": [
+                "laravel",
+                "nova",
+                "optimistdigital",
+                "outl1ne",
+                "translations"
+            ],
+            "support": {
+                "issues": "https://github.com/outl1ne/nova-translations-loader/issues",
+                "source": "https://github.com/outl1ne/nova-translations-loader/tree/5.0.1"
+            },
+            "time": "2023-02-10T16:14:58+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -7151,7 +7332,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feature/Layer_V1",
+            "version": "dev-feature/Orchestrator_hardening_APP",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -9706,7 +9887,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "davidpiesse/nova-toggle": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

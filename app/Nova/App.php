@@ -16,7 +16,7 @@ use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
 use Davidpiesse\NovaToggle\Toggle;
-use Laravel\Nova\Fields\MultiSelect;
+use Outl1ne\MultiselectField\Multiselect;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Emilianotisato\NovaTinyMCE\NovaTinyMCE;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
