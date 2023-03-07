@@ -9,6 +9,7 @@ use App\Enums\UserRole;
 use App\Models\Project;
 use App\Models\Customer;
 use App\Models\Milestone;
+use App\Models\Layer;
 use Illuminate\Console\Command;
 
 class OrchestratorImport extends Command
@@ -51,6 +52,10 @@ class OrchestratorImport extends Command
         //IMPORT EPICS
         $epicsData = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epics'), true);
         $this->importEpics($epicsData);
+
+        //IMPORT LAYERS
+        $layersData = json_decode(file_get_contents('https://geohub.webmapp.it/api/export/layers'), true);
+        $this->importLayers($layersData);
 
         $this->info('Everything imported correctly');
     }
@@ -174,6 +179,22 @@ class OrchestratorImport extends Command
             $counter++;
 
             App::updateOrCreate(['app_id' => $element['app_id']], $element);
+        }
+    }
+
+    private function importLayers($data)
+    {
+        $this->info('Importing Layers');
+        foreach ($data as $element) {
+            Layer::updateOrCreate([
+                'geohub_id' => $element['id'],
+            ], [
+                'name' => $element['name'],
+                'title' => $element['title'],
+                'color' => $element['color'],
+                'query_string' => $element['query_string'],
+                'app_id' => $element['app_id']
+            ]);
         }
     }
 }

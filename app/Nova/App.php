@@ -18,7 +18,7 @@ use Laravel\Nova\Fields\Textarea;
 use Davidpiesse\NovaToggle\Toggle;
 use Outl1ne\MultiselectField\Multiselect;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Kraftbit\NovaTinymce5Editor\NovaTinymce5Editor;
+use Emilianotisato\NovaTinyMCE\NovaTinyMCE;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
 
@@ -360,11 +360,7 @@ class App extends Resource
     protected function project_tab(): array
     {
         return [
-            //!not working
-            NovaTinymce5Editor::make('Page Project', 'page_project'),
-            //* working
-            Text::make('Page Project', 'page_project')->asHtml()
-
+            NovaTinyMCE::make('Page Project', 'page_project')
         ];
     }
 

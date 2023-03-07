@@ -2,19 +2,23 @@
 
 namespace App\Nova;
 
+use App\Enums\EpicStatus;
 use Laravel\Nova\Panel;
+use App\Enums\StoryStatus;
+
 use Laravel\Nova\Fields\ID;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use App\Nova\Actions\EditEpicsFromIndex;
-use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
 
-
-class Epic extends Resource
+class NewEpic extends Resource
 {
     /**
      * The model the resource corresponds to.
@@ -30,7 +34,7 @@ class Epic extends Resource
      */
     public static $title = 'name';
 
-    /**
+        /**
      * The number of resources to show per page via relationships.
      *
      * @var int
@@ -45,6 +49,18 @@ class Epic extends Resource
     public static $search = [
         'id', 'name', 'description', 'milestone.name', 'user.name', 'project.name' // <-- searchable by project name
     ];
+
+    /**
+     * Build an "index" query for the given resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        return $query->where('status', EpicStatus::New);
+    }
 
     /**
      * Get the fields displayed by the resource.
@@ -73,21 +89,19 @@ class Epic extends Resource
                 Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
                     return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
                 })->asHtml(),
-                Text::make('Status')
-                    ->hideWhenCreating()
-                    ->hideWhenUpdating(),
+                    Text::make('Status')->onlyOnDetail(),
+
             ]),
 
-
             new Panel('DESCRIPTION', [
-                MarkdownTui::make('Description'),
-
+                Markdown::make('Description')
+                    ->hideFromIndex()->alwaysShow(),
             ]),
 
             new Panel('NOTES', [
-                MarkdownTui::make('Notes')
+                Markdown::make('Notes')
                     ->nullable()
-
+                    ->alwaysShow(),
             ]),
 
             HasMany::make('Stories'),
@@ -117,7 +131,6 @@ class Epic extends Resource
             new filters\UserFilter,
             new filters\MilestoneFilter,
             new filters\ProjectFilter,
-            new filters\EpicStatusFilter
         ];
     }
 
@@ -130,7 +143,6 @@ class Epic extends Resource
     public function lenses(NovaRequest $request)
     {
         return [
-            new Lenses\MyEpicLens,
         ];
     }
 
