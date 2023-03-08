@@ -80,13 +80,15 @@ class Epic extends Resource
 
 
             new Panel('DESCRIPTION', [
-                MarkdownTui::make('Description'),
+                MarkdownTui::make('Description')
+                    ->minHeight('500px'),
 
             ]),
 
             new Panel('NOTES', [
                 MarkdownTui::make('Notes')
                     ->nullable()
+                    ->minHeight('500px'),
 
             ]),
 

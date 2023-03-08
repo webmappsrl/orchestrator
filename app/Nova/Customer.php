@@ -90,6 +90,7 @@ class Customer extends Resource
             new Panel('NOTES', [
                 MarkdownTui::make('Notes', 'notes')
                     ->showOnDetail()
+                    ->minHeight('500px'),
 
             ]),
 
