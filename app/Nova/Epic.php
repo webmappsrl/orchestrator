@@ -66,7 +66,7 @@ class Epic extends Resource
                     ->sortable()
                     ->rules('required', 'max:255')
                     ->onlyOnIndex()
-                    ->displayUsing(function ($name) {
+                    ->displayUsing(function ($name, $a, $b) {
                         $wrappedName = wordwrap($name, 50, "\n", true);
                         $htmlName = str_replace("\n", '<br>', $wrappedName);
                         return $htmlName;
@@ -75,11 +75,8 @@ class Epic extends Resource
                 Text::make('Name')
                     ->sortable()
                     ->rules('required', 'max:255')
-                    ->onlyOnDetail(),
-                Text::make('Name')
-                    ->sortable()
-                    ->rules('required', 'max:255')
-                    ->onlyOnForms(),
+                    ->hideFromIndex(),
+
                 Text::make('SAL', function () {
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),

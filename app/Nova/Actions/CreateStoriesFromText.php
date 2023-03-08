@@ -39,6 +39,10 @@ class CreateStoriesFromText extends Action
         $epicUserId = $epic->user_id;
 
         foreach ($lines as $line) {
+            // Ignore empty lines don't create
+            if (empty(trim($line))) {
+                continue;
+            }
             // Create a new story 
             $story = new Story();
             // Associate the story with the epic and user
