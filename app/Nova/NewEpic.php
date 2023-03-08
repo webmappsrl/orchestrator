@@ -15,6 +15,7 @@ use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use App\Nova\Actions\EditEpicsFromIndex;
 use App\Nova\Actions\CreateStoriesFromText;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
 
@@ -34,7 +35,7 @@ class NewEpic extends Resource
      */
     public static $title = 'name';
 
-        /**
+    /**
      * The number of resources to show per page via relationships.
      *
      * @var int
@@ -89,19 +90,20 @@ class NewEpic extends Resource
                 Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
                     return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
                 })->asHtml(),
-                    Text::make('Status')->onlyOnDetail(),
+                Text::make('Status')->onlyOnDetail(),
 
             ]),
 
             new Panel('DESCRIPTION', [
-                Markdown::make('Description')
-                    ->hideFromIndex()->alwaysShow(),
+                MarkdownTui::make('Description')
+                    ->hideFromIndex()
+                    ->minHeight('500px'),
             ]),
 
             new Panel('NOTES', [
-                Markdown::make('Notes')
+                MarkdownTui::make('Notes')
                     ->nullable()
-                    ->alwaysShow(),
+                    ->minHeight('500px'),
             ]),
 
             HasMany::make('Stories'),
@@ -142,8 +144,7 @@ class NewEpic extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [
-        ];
+        return [];
     }
 
     /**

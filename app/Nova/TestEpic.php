@@ -2,8 +2,8 @@
 
 namespace App\Nova;
 
-use App\Enums\EpicStatus;
 use Laravel\Nova\Panel;
+use App\Enums\EpicStatus;
 use App\Enums\StoryStatus;
 
 use Laravel\Nova\Fields\ID;
@@ -14,6 +14,7 @@ use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use App\Nova\Actions\EditEpicsFromIndex;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
@@ -34,7 +35,7 @@ class TestEpic extends Resource
      */
     public static $title = 'name';
 
-        /**
+    /**
      * The number of resources to show per page via relationships.
      *
      * @var int
@@ -94,14 +95,15 @@ class TestEpic extends Resource
             ]),
 
             new Panel('DESCRIPTION', [
-                Markdown::make('Description')
-                    ->hideFromIndex()->alwaysShow(),
+                MarkdownTui::make('Description')
+                    ->hideFromIndex()
+                    ->minHeight('500px'),
             ]),
 
             new Panel('NOTES', [
-                Markdown::make('Notes')
+                MarkdownTui::make('Notes')
                     ->nullable()
-                    ->alwaysShow(),
+                    ->minHeight('500px'),
             ]),
 
             HasMany::make('Stories'),
@@ -142,8 +144,7 @@ class TestEpic extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [
-        ];
+        return [];
     }
 
     /**
