@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\RecurringProduct;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class RecurringProductSeeder extends Seeder
 {
@@ -12,6 +13,6 @@ class RecurringProductSeeder extends Seeder
      */
     public function run(): void
     {
-        Product::factory(100)->create();
+        RecurringProduct::factory(100)->create();
     }
 }

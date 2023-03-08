@@ -13,7 +13,7 @@ class RecurringProductPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class RecurringProductPolicy
      */
     public function view(User $user, RecurringProduct $recurringProduct): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class RecurringProductPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -37,7 +37,7 @@ class RecurringProductPolicy
      */
     public function update(User $user, RecurringProduct $recurringProduct): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -45,7 +45,7 @@ class RecurringProductPolicy
      */
     public function delete(User $user, RecurringProduct $recurringProduct): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -53,7 +53,7 @@ class RecurringProductPolicy
      */
     public function restore(User $user, RecurringProduct $recurringProduct): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class RecurringProductPolicy
      */
     public function forceDelete(User $user, RecurringProduct $recurringProduct): bool
     {
-        //
+        return true;
     }
 }
