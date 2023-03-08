@@ -19,4 +19,9 @@ class RecurringProduct extends Model
 
     //translatable fields
     public $translatable = ['name'];
+
+    public function quotes()
+    {
+        return $this->belongsToMany(Quote::class)->withPivot('quantity');
+    }
 }
