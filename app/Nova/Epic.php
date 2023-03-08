@@ -65,8 +65,6 @@ class Epic extends Resource
                 Text::make('Name')
                     ->sortable()
                     ->rules('required', 'max:255'),
-                Text::make('Title')
-                    ->nullable()->hideFromIndex(),
                 Text::make('SAL', function () {
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),
