@@ -13,7 +13,7 @@ class QuotePolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class QuotePolicy
      */
     public function view(User $user, Quote $quote): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class QuotePolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -37,7 +37,7 @@ class QuotePolicy
      */
     public function update(User $user, Quote $quote): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -45,7 +45,7 @@ class QuotePolicy
      */
     public function delete(User $user, Quote $quote): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -53,7 +53,7 @@ class QuotePolicy
      */
     public function restore(User $user, Quote $quote): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class QuotePolicy
      */
     public function forceDelete(User $user, Quote $quote): bool
     {
-        //
+        return true;
     }
 }

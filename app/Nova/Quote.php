@@ -2,21 +2,20 @@
 
 namespace App\Nova;
 
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Currency;
+
 use Laravel\Nova\Fields\ID;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class Product extends Resource
+class Quote extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Product>
+     * @var class-string<\App\Models\Quote>
      */
-    public static $model = \App\Models\Product::class;
+    public static $model = \App\Models\Quote::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -31,7 +30,7 @@ class Product extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name',
+        'id', 'name'
     ];
 
     /**
@@ -44,10 +43,10 @@ class Product extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('name')->sortable(),
-            Trix::make('description')->onlyOnDetail()->nullable(),
-            Text::make('sku')->hideFromIndex(),
-            Currency::make('price')->currency('EUR')->nullable(),
+            Text::make('title'),
+            Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
+                return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
+            })->asHtml(),
         ];
     }
 

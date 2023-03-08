@@ -15,6 +15,7 @@ use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
 use App\Nova\Milestone;
 use App\Nova\ProgressEpic;
+use App\Nova\Quote;
 use App\Nova\RecurringProduct;
 use Laravel\Nova\Menu\Menu;
 use Illuminate\Http\Request;
@@ -54,6 +55,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Project::class),
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
+                    MenuItem::resource(Quote::class),
                 ])->icon('users')->collapsable(),
 
                 MenuSection::make('DEV', [
