@@ -13,6 +13,7 @@
         "davidpiesse/nova-toggle": "v4.x-dev",
         "eminiarts/nova-tabs": "^2.2",
         "guzzlehttp/guzzle": "^7.2",
+        "khalin/nova4-searchable-belongs-to-filter": "^1.0",
         "kongulov/nova-tab-translatable": "^2.1",
         "laravel/framework": "^10.0",
         "laravel/nova": "^4.0",

@@ -18,6 +18,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class TestEpic extends Resource
 {
@@ -143,7 +144,9 @@ class TestEpic extends Resource
         return [
             new filters\UserFilter,
             new filters\MilestoneFilter,
-            new filters\ProjectFilter,
+            (new NovaSearchableBelongsToFilter('Project'))
+                ->fieldAttribute('project')
+                ->filterBy('project_id'),
         ];
     }
 

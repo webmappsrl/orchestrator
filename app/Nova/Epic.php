@@ -12,6 +12,7 @@ use App\Nova\Actions\EditEpicsFromIndex;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 
 class Epic extends Resource
@@ -128,8 +129,10 @@ class Epic extends Resource
         return [
             new filters\UserFilter,
             new filters\MilestoneFilter,
-            new filters\ProjectFilter,
-            new filters\EpicStatusFilter
+            new filters\EpicStatusFilter,
+            (new NovaSearchableBelongsToFilter('Project'))
+                ->fieldAttribute('project')
+                ->filterBy('project_id'),
         ];
     }
 

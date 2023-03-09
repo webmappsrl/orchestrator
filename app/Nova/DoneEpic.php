@@ -2,8 +2,8 @@
 
 namespace App\Nova;
 
-use App\Enums\EpicStatus;
 use Laravel\Nova\Panel;
+use App\Enums\EpicStatus;
 use App\Enums\StoryStatus;
 
 use Laravel\Nova\Fields\ID;
@@ -14,10 +14,11 @@ use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use App\Nova\Actions\EditEpicsFromIndex;
-use App\Nova\Actions\CreateStoriesFromText;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
+use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class DoneEpic extends Resource
 {
@@ -143,7 +144,9 @@ class DoneEpic extends Resource
         return [
             new filters\UserFilter,
             new filters\MilestoneFilter,
-            new filters\ProjectFilter,
+            (new NovaSearchableBelongsToFilter('Project'))
+                ->fieldAttribute('project')
+                ->filterBy('project_id'),
         ];
     }
 
