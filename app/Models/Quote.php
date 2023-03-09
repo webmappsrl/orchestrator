@@ -26,4 +26,18 @@ class Quote extends Model
     {
         return $this->belongsToMany(RecurringProduct::class)->withPivot('quantity');
     }
+
+    /**
+     * Get the total price of the quote.
+     * @return float
+     */
+    public function getTotalPrice(): float
+    {
+        $totalPrice = 0;
+
+        foreach ($this->products as $product) {
+            $totalPrice += $product->price * $product->pivot->quantity;
+        }
+        return $totalPrice;
+    }
 }
