@@ -107,13 +107,11 @@ class DoneEpic extends Resource
             new Panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
                     ->hideFromIndex()
-                    ->minHeight('500px'),
             ]),
 
             new Panel('NOTES', [
                 MarkdownTui::make('Notes')
                     ->nullable()
-                    ->minHeight('500px'),
             ]),
 
             HasMany::make('Stories'),

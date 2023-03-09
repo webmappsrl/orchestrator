@@ -57,14 +57,12 @@ class Project extends Resource
             new panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
                     ->hideFromIndex()
-                    ->minHeight('500px'),
             ]),
 
             new Panel('NOTE', [
                 MarkdownTui::make('Note')
                     ->hideFromIndex()
                     ->nullable()
-                    ->minHeight('500px'),
             ]),
 
             HasMany::make('Epics'),
