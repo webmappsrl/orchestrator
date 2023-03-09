@@ -60,7 +60,7 @@ class Quote extends Resource
                     Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1'),
                 ];
             }),
-            Currency::make('Total price')
+            Currency::make('Total products price')
                 ->currency('EUR')
                 ->locale('it')
                 ->onlyOnIndex()
@@ -68,13 +68,21 @@ class Quote extends Resource
                     $price = empty($this->products) ? 0 : $this->getTotalPrice();
                     return number_format($price, 2, ',', '.') . ' €';
                 })->sortable(),
-            Currency::make('Total recurring price')
+            Currency::make('Total recurring products price')
                 ->currency('EUR')
                 ->locale('it')
                 ->onlyOnIndex()
                 ->displayUsing(function () {
                     $price = empty($this->recurringProducts) ? 0 : $this->getTotalRecurringPrice();
                     return number_format($price, 2, ',', '.') . ' €';
+                })->sortable(),
+            Currency::make('Total quote price')
+                ->currency('EUR')
+                ->locale('it')
+                ->onlyOnIndex()
+                ->displayUsing(function () {
+                    $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice();
+                    return number_format($quotePrice, 2, ',', '.') . ' €';
                 })->sortable(),
         ];
     }
