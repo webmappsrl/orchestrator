@@ -53,7 +53,12 @@ class Quote extends Resource
                 return [
                     Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1'),
                 ];
-            })
+            }),
+            BelongsToMany::make('Recurring Products')->fields(function () {
+                return [
+                    Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1'),
+                ];
+            }),
         ];
     }
 

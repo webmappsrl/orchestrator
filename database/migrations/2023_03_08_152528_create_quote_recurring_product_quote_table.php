@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('recurring_product_quote', function (Blueprint $table) {
+        Schema::create('quote_recurring_product', function (Blueprint $table) {
             $table->foreignId('recurring_product_id')->constrained()->onDelete('cascade');
             $table->foreignId('quote_id')->constrained()->onDelete('cascade');
             $table->integer('quantity')->default(1);
