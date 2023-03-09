@@ -94,8 +94,6 @@ class NewEpic extends Resource
                     ->sortable()
                     ->rules('required', 'max:255')
                     ->hideFromIndex(),
-                Text::make('Title')
-                    ->nullable()->hideFromIndex(),
                 Text::make('SAL', function () {
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),
