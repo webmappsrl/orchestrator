@@ -68,6 +68,14 @@ class Quote extends Resource
                     $price = empty($this->products) ? 0 : $this->getTotalPrice();
                     return number_format($price, 2, ',', '.') . ' €';
                 })->sortable(),
+            Currency::make('Total recurring price')
+                ->currency('EUR')
+                ->locale('it')
+                ->onlyOnIndex()
+                ->displayUsing(function () {
+                    $price = empty($this->recurringProducts) ? 0 : $this->getTotalRecurringPrice();
+                    return number_format($price, 2, ',', '.') . ' €';
+                })->sortable(),
         ];
     }
 

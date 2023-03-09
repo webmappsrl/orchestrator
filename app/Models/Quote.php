@@ -40,4 +40,19 @@ class Quote extends Model
         }
         return $totalPrice;
     }
+
+    /**
+     * Get the total recurring price.
+     * @return float
+     */
+    public function getTotalRecurringPrice(): float
+    {
+
+        $totalRecurringPrice = 0;
+
+        foreach ($this->recurringProducts as $recurringProduct) {
+            $totalRecurringPrice += $recurringProduct->price * $recurringProduct->pivot->quantity;
+        }
+        return $totalRecurringPrice;
+    }
 }
