@@ -6,6 +6,7 @@ namespace App\Nova;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -59,6 +60,14 @@ class Quote extends Resource
                     Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1'),
                 ];
             }),
+            Currency::make('Total price')
+                ->currency('EUR')
+                ->locale('it')
+                ->onlyOnIndex()
+                ->displayUsing(function () {
+                    $price = empty($this->products) ? 0 : $this->getTotalPrice();
+                    return number_format($price, 2, ',', '.') . ' €';
+                })->sortable(),
         ];
     }
 
