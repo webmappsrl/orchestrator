@@ -81,7 +81,18 @@ class NewEpic extends Resource
                 BelongsTo::make('Project')->searchable(),
                 Text::make('Name')
                     ->sortable()
-                    ->rules('required', 'max:255'),
+                    ->rules('required', 'max:255')
+                    ->onlyOnIndex()
+                    ->displayUsing(function ($name, $a, $b) {
+                        $wrappedName = wordwrap($name, 50, "\n", true);
+                        $htmlName = str_replace("\n", '<br>', $wrappedName);
+                        return $htmlName;
+                    })
+                    ->asHtml(),
+                Text::make('Name')
+                    ->sortable()
+                    ->rules('required', 'max:255')
+                    ->hideFromIndex(),
                 Text::make('Title')
                     ->nullable()->hideFromIndex(),
                 Text::make('SAL', function () {
