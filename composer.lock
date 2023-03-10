@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8bb46f7150bba706e4514241dc46aa01",
+    "content-hash": "4cf83c55bd6ec69bc85c5fa9fcce749f",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1085,53 +1085,6 @@
             "time": "2023-01-14T14:17:03+00:00"
         },
         {
-            "name": "emilianotisato/nova-tinymce",
-            "version": "2.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/emilianotisato/nova-tinymce.git",
-                "reference": "faceec828be3b71281497ef86fcd8c5eb56ce5e0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/emilianotisato/nova-tinymce/zipball/faceec828be3b71281497ef86fcd8c5eb56ce5e0",
-                "reference": "faceec828be3b71281497ef86fcd8c5eb56ce5e0",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.3|^8.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Emilianotisato\\NovaTinyMCE\\FieldServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Emilianotisato\\NovaTinyMCE\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "This Nova package allow you to use TinyMCE editor for text areas.You can customize the editor options and... you can upload images to your server and put them rigth there on the text without leaving the text editor!",
-            "keywords": [
-                "editor",
-                "laravel",
-                "nova",
-                "tiny"
-            ],
-            "support": {
-                "issues": "https://github.com/emilianotisato/nova-tinymce/issues",
-                "source": "https://github.com/emilianotisato/nova-tinymce/tree/2.0.0"
-            },
-            "time": "2022-04-21T21:56:00+00:00"
-        },
-        {
             "name": "eminiarts/nova-tabs",
             "version": "2.2.3",
             "source": {
@@ -1811,6 +1764,54 @@
                 }
             ],
             "time": "2023-01-17T01:02:51+00:00"
+        },
+        {
+            "name": "khalin/nova4-searchable-belongs-to-filter",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/oleghalin/nova4-searchable-belongs-to-filter.git",
+                "reference": "0cf85d0d1f96d70e2a21ea89e9438c901fdc5d16"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/oleghalin/nova4-searchable-belongs-to-filter/zipball/0cf85d0d1f96d70e2a21ea89e9438c901fdc5d16",
+                "reference": "0cf85d0d1f96d70e2a21ea89e9438c901fdc5d16",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.0",
+                "php": ">=7.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Khalin\\Nova4SearchableBelongsToFilter\\FilterServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Khalin\\Nova4SearchableBelongsToFilter\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Searchable Nova 4 filter for belongsTo relationships.",
+            "keywords": [
+                "belongs-to",
+                "filter",
+                "laravel",
+                "nova",
+                "nova-4"
+            ],
+            "support": {
+                "source": "https://github.com/oleghalin/nova4-searchable-belongs-to-filter/tree/1.0.1"
+            },
+            "time": "2022-04-18T10:06:48+00:00"
         },
         {
             "name": "kongulov/nova-tab-translatable",
@@ -7332,7 +7333,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feature/Orchestrator_hardening_APP",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",

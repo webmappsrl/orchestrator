@@ -2,8 +2,8 @@
 
 namespace App\Nova;
 
-use App\Enums\EpicStatus;
 use Laravel\Nova\Panel;
+use App\Enums\EpicStatus;
 use App\Enums\StoryStatus;
 
 use Laravel\Nova\Fields\ID;
@@ -14,9 +14,11 @@ use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use App\Nova\Actions\EditEpicsFromIndex;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class TestEpic extends Resource
 {
@@ -34,7 +36,7 @@ class TestEpic extends Resource
      */
     public static $title = 'name';
 
-        /**
+    /**
      * The number of resources to show per page via relationships.
      *
      * @var int
@@ -80,9 +82,18 @@ class TestEpic extends Resource
                 BelongsTo::make('Project')->searchable(),
                 Text::make('Name')
                     ->sortable()
-                    ->rules('required', 'max:255'),
-                Text::make('Title')
-                    ->nullable()->hideFromIndex(),
+                    ->rules('required', 'max:255')
+                    ->onlyOnIndex()
+                    ->displayUsing(function ($name, $a, $b) {
+                        $wrappedName = wordwrap($name, 50, "\n", true);
+                        $htmlName = str_replace("\n", '<br>', $wrappedName);
+                        return $htmlName;
+                    })
+                    ->asHtml(),
+                Text::make('Name')
+                    ->sortable()
+                    ->rules('required', 'max:255')
+                    ->hideFromIndex(),
                 Text::make('SAL', function () {
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),
@@ -94,14 +105,13 @@ class TestEpic extends Resource
             ]),
 
             new Panel('DESCRIPTION', [
-                Markdown::make('Description')
-                    ->hideFromIndex()->alwaysShow(),
+                MarkdownTui::make('Description')
+                    ->hideFromIndex()
             ]),
 
             new Panel('NOTES', [
-                Markdown::make('Notes')
+                MarkdownTui::make('Notes')
                     ->nullable()
-                    ->alwaysShow(),
             ]),
 
             HasMany::make('Stories'),
@@ -130,7 +140,9 @@ class TestEpic extends Resource
         return [
             new filters\UserFilter,
             new filters\MilestoneFilter,
-            new filters\ProjectFilter,
+            (new NovaSearchableBelongsToFilter('Project'))
+                ->fieldAttribute('project')
+                ->filterBy('project_id'),
         ];
     }
 
@@ -142,8 +154,7 @@ class TestEpic extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [
-        ];
+        return [];
     }
 
     /**

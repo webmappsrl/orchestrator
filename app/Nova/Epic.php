@@ -12,6 +12,7 @@ use App\Nova\Actions\EditEpicsFromIndex;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 
 class Epic extends Resource
@@ -43,7 +44,7 @@ class Epic extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description', 'milestone.name', 'user.name', 'project.name' // <-- searchable by project name
+        'id', 'name', 'description', 'milestone.name', 'user.name', 'project.name', 'status'
     ];
 
     /**
@@ -64,9 +65,19 @@ class Epic extends Resource
                 BelongsTo::make('Project')->searchable(),
                 Text::make('Name')
                     ->sortable()
-                    ->rules('required', 'max:255'),
-                Text::make('Title')
-                    ->nullable()->hideFromIndex(),
+                    ->rules('required', 'max:255')
+                    ->onlyOnIndex()
+                    ->displayUsing(function ($name, $a, $b) {
+                        $wrappedName = wordwrap($name, 50, "\n", true);
+                        $htmlName = str_replace("\n", '<br>', $wrappedName);
+                        return $htmlName;
+                    })
+                    ->asHtml(),
+                Text::make('Name')
+                    ->sortable()
+                    ->rules('required', 'max:255')
+                    ->hideFromIndex(),
+
                 Text::make('SAL', function () {
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),
@@ -80,14 +91,12 @@ class Epic extends Resource
 
 
             new Panel('DESCRIPTION', [
-                MarkdownTui::make('Description'),
-
+                MarkdownTui::make('Description')
             ]),
 
             new Panel('NOTES', [
                 MarkdownTui::make('Notes')
                     ->nullable()
-
             ]),
 
             HasMany::make('Stories'),
@@ -116,8 +125,10 @@ class Epic extends Resource
         return [
             new filters\UserFilter,
             new filters\MilestoneFilter,
-            new filters\ProjectFilter,
-            new filters\EpicStatusFilter
+            new filters\EpicStatusFilter,
+            (new NovaSearchableBelongsToFilter('Project'))
+                ->fieldAttribute('project')
+                ->filterBy('project_id'),
         ];
     }
 

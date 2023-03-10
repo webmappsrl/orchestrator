@@ -90,7 +90,6 @@ class Customer extends Resource
             new Panel('NOTES', [
                 MarkdownTui::make('Notes', 'notes')
                     ->showOnDetail()
-
             ]),
 
             HasMany::make('Projects'),
