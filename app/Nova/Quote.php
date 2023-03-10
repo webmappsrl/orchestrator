@@ -5,6 +5,7 @@ namespace App\Nova;
 
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Number;
@@ -50,6 +51,7 @@ class Quote extends Resource
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
+            BelongsTo::make('Customer'),
             BelongsToMany::make('Products')->fields(function () {
                 return [
                     Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1'),
@@ -63,7 +65,7 @@ class Quote extends Resource
             Currency::make('Total products price')
                 ->currency('EUR')
                 ->locale('it')
-                ->onlyOnIndex()
+                ->exceptOnForms()
                 ->displayUsing(function () {
                     $price = empty($this->products) ? 0 : $this->getTotalPrice();
                     return number_format($price, 2, ',', '.') . ' €';
@@ -71,7 +73,7 @@ class Quote extends Resource
             Currency::make('Total recurring products price')
                 ->currency('EUR')
                 ->locale('it')
-                ->onlyOnIndex()
+                ->exceptOnForms()
                 ->displayUsing(function () {
                     $price = empty($this->recurringProducts) ? 0 : $this->getTotalRecurringPrice();
                     return number_format($price, 2, ',', '.') . ' €';
@@ -79,7 +81,7 @@ class Quote extends Resource
             Currency::make('Total quote price')
                 ->currency('EUR')
                 ->locale('it')
-                ->onlyOnIndex()
+                ->exceptOnForms()
                 ->displayUsing(function () {
                     $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice();
                     return number_format($quotePrice, 2, ',', '.') . ' €';

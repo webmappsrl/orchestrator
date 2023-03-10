@@ -17,9 +17,12 @@ class QuoteFactory extends Factory
      */
     public function definition(): array
     {
+        if (Customer::count() == 0) {
+            Customer::factory(10)->create();
+        }
         return [
             'title' => $this->faker->name(),
-            'google_drive_url' => $this->faker->text(),
+            'google_drive_url' => $this->faker->url(),
             'customer_id' => Customer::inRandomOrder()->first()->id,
 
         ];
