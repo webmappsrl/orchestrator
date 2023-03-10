@@ -93,6 +93,7 @@ class Customer extends Resource
             ]),
 
             HasMany::make('Projects'),
+            HasMany::make('Quotes'),
         ];
     }
 

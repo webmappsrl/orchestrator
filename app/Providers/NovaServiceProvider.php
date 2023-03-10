@@ -3,24 +3,27 @@
 namespace App\Providers;
 
 use App\Nova\App;
+use App\Nova\Epic;
+use App\Nova\User;
+use App\Nova\Layer;
+use App\Nova\NewEpic;
+use App\Nova\Product;
+use App\Nova\Project;
 use App\Nova\Customer;
 use App\Nova\DoneEpic;
-use App\Nova\Epic;
-use App\Nova\NewEpic;
-use App\Nova\Layer;
+use App\Nova\TestEpic;
+use Laravel\Nova\Nova;
 use App\Nova\Milestone;
 use App\Nova\ProgressEpic;
-use App\Nova\Project;
-use App\Nova\TestEpic;
-use App\Nova\User;
+use App\Nova\Quote;
+use App\Nova\RecurringProduct;
+use Laravel\Nova\Menu\Menu;
 use Illuminate\Http\Request;
-use Laravel\Nova\Nova;
+use Laravel\Nova\Menu\MenuItem;
+use Laravel\Nova\Dashboards\Main;
+use Laravel\Nova\Menu\MenuSection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
-use Laravel\Nova\Dashboards\Main;
-use Laravel\Nova\Menu\Menu;
-use Laravel\Nova\Menu\MenuItem;
-use Laravel\Nova\Menu\MenuSection;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -50,6 +53,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('CRM', [
                     MenuItem::resource(Customer::class),
                     MenuItem::resource(Project::class),
+                    MenuItem::resource(Product::class),
+                    MenuItem::resource(RecurringProduct::class),
+                    MenuItem::resource(Quote::class),
                 ])->icon('users')->collapsable(),
 
                 MenuSection::make('DEV', [
