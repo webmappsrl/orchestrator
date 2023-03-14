@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Currency;
+use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -93,6 +94,18 @@ class Quote extends Resource
                 ->displayUsing(function () {
                     return number_format($this->discount, 2, ',', '.') . ' €';
                 }),
+            KeyValue::make('Additional Services', 'additional_services')
+                ->hideFromIndex()
+                ->rules('array')
+                ->keyLabel('Description')
+                ->valueLabel('Price')
+                ->resolveUsing(function ($value) {
+                    return [
+                        $value['description'] => number_format($value['price'], 2, ',', '.') . ' €'
+                    ];
+                })
+
+
         ];
     }
 

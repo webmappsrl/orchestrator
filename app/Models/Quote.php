@@ -12,6 +12,10 @@ class Quote extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'additional_services' => 'array',
+    ];
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);

@@ -22,7 +22,7 @@ class QuoteFactory extends Factory
         if (Customer::count() == 0) {
             Customer::factory(10)->create();
         }
-        $additionalService = json_encode([
+        $additionalService = ([
             'description' => $this->faker->text(10),
             'price' => $this->faker->randomFloat(2, 0, 100)
         ]);
