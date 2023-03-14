@@ -100,9 +100,11 @@ class Quote extends Resource
                 ->keyLabel('Description')
                 ->valueLabel('Price')
                 ->resolveUsing(function ($value) {
-                    return [
-                        $value['description'] => number_format($value['price'], 2, ',', '.') . ' €'
-                    ];
+                    return collect($value)->mapWithKeys(function ($value) {
+                        return [
+                            $value['description'] => number_format($value['price'], 2, ',', '.') . ' €'
+                        ];
+                    });
                 })
 
 

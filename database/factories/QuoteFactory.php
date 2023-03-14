@@ -22,10 +22,17 @@ class QuoteFactory extends Factory
         if (Customer::count() == 0) {
             Customer::factory(10)->create();
         }
-        $additionalService = ([
-            'description' => $this->faker->text(10),
-            'price' => $this->faker->randomFloat(2, 0, 100)
-        ]);
+
+        // Create a random number of additional services
+        $additionalService = [];
+        $numElements = $this->faker->randomNumber(1);
+        for ($i = 0; $i < $numElements; $i++) {
+            $additionalService[] = [
+                'description' => $this->faker->text(10),
+                'price' => $this->faker->randomFloat(2, 0, 100)
+            ];
+        }
+
         return [
             'title' => $this->faker->name(),
             'google_drive_url' => $this->faker->url(),

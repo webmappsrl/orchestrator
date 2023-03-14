@@ -59,4 +59,20 @@ class Quote extends Model
         }
         return $totalRecurringPrice;
     }
+
+    /**
+     * Get the total of additional services price.
+     * @return float
+     */
+    public function getTotalAdditionalServicesPrice(): float
+    {
+        $totalAdditionalServicesPrice = 0;
+
+        if (!$this->additional_services) return 0;
+
+        foreach ($this->additional_services as $additionalService) {
+            $totalAdditionalServicesPrice += $additionalService['price'] ?? 0;
+        }
+        return $totalAdditionalServicesPrice;
+    }
 }
