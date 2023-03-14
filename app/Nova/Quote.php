@@ -86,6 +86,13 @@ class Quote extends Resource
                     $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice();
                     return number_format($quotePrice, 2, ',', '.') . ' €';
                 })->sortable(),
+            Currency::make('Discount')
+                ->currency('EUR')
+                ->locale('it')
+                ->hideFromIndex()
+                ->displayUsing(function () {
+                    return number_format($this->discount, 2, ',', '.') . ' €';
+                }),
         ];
     }
 
