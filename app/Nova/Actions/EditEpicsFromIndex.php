@@ -31,10 +31,10 @@ class EditEpicsFromIndex extends Action
                 $model->status = $fields['status'];
             }
             if (isset($fields['milestone'])) {
-                $model->user_id = $fields['milestone']->id;
+                $model->milestone_id = $fields['milestone']->id;
             }
             if (isset($fields['project'])) {
-                $model->user_id = $fields['project']->id;
+                $model->project_id = $fields['project']->id;
             }
             if (isset($fields['user'])) {
                 $model->user_id = $fields['user']->id;
