@@ -101,11 +101,22 @@ class Quote extends Resource
                 ->valueLabel('Price')
                 ->resolveUsing(function ($value) {
                     return collect($value)->mapWithKeys(function ($value) {
-                        return [
-                            $value['description'] => number_format($value['price'], 2, ',', '.') . ' €'
-                        ];
+                        if (!empty($value['description']) && !empty($value['price'])) {
+                            return [
+                                $value['description'] => number_format($value['price'], 2, ',', '.') . ' €'
+                            ];
+                        } else {
+                            return [];
+                        }
                     });
-                })
+                }),
+            Currency::make('Additional Services Price')
+                ->currency('EUR')
+                ->locale('it')
+                ->hideFromIndex()
+                ->displayUsing(function () {
+                    return number_format($this->getTotalAdditionalServicesPrice(), 2, ',', '.') . ' €';
+                }),
 
 
         ];
