@@ -14,4 +14,4 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/quote/{id}', [QuoteController::class, 'show']);
+Route::get('/quote/{id}', [QuoteController::class, 'show'])->name('quote');

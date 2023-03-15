@@ -35,7 +35,7 @@ class Quote extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name'
+        'id', 'title'
     ];
 
     /**
@@ -134,10 +134,13 @@ class Quote extends Resource
                 ->displayUsing(function () {
                     $iva = $this->getQuoteNetPrice() * 0.22;
                     return number_format($this->getQuoteNetPrice() + $iva, 2, ',', '.') . ' €';
+                }),
+            Text::make('Link')
+                ->resolveUsing(function ($value, $resource, $attribute) {
+                    return '<a class="link-default" href="' . route('quote', ['id' => $resource->id]) . '">View Quote</a>';
                 })
-
-
-
+                ->asHtml()
+                ->exceptOnForms()
         ];
     }
 
