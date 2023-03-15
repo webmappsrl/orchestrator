@@ -110,12 +110,21 @@ class Quote extends Resource
                         }
                     });
                 }),
-            Currency::make('Additional Services Price')
+            Currency::make('Additional Services Total Price')
                 ->currency('EUR')
                 ->locale('it')
                 ->hideFromIndex()
                 ->displayUsing(function () {
                     return number_format($this->getTotalAdditionalServicesPrice(), 2, ',', '.') . ' €';
+                }),
+
+            Currency::make('IVA')
+                ->currency('EUR')
+                ->locale('it')
+                ->hideFromIndex()
+                ->displayUsing(function () {
+                    $iva = $this->getQuoteNetPrice() * 0.22;
+                    return number_format($iva, 2, ',', '.') . ' €';
                 }),
 
 
