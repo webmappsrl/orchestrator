@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+  phpfpm:
+    extra_hosts:
+        - host.docker.internal:host-gateway
+    # user: root
+    build: ./docker/configs/phpfpm
+    restart: always
+    container_name: "php81_${APP_NAME}"
+    image: wm-phpfpm:8.1
+    ports:
+      - ${DOCKER_PHP_PORT}:9000
+      - ${DOCKER_SERVE_PORT}:8000
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    working_dir: '/var/www/html/${DOCKER_PROJECT_DIR_NAME}'
+  db:
+    image: postgis/postgis:14-3.3
+    container_name: "postgres_${APP_NAME}"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?err}
+      POSTGRES_USER_PASSWORD: ${DB_PASSWORD:?err}
+      POSTGRES_USER: ${DB_USERNAME:?err}
+      POSTGRES_DB: ${DB_DATABASE:?err}
+    volumes:
+      - "./docker/volumes/postgresql/data:/var/lib/postgresql/data"
