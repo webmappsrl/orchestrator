@@ -113,7 +113,7 @@ class Quote extends Resource
             Currency::make('Additional Services Total Price')
                 ->currency('EUR')
                 ->locale('it')
-                ->hideFromIndex()
+                ->onlyonDetail()
                 ->displayUsing(function () {
                     return number_format($this->getTotalAdditionalServicesPrice(), 2, ',', '.') . ' €';
                 }),
@@ -121,11 +121,21 @@ class Quote extends Resource
             Currency::make('IVA')
                 ->currency('EUR')
                 ->locale('it')
-                ->hideFromIndex()
+                ->onlyonDetail()
                 ->displayUsing(function () {
                     $iva = $this->getQuoteNetPrice() * 0.22;
                     return number_format($iva, 2, ',', '.') . ' €';
                 }),
+
+            Currency::make('Final Price')
+                ->currency('EUR')
+                ->locale('it')
+                ->onlyonDetail()
+                ->displayUsing(function () {
+                    $iva = $this->getQuoteNetPrice() * 0.22;
+                    return number_format($this->getQuoteNetPrice() + $iva, 2, ',', '.') . ' €';
+                })
+
 
 
         ];
