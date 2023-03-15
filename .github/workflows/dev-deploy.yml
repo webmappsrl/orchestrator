@@ -1,0 +1,46 @@
+name: Laravel deploy DEVELOP
+
+on:
+  push:
+    branches: 
+      - develop
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:14-3.3
+        env:
+          POSTGRES_PASSWORD: orchestrator
+          POSTGRES_DB: orchestrator
+          POSTGRES_USER: orchestrator
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+      with:
+        php-version: '8.1'
+    - uses: actions/checkout@v3
+    - name: Copy .env
+      run: cp .env-example .env
+    - name: Install Dependencies
+      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+    - name: Generate key
+      run: php artisan key:generate
+    - name: Migrate
+      run: php artisan migrate
+      env:
+          PGPASSWORD: orchestrator
+    - name: Laravel Tests
+      run: php artisan test
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOSTDEV }}
+        username: ${{ secrets.USERNAMEDEV }}
+        port: ${{ secrets.PORTDEV }}
+        key: ${{ secrets.SSHKEYDEV }}
+        script: "cd /root/html/orchestrator && git pull && docker exec php81_orchestrator bash scripts/deploy_dev.sh"
