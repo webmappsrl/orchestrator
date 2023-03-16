@@ -94,16 +94,33 @@ class Quote extends Resource
                 ->displayUsing(function () {
                     return number_format($this->discount, 2, ',', '.') . ' €';
                 }),
+            Text::make('Additional Services', function () {
+                if (is_array($this->additional_services) && count($this->additional_services) > 0) {
+                    $table = '<table><tr><th>Description</th><th>Price</th></tr>';
+                    foreach ($this->additional_services as $service) {
+                        $description = $service['description'] ?? '';
+                        $price = $service['price'] ?? 0;
+                        $table .= "<tr><td>{$description}</td><td>{$price} €</td></tr>";
+                    }
+                    $table .= '</table>';
+                    return $table;
+                } else {
+                    return "No related services";
+                }
+            })->asHtml()->onlyOnDetail(),
             KeyValue::make('Additional Services', 'additional_services')
                 ->hideFromIndex()
-                ->rules('array')
+                ->rules('json')
                 ->keyLabel('Description')
                 ->valueLabel('Price')
                 ->resolveUsing(function ($value) {
-                    return collect($value)->mapWithKeys(function ($value) {
-                        if (!empty($value['description']) && !empty($value['price'])) {
+                    if (is_string($value) && json_decode($value) !== null) {
+                        $value = json_decode($value, true);
+                    }
+                    return collect($value)->mapWithKeys(function ($item) {
+                        if (!empty($item['description']) && !empty($item['price'])) {
                             return [
-                                $value['description'] => number_format($value['price'], 2, ',', '.') . ' €'
+                                $item['description'] => number_format($item['price'], 2, ',', '.') . ' €'
                             ];
                         } else {
                             return [];
