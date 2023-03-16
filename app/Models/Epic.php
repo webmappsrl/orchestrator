@@ -46,6 +46,7 @@ class Epic extends Model
      * quando la epica ha tutte le storie in status done ha status done.
      * quando la epica ha almeno una storia con status diverso da new ha stato in progress, 
      * quando la epica ha almeno una storia con status rejected ha stato rejected.
+     * quando la epica ha tutte le storie in done e almeno una in test ha stato test.
      *
      * @return EpicStatus
      */
@@ -75,6 +76,10 @@ class Epic extends Model
 
         if ($rejectedStories->count() > 0) {
             return EpicStatus::Rejected;
+        }
+
+        if ($TestStories->count() > 0 && $doneStories->count() == $totalStories->count() - $TestStories->count()) {
+            return EpicStatus::Test;
         }
 
         return EpicStatus::Progress;
