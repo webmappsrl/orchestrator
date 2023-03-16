@@ -45,6 +45,7 @@ class Epic extends Model
      * quando la epica ha tutte le storie in status test è in status test, 
      * quando la epica ha tutte le storie in status done ha status done.
      * quando la epica ha almeno una storia con status diverso da new ha stato in progress, 
+     * quando la epica ha almeno una storia con status rejected ha stato rejected.
      *
      * @return EpicStatus
      */
@@ -54,6 +55,7 @@ class Epic extends Model
         $newStories = $this->stories()->where('status', StoryStatus::New)->get();
         $TestStories = $this->stories()->where('status', StoryStatus::Test)->get();
         $doneStories = $this->stories()->where('status', StoryStatus::Done)->get();
+        $rejectedStories = $this->stories()->where('status', StoryStatus::Rejected)->get();
 
         if ($totalStories->count() == 0) {
             return EpicStatus::New;
@@ -71,6 +73,10 @@ class Epic extends Model
             return EpicStatus::Done;
         }
 
+        if ($rejectedStories->count() > 0) {
+            return EpicStatus::Rejected;
+        }
+
         return EpicStatus::Progress;
     }
     public function project()
@@ -83,10 +89,11 @@ class Epic extends Model
      *
      * @return string
      */
-    public function wip(): string {
-        if (count($this->stories)==0) {
+    public function wip(): string
+    {
+        if (count($this->stories) == 0) {
             return 'ND';
         }
-        return $this->stories()->whereIn('status',[StoryStatus::Test,StoryStatus::Done])->count().' / '.$this->stories()->count();
+        return $this->stories()->whereIn('status', [StoryStatus::Test, StoryStatus::Done])->count() . ' / ' . $this->stories()->count();
     }
 }
