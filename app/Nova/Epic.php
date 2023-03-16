@@ -2,9 +2,11 @@
 
 namespace App\Nova;
 
+use App\Enums\EpicStatus;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
@@ -84,9 +86,17 @@ class Epic extends Resource
                 Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
                     return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
                 })->asHtml(),
-                Text::make('Status')
-                    ->hideWhenCreating()
-                    ->hideWhenUpdating(),
+                Select::make('Status', 'status')
+                    ->options([
+                        'new' => EpicStatus::New,
+                        'project' => EpicStatus::Project,
+                        'progress' => EpicStatus::Progress,
+                        'testing' => EpicStatus::Test,
+                        'rejected' => EpicStatus::Rejected,
+                        'done' => EpicStatus::Done,
+                    ])
+
+                    ->rules('required')
             ]),
 
 

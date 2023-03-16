@@ -9,4 +9,5 @@ enum EpicStatus: string
     case Test = 'test';
     case Done = 'done';
     case Rejected = 'rejected';
+    case Project = 'project';
 }
