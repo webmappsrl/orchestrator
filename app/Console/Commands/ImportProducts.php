@@ -2,7 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Imports\ProductsImport;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+
+
+
+
+
 
 class ImportProducts extends Command
 {
@@ -25,5 +34,8 @@ class ImportProducts extends Command
      */
     public function handle(): void
     {
+        $path = $this->argument('path')[0];
+        Excel::import(new ProductsImport(), $path, null, \Maatwebsite\Excel\Excel::XLSX);
+        $this->info('Products imported successfully');
     }
 }
