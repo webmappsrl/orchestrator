@@ -27,11 +27,11 @@ class QuoteFactory extends Factory
         $additionalService = [];
         $numElements = $this->faker->randomNumber(1);
         for ($i = 0; $i < $numElements; $i++) {
-            $additionalService[] = [
-                'description' => $this->faker->text(10),
-                'price' => $this->faker->randomFloat(2, 0, 100)
+            $additionalService = [
+                $this->faker->text(10) => $this->faker->randomFloat(2, 0, 100)
             ];
         }
+
 
         return [
             'title' => $this->faker->name(),
@@ -39,8 +39,6 @@ class QuoteFactory extends Factory
             'customer_id' => Customer::inRandomOrder()->first()->id,
             'discount' => $this->faker->randomFloat(2, 0, 100),
             'additional_services' => $additionalService,
-
-
         ];
     }
 }
