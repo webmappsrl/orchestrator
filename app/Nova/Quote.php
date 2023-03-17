@@ -98,7 +98,8 @@ class Quote extends Resource
                 ->hideFromIndex()
                 ->rules('json')
                 ->keyLabel('Description')
-                ->valueLabel('Price (€)'),
+                ->valueLabel('Price (€)')
+                ->help('Add additional services to the quote. The price must be with "." as decimal separator. (Example: 100.00)'),
             Currency::make('Additional Services Total Price')
                 ->currency('EUR')
                 ->locale('it')
@@ -106,7 +107,6 @@ class Quote extends Resource
                 ->displayUsing(function () {
                     return number_format($this->getTotalAdditionalServicesPrice(), 2, ',', '.') . ' €';
                 }),
-
             Currency::make('IVA')
                 ->currency('EUR')
                 ->locale('it')
@@ -115,7 +115,6 @@ class Quote extends Resource
                     $iva = $this->getQuoteNetPrice() * 0.22;
                     return number_format($iva, 2, ',', '.') . ' €';
                 }),
-
             Currency::make('Final Price')
                 ->currency('EUR')
                 ->locale('it')

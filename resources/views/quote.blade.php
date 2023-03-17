@@ -95,10 +95,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($quote->additional_services as $service)
+                        @foreach ($quote->additional_services as $description => $price)
                             <tr>
-                                <td>{{ $service['description'] }}</td>
-                                <td>{{ $service['price'] }}€</td>
+                                <td>{{ $description }}</td>
+                                <td>{{ $price }}€</td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -72,10 +72,11 @@ class Quote extends Model
     {
         $totalAdditionalServicesPrice = 0;
 
-        if (!$this->additional_services) return 0;
+        if (empty($this->additional_services)) return $totalAdditionalServicesPrice;
 
-        foreach ($this->additional_services as $key => $value) {
-            $totalAdditionalServicesPrice += $value ?? 0;
+        foreach ($this->additional_services as $description => $price) {
+
+            $totalAdditionalServicesPrice += $price ?? 0;
         }
         return $totalAdditionalServicesPrice;
     }

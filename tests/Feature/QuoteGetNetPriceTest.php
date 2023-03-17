@@ -34,9 +34,9 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                ['description' => 'Service A', 'price' => 10],
-                ['description' => 'Service B', 'price' => 20],
-                ['description' => 'Service C', 'price' => 30],
+                'service1' => 100,
+                'service2' => 50,
+                'service3' => 30,
             ], 'discount' => 20
         ]);
         $quote->products()->attach([
@@ -53,8 +53,8 @@ class QuoteGetNetPriceTest extends TestCase
         // Verify that the net price of the quote is calculated correctly
         $this->assertEquals(30, $quote->getTotalPrice());
         $this->assertEquals(30, $quote->getTotalRecurringPrice());
-        $this->assertEquals(60, $quote->getTotalAdditionalServicesPrice());
-        $this->assertEquals(100, $quote->getQuoteNetPrice());
+        $this->assertEquals(180, $quote->getTotalAdditionalServicesPrice());
+        $this->assertEquals(220, $quote->getQuoteNetPrice());
     }
 
     /**
@@ -121,9 +121,9 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                ['description' => 'Service A', 'price' => 10],
-                ['description' => 'Service B', 'price' => 20],
-                ['description' => 'Service C', 'price' => 30],
+                'service1' => 10,
+                'service2' => 20,
+                'service3' => 30,
             ], 'discount' => null
 
         ]);
@@ -204,9 +204,9 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                ['description' => 'Service A', 'price' => 10],
-                ['description' => 'Service B', 'price' => 20],
-                ['description' => 'Service C', 'price' => 30],
+                'service1' => 10,
+                'service2' => 20,
+                'service3' => 30,
             ], 'discount' => 20
         ]);
         $quote->products()->attach([
@@ -271,9 +271,9 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                ['description' => 'Service A', 'price' => 10],
-                ['description' => 'Service B', 'price' => 20],
-                ['description' => 'Service C', 'price' => 30],
+                'service1' => 10,
+                'service2' => 20,
+                'service3' => 30,
             ], 'discount' => null
         ]);
         $quote->products()->attach([
@@ -308,9 +308,9 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                ['description' => 'Service A', 'price' => 10],
-                ['description' => 'Service B', 'price' => 20],
-                ['description' => 'Service C', 'price' => 30],
+                'service1' => 10,
+                'service2' => 20,
+                'service3' => 30,
             ], 'discount' => 20
         ]);
         $quote->recurringProducts()->attach([
@@ -339,9 +339,9 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                ['description' => 'Service A', 'price' => 10],
-                ['description' => 'Service B', 'price' => 20],
-                ['description' => 'Service C', 'price' => 30],
+                'service1' => 10,
+                'service2' => 20,
+                'service3' => 30,
             ], 'discount' => 20
         ]);
 
