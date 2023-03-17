@@ -15,7 +15,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
-
+use Laravel\Nova\Fields\Status;
 
 class Epic extends Resource
 {
@@ -95,8 +95,14 @@ class Epic extends Resource
                         'rejected' => EpicStatus::Rejected,
                         'done' => EpicStatus::Done,
                     ])
-
                     ->rules('required')
+                    ->onlyOnForms(),
+                Status::make('Status')
+                    ->loadingWhen(['status' => 'project'])
+                    ->failedWhen(['status' => 'rejected'])
+
+
+
             ]),
 
 

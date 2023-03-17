@@ -5,8 +5,8 @@ namespace App\Enums;
 enum EpicStatus: string
 {
     case New = 'new';
-    case Progress = 'progress';
-    case Test = 'test';
+    case Progress = 'in progress';
+    case Test = 'testing';
     case Done = 'done';
     case Rejected = 'rejected';
     case Project = 'project';
