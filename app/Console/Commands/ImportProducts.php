@@ -20,7 +20,7 @@ class ImportProducts extends Command
      *
      * @var string
      */
-    protected $signature = 'orchestrator:import-products {path* : Path to the Excel file}';
+    protected $signature = 'orchestrator:import-products {path : Path to the Excel file}';
 
     /**
      * The console command description.
@@ -34,8 +34,9 @@ class ImportProducts extends Command
      */
     public function handle(): void
     {
-        $path = $this->argument('path')[0];
-        Excel::import(new ProductsImport(), $path, null, \Maatwebsite\Excel\Excel::XLSX);
+        $this->info("Importing products from " . $this->argument('path'));
+        $path = Storage::disk('importer')->path($this->argument('path'));
+        Excel::import(new ProductsImport(), $path);
         $this->info('Products imported successfully');
     }
 }

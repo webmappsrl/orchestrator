@@ -12,7 +12,7 @@ class ProductsImport implements ToCollection
     /**
      * @param Collection $collection
      */
-    public function collection(Collection $collection)
+    public function collection(Collection $rows)
     {
         foreach ($rows as $key => $row) {
             if ($key == 0) continue; // skip header row
