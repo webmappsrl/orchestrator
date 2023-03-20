@@ -1,0 +1,68 @@
+body {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    padding: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.quote-header {
+    font-size: 45px;
+    margin-bottom: 50px;
+    text-align: center;
+    letter-spacing: 4px;
+}
+
+.quote-details {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.tables-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.additional-services-table {
+    margin: auto;
+}
+
+.products-table h2,
+.recurring-products-table h2,
+.additional-services-table h2,
+.summary-table h2 {
+    font-size: 25px;
+    font-weight: bold;
+    margin: 30px;
+    text-align: center;
+}
+
+th,
+td {
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+    border: 1px solid #ddd;
+}
+
+th {
+    text-align: center;
+    background-color: #f2f2f2;
+}
+
+.summary-table {
+    border-collapse: collapse;
+    width: 50%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.no-elements {
+    text-align: center;
+    font-size: 30px;
+    color: red;
+}
