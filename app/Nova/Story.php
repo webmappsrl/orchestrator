@@ -13,6 +13,7 @@ use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\BelongsTo;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 
 class Story extends Resource
@@ -70,7 +71,9 @@ class Story extends Resource
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
                 ->sortable(),
-            MarkdownTui::make(__('Description'), 'description')->hideFromIndex(),
+            MarkdownTui::make(__('Description'), 'description')
+                ->hideFromIndex()
+                ->initialEditType(EditorType::MARKDOWN),
             BelongsTo::make('User')->default(function ($request) {
                 $epic = Epic::find($request->input('viaResourceId'));
                 return $epic ? $epic->user_id : null;

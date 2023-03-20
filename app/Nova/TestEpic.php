@@ -17,6 +17,7 @@ use App\Nova\Actions\EditEpicsFromIndex;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
@@ -107,11 +108,13 @@ class TestEpic extends Resource
             new Panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
                     ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN)
             ]),
 
             new Panel('NOTES', [
                 MarkdownTui::make('Notes')
                     ->nullable()
+                    ->initialEditType(EditorType::MARKDOWN)
             ]),
 
             HasMany::make('Stories'),

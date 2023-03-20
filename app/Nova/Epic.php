@@ -16,6 +16,7 @@ use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 use Laravel\Nova\Fields\Status;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 class Epic extends Resource
 {
@@ -109,11 +110,13 @@ class Epic extends Resource
 
             new Panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
+                    ->initialEditType(EditorType::MARKDOWN)
             ]),
 
             new Panel('NOTES', [
                 MarkdownTui::make('Notes')
                     ->nullable()
+                    ->initialEditType(EditorType::MARKDOWN)
             ]),
 
             HasMany::make('Stories'),
