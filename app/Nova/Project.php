@@ -114,4 +114,9 @@ class Project extends Resource
     {
         return [];
     }
+
+    public function indexBreadcrumb()
+    {
+        return null;
+    }
 }

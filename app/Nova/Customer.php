@@ -140,4 +140,9 @@ class Customer extends Resource
     {
         return [];
     }
+
+    public function indexBreadcrumb()
+    {
+        return null;
+    }
 }

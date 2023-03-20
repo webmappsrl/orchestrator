@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Project;
 use App\Enums\EpicStatus;
 use App\Enums\StoryStatus;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Project;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Epic extends Model
 {
@@ -22,6 +23,16 @@ class Epic extends Model
         'text2stories',
         'notes',
     ];
+
+    public function parent()
+    {
+        return $this->config();
+    }
+
+    public function config()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
 
     public function stories()
     {

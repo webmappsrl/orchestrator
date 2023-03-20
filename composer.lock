@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4cf83c55bd6ec69bc85c5fa9fcce749f",
+    "content-hash": "bd7cfd10ccbae38637a2bd967578ac2c",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1144,6 +1144,54 @@
                 "source": "https://github.com/eminiarts/nova-tabs/tree/2.2.3"
             },
             "time": "2022-10-25T19:58:02+00:00"
+        },
+        {
+            "name": "formfeed-uk/nova-breadcrumbs",
+            "version": "3.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Formfeed-UK/nova-breadcrumbs.git",
+                "reference": "a4f260d23b7005dddd839ba07bb04baf3252b4d7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Formfeed-UK/nova-breadcrumbs/zipball/a4f260d23b7005dddd839ba07bb04baf3252b4d7",
+                "reference": "a4f260d23b7005dddd839ba07bb04baf3252b4d7",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.19",
+                "php": "^7.4|^8"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Formfeed\\Breadcrumbs\\BreadcrumbServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Formfeed\\Breadcrumbs\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova package to extend the capabilities of the first party Nova Breadcrumbs",
+            "homepage": "https://github.com/formfeed-uk/nova-breadcrumbs",
+            "keywords": [
+                "breadcrumbs",
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/Formfeed-UK/nova-breadcrumbs/issues",
+                "source": "https://github.com/Formfeed-UK/nova-breadcrumbs/tree/3.1.0"
+            },
+            "time": "2023-03-04T22:14:59+00:00"
         },
         {
             "name": "fruitcake/php-cors",
@@ -7333,7 +7381,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-main",
+            "version": "dev-feature/Hardening_DEV_e_CRM_V2",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",

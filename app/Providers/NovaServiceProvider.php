@@ -37,6 +37,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         parent::boot();
 
+        Nova::withBreadcrumbs(true);
+
         Nova::mainMenu(function (Request $request) {
             return [
                 MenuSection::dashboard(Main::class)->icon('chart-bar'),

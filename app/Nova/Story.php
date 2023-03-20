@@ -165,4 +165,9 @@ class Story extends Resource
     {
         return $this->belongsTo(User::class, 'foreign_key', 'other_key');
     }
+
+    public function indexBreadcrumb()
+    {
+        return null;
+    }
 }

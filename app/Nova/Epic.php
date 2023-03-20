@@ -49,6 +49,7 @@ class Epic extends Resource
         'id', 'name', 'description', 'milestone.name', 'user.name', 'project.name', 'status'
     ];
 
+
     /**
      * Get the fields displayed by the resource.
      *
@@ -179,5 +180,10 @@ class Epic extends Resource
                 ->confirmButtonText('Conferma')
                 ->cancelButtonText('Annulla'),
         ];
+    }
+
+    public function indexBreadcrumb()
+    {
+        return null;
     }
 }
