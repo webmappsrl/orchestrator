@@ -62,7 +62,7 @@ class Story extends Resource
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable()
                 ->displayUsing(function ($name, $a, $b) {
-                    $wrappedName = wordwrap($name, 50, "\n", true);
+                    $wrappedName = wordwrap($name, 75, "\n", true);
                     $htmlName = str_replace("\n", '<br>', $wrappedName);
                     return $htmlName;
                 })
