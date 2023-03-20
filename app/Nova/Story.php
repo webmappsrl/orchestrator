@@ -60,7 +60,13 @@ class Story extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make(__('Name'), 'name')->sortable(),
+            Text::make(__('Name'), 'name')->sortable()
+                ->displayUsing(function ($name, $a, $b) {
+                    $wrappedName = wordwrap($name, 50, "\n", true);
+                    $htmlName = str_replace("\n", '<br>', $wrappedName);
+                    return $htmlName;
+                })
+                ->asHtml(),
             Select::make('Status')
                 ->options(collect(StoryStatus::cases())
                     ->pluck('name', 'value'))
