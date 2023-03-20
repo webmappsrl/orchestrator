@@ -147,6 +147,11 @@ class OrchestratorImport extends Command
 
             $orchestrator_project = Project::where('wmpm_id', $epicProps['project_id'])->first();
             $orchestrator_project_id = is_null($orchestrator_project) ?  $project_unknown->id : $orchestrator_project->id;
+
+            if (Epic::where('wmpm_id', $epicProps['id'])->exists()) {
+                $this->info("Epic with wmpm_id {$epicProps['id']} already exist: skipping.");
+                continue;
+            }
             Epic::updateOrCreate(
                 [
                     'wmpm_id' => $epicProps['id'],

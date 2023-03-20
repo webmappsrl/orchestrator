@@ -38,6 +38,11 @@ class Epic extends Model
         return $this->belongsTo(Milestone::class);
     }
 
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     /**
      * Check epic status based on stories status
      * Se la epica non ha storie -> status=new,
@@ -84,10 +89,7 @@ class Epic extends Model
 
         return EpicStatus::Progress;
     }
-    public function project()
-    {
-        return $this->belongsTo(Project::class);
-    }
+
 
     /**
      * It returns a string with WIP (Work in Progress)
