@@ -75,7 +75,9 @@ class Story extends Resource
                 $epic = Epic::find($request->input('viaResourceId'));
                 return $epic ? $epic->user_id : null;
             }),
-            BelongsTo::make('Epic'),
+            BelongsTo::make('Epic')->default(function ($request) {
+                return $request->input('viaResourceId');
+            }),
         ];
     }
     /**
