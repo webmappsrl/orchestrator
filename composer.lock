@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "89ad96c0dd07e1c0aed5e41b4ce307b8",
+    "content-hash": "bd7cfd10ccbae38637a2bd967578ac2c",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1227,65 +1227,52 @@
             "time": "2022-10-25T19:58:02+00:00"
         },
         {
-            "name": "ezyang/htmlpurifier",
-            "version": "v4.16.0",
+            "name": "formfeed-uk/nova-breadcrumbs",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/ezyang/htmlpurifier.git",
-                "reference": "523407fb06eb9e5f3d59889b3978d5bfe94299c8"
+                "url": "https://github.com/Formfeed-UK/nova-breadcrumbs.git",
+                "reference": "a4f260d23b7005dddd839ba07bb04baf3252b4d7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/523407fb06eb9e5f3d59889b3978d5bfe94299c8",
-                "reference": "523407fb06eb9e5f3d59889b3978d5bfe94299c8",
+                "url": "https://api.github.com/repos/Formfeed-UK/nova-breadcrumbs/zipball/a4f260d23b7005dddd839ba07bb04baf3252b4d7",
+                "reference": "a4f260d23b7005dddd839ba07bb04baf3252b4d7",
                 "shasum": ""
             },
             "require": {
-                "php": "~5.6.0 || ~7.0.0 || ~7.1.0 || ~7.2.0 || ~7.3.0 || ~7.4.0 || ~8.0.0 || ~8.1.0 || ~8.2.0"
-            },
-            "require-dev": {
-                "cerdic/css-tidy": "^1.7 || ^2.0",
-                "simpletest/simpletest": "dev-master"
-            },
-            "suggest": {
-                "cerdic/css-tidy": "If you want to use the filter 'Filter.ExtractStyleBlocks'.",
-                "ext-bcmath": "Used for unit conversion and imagecrash protection",
-                "ext-iconv": "Converts text to and from non-UTF-8 encodings",
-                "ext-tidy": "Used for pretty-printing HTML"
+                "laravel/nova": "^4.19",
+                "php": "^7.4|^8"
             },
             "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Formfeed\\Breadcrumbs\\BreadcrumbServiceProvider"
+                    ]
+                }
+            },
             "autoload": {
-                "files": [
-                    "library/HTMLPurifier.composer.php"
-                ],
-                "psr-0": {
-                    "HTMLPurifier": "library/"
-                },
-                "exclude-from-classmap": [
-                    "/library/HTMLPurifier/Language/"
-                ]
+                "psr-4": {
+                    "Formfeed\\Breadcrumbs\\": "src/"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "LGPL-2.1-or-later"
+                "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Edward Z. Yang",
-                    "email": "admin@htmlpurifier.org",
-                    "homepage": "http://ezyang.com"
-                }
-            ],
-            "description": "Standards compliant HTML filter written in PHP",
-            "homepage": "http://htmlpurifier.org/",
+            "description": "A Laravel Nova package to extend the capabilities of the first party Nova Breadcrumbs",
+            "homepage": "https://github.com/formfeed-uk/nova-breadcrumbs",
             "keywords": [
-                "html"
+                "breadcrumbs",
+                "laravel",
+                "nova"
             ],
             "support": {
-                "issues": "https://github.com/ezyang/htmlpurifier/issues",
-                "source": "https://github.com/ezyang/htmlpurifier/tree/v4.16.0"
+                "issues": "https://github.com/Formfeed-UK/nova-breadcrumbs/issues",
+                "source": "https://github.com/Formfeed-UK/nova-breadcrumbs/tree/3.1.0"
             },
-            "time": "2022-09-18T07:06:19+00:00"
+            "time": "2023-03-04T22:14:59+00:00"
         },
         {
             "name": "fruitcake/php-cors",
@@ -7908,7 +7895,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-develop",
+            "version": "dev-feature/Hardening_DEV_e_CRM_V2",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",

@@ -2,13 +2,14 @@
 
 namespace App\Nova;
 
-use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\BelongsTo;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 
 
@@ -57,11 +58,13 @@ class Project extends Resource
             new panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
                     ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN)
             ]),
 
             new Panel('NOTE', [
                 MarkdownTui::make('Note')
                     ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN)
                     ->nullable()
             ]),
 
@@ -113,5 +116,10 @@ class Project extends Resource
     public function actions(NovaRequest $request)
     {
         return [];
+    }
+
+    public function indexBreadcrumb()
+    {
+        return null;
     }
 }

@@ -2,12 +2,13 @@
 
 namespace App\Nova;
 
-use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\DateTime;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 
 class Milestone extends Resource
@@ -46,7 +47,9 @@ class Milestone extends Resource
         return [
             ID::make(__('ID'), 'id')->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
-            MarkdownTui::make(__('Description'), 'description')->hideFromIndex(),
+            MarkdownTui::make(__('Description'), 'description')
+                ->hideFromIndex()
+                ->initialEditType(EditorType::MARKDOWN),
             DateTime::make(__('Due Date'), 'due_date')->sortable(),
             HasMany::make('Epics'), //display relation with epic in nova field
         ];

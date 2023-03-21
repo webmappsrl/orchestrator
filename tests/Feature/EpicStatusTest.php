@@ -63,14 +63,26 @@ class EpicStatusTest extends TestCase
 
     /**
      * @test
-     * quando la epica ha almeno una storia con status diverso da new ha stato in progress, 
+     * quando la epica ha almeno una storia con status diverso da new o rejected ha stato in progress, 
      */
-    public function at_least_one_story_different_from_new_then_epic_status_progress()
+    public function at_least_one_story_different_from_new_or_rejected_then_epic_status_progress()
     {
         $e = Epic::factory()->create();
         Story::factory(9)->create(['epic_id' => $e->id, 'status' => StoryStatus::New]);
         Story::factory(1)->create(['epic_id' => $e->id, 'status' => collect(StoryStatus::cases())
-            ->reject(fn ($status) => $status === StoryStatus::New)->random()]);
+            ->reject(fn ($status) => $status === StoryStatus::New || $status === StoryStatus::Rejected)->random()]);
         $this->assertEquals(EpicStatus::Progress, $e->getStatusFromStories());
+    }
+
+    /**
+     * @test
+     * quando la epica ha almeno una storia con status rejected ha stato rejected.
+     */
+    public function at_least_one_story_rejected_then_epic_status_rejected()
+    {
+        $e = Epic::factory()->create();
+        Story::factory(9)->create(['epic_id' => $e->id, 'status' => StoryStatus::New]);
+        Story::factory(1)->create(['epic_id' => $e->id, 'status' => StoryStatus::Rejected]);
+        $this->assertEquals(EpicStatus::Rejected, $e->getStatusFromStories());
     }
 }

@@ -14,6 +14,16 @@ class Story extends Model
     protected $fillable = [
         'status'
     ];
+    public function parent()
+    {
+        return $this->config();
+    }
+
+    public function config()
+    {
+        return $this->belongsTo(Epic::class, 'epic_id');
+    }
+
 
     protected static function booted()
     {

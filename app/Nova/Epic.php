@@ -2,9 +2,11 @@
 
 namespace App\Nova;
 
+use App\Enums\EpicStatus;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
@@ -13,7 +15,8 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
-
+use Laravel\Nova\Fields\Status;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 class Epic extends Resource
 {
@@ -46,6 +49,7 @@ class Epic extends Resource
     public static $search = [
         'id', 'name', 'description', 'milestone.name', 'user.name', 'project.name', 'status'
     ];
+
 
     /**
      * Get the fields displayed by the resource.
@@ -84,19 +88,35 @@ class Epic extends Resource
                 Text::make('URL', 'pull_request_link')->nullable()->hideFromIndex()->displayUsing(function () {
                     return '<a class="link-default" target="_blank" href="' . $this->pull_request_link . '">' . $this->pull_request_link . '</a>';
                 })->asHtml(),
-                Text::make('Status')
-                    ->hideWhenCreating()
-                    ->hideWhenUpdating(),
+                Select::make('Status', 'status')
+                    ->options([
+                        'new' => EpicStatus::New,
+                        'project' => EpicStatus::Project,
+                        'progress' => EpicStatus::Progress,
+                        'testing' => EpicStatus::Test,
+                        'rejected' => EpicStatus::Rejected,
+                        'done' => EpicStatus::Done,
+                    ])
+                    ->rules('required')
+                    ->onlyOnForms(),
+                Status::make('Status')
+                    ->loadingWhen(['status' => 'project'])
+                    ->failedWhen(['status' => 'rejected'])
+
+
+
             ]),
 
 
             new Panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
+                    ->initialEditType(EditorType::MARKDOWN)
             ]),
 
             new Panel('NOTES', [
                 MarkdownTui::make('Notes')
                     ->nullable()
+                    ->initialEditType(EditorType::MARKDOWN)
             ]),
 
             HasMany::make('Stories'),
@@ -163,5 +183,10 @@ class Epic extends Resource
                 ->confirmButtonText('Conferma')
                 ->cancelButtonText('Annulla'),
         ];
+    }
+
+    public function indexBreadcrumb()
+    {
+        return null;
     }
 }

@@ -39,6 +39,13 @@ class EditEpicsFromIndex extends Action
             if (isset($fields['user'])) {
                 $model->user_id = $fields['user']->id;
             }
+
+            $model->stories->each(function ($story) use ($fields) {
+                if (isset($fields['status'])) {
+                    $story->status = $fields['status'];
+                    $story->save();
+                }
+            });
             $model->save();
         }
     }

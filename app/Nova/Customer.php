@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
@@ -90,6 +91,7 @@ class Customer extends Resource
             new Panel('NOTES', [
                 MarkdownTui::make('Notes', 'notes')
                     ->showOnDetail()
+                    ->initialEditType(EditorType::MARKDOWN)
             ]),
 
             HasMany::make('Projects'),
@@ -139,5 +141,10 @@ class Customer extends Resource
     public function actions(NovaRequest $request)
     {
         return [];
+    }
+
+    public function indexBreadcrumb()
+    {
+        return null;
     }
 }

@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Project;
 use App\Enums\EpicStatus;
 use App\Enums\StoryStatus;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Project;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Epic extends Model
 {
@@ -23,6 +24,16 @@ class Epic extends Model
         'notes',
     ];
 
+    public function parent()
+    {
+        return $this->config();
+    }
+
+    public function config()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
+
     public function stories()
     {
         return $this->hasMany(Story::class);
@@ -38,6 +49,11 @@ class Epic extends Model
         return $this->belongsTo(Milestone::class);
     }
 
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     /**
      * Check epic status based on stories status
      * Se la epica non ha storie -> status=new,
@@ -45,6 +61,8 @@ class Epic extends Model
      * quando la epica ha tutte le storie in status test è in status test, 
      * quando la epica ha tutte le storie in status done ha status done.
      * quando la epica ha almeno una storia con status diverso da new ha stato in progress, 
+     * quando la epica ha almeno una storia con status rejected ha stato rejected.
+     * quando la epica ha tutte le storie in done e almeno una in test ha stato test.
      *
      * @return EpicStatus
      */
@@ -54,6 +72,7 @@ class Epic extends Model
         $newStories = $this->stories()->where('status', StoryStatus::New)->get();
         $TestStories = $this->stories()->where('status', StoryStatus::Test)->get();
         $doneStories = $this->stories()->where('status', StoryStatus::Done)->get();
+        $rejectedStories = $this->stories()->where('status', StoryStatus::Rejected)->get();
 
         if ($totalStories->count() == 0) {
             return EpicStatus::New;
@@ -71,22 +90,28 @@ class Epic extends Model
             return EpicStatus::Done;
         }
 
+        if ($rejectedStories->count() > 0) {
+            return EpicStatus::Rejected;
+        }
+
+        if ($TestStories->count() > 0 && $doneStories->count() == $totalStories->count() - $TestStories->count()) {
+            return EpicStatus::Test;
+        }
+
         return EpicStatus::Progress;
     }
-    public function project()
-    {
-        return $this->belongsTo(Project::class);
-    }
+
 
     /**
      * It returns a string with WIP (Work in Progress)
      *
      * @return string
      */
-    public function wip(): string {
-        if (count($this->stories)==0) {
+    public function wip(): string
+    {
+        if (count($this->stories) == 0) {
             return 'ND';
         }
-        return $this->stories()->whereIn('status',[StoryStatus::Test,StoryStatus::Done])->count().' / '.$this->stories()->count();
+        return $this->stories()->whereIn('status', [StoryStatus::Test, StoryStatus::Done])->count() . ' / ' . $this->stories()->count();
     }
 }

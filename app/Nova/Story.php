@@ -6,12 +6,14 @@ namespace App\Nova;
 use App\Models\Epic;
 use App\Models\User;
 use App\Enums\StoryStatus;
-use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\BelongsTo;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 
 class Story extends Resource
@@ -58,14 +60,33 @@ class Story extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make(__('Name'), 'name')->sortable(),
-            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->default(StoryStatus::New->value)->displayUsingLabels(),
-            MarkdownTui::make(__('Description'), 'description')->hideFromIndex(),
+            Text::make(__('Name'), 'name')->sortable()
+                ->displayUsing(function ($name, $a, $b) {
+                    $wrappedName = wordwrap($name, 75, "\n", true);
+                    $htmlName = str_replace("\n", '<br>', $wrappedName);
+                    return $htmlName;
+                })
+                ->asHtml(),
+            Select::make('Status')
+                ->options(collect(StoryStatus::cases())
+                    ->pluck('name', 'value'))
+                ->default(StoryStatus::New->value)
+                ->displayUsingLabels()
+                ->hideFromIndex(),
+            Status::make('Status')
+                ->loadingWhen(['status' => 'progress'])
+                ->failedWhen(['status' => 'rejected'])
+                ->sortable(),
+            MarkdownTui::make(__('Description'), 'description')
+                ->hideFromIndex()
+                ->initialEditType(EditorType::MARKDOWN),
             BelongsTo::make('User')->default(function ($request) {
                 $epic = Epic::find($request->input('viaResourceId'));
                 return $epic ? $epic->user_id : null;
             }),
-            BelongsTo::make('Epic'),
+            BelongsTo::make('Epic')->default(function ($request) {
+                return $request->input('viaResourceId');
+            }),
         ];
     }
     /**
@@ -152,5 +173,10 @@ class Story extends Resource
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'foreign_key', 'other_key');
+    }
+
+    public function indexBreadcrumb()
+    {
+        return null;
     }
 }
