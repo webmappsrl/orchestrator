@@ -12,6 +12,7 @@
         "datomatic/nova-markdown-tui": "^1.2",
         "davidpiesse/nova-toggle": "v4.x-dev",
         "eminiarts/nova-tabs": "^2.2",
+        "ezyang/htmlpurifier": "^4.16",
         "formfeed-uk/nova-breadcrumbs": "^3.1",
         "guzzlehttp/guzzle": "^7.2",
         "khalin/nova4-searchable-belongs-to-filter": "^1.0",
