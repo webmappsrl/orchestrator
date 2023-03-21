@@ -125,7 +125,7 @@ class Quote extends Resource
                 }),
             Text::make('Link')
                 ->resolveUsing(function ($value, $resource, $attribute) {
-                    return '<a class="link-default" href="' . route('quote', ['id' => $resource->id]) . '">View Quote</a>';
+                    return '<a class="link-default" target="_blank" href="' . route('quote', ['id' => $resource->id]) . '">View Quote</a>';
                 })
                 ->asHtml()
                 ->exceptOnForms()
