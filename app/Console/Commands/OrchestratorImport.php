@@ -143,15 +143,16 @@ class OrchestratorImport extends Command
             $this->info("Importing epic $counter / $tot_epics");
             $counter++;
 
+            if (Epic::where('wmpm_id', $element)->exists()) {
+                $this->info("Epic with wmpm_id {$element} already exist: skipping.");
+                continue;
+            }
+
             $epicProps = json_decode(file_get_contents('https://wmpm.webmapp.it/api/export/epic/' . $element), true);
 
             $orchestrator_project = Project::where('wmpm_id', $epicProps['project_id'])->first();
             $orchestrator_project_id = is_null($orchestrator_project) ?  $project_unknown->id : $orchestrator_project->id;
 
-            if (Epic::where('wmpm_id', $epicProps['id'])->exists()) {
-                $this->info("Epic with wmpm_id {$epicProps['id']} already exist: skipping.");
-                continue;
-            }
             Epic::updateOrCreate(
                 [
                     'wmpm_id' => $epicProps['id'],
