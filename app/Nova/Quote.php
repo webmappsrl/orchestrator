@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Currency;
+use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -34,7 +35,7 @@ class Quote extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name'
+        'id', 'title'
     ];
 
     /**
@@ -86,6 +87,48 @@ class Quote extends Resource
                     $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice();
                     return number_format($quotePrice, 2, ',', '.') . ' €';
                 })->sortable(),
+            Currency::make('Discount')
+                ->currency('EUR')
+                ->locale('it')
+                ->hideFromIndex()
+                ->displayUsing(function () {
+                    return number_format($this->discount, 2, ',', '.') . ' €';
+                }),
+            KeyValue::make('Additional Services', 'additional_services')
+                ->hideFromIndex()
+                ->rules('json')
+                ->keyLabel('Description')
+                ->valueLabel('Price (€)')
+                ->help('Add additional services to the quote. The price must be with "." as decimal separator. (Example: 100.00)'),
+            Currency::make('Additional Services Total Price')
+                ->currency('EUR')
+                ->locale('it')
+                ->onlyonDetail()
+                ->displayUsing(function () {
+                    return number_format($this->getTotalAdditionalServicesPrice(), 2, ',', '.') . ' €';
+                }),
+            Currency::make('IVA')
+                ->currency('EUR')
+                ->locale('it')
+                ->onlyonDetail()
+                ->displayUsing(function () {
+                    $iva = $this->getQuoteNetPrice() * 0.22;
+                    return number_format($iva, 2, ',', '.') . ' €';
+                }),
+            Currency::make('Final Price')
+                ->currency('EUR')
+                ->locale('it')
+                ->onlyonDetail()
+                ->displayUsing(function () {
+                    $iva = $this->getQuoteNetPrice() * 0.22;
+                    return number_format($this->getQuoteNetPrice() + $iva, 2, ',', '.') . ' €';
+                }),
+            Text::make('Link')
+                ->resolveUsing(function ($value, $resource, $attribute) {
+                    return '<a class="link-default" target="_blank" href="' . route('quote', ['id' => $resource->id]) . '">View Quote</a>';
+                })
+                ->asHtml()
+                ->exceptOnForms()
         ];
     }
 
