@@ -29,9 +29,12 @@
                 <td>
                     <ul>
                         <li><strong>Nome: </strong>{{ $quote->customer->full_name ?? $quote->customer->name }}</li>
-                        <li><strong>Dominio: </strong>{{ $quote->customer->domain_name }}</li>
+                        </li>
+                        @if ($quote->customer->domain_name)
+                            <li><strong>Dominio: </strong>{{ $quote->customer->domain_name }}</li>
+                        @endif
                         @if ($quote->customer->has_subscription)
-                            <li><strong>Ammontare Sottoscrizione: </strong>{{ $quote->customer->subscription_amount }}
+                            <li><strong>Ammontare Sottoscrizione: </strong>{{ $quote->customer->subscription_amount }}€
                             </li>
                         @else
                             <li><strong>Non sottoscritto</strong></li>
