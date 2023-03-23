@@ -10,12 +10,50 @@
 </head>
 
 <body>
-    <h1 class="quote-header"> Quote: {{ $quote->title }} </h1>
-    <div class="quote-details">
-        <p> <strong>Id:</strong> {{ $quote->id }}</p>
-        <p> <strong>Creata il:</strong> {{ $quote->created_at }}</p>
-        <p> <strong>Destinatario:</strong> {{ $quote->customer->full_name ?? $quote->customer->name }}</p>
+    {{-- <h1 class="quote-header"> Quote: {{ $quote->title }} </h1> --}}
+    <div class="webmapp-header">
+        <h2>Webmapp S.r.l.</h2>
+        <p>Via A. Cei, 2 - 56123 Pisa</p>
+        <p>E-Mail: <a class='mail-link'href="mailto:info@webmapp.it">info@webmapp.it</a></p>
+        <p>Capitale Sociale € 10.000,00 – P.Iva e CF 02266770508</p>
     </div>
+    <table class="quote-details">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Dettagli preventivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <ul>
+                        <li><strong>Nome: </strong>{{ $quote->customer->full_name ?? $quote->customer->name }}</li>
+                        </li>
+                        @if ($quote->customer->domain_name)
+                            <li><strong>Dominio: </strong>{{ $quote->customer->domain_name }}</li>
+                        @endif
+                        @if ($quote->customer->has_subscription)
+                            <li><strong>Ammontare Sottoscrizione: </strong>{{ $quote->customer->subscription_amount }}€
+                            </li>
+                        @else
+                            <li><strong>Non sottoscritto</strong></li>
+                        @endif
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li><strong>Nome:</strong> {{ $quote->title }}</li>
+                        <li><strong>Id:</strong> {{ $quote->id }}</li>
+                        <li><strong>Emesso il:</strong> {{ date('d-m-Y', strtotime($quote->created_at)) }}</li>
+                        <li><strong>Scadenza:</strong> {{ date('d-m-Y', strtotime($quote->created_at->addDays(30))) }}
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
 
     <div class="tables-container">
         <div class="products-table">
