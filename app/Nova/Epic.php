@@ -177,7 +177,9 @@ class Epic extends Resource
             (new CreateStoriesFromText)
                 ->onlyOnDetail(),
             (new EpicDoneAction)
-                ->onlyOnDetail(),
+                //inlining the action
+                ->onlyOnTableRow()
+                ->showOnDetail(),
             (new EditEpicsFromIndex)
                 ->confirmText('Seleziona stato, milestone, project e utente da assegnare alle epiche che hai selezionato. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
                 ->confirmButtonText('Conferma')
