@@ -9,7 +9,7 @@ use Laravel\Nova\Fields\DateTime;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-
+use Laravel\Nova\Fields\Number as Number;
 
 class Milestone extends Resource
 {
@@ -52,6 +52,11 @@ class Milestone extends Resource
                 ->initialEditType(EditorType::MARKDOWN),
             DateTime::make(__('Due Date'), 'due_date')->sortable(),
             HasMany::make('Epics'), //display relation with epic in nova field
+            //display the total number of epic that are in this milestone
+            Number::make('Epics', function () {
+                return $this->epics->count();
+            })->sortable(),
+
         ];
     }
 
