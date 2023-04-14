@@ -98,7 +98,8 @@ class Epic extends Resource
                         'done' => EpicStatus::Done,
                     ])
                     ->rules('required')
-                    ->onlyOnForms(),
+                    ->onlyOnForms()
+                    ->default('project'),
                 Status::make('Status')
                     ->loadingWhen(['status' => 'project'])
                     ->failedWhen(['status' => 'rejected'])
