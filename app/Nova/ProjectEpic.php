@@ -175,4 +175,8 @@ class ProjectEpic extends Resource
                 ->cancelButtonText('Annulla'),
         ];
     }
+    public function indexBreadcrumb()
+    {
+        return null;
+    }
 }

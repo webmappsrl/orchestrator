@@ -175,4 +175,8 @@ class RejectedEpic extends Resource
                 ->cancelButtonText('Annulla'),
         ];
     }
+    public function indexBreadcrumb()
+    {
+        return null;
+    }
 }
