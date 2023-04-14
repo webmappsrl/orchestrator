@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Nova\Actions\SetMilestoneEpicsToDone;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
@@ -112,6 +113,11 @@ class Milestone extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new SetMilestoneEpicsToDone)
+                //inlining the action
+                ->onlyOnTableRow()
+                ->showOnDetail(),
+        ];
     }
 }
