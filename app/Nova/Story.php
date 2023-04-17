@@ -11,6 +11,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\BelongsTo;
+use App\Nova\Actions\MoveStoriesFromEpic;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
@@ -160,6 +161,11 @@ class Story extends Resource
             (new actions\StoryToRejectedStatusAction)
                 ->showInline()
                 ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Rejected o "Annulla" per annullare.')
+                ->confirmButtonText('Conferma')
+                ->cancelButtonText('Annulla'),
+
+            (new MoveStoriesFromEpic)
+                ->confirmText('Seleziona l\'epica in cui vuoi spostare le storie selezionate. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
                 ->confirmButtonText('Conferma')
                 ->cancelButtonText('Annulla'),
         ];
