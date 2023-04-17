@@ -15,7 +15,7 @@ use App\Nova\Actions\MoveStoriesFromEpic;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-
+use Laravel\Nova\Panel;
 
 class Story extends Resource
 {
@@ -68,12 +68,6 @@ class Story extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
-            Select::make('Status')
-                ->options(collect(StoryStatus::cases())
-                    ->pluck('name', 'value'))
-                ->default(StoryStatus::New->value)
-                ->displayUsingLabels()
-                ->hideFromIndex(),
             Status::make('Status')
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
@@ -88,6 +82,12 @@ class Story extends Resource
             BelongsTo::make('Epic')->default(function ($request) {
                 return $request->input('viaResourceId');
             }),
+            //add a panel to show the related epic description
+            new Panel(__('Epic Description'), [
+                MarkdownTui::make(__('Description'), 'epic.description')
+                    ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN),
+            ]),
         ];
     }
     /**
