@@ -14,11 +14,11 @@ use App\Nova\Customer;
 use App\Nova\DoneEpic;
 use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
+use App\Enums\UserRole;
 use App\Nova\Milestone;
 use App\Nova\ProjectEpic;
 use App\Nova\ProgressEpic;
 use App\Nova\RejectedEpic;
-use Laravel\Nova\Menu\Menu;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
 use Laravel\Nova\Menu\MenuItem;
@@ -101,8 +101,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function gate()
     {
         Gate::define('viewNova', function ($user) {
-            $userIsAdmin = $user->role == 'admin';
-            $userIsEditor = $user->role == 'editor';
+            $userIsAdmin = $user->hasRole(UserRole::Admin);
+            $userIsEditor = $user->hasRole(UserRole::Editor);
             $isInDevelopment = env('APP_ENV') == 'develop';
             $isInProduction = env('APP_ENV') == 'production';
 

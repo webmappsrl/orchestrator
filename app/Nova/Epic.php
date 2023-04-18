@@ -107,16 +107,8 @@ class Epic extends Resource
 
 
             ]),
-
-
             new Panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
-                    ->initialEditType(EditorType::MARKDOWN)
-            ]),
-
-            new Panel('NOTES', [
-                MarkdownTui::make('Notes')
-                    ->nullable()
                     ->initialEditType(EditorType::MARKDOWN)
             ]),
 
