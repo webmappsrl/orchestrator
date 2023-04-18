@@ -5,25 +5,44 @@ Introduction to ORCHSTRATOR (TBD)
 
 ## INSTALL
 
-First of all install the [GEOBOX](https://github.com/webmappsrl/geobox) repo and configure the ALIASES command. 
+First of all install the [GEOBOX](https://github.com/webmappsrl/geobox) repo and configure the ALIASES command.
+Replace `${instance name}` with the instance name (APP_NAME in .env file)
 
 ```sh
-git clone git@github.com:webmappsrl/orchestrator.git
+git clone git@github.com:webmappsrl/${instance name}.git orchestrator
+git flow init
 ```
-Important NOTE: remember to checkout the develop branch.
+
+*Important NOTE*: remember to checkout the develop branch.
 
 ```sh
-cd orchestrator
+cd ${instance name}
 bash docker/init-docker.sh
-geobox_install orchestrator
+docker exec -u 0 -it php81_${instance name} bash
+chown -R 33 storage
 ```
-## Run web server from shell outside docker
 
-In order to start a web server in local environment use the following command:
-Replace `${instance name}` with the instance name (APP_NAME in .env file) 
+*Important NOTE*: if you have installed XDEBUG you need to create the xdebug.log file on the docker:
 
-```sh
-geobox_serve ${instance name}
+```bash
+docker exec -u 0 -it php81_${instance name} bash
+touch /var/log/xdebug.log
+chown -R 33 /var/log/
+```
+
+At the end run install command to for this instance
+```bash
+geobox_install ${instance name}
+```
+
+*Important NOTE*: 
+- Update your local repository of Geobox following its [Aliases instructions](https://github.com/webmappsrl/geobox#aliases) 
+- Make sure that the version of wm-package of your instance is at leaset 1.1
+
+Finally to import a fresh copy of database use Geobox restore command:
+
+```bash
+geobox_dump_restore ${instance name}
 ```
 
 

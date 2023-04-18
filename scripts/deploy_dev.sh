@@ -22,6 +22,7 @@ php artisan clear-compiled
 
 composer dump-autoload
 php artisan optimize
+php artisan config:clear
 
 # Compile npm assets
 # npm run prod
