@@ -18,7 +18,7 @@ php artisan clear-compiled
 # TODO: Uncomment when api.favorite issue will be resolved
 # php artisan optimize
 
-php artisan migrate
+php artisan migrate --force
 
 php artisan up
 
