@@ -106,13 +106,6 @@ class ProjectEpic extends Resource
                     ->hideFromIndex()
                     ->initialEditType(EditorType::MARKDOWN)
             ]),
-
-            new Panel('NOTES', [
-                MarkdownTui::make('Notes')
-                    ->nullable()
-                    ->initialEditType(EditorType::MARKDOWN)
-            ]),
-
             HasMany::make('Stories'),
         ];
     }
