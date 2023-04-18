@@ -14,3 +14,7 @@ yarn-error.log
 /.idea
 /docker/volumes/*
 docker-compose.yml
+/.phpunit.cache
+.phpunit.result.cache
+/storage/backups
+/storage/app/database

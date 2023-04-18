@@ -25,3 +25,5 @@ services:
       POSTGRES_DB: ${DB_DATABASE:?err}
     volumes:
       - "./docker/volumes/postgresql/data:/var/lib/postgresql/data"
+    ports: 
+      - ${DOCKER_PSQL_PORT}:5432

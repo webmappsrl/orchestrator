@@ -9,17 +9,26 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
+        "datomatic/nova-markdown-tui": "^1.2",
+        "davidpiesse/nova-toggle": "v4.x-dev",
+        "emilianotisato/nova-tinymce": "^2.0",
+        "eminiarts/nova-tabs": "^2.2",
+        "ezyang/htmlpurifier": "^4.16",
+        "formfeed-uk/nova-breadcrumbs": "^3.1",
         "guzzlehttp/guzzle": "^7.2",
+        "khalin/nova4-searchable-belongs-to-filter": "^1.0",
         "kongulov/nova-tab-translatable": "^2.1",
         "laravel/framework": "^10.0",
         "laravel/nova": "^4.0",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.12",
+        "maatwebsite/excel": "^3.1",
+        "outl1ne/nova-multiselect-field": "^4.2",
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-translatable": "^6.3",
-        "wm/wm-package": "*",
-        "wm/wm-internal": "*"
+        "wm/wm-internal": "*",
+        "wm/wm-package": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

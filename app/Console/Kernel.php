@@ -25,7 +25,9 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
+        $this->load(__DIR__ . 'Commands/OrchestratorImport');
+        $this->load(__DIR__ . 'Commands/ImportProducts');
 
         require base_path('routes/console.php');
     }

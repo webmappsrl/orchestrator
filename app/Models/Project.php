@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Epic;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Project extends Model
 {
@@ -12,11 +13,17 @@ class Project extends Model
     protected $fillable = [
         'name',
         'description',
-        'customer_id'
+        'customer_id',
+        'wmpm_id'
     ];
 
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function epics()
+    {
+        return $this->hasMany(Epic::class);
     }
 }

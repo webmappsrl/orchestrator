@@ -4,16 +4,18 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Wm\WmPackage\Model\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use App\Enums\UserRole;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Auth\Impersonatable;
+use Illuminate\Notifications\Notifiable;
+use Wm\WmPackage\Model\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Impersonatable, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -24,6 +26,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'roles'
     ];
 
     /**
@@ -67,4 +70,24 @@ class User extends Authenticatable
         return $this->hasMany(Epic::class);
     }
 
+    /**
+     * Determine if the user can impersonate another user.
+     *
+     * @return bool
+     */
+    public function canImpersonate()
+    {
+        return $this->hasRole(UserRole::Admin);
+    }
+
+
+    /**
+     * Determine if the user can be impersonated.
+     *
+     * @return bool
+     */
+    public function canBeImpersonated()
+    {
+        return true;
+    }
 }

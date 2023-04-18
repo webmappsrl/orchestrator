@@ -17,20 +17,7 @@ class AppFactory extends Factory
     public function definition()
     {
         return [
-            'name' => [
-                'it' => $this->faker->name(),
-                'en' => $this->faker->name(),
-                'de' => $this->faker->name(),
-                'fr' => $this->faker->name(),
-                'es' => $this->faker->name(),
-            ],
-            'description' => [
-                'it' => $this->faker->text(),
-                'en' => $this->faker->text(),
-                'de' => $this->faker->text(),
-                'fr' => $this->faker->text(),
-                'es' => $this->faker->text(),
-            ],
+            'name' => $this->faker->name()
         ];
     }
 }

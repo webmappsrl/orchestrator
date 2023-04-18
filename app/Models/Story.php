@@ -3,14 +3,37 @@
 namespace App\Models;
 
 use App\Models\Epic;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Story extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'status'
+    ];
+    public function parent()
+    {
+        return $this->config();
+    }
+
+    public function config()
+    {
+        return $this->belongsTo(Epic::class, 'epic_id');
+    }
+
+
+    protected static function booted()
+    {
+        //update epic status whenever a story is created or updated
+        static::saved(function (Story $story) {
+            $epic = $story->epic;
+            $epic->status = $epic->getStatusFromStories()->value;
+            $epic->save();
+        });
+    }
 
     public function user()
     {
