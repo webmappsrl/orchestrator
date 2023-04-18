@@ -36,7 +36,7 @@ geobox_install ${instance name}
 ```
 
 *Important NOTE*: 
-- Update your local repository of Geobox following its [Aliases instructions](https://github.com/webmappsrl/geobox#aliases) 
+- Update your local repository of Geobox following its [Aliases instructions](https://github.com/webmappsrl/geobox#aliases-and-global-shell-variable). Make sure that you have set the environment variable GEOBOX_PATH correctly.
 - Make sure that the version of wm-package of your instance is at leaset 1.1. Use command:
 ```bash
 composer update wm/wp-package
