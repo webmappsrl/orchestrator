@@ -5,6 +5,7 @@ namespace App\Nova;
 use Laravel\Nova\Panel;
 use App\Enums\EpicStatus;
 use Laravel\Nova\Fields\ID;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\BelongsTo;
@@ -14,10 +15,9 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
-class DoneEpic extends Resource
+class RejectedEpic extends Resource
 {
     /**
      * The model the resource corresponds to.
@@ -58,7 +58,7 @@ class DoneEpic extends Resource
      */
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->where('status', EpicStatus::Done);
+        return $query->where('status', EpicStatus::Rejected);
     }
 
     /**
@@ -106,6 +106,13 @@ class DoneEpic extends Resource
                     ->hideFromIndex()
                     ->initialEditType(EditorType::MARKDOWN)
             ]),
+
+            new Panel('NOTES', [
+                MarkdownTui::make('Notes')
+                    ->nullable()
+                    ->initialEditType(EditorType::MARKDOWN)
+            ]),
+
             HasMany::make('Stories'),
         ];
     }

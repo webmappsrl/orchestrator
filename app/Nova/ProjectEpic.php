@@ -17,7 +17,7 @@ use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
-class DoneEpic extends Resource
+class ProjectEpic extends Resource
 {
     /**
      * The model the resource corresponds to.
@@ -58,7 +58,7 @@ class DoneEpic extends Resource
      */
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->where('status', EpicStatus::Done);
+        return $query->where('status', EpicStatus::Project);
     }
 
     /**
@@ -106,6 +106,13 @@ class DoneEpic extends Resource
                     ->hideFromIndex()
                     ->initialEditType(EditorType::MARKDOWN)
             ]),
+
+            new Panel('NOTES', [
+                MarkdownTui::make('Notes')
+                    ->nullable()
+                    ->initialEditType(EditorType::MARKDOWN)
+            ]),
+
             HasMany::make('Stories'),
         ];
     }

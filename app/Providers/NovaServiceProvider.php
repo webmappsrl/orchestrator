@@ -16,8 +16,9 @@ use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
 use App\Nova\Milestone;
+use App\Nova\ProjectEpic;
 use App\Nova\ProgressEpic;
-use Laravel\Nova\Menu\Menu;
+use App\Nova\RejectedEpic;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
 use Laravel\Nova\Menu\MenuItem;
@@ -65,9 +66,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Milestone::class),
                     MenuItem::resource(Epic::class),
                     MenuItem::resource(NewEpic::class),
+                    MenuItem::resource(ProjectEpic::class),
                     MenuItem::resource(ProgressEpic::class),
                     MenuItem::resource(TestEpic::class),
                     MenuItem::resource(DoneEpic::class),
+                    MenuItem::resource(RejectedEpic::class),
                 ])->icon('code')->collapsable(),
             ];
         });

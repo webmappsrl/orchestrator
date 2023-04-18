@@ -172,4 +172,8 @@ class TestEpic extends Resource
                 ->cancelButtonText('Annulla'),
         ];
     }
+    public function indexBreadcrumb()
+    {
+        return null;
+    }
 }

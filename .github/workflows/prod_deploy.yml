@@ -1,9 +1,9 @@
-name: Laravel deploy DEVELOP
+name: Laravel deploy PROD
 
 on:
   push:
     branches: 
-      - develop
+      - main
 
 jobs:
   laravel-tests:
@@ -41,8 +41,8 @@ jobs:
     - name: Deploy to server
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOSTDEV }}
-        username: ${{ secrets.USERNAMEDEV }}
-        port: ${{ secrets.PORTDEV }}
-        key: ${{ secrets.SSHKEYDEV }}
-        script: "cd /root/html/orchestrator && git pull && docker exec php81_orchestrator bash scripts/deploy_dev.sh"
+        host: ${{ secrets.HOSTPROD }}
+        username: ${{ secrets.USERNAMEPROD }}
+        port: ${{ secrets.PORTPROD}}
+        key: ${{ secrets.SSHKEYPROD }}
+        script: "cd /root/html/orchestrator && git pull && docker exec php81_orchestrator bash scripts/deploy_prod.sh"
