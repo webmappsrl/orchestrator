@@ -11,6 +11,7 @@
         "php": "^8.0.2",
         "datomatic/nova-markdown-tui": "^1.2",
         "davidpiesse/nova-toggle": "v4.x-dev",
+        "emilianotisato/nova-tinymce": "^2.0",
         "eminiarts/nova-tabs": "^2.2",
         "ezyang/htmlpurifier": "^4.16",
         "formfeed-uk/nova-breadcrumbs": "^3.1",

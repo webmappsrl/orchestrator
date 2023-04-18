@@ -8,7 +8,7 @@
             "name": "Listen for Xdebug",
             "type": "php",
             "request": "launch",
-            "port": 9200,
+            "port": 9299,
             "pathMappings": {
               "/var/www/html/orchestrator": "${workspaceRoot}"
             },

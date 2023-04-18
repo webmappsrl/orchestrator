@@ -15,12 +15,13 @@ composer install  --no-interaction --prefer-dist --optimize-autoloader
 # TODO
 # php artisan db:wipe
 # php artisan db:restore
-php artisan migrate
+php artisan migrate  --force
 
 # Clear the old cache
 php artisan clear-compiled
 
 composer dump-autoload
+php artisan config:clear
 php artisan optimize
 
 # Compile npm assets

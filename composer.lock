@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "437db2d649cdc6f92d9ad70a06aa8f45",
+    "content-hash": "a132cf0499241f8e3f8df6210c3e955d",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1164,6 +1164,53 @@
                 }
             ],
             "time": "2023-01-14T14:17:03+00:00"
+        },
+        {
+            "name": "emilianotisato/nova-tinymce",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/emilianotisato/nova-tinymce.git",
+                "reference": "faceec828be3b71281497ef86fcd8c5eb56ce5e0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/emilianotisato/nova-tinymce/zipball/faceec828be3b71281497ef86fcd8c5eb56ce5e0",
+                "reference": "faceec828be3b71281497ef86fcd8c5eb56ce5e0",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Emilianotisato\\NovaTinyMCE\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Emilianotisato\\NovaTinyMCE\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "This Nova package allow you to use TinyMCE editor for text areas.You can customize the editor options and... you can upload images to your server and put them rigth there on the text without leaving the text editor!",
+            "keywords": [
+                "editor",
+                "laravel",
+                "nova",
+                "tiny"
+            ],
+            "support": {
+                "issues": "https://github.com/emilianotisato/nova-tinymce/issues",
+                "source": "https://github.com/emilianotisato/nova-tinymce/tree/2.0.0"
+            },
+            "time": "2022-04-21T21:56:00+00:00"
         },
         {
             "name": "eminiarts/nova-tabs",
@@ -7956,7 +8003,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-develop",
+            "version": "dev-feature/add_git_actions",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -8037,16 +8084,16 @@
         },
         {
             "name": "wm/wm-package",
-            "version": "1.0",
+            "version": "1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmappsrl/wm-package.git",
-                "reference": "b70486e562dcf9081fecb00cc566709725921832"
+                "reference": "fa0136409ed609960659c4916e0e7cc17b0dd629"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmappsrl/wm-package/zipball/b70486e562dcf9081fecb00cc566709725921832",
-                "reference": "b70486e562dcf9081fecb00cc566709725921832",
+                "url": "https://api.github.com/repos/webmappsrl/wm-package/zipball/fa0136409ed609960659c4916e0e7cc17b0dd629",
+                "reference": "fa0136409ed609960659c4916e0e7cc17b0dd629",
                 "shasum": ""
             },
             "require": {
@@ -8108,9 +8155,9 @@
             ],
             "support": {
                 "issues": "https://github.com/webmappsrl/wm-package/issues",
-                "source": "https://github.com/webmappsrl/wm-package/tree/1.0"
+                "source": "https://github.com/webmappsrl/wm-package/tree/1.1"
             },
-            "time": "2023-02-22T08:30:30+00:00"
+            "time": "2023-04-03T20:57:54+00:00"
         }
     ],
     "packages-dev": [
