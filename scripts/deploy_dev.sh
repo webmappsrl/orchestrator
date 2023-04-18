@@ -15,7 +15,7 @@ composer install  --no-interaction --prefer-dist --optimize-autoloader
 # TODO
 # php artisan db:wipe
 # php artisan db:restore
-php artisan migrate --force
+php artisan migrate  --force
 
 # Clear the old cache
 php artisan clear-compiled
