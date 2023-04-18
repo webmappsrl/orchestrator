@@ -8,17 +8,18 @@ php artisan down
 composer install
 composer dump-autoload
 
-# Clear and cache config
-php artisan config:cache
-php artisan config:clear
+
+# TODO: Uncomment when api.favorite issue will be resolved
+
+php artisan migrate --force
 
 # Clear the old cache
 php artisan clear-compiled
 
-# TODO: Uncomment when api.favorite issue will be resolved
-# php artisan optimize
+# Clear and cache config
+php artisan config:clear
 
-php artisan migrate --force
+php artisan optimize
 
 php artisan up
 
