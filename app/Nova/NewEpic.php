@@ -179,4 +179,8 @@ class NewEpic extends Resource
                 ->cancelButtonText('Annulla'),
         ];
     }
+    public function indexBreadcrumb()
+    {
+        return null;
+    }
 }

@@ -4,13 +4,9 @@ namespace App\Nova;
 
 use Laravel\Nova\Panel;
 use App\Enums\EpicStatus;
-use App\Enums\StoryStatus;
-
 use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use App\Nova\Actions\EditEpicsFromIndex;
@@ -18,7 +14,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
+
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class DoneEpic extends Resource
@@ -178,5 +174,9 @@ class DoneEpic extends Resource
                 ->confirmButtonText('Conferma')
                 ->cancelButtonText('Annulla'),
         ];
+    }
+    public function indexBreadcrumb()
+    {
+        return null;
     }
 }

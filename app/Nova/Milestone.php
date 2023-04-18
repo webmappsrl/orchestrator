@@ -2,14 +2,15 @@
 
 namespace App\Nova;
 
+use App\Nova\Actions\SetMilestoneEpicsToDone;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\Number;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-
 
 class Milestone extends Resource
 {
@@ -51,7 +52,23 @@ class Milestone extends Resource
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
             DateTime::make(__('Due Date'), 'due_date')->sortable(),
-            HasMany::make('Epics'), //display relation with epic in nova field
+            HasMany::make('New Epics', 'newEpics', Epic::class),
+            HasMany::make('Project Epics', 'ProjectEpics', Epic::class),
+            HasMany::make('Progress Epics', 'ProgressEpics', Epic::class),
+            HasMany::make('Test Epics', 'TestEpics', Epic::class),
+            HasMany::make('Done Epics', 'DoneEpics', Epic::class),
+            HasMany::make('Rejected Epics', 'RejectedEpics', Epic::class),
+            //display the total number of epic that are in this milestone
+            Number::make('Epics', function () {
+                return $this->epics->count();
+            })->sortable(),
+            //add a column to display the SAL of all epics in this milestone
+            Text::make('SAL', function () {
+                return $this->wip();
+            })->hideWhenCreating()->hideWhenUpdating(),
+
+
+
         ];
     }
 
@@ -96,6 +113,11 @@ class Milestone extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new SetMilestoneEpicsToDone)
+                //inlining the action
+                ->onlyOnTableRow()
+                ->showOnDetail(),
+        ];
     }
 }

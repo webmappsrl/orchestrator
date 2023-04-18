@@ -5,9 +5,10 @@ namespace App\Models;
 use App\Models\Project;
 use App\Enums\EpicStatus;
 use App\Enums\StoryStatus;
-use Illuminate\Support\Facades\Config;
+use App\Observers\EpicObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 
 class Epic extends Model
 {
@@ -24,11 +25,21 @@ class Epic extends Model
         'notes',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        Epic::observe(EpicObserver::class);
+    }
+
+    /**
+     * Get the parent model for the relationship in breadcrumbs
+     *
+     */
     public function parent()
     {
         return $this->config();
     }
-
     public function config()
     {
         return $this->belongsTo(Project::class, 'project_id');
