@@ -37,7 +37,10 @@ geobox_install ${instance name}
 
 *Important NOTE*: 
 - Update your local repository of Geobox following its [Aliases instructions](https://github.com/webmappsrl/geobox#aliases) 
-- Make sure that the version of wm-package of your instance is at leaset 1.1
+- Make sure that the version of wm-package of your instance is at leaset 1.1. Use command:
+```bash
+composer update wm/wp-package
+```
 
 Finally to import a fresh copy of database use Geobox restore command:
 
