@@ -113,6 +113,6 @@ class MyEpicLens extends Lens
 
     public function name()
     {
-        return 'Le mie Epiche';
+        return 'My Epics';
     }
 }

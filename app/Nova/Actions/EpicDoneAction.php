@@ -21,7 +21,7 @@ class EpicDoneAction extends Action
      *
      * @var string
      */
-    public $name = 'Imposta lo stato della Epica a DONE';
+    public $name = 'Set Epic Status to Done';
 
     /**
      * Perform the action on the given models.
@@ -33,12 +33,12 @@ class EpicDoneAction extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         foreach ($models as $epic) {
-            if($epic->stories()->count() == 0) {
-                $epic->status=EpicStatus::Done;
+            if ($epic->stories()->count() == 0) {
+                $epic->status = EpicStatus::Done;
                 $epic->save();
             }
-            foreach($epic->stories as $s) {
-                $s->status=StoryStatus::Done;
+            foreach ($epic->stories as $s) {
+                $s->status = StoryStatus::Done;
                 $s->save();
             }
         }

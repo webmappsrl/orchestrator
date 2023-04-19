@@ -22,7 +22,7 @@ class MoveStoriesFromEpic extends Action
      *
      * @var string
      */
-    public $name = 'Sposta in un altra Epica';
+    public $name = 'Move to another epic';
 
     /**
      * Perform the action on the given models.

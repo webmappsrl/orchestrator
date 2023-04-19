@@ -29,7 +29,7 @@ class StoryToRejectedStatusAction extends Action
                 'status' => StoryStatus::Rejected,
             ]);
 
-            return Action::message('Status cambiato correttamente');
+            return Action::message('Status changed correctly');
         }
     }
 

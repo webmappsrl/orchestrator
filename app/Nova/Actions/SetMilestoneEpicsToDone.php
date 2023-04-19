@@ -19,7 +19,7 @@ class SetMilestoneEpicsToDone extends Action
      *
      * @var string
      */
-    public $name = 'Imposta lo stato di tutte le Epiche a DONE';
+    public $name = 'Set all epics status to Done';
 
 
     /**

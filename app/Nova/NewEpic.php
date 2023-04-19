@@ -165,11 +165,13 @@ class NewEpic extends Resource
             (new CreateStoriesFromText)
                 ->onlyOnDetail(),
             (new EpicDoneAction)
-                ->onlyOnDetail(),
+                //inlining the action
+                ->onlyOnTableRow()
+                ->showOnDetail(),
             (new EditEpicsFromIndex)
-                ->confirmText('Seleziona stato, milestone, project e utente da assegnare alle epiche che hai selezionato. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->confirmText('Select status, milestone, project and User to assign to the epics you have selected. Click on the "Confirm" button to save or "Cancel" to delete.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
         ];
     }
     public function indexBreadcrumb()

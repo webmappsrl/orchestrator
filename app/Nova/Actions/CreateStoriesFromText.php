@@ -70,6 +70,6 @@ class CreateStoriesFromText extends Action
 
     public function name()
     {
-        return 'Crea storie dal testo';
+        return 'Create story from text';
     }
 }

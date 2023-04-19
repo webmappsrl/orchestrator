@@ -68,6 +68,6 @@ class EditEpicsFromIndex extends Action
 
     public function name()
     {
-        return 'Modifica epiche';
+        return 'Edit Epics';
     }
 }
