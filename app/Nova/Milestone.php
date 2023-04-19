@@ -58,10 +58,6 @@ class Milestone extends Resource
             HasMany::make('Test Epics', 'TestEpics', Epic::class),
             HasMany::make('Done Epics', 'DoneEpics', Epic::class),
             HasMany::make('Rejected Epics', 'RejectedEpics', Epic::class),
-            //display the total number of epic that are in this milestone
-            Number::make('Epics', function () {
-                return $this->epics->count();
-            })->sortable(),
             //add a column to display the SAL of all epics in this milestone
             Text::make('SAL', function () {
                 return $this->wip();
