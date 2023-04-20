@@ -103,9 +103,6 @@ class Epic extends Resource
                 Status::make('Status')
                     ->loadingWhen(['status' => 'project'])
                     ->failedWhen(['status' => 'rejected'])
-
-
-
             ]),
             new Panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
