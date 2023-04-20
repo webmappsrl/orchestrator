@@ -39,7 +39,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         parent::boot();
 
-        Nova::style('nova-custom', public_path('/nova-custom.css'));
+        // Nova::style('nova-custom', public_path('/nova-custom.css'));
 
         Nova::withBreadcrumbs(true);
 
