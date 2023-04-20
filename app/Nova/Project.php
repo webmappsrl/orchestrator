@@ -10,8 +10,9 @@ use Laravel\Nova\Fields\BelongsTo;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-
-
+use Laravel\Nova\Fields\Date;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\Number;
 
 class Project extends Resource
 {
@@ -53,6 +54,11 @@ class Project extends Resource
                     ->sortable()
                     ->rules('required', 'max:255'),
                 BelongsTo::make('Customer'),
+                //add a column to display the SAL of all epics in this milestone
+                Text::make('SAL', function () {
+                    return $this->wip();
+                })->hideWhenCreating()->hideWhenUpdating(),
+                Date::make('Due date')->sortable(),
             ]),
 
             new panel('DESCRIPTION', [
