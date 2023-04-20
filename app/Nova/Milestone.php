@@ -2,14 +2,18 @@
 
 namespace App\Nova;
 
+use App\Enums\EpicStatus;
+use App\Nova\Actions\SetMilestoneEpicsToDone;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\Number;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-
+use Eminiarts\Tabs\Tab;
+use Eminiarts\Tabs\Tabs;
 
 class Milestone extends Resource
 {
@@ -51,7 +55,31 @@ class Milestone extends Resource
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
             DateTime::make(__('Due Date'), 'due_date')->sortable(),
-            HasMany::make('Epics'), //display relation with epic in nova field
+            new Tabs('Epics', [
+                //create a tab for every status of epics
+                Tab::make('New Epics', [
+                    HasMany::make('New Epics', 'newEpics', Epic::class),
+                ]),
+                Tab::make('Project Epics', [
+                    HasMany::make('Project Epics', 'projectEpics', Epic::class),
+                ]),
+                Tab::make('Progress Epics', [
+                    HasMany::make('Progress Epics', 'progressEpics', Epic::class),
+                ]),
+                Tab::make('Test Epics', [
+                    HasMany::make('Test Epics', 'testEpics', Epic::class),
+                ]),
+                Tab::make('Done Epics', [
+                    HasMany::make('Done Epics', 'doneEpics', Epic::class),
+                ]),
+            ]),
+            //add a column to display the SAL of all epics in this milestone
+            Text::make('SAL', function () {
+                return $this->wip();
+            })->hideWhenCreating()->hideWhenUpdating(),
+
+
+
         ];
     }
 
@@ -96,6 +124,11 @@ class Milestone extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new SetMilestoneEpicsToDone)
+                //inlining the action
+                ->onlyOnTableRow()
+                ->showOnDetail(),
+        ];
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Nova\Actions;
 
-use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -11,9 +10,17 @@ use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class StoryToRejectedStatusAction extends Action
+class SetMilestoneEpicsToDone extends Action
 {
     use InteractsWithQueue, Queueable;
+
+    /**
+     * The displayable name of the action.
+     *
+     * @var string
+     */
+    public $name = 'Set all epics status to Done';
+
 
     /**
      * Perform the action on the given models.
@@ -24,12 +31,9 @@ class StoryToRejectedStatusAction extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
+        //set the status of all the epics in the milestone to done
         foreach ($models as $model) {
-            $model->update([
-                'status' => StoryStatus::Rejected,
-            ]);
-
-            return Action::message('Status changed correctly');
+            $model->epics()->update(['status' => 'done']);
         }
     }
 
@@ -42,10 +46,5 @@ class StoryToRejectedStatusAction extends Action
     public function fields(NovaRequest $request)
     {
         return [];
-    }
-
-    public function name()
-    {
-        return 'Change status to Rejected';
     }
 }

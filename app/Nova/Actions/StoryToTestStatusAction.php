@@ -30,7 +30,7 @@ class StoryToTestStatusAction extends Action
             ]);
         }
 
-        return Action::message('Status cambiato correttamente');
+        return Action::message('Status changed correctly');
     }
 
     /**
@@ -46,6 +46,6 @@ class StoryToTestStatusAction extends Action
 
     public function name()
     {
-        return 'Test';
+        return 'Change status to Test';
     }
 }

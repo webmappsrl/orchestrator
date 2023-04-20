@@ -5,7 +5,7 @@ namespace App\Nova\Lenses;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Lenses\Lens;
-use Laravel\Nova\Fields\Markdown;
+use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Filters\ProjectFilter;
 use App\Nova\Filters\MilestoneFilter;
@@ -58,7 +58,9 @@ class MyEpicLens extends Lens
             Text::make('SAL', function () {
                 return $this->wip();
             }),
-            Text::make('Status'),
+            Status::make('Status')
+                ->loadingWhen(['status' => 'project'])
+                ->failedWhen(['status' => 'rejected'])
         ];
     }
 
@@ -111,6 +113,6 @@ class MyEpicLens extends Lens
 
     public function name()
     {
-        return 'Le mie Epiche';
+        return 'My Epics';
     }
 }

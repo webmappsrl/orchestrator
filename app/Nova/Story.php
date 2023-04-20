@@ -11,10 +11,11 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\BelongsTo;
+use App\Nova\Actions\MoveStoriesFromEpic;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-
+use Laravel\Nova\Panel;
 
 class Story extends Resource
 {
@@ -67,12 +68,6 @@ class Story extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
-            Select::make('Status')
-                ->options(collect(StoryStatus::cases())
-                    ->pluck('name', 'value'))
-                ->default(StoryStatus::New->value)
-                ->displayUsingLabels()
-                ->hideFromIndex(),
             Status::make('Status')
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
@@ -87,6 +82,12 @@ class Story extends Resource
             BelongsTo::make('Epic')->default(function ($request) {
                 return $request->input('viaResourceId');
             }),
+            //add a panel to show the related epic description
+            new Panel(__('Epic Description'), [
+                MarkdownTui::make(__('Description'), 'epic.description')
+                    ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN),
+            ]),
         ];
     }
     /**
@@ -135,33 +136,38 @@ class Story extends Resource
     {
         return [
             (new actions\EditStoriesFromEpic)
-                ->confirmText('Seleziona stato e utente da assegnare alle storie che hai selezionato. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->confirmText('Edit Status and User for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
 
             (new actions\StoryToProgressStatusAction)
-                ->showInline()
-                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Progress o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Progress or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
 
             (new actions\StoryToDoneStatusAction)
-                ->showInline()
-                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Done o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
 
             (new actions\StoryToTestStatusAction)
-                ->showInline()
-                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Test o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Test or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
 
             (new actions\StoryToRejectedStatusAction)
-                ->showInline()
-                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Rejected o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
+
+            (new MoveStoriesFromEpic)
+                ->confirmText('Seleziona l\'epica in cui vuoi spostare le storie selezionate. Clicca sul tasto "Confirm" per salvare o "Cancel" per annullare.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
         ];
     }
 

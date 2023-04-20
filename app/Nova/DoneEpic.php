@@ -4,13 +4,9 @@ namespace App\Nova;
 
 use Laravel\Nova\Panel;
 use App\Enums\EpicStatus;
-use App\Enums\StoryStatus;
-
 use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use App\Nova\Actions\EditEpicsFromIndex;
@@ -18,7 +14,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
+
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class DoneEpic extends Resource
@@ -110,13 +106,6 @@ class DoneEpic extends Resource
                     ->hideFromIndex()
                     ->initialEditType(EditorType::MARKDOWN)
             ]),
-
-            new Panel('NOTES', [
-                MarkdownTui::make('Notes')
-                    ->nullable()
-                    ->initialEditType(EditorType::MARKDOWN)
-            ]),
-
             HasMany::make('Stories'),
         ];
     }
@@ -171,12 +160,14 @@ class DoneEpic extends Resource
         return [
             (new CreateStoriesFromText)
                 ->onlyOnDetail(),
-            (new EpicDoneAction)
-                ->onlyOnDetail(),
             (new EditEpicsFromIndex)
-                ->confirmText('Seleziona stato, milestone, project e utente da assegnare alle epiche che hai selezionato. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->confirmText('Select status, milestone, project and User to assign to the epics you have selected. Click on the "Confirm" button to save or "Cancel" to delete.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
         ];
+    }
+    public function indexBreadcrumb()
+    {
+        return null;
     }
 }

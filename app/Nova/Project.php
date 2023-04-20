@@ -67,8 +67,8 @@ class Project extends Resource
                     ->initialEditType(EditorType::MARKDOWN)
             ]),
 
-            new Panel('NOTE', [
-                MarkdownTui::make('Note')
+            new Panel('NOTES', [
+                MarkdownTui::make('Notes')
                     ->hideFromIndex()
                     ->initialEditType(EditorType::MARKDOWN)
                     ->nullable()

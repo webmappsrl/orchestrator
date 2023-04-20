@@ -4,13 +4,10 @@ namespace App\Nova;
 
 use Laravel\Nova\Panel;
 use App\Enums\EpicStatus;
-use App\Enums\StoryStatus;
-
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use App\Nova\Actions\EditEpicsFromIndex;
@@ -18,10 +15,9 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
-class TestEpic extends Resource
+class RejectedEpic extends Resource
 {
     /**
      * The model the resource corresponds to.
@@ -62,7 +58,7 @@ class TestEpic extends Resource
      */
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->where('status', EpicStatus::Test);
+        return $query->where('status', EpicStatus::Rejected);
     }
 
     /**
