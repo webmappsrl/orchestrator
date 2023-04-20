@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Nova\Filters\CustomerWpMigrationFilter;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Date;
@@ -11,6 +12,7 @@ use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\HasMany;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 
@@ -36,7 +38,7 @@ class Customer extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'hs_id', 'domain_name', 'full_name', 'subscription_amount', 'subscription_last_payment', 'subscription_last_invoice', 'notes'
+        'id', 'name', 'hs_id', 'domain_name', 'full_name', 'subscription_amount', 'subscription_last_payment', 'subscription_last_invoice', 'notes', 'acronym'
     ];
 
     /**
@@ -57,6 +59,10 @@ class Customer extends Resource
                     ->sortable()
                     ->nullable()
                     ->hideFromIndex(),
+                Text::make('Acronym','acronym')
+                    ->sortable()
+                    ->nullable()
+                    ->hideFromIndex(),
                 Text::make('HS', 'hs_id')
                     ->sortable()
                     ->nullable()
@@ -65,7 +71,16 @@ class Customer extends Resource
                     ->sortable()
                     ->nullable()
                     ->hideFromIndex(),
-
+                Select::make('WP Migration','wp_migration')->options(
+                    [
+                        'wordpress' => 'Wordpress',
+                        'geohub' => 'Geohub',
+                        'geobox' => 'Geobox',
+                    ]
+                )->hideFromIndex(),
+                MarkdownTui::make('Migration Note','migration_note')
+                ->hideFromIndex()
+                ->initialEditType(EditorType::MARKDOWN)
             ]),
 
             new Panel('SUBSCRIPTION INFO', [
@@ -90,8 +105,8 @@ class Customer extends Resource
 
             new Panel('NOTES', [
                 MarkdownTui::make('Notes', 'notes')
-                    ->showOnDetail()
-                    ->initialEditType(EditorType::MARKDOWN)
+                ->initialEditType(EditorType::MARKDOWN)
+                ->hideFromIndex(),
             ]),
 
             HasMany::make('Projects'),
@@ -118,7 +133,9 @@ class Customer extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new CustomerWpMigrationFilter,
+        ];
     }
 
     /**
