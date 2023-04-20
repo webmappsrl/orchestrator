@@ -5,21 +5,25 @@ header {
 }
 nav[aria-label="breadcrumb"] {
     position: fixed;
-    top: 56px;
     z-index: 999;
-    background-color: #f1f5f9;
-    padding: 30px 0;
-    width: 100%;
+    width: 70%;
+    font-size: 0.7rem;
+    padding: 5px;
+    text-align: center;
+    top: 10px;
 }
 nav[aria-label="breadcrumb"] ol {
-    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
-/* @media screen and (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
     nav[aria-label="breadcrumb"] {
         display: none;
     }
-} */
+}
 @media screen and (min-width: 1024px) {
     .sidebar-menu {
         position: fixed;
