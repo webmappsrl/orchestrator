@@ -46,6 +46,6 @@ class StoryToRejectedStatusAction extends Action
 
     public function name()
     {
-        return 'Rejected';
+        return 'Change status to Rejected';
     }
 }

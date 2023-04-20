@@ -3,14 +3,17 @@
 namespace App\Nova\Actions;
 
 use App\Models\Epic;
+use App\Models\Project;
+use App\Models\Milestone;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Bus\Queueable;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\FormData;
+
 use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
-
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class MoveStoriesFromEpic extends Action
@@ -47,16 +50,42 @@ class MoveStoriesFromEpic extends Action
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
-    public function fields(NovaRequest $request)
+    public function fields(NovaRequest $request,)
     {
+        $resourceId = $request->query('viaResourceId');
+        $epic = Epic::find($resourceId);
+        if ($epic) {
+            $project = Project::where('id', $epic->project_id)->first();
+            $milestone = Milestone::where('id', $epic->milestone_id)->first();
+        }
+
+        //create 3 select: the first one is for chose the project from every existing project. The second one is for chose the milestone from every existing milestone. The third one is for chose the epic to move the story to. Epic select Options must change based on the project selected, or milestone selected. Default select for project and milestone should be the current project and milestone of the epic the stories belongs to.
+
         return [
-            Select::make('Epic', 'epic_id')
-                ->options(Epic::all()->pluck('name', 'id'))
+
+            Select::make('Project', 'project_id')
+                ->options(Project::all()->pluck('name', 'id'))
                 ->displayUsingLabels()
+                ->rules('required')
+                ->default($project->id ?? null)
                 ->searchable(),
 
-            ID::make('Epic ID', 'epic_id')
-                ->sortable()
+
+            Select::make('Milestone', 'milestone_id')
+                ->options(Milestone::all()->pluck('name', 'id'))
+                ->displayUsingLabels()
+                ->rules('required')
+                ->default($milestone->id ?? null)
+                ->searchable(),
+
+
+            Select::make('Epic', 'epic_id')
+                ->dependsOn(['milestone_id', 'project_id'], function (Select $field, NovaRequest $request, FormData $formData) {
+                    $field->options(Epic::where('project_id', $formData->project_id)->where('milestone_id', $formData->milestone_id)->pluck('name', 'id'));
+                })
+                ->displayUsingLabels()
+                ->rules('required')
+                ->searchable(),
 
 
         ];
