@@ -10,7 +10,9 @@ use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 class EditStoriesFromEpic extends Action
 {
@@ -21,7 +23,7 @@ class EditStoriesFromEpic extends Action
      *
      * @var string
      */
-    public $name = 'Modifica stato e user delle storie';
+    public $name = 'Edit Story';
 
     /**
      * Perform the action on the given models.
@@ -59,6 +61,6 @@ class EditStoriesFromEpic extends Action
 
     public function name()
     {
-        return 'Modifica storie';
+        return 'Edit';
     }
 }

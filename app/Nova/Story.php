@@ -136,38 +136,38 @@ class Story extends Resource
     {
         return [
             (new actions\EditStoriesFromEpic)
-                ->confirmText('Seleziona stato e utente da assegnare alle storie che hai selezionato. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->confirmText('Edit Status and User for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
 
             (new actions\StoryToProgressStatusAction)
-                ->showInline()
-                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Progress o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Progress or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
 
             (new actions\StoryToDoneStatusAction)
-                ->showInline()
-                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Done o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
 
             (new actions\StoryToTestStatusAction)
-                ->showInline()
-                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Test o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Test or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
 
             (new actions\StoryToRejectedStatusAction)
-                ->showInline()
-                ->confirmText('Clicca sul tasto "Conferma" per salvare lo status in Rejected o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
 
             (new MoveStoriesFromEpic)
-                ->confirmText('Seleziona l\'epica in cui vuoi spostare le storie selezionate. Clicca sul tasto "Conferma" per salvare o "Annulla" per annullare.')
-                ->confirmButtonText('Conferma')
-                ->cancelButtonText('Annulla'),
+                ->confirmText('Seleziona l\'epica in cui vuoi spostare le storie selezionate. Clicca sul tasto "Confirm" per salvare o "Cancel" per annullare.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
         ];
     }
 

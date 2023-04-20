@@ -30,7 +30,7 @@ class StoryToProgressStatusAction extends Action
             ]);
         }
 
-        return Action::message('Status cambiato correttamente');
+        return Action::message('Status changed correctly');
     }
 
     /**
@@ -46,6 +46,6 @@ class StoryToProgressStatusAction extends Action
 
     public function name()
     {
-        return 'Progress';
+        return 'Change status to Progress';
     }
 }
