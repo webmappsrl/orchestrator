@@ -1,0 +1,28 @@
+header {
+    position: fixed;
+    z-index: 998;
+    width: 100%;
+}
+nav[aria-label="breadcrumb"] {
+    position: fixed;
+    top: 56px;
+    z-index: 999;
+    background-color: #f1f5f9;
+    padding: 30px 0;
+    width: 100%;
+}
+nav[aria-label="breadcrumb"] ol {
+    position: fixed;
+}
+
+/* @media screen and (max-width: 1024px) {
+    nav[aria-label="breadcrumb"] {
+        display: none;
+    }
+} */
+@media screen and (min-width: 1024px) {
+    .sidebar-menu {
+        position: fixed;
+        z-index: 999;
+    }
+}
