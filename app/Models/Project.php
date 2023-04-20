@@ -17,6 +17,10 @@ class Project extends Model
         'wmpm_id'
     ];
 
+    protected $casts = [
+        'due_date' => 'date',
+    ];
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
@@ -25,5 +29,18 @@ class Project extends Model
     public function epics()
     {
         return $this->hasMany(Epic::class);
+    }
+
+    /**
+     * Returns the SAL of the milestone
+     *
+     * @return int
+    */
+    public function wip(): string
+    {
+        $totalEpics = $this->epics->count();
+        $doneEpics = $this->epics->where('status', 'done')->count();
+
+        return count($this->epics) == 0 ? 'ND' : $doneEpics . '/' . $totalEpics;
     }
 }
