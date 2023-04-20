@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Nova\Filters\CustomerWpMigrationFilter;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Date;
@@ -104,8 +105,8 @@ class Customer extends Resource
 
             new Panel('NOTES', [
                 MarkdownTui::make('Notes', 'notes')
-                    ->showOnDetail()
-                    ->initialEditType(EditorType::MARKDOWN)
+                ->initialEditType(EditorType::MARKDOWN)
+                ->hideFromIndex(),
             ]),
 
             HasMany::make('Projects'),
@@ -132,7 +133,9 @@ class Customer extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new CustomerWpMigrationFilter,
+        ];
     }
 
     /**

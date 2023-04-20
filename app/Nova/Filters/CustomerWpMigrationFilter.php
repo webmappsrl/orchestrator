@@ -24,7 +24,7 @@ class CustomerWpMigrationFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-        return $query;
+        return $query->where('wp_migration', $value);
     }
 
     /**
@@ -35,6 +35,15 @@ class CustomerWpMigrationFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return [];
+        return [
+            'Wordpress' => 'wordpress',
+            'Geohub' => 'geohub',
+            'Geobox' => 'geobox',
+        ];
+    }
+
+    public function name()
+    {
+        return 'Content migration status';
     }
 }
