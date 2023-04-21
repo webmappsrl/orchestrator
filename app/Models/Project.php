@@ -31,11 +31,16 @@ class Project extends Model
         return $this->hasMany(Epic::class);
     }
 
+    public function stories()
+    {
+        return $this->hasMany(Story::class);
+    }
+
     /**
      * Returns the SAL of the milestone
      *
      * @return int
-    */
+     */
     public function wip(): string
     {
         $totalEpics = $this->epics->count();

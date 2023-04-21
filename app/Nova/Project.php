@@ -75,6 +75,7 @@ class Project extends Resource
             ]),
 
             HasMany::make('Epics'),
+            HasMany::make('Stories'),
         ];
     }
 
