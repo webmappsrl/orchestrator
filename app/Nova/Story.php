@@ -13,6 +13,7 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\MoveStoriesFromEpic;
+use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
@@ -98,7 +99,7 @@ class Story extends Resource
 
                     if ($fromEpic) {
                         $epic = Epic::find($request->input('viaResourceId'));
-                        return $epic ? $epic->id : null;
+                        return $epic->id;
                     } else {
                         return null;
                     }
@@ -122,7 +123,7 @@ class Story extends Resource
                     }
                 })
                 ->searchable()
-                ->onlyOnDetail(),
+                ->hideFromIndex(),
             //add a panel to show the related epic description
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
@@ -206,9 +207,14 @@ class Story extends Resource
                 ->cancelButtonText('Cancel'),
 
             (new MoveStoriesFromEpic)
-                ->confirmText('Seleziona l\'epica in cui vuoi spostare le storie selezionate. Clicca sul tasto "Confirm" per salvare o "Cancel" per annullare.')
+                ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
+            (new moveStoriesFromProjectToEpicAction)
+                ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
+
         ];
     }
 
