@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stories', function (Blueprint $table) {
-            $table->foreignId('epic_id')->nullable()->change();
+            $table->foreignId('project_id')->nullable()->constrained()->onDelete('cascade');
         });
     }
 
@@ -22,7 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('stories', function (Blueprint $table) {
-            $table->unsignedBigInteger('epic_id')->nullable(false)->change();
+            $table->dropForeign('project_id');
+            $table->dropColumn('project_id');
         });
     }
 };
