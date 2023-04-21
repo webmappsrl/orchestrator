@@ -210,10 +210,18 @@ class Story extends Resource
                 ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
+
             (new moveStoriesFromProjectToEpicAction)
                 ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
+
+            (new actions\createNewEpicFromStoriesAction)
+                ->confirmText('Click on the "Confirm" button to create a new epic with selected stories or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
+
+
 
         ];
     }
