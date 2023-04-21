@@ -102,7 +102,8 @@ class Story extends Resource
                     } else {
                         return null;
                     }
-                }),
+                })
+                ->hideFromIndex(),
             BelongsTo::make('Project')
                 ->default(function ($request) {
                     //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
@@ -120,7 +121,8 @@ class Story extends Resource
                         return $project ? $project->id : null;
                     }
                 })
-                ->searchable(),
+                ->searchable()
+                ->onlyOnDetail(),
             //add a panel to show the related epic description
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
