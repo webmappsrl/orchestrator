@@ -221,6 +221,12 @@ class Story extends Resource
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
 
+            (new actions\moveToBacklog)
+                ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel')
+                ->showInline(),
+
 
 
         ];
