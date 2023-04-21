@@ -85,7 +85,7 @@ class Story extends Resource
             //add a panel to show the related epic description
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
-                    ->hideFromIndex()
+                    ->onlyOnDetail()
                     ->initialEditType(EditorType::MARKDOWN),
             ]),
         ];
