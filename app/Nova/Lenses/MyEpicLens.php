@@ -10,6 +10,7 @@ use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Filters\ProjectFilter;
 use App\Nova\Filters\MilestoneFilter;
 use App\Nova\Filters\EpicStatusFilter;
+use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Http\Requests\LensRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -60,7 +61,9 @@ class MyEpicLens extends Lens
             }),
             Status::make('Status')
                 ->loadingWhen(['status' => 'project'])
-                ->failedWhen(['status' => 'rejected'])
+                ->failedWhen(['status' => 'rejected']),
+            
+            BelongsToMany::make('Tag projects','tagProjects','App\Nova\Project')->searchable()
         ];
     }
 

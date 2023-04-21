@@ -64,6 +64,11 @@ class Epic extends Model
     {
         return $this->belongsTo(Project::class);
     }
+    
+    public function tagProjects()
+    {
+        return $this->belongsToMany(Project::class,'epic_project_tags');
+    }
 
     /**
      * Check epic status based on stories status
