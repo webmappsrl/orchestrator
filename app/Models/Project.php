@@ -25,10 +25,15 @@ class Project extends Model
     {
         return $this->belongsTo(Customer::class);
     }
-
+    
     public function epics()
     {
         return $this->hasMany(Epic::class);
+    }
+    
+    public function tagEpics()
+    {
+        return $this->belongsToMany(Epic::class,'epic_project_tags');
     }
 
     /**

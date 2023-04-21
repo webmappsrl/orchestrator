@@ -13,6 +13,7 @@ use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Tag;
 
 class Project extends Resource
 {
@@ -59,6 +60,7 @@ class Project extends Resource
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),
                 Date::make('Due date')->sortable(),
+                Tag::make('Tag epics','tagEpics','App\Nova\Epic')->onlyOnDetail()->withPreview()
             ]),
 
             new panel('DESCRIPTION', [

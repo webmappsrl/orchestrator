@@ -20,6 +20,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Laravel\Nova\Fields\Markdown as FieldsMarkdown;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
+use Laravel\Nova\Fields\BelongsToMany;
 
 class NewEpic extends Resource
 {
@@ -111,6 +112,7 @@ class NewEpic extends Resource
                     ->initialEditType(EditorType::MARKDOWN)
             ]),
             HasMany::make('Stories'),
+            BelongsToMany::make('Tag projects','tagProjects','App\Nova\Project')->searchable()
         ];
     }
 

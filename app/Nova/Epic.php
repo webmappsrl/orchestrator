@@ -17,6 +17,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 use Laravel\Nova\Fields\Status;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Laravel\Nova\Fields\BelongsToMany;
 
 class Epic extends Resource
 {
@@ -110,6 +111,7 @@ class Epic extends Resource
             ]),
 
             HasMany::make('Stories'),
+            BelongsToMany::make('Tag projects','tagProjects','App\Nova\Project')->searchable()
         ];
     }
 
