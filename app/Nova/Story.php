@@ -6,6 +6,7 @@ namespace App\Nova;
 use App\Models\Epic;
 use App\Models\User;
 use App\Enums\StoryStatus;
+use App\Models\Project;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
@@ -51,6 +52,8 @@ class Story extends Resource
         'id', 'name', 'description'
     ];
 
+    public static $linkToParent = true;
+
     /**
      * Get the fields displayed by the resource.
      *
@@ -75,13 +78,49 @@ class Story extends Resource
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
-            BelongsTo::make('User')->default(function ($request) {
-                $epic = Epic::find($request->input('viaResourceId'));
-                return $epic ? $epic->user_id : null;
-            }),
-            BelongsTo::make('Epic')->default(function ($request) {
-                return $request->input('viaResourceId');
-            }),
+            BelongsTo::make('User')
+                ->default(function ($request) {
+                    $epic = Epic::find($request->input('viaResourceId'));
+                    return $epic ? $epic->user_id : null;
+                }),
+            BelongsTo::make('Epic')
+                ->nullable()
+                ->default(function ($request) {
+                    //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
+                    $fromEpic =
+                        $request->input('viaResource') === 'epics' ||
+                        $request->input('viaResource') === 'new-epics' ||
+                        $request->input('viaResource') === 'project-epics' ||
+                        $request->input('viaResource') === 'progress-epics' ||
+                        $request->input('viaResource') === 'test-epics' ||
+                        $request->input('viaResource') === 'done-epics' ||
+                        $request->input('viaResource') === 'rejected-epics';
+
+                    if ($fromEpic) {
+                        $epic = Epic::find($request->input('viaResourceId'));
+                        return $epic ? $epic->id : null;
+                    } else {
+                        return null;
+                    }
+                }),
+            BelongsTo::make('Project')
+                ->default(function ($request) {
+                    //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
+                    $fromEpic =
+                        $request->input('viaResource') === 'epics' ||
+                        $request->input('viaResource') === 'new-epics' ||
+                        $request->input('viaResource') === 'project-epics' ||
+                        $request->input('viaResource') === 'progress-epics' ||
+                        $request->input('viaResource') === 'test-epics' ||
+                        $request->input('viaResource') === 'done-epics' ||
+                        $request->input('viaResource') === 'rejected-epics';
+                    if ($fromEpic) {
+                        $epic = Epic::find($request->input('viaResourceId'));
+                        $project = Project::find($epic->project_id);
+                        return $project ? $project->id : null;
+                    }
+                })
+                ->searchable(),
             //add a panel to show the related epic description
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
