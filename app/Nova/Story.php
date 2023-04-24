@@ -221,13 +221,16 @@ class Story extends Resource
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
 
+            //this action should be available only when selecting stories from the epic page
+
             (new actions\moveToBacklog)
                 ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel')
-                ->showInline(),
-
-
+                ->showInline()
+                ->canSee(function ($request) {
+                    return $request->viaResource != 'projects';
+                }),
 
         ];
     }
