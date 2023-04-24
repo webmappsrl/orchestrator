@@ -21,7 +21,13 @@ class Story extends Model
 
     public function config()
     {
-        return $this->belongsTo(Epic::class, 'epic_id');
+        //if the user was in the epic view, the epic name will be shown in the breadcrumbs, otherwise the project name
+
+        if ($this->belongsTo(Epic::class)) {
+            return $this->belongsTo(Epic::class, 'epic_id');
+        } else {
+            return $this->belongsTo(Project::class, 'project_id');
+        }
     }
 
 
@@ -29,15 +35,22 @@ class Story extends Model
     {
         //update epic status whenever a story is created or updated
         static::saved(function (Story $story) {
-            $epic = $story->epic;
-            $epic->status = $epic->getStatusFromStories()->value;
-            $epic->save();
+            if (!empty($story->epic)) {
+                $epic = $story->epic;
+                $epic->status = $epic->getStatusFromStories()->value;
+                $epic->save();
+            }
         });
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
     }
 
     /**
