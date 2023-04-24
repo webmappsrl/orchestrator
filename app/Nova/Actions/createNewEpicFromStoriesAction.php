@@ -29,8 +29,7 @@ class createNewEpicFromStoriesAction extends Action
      *
      * @var string
      */
-    public $name = 'Create a new epic from selected stories';
-
+    public $name = 'Create Epic from Stories';
 
     /**
      * Perform the action on the given models.
