@@ -39,6 +39,7 @@ class MoveStoriesFromEpic extends Action
 
         foreach ($models as $story) {
             $story->epic()->associate($epic);
+            $story->project_id = $epic->project_id;
             $story->save();
         }
     }
