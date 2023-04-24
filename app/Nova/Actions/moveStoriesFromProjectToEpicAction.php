@@ -22,7 +22,7 @@ class moveStoriesFromProjectToEpicAction extends Action
      *
      * @var string
      */
-    public $name = 'Move to epic';
+    public $name = 'Assign stories to an epic of the current project';
 
     /**
      * Perform the action on the given models.
