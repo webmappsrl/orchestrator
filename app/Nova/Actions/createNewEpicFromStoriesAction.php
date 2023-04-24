@@ -25,6 +25,13 @@ class createNewEpicFromStoriesAction extends Action
     use InteractsWithQueue, Queueable;
 
     /**
+     * The displayable name of the action.
+     *
+     * @var string
+     */
+    public $name = 'Create Epic from Stories';
+
+    /**
      * Perform the action on the given models.
      *
      * @param  \Laravel\Nova\Fields\ActionFields  $fields

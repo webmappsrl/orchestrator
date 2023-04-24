@@ -176,7 +176,7 @@ class Story extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [
+        $actions = [
             (new actions\EditStoriesFromEpic)
                 ->confirmText('Edit Status and User for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
@@ -205,31 +205,32 @@ class Story extends Resource
                 ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
-
-            (new MoveStoriesFromEpic)
-                ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
-            (new moveStoriesFromProjectToEpicAction)
-                ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
-            (new actions\createNewEpicFromStoriesAction)
-                ->confirmText('Click on the "Confirm" button to create a new epic with selected stories or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
-            (new actions\moveToBacklog)
-                ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
-                ->showInline(),
-
-
-
         ];
+
+        if ($request->viaResource == 'projects') {
+            array_push($actions,(new moveStoriesFromProjectToEpicAction)
+            ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
+            ->confirmButtonText('Confirm')
+            ->cancelButtonText('Cancel'));
+            array_push($actions,(new actions\createNewEpicFromStoriesAction)
+            ->confirmText('Click on the "Confirm" button to create a new epic with selected stories or "Cancel" to cancel.')
+            ->confirmButtonText('Confirm')
+            ->cancelButtonText('Cancel'));
+        }
+
+        if ($request->viaResource != 'projects') {
+            array_push($actions,(new actions\moveToBacklogAction)
+            ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
+            ->confirmButtonText('Confirm')
+            ->cancelButtonText('Cancel')
+            ->showInline());
+            array_push($actions,(new MoveStoriesFromEpic)
+            ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
+            ->confirmButtonText('Confirm')
+            ->cancelButtonText('Cancel'));
+        }
+
+        return $actions;
     }
 
     /**

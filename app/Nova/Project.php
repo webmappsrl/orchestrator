@@ -75,7 +75,7 @@ class Project extends Resource
             ]),
 
             HasMany::make('Epics'),
-            HasMany::make('Stories'),
+            HasMany::make('Backlog Stories','Stories','App\Nova\Story'),
         ];
     }
 
