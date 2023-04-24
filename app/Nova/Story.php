@@ -6,12 +6,14 @@ namespace App\Nova;
 use App\Models\Epic;
 use App\Models\User;
 use App\Enums\StoryStatus;
+use App\Models\Project;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\MoveStoriesFromEpic;
+use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
@@ -51,6 +53,8 @@ class Story extends Resource
         'id', 'name', 'description'
     ];
 
+    public static $linkToParent = true;
+
     /**
      * Get the fields displayed by the resource.
      *
@@ -75,17 +79,55 @@ class Story extends Resource
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
-            BelongsTo::make('User')->default(function ($request) {
-                $epic = Epic::find($request->input('viaResourceId'));
-                return $epic ? $epic->user_id : null;
-            }),
-            BelongsTo::make('Epic')->default(function ($request) {
-                return $request->input('viaResourceId');
-            }),
+            BelongsTo::make('User')
+                ->default(function ($request) {
+                    $epic = Epic::find($request->input('viaResourceId'));
+                    return $epic ? $epic->user_id : null;
+                }),
+            BelongsTo::make('Epic')
+                ->nullable()
+                ->default(function ($request) {
+                    //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
+                    $fromEpic =
+                        $request->input('viaResource') === 'epics' ||
+                        $request->input('viaResource') === 'new-epics' ||
+                        $request->input('viaResource') === 'project-epics' ||
+                        $request->input('viaResource') === 'progress-epics' ||
+                        $request->input('viaResource') === 'test-epics' ||
+                        $request->input('viaResource') === 'done-epics' ||
+                        $request->input('viaResource') === 'rejected-epics';
+
+                    if ($fromEpic) {
+                        $epic = Epic::find($request->input('viaResourceId'));
+                        return $epic->id;
+                    } else {
+                        return null;
+                    }
+                })
+                ->hideFromIndex(),
+            BelongsTo::make('Project')
+                ->default(function ($request) {
+                    //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
+                    $fromEpic =
+                        $request->input('viaResource') === 'epics' ||
+                        $request->input('viaResource') === 'new-epics' ||
+                        $request->input('viaResource') === 'project-epics' ||
+                        $request->input('viaResource') === 'progress-epics' ||
+                        $request->input('viaResource') === 'test-epics' ||
+                        $request->input('viaResource') === 'done-epics' ||
+                        $request->input('viaResource') === 'rejected-epics';
+                    if ($fromEpic) {
+                        $epic = Epic::find($request->input('viaResourceId'));
+                        $project = Project::find($epic->project_id);
+                        return $project ? $project->id : null;
+                    }
+                })
+                ->searchable()
+                ->hideFromIndex(),
             //add a panel to show the related epic description
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
-                    ->onlyOnDetail()
+                    ->hideFromIndex()
                     ->initialEditType(EditorType::MARKDOWN),
             ]),
         ];
@@ -134,7 +176,7 @@ class Story extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [
+        $actions = [
             (new actions\EditStoriesFromEpic)
                 ->confirmText('Edit Status and User for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
@@ -163,12 +205,32 @@ class Story extends Resource
                 ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
-
-            (new MoveStoriesFromEpic)
-                ->confirmText('Seleziona l\'epica in cui vuoi spostare le storie selezionate. Clicca sul tasto "Confirm" per salvare o "Cancel" per annullare.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
         ];
+
+        if ($request->viaResource == 'projects') {
+            array_push($actions,(new moveStoriesFromProjectToEpicAction)
+            ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
+            ->confirmButtonText('Confirm')
+            ->cancelButtonText('Cancel'));
+            array_push($actions,(new actions\createNewEpicFromStoriesAction)
+            ->confirmText('Click on the "Confirm" button to create a new epic with selected stories or "Cancel" to cancel.')
+            ->confirmButtonText('Confirm')
+            ->cancelButtonText('Cancel'));
+        }
+
+        if ($request->viaResource != 'projects') {
+            array_push($actions,(new actions\moveToBacklogAction)
+            ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
+            ->confirmButtonText('Confirm')
+            ->cancelButtonText('Cancel')
+            ->showInline());
+            array_push($actions,(new MoveStoriesFromEpic)
+            ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
+            ->confirmButtonText('Confirm')
+            ->cancelButtonText('Cancel'));
+        }
+
+        return $actions;
     }
 
     /**

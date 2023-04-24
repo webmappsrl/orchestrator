@@ -36,11 +36,26 @@ class Project extends Model
         return $this->belongsToMany(Epic::class,'epic_project_tags');
     }
 
+    public function stories()
+    {
+        return $this->hasMany(Story::class);
+    }
+
+    /**
+     * Returns only the stories that are not in some epic(backlog stories)
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+
+    public function backlogStories()
+    {
+        return $this->hasMany(Story::class)->whereNull('epic_id');
+    }
+
     /**
      * Returns the SAL of the milestone
      *
      * @return int
-    */
+     */
     public function wip(): string
     {
         $totalEpics = $this->epics->count();

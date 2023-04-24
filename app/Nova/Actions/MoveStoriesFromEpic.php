@@ -10,7 +10,6 @@ use Illuminate\Bus\Queueable;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\FormData;
-
 use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
@@ -25,7 +24,7 @@ class MoveStoriesFromEpic extends Action
      *
      * @var string
      */
-    public $name = 'Move to another epic';
+    public $name = 'Move to another Epic';
 
     /**
      * Perform the action on the given models.
@@ -40,6 +39,7 @@ class MoveStoriesFromEpic extends Action
 
         foreach ($models as $story) {
             $story->epic()->associate($epic);
+            $story->project_id = $epic->project_id;
             $story->save();
         }
     }
@@ -86,7 +86,6 @@ class MoveStoriesFromEpic extends Action
                 ->displayUsingLabels()
                 ->rules('required')
                 ->searchable(),
-
 
         ];
     }
