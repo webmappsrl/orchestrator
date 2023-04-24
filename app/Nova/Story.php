@@ -127,7 +127,7 @@ class Story extends Resource
             //add a panel to show the related epic description
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
-                    ->hideFromIndex()
+                    ->onlyOnDetail()
                     ->initialEditType(EditorType::MARKDOWN),
             ]),
         ];
@@ -209,17 +209,26 @@ class Story extends Resource
             (new MoveStoriesFromEpic)
                 ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
+                ->cancelButtonText('Cancel')
+                ->canSee(function ($request) {
+                    return $request->viaResource != 'projects';
+                }),
 
             (new moveStoriesFromProjectToEpicAction)
                 ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
+                ->cancelButtonText('Cancel')
+                ->canSee(function ($request) {
+                    return $request->viaResource == 'projects';
+                }),
 
             (new actions\createNewEpicFromStoriesAction)
                 ->confirmText('Click on the "Confirm" button to create a new epic with selected stories or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
+                ->cancelButtonText('Cancel')
+                ->canSee(function ($request) {
+                    return $request->viaResource == 'projects';
+                }),
 
             //this action should be available only when selecting stories from the epic page
 
