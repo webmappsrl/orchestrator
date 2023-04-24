@@ -81,7 +81,7 @@ class Customer extends Resource
                 MarkdownTui::make('Migration Note','migration_note')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
-                Text::make('Contact emails','email')->copyable(),
+                Text::make('Contact emails','email')->copyable()->hideFromIndex(),
             ]),
 
             new Panel('SUBSCRIPTION INFO', [
