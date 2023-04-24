@@ -75,7 +75,8 @@ class Project extends Resource
             ]),
 
             HasMany::make('Epics'),
-            HasMany::make('Stories'),
+            HasMany::make('Backlog Stories', 'backlogStories', Story::class)
+                ->sortable()
         ];
     }
 

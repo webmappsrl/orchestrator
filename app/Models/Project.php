@@ -37,6 +37,16 @@ class Project extends Model
     }
 
     /**
+     * Returns only the stories that are not in some epic(backlog stories)
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+
+    public function backlogStories()
+    {
+        return $this->hasMany(Story::class)->whereNull('epic_id');
+    }
+
+    /**
      * Returns the SAL of the milestone
      *
      * @return int
