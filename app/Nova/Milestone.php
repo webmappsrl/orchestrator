@@ -14,9 +14,11 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Eminiarts\Tabs\Tab;
 use Eminiarts\Tabs\Tabs;
+use Eminiarts\Tabs\Traits\HasTabs;
 
 class Milestone extends Resource
 {
+    use HasTabs;
     /**
      * The model the resource corresponds to.
      *
@@ -71,6 +73,9 @@ class Milestone extends Resource
                 ]),
                 Tab::make('Done Epics', [
                     HasMany::make('Done Epics', 'doneEpics', Epic::class),
+                ]),
+                Tab::make('Rejected Epics', [
+                    HasMany::make('Rejected Epics', 'rejectedEpics', Epic::class),
                 ]),
             ]),
             //add a column to display the SAL of all epics in this milestone

@@ -53,7 +53,7 @@ class Milestone extends Model
      */
     public function newEpics(): HasMany
     {
-        return $this->hasMany(Epic::class)->where('status', 'new');
+        return $this->hasMany(Epic::class)->where('status', EpicStatus::New);
     }
 
 
@@ -64,7 +64,7 @@ class Milestone extends Model
      */
     public function progressEpics(): HasMany
     {
-        return $this->hasMany(Epic::class)->where('status', 'progress');
+        return $this->hasMany(Epic::class)->where('status', EpicStatus::Progress);
     }
 
     /**
@@ -74,7 +74,7 @@ class Milestone extends Model
      */
     public function testEpics(): HasMany
     {
-        return $this->hasMany(Epic::class)->where('status', 'test');
+        return $this->hasMany(Epic::class)->where('status', EpicStatus::Test);
     }
 
     /**
@@ -84,7 +84,7 @@ class Milestone extends Model
      */
     public function doneEpics(): HasMany
     {
-        return $this->hasMany(Epic::class)->where('status', 'done');
+        return $this->hasMany(Epic::class)->where('status', EpicStatus::Done);
     }
 
     /**
@@ -94,7 +94,7 @@ class Milestone extends Model
      */
     public function rejectedEpics(): HasMany
     {
-        return $this->hasMany(Epic::class)->where('status', 'rejected');
+        return $this->hasMany(Epic::class)->where('status', EpicStatus::Rejected);
     }
 
     /**
@@ -104,6 +104,6 @@ class Milestone extends Model
      */
     public function projectEpics(): HasMany
     {
-        return $this->hasMany(Epic::class)->where('status', 'project');
+        return $this->hasMany(Epic::class)->where('status', EpicStatus::Project);
     }
 }
