@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAppRequest;
 use App\Http\Requests\UpdateAppRequest;
 use App\Models\App;
+use Illuminate\Support\Facades\Storage;
 
 class AppController extends Controller
 {
@@ -82,5 +83,20 @@ class AppController extends Controller
     public function destroy(App $app)
     {
         //
+    }
+    public function config(int $id)
+    {
+        $app = App::find($id);
+        if (is_null($app)) {
+            return response()->json(['code' => 404, 'error' => '404 not found'], 404);
+        }
+        $confUri = $id . ".json";
+        if (Storage::disk('conf')->exists($confUri)) {
+            $json = Storage::disk('conf')->get($confUri);
+            return response()->json(json_decode($json));
+        } else {
+            $json = $app->BuildConfJson($id);
+            return response()->json($json);
+        }
     }
 }

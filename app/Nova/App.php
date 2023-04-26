@@ -15,13 +15,10 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
-use Davidpiesse\NovaToggle\Toggle;
 use Outl1ne\MultiselectField\Multiselect;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Emilianotisato\NovaTinyMCE\NovaTinyMCE;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
-
-
 
 class App extends Resource
 {
@@ -162,20 +159,36 @@ class App extends Resource
         $availableLanguages = is_null($this->model()->available_languages) ? [] : json_decode($this->model()->available_languages, true);
 
         return [
-            Select::make(__('Api API'), 'api')->options(
-                [
-                    'elbrus' => 'Elbrus',
-                    'webmapp' => 'WebMapp',
-                    'webapp' => 'WebApp',
-                ]
-            )->required(),
-            Text::make(__('App Id'), 'app_id')->required(),
-            Text::make(__('Name'), 'name')->sortable()->required(),
-            Text::make(__('Customer Name'), 'customer_name')->sortable()->required(),
-            Select::make(__('Default Language'), 'default_language')->hideFromIndex()->options($this->languages)->displayUsingLabels()->required(),
+            Text::make(__('App Id'), 'app_id', function ($val) {
+                return 'it.webmapp.' . $val;
+            })->rules('required', function ($attribute, $value, $fail) {
+                if (\App\Models\App::where('app_id', $value)->count() > 0) {
+                    return $fail('The ' . $attribute . ' field must be unique.');
+                }
+                if (strtolower($value) !== $value) {
+                    return $fail('The ' . $attribute . ' field must be lowercase.');
+                }
+                if (strlen($value) > 20) {
+                    return $fail('The ' . $attribute . ' field must be minor of 20.');
+                }
+                if ('it.webmapp.' == $value) {
+                    return $fail('The ' . $attribute . ' field must be have a name instance.');
+                }
+                if (substr_count($value, 'it.webmapp.') != 1) {
+                    return $fail('The ' . $attribute . ' field must be contain "it.webmapp." one time');
+                }
+
+                if (str_starts_with($value, 'it.webmapp.') === false) {
+                    return $fail('The ' . $attribute . ' field must be start with "it.webmapp."');
+                }
+            })->help(__('identify the app in the stores')),
+            Text::make(__('Name'), 'name')->sortable()->help(__('The name displayed when the app was downloaded'))->required(),
+            Text::make(__('Customer Name'), 'customer_name')->sortable()->help(__('the name of the client note does not influence the creation of the app'))->required(),
+            Select::make(__('Default Language'), 'default_language')->hideFromIndex()->options($this->languages)->displayUsingLabels()->required()->help(__('
+            the default language used to translate the app/webapp')),
             //todo: fix multiselect (array to string conversion error)
             //! update: works on update. Doesn't work on create
-            Multiselect::make(__('Available Languages'), 'available_languages')->hideFromIndex()->options($this->languages, $availableLanguages)
+            Multiselect::make(__('Available Languages'), 'available_languages')->hideFromIndex()->options($this->languages, $availableLanguages)->help(__('the languages ​​you want to enable for translating the app/webapp'))
         ];
     }
 
@@ -240,16 +253,11 @@ class App extends Resource
             'WEBAPP' => $this->webapp_tab(),
             'HOME' => $this->home_tab(),
             'PROJECT' => $this->project_tab(),
-            'AUTH' => $this->auth_tab(),
-            'OFFLINE' => $this->offline_tab(),
             'ICONS' => $this->icons_tab(),
             'LANGUAGES' => $this->languages_tab(),
             'MAP' => $this->map_tab(),
-            'OPTIONS' => $this->options_tab(),
-            'ROUTING' => $this->routing_tab(),
-            'TABLE' => $this->table_tab(),
+            'POIS' => $this->pois_tab(),
             'THEME' => $this->theme_tab(),
-
         ];
     }
 
@@ -257,18 +265,19 @@ class App extends Resource
     protected function app_tab(): array
     {
         return [
-            Select::make(__('API type'), 'api')->options(
-                [
-                    'elbrus' => 'Elbrus',
-                    'webmapp' => 'WebMapp',
-                    'webapp' => 'WebApp',
-                ]
-            )->required(),
-            Text::make(__('App Id'), 'app_id')->required(),
-            Text::make(__('Name'), 'name')->sortable()->required(),
-            Text::make(__('Customer Name'), 'customer_name')->sortable()->required(),
-            Text::make(__('Play Store link (android)'), 'android_store_link'),
-            Text::make(__('App Store link (iOS)'), 'ios_store_link'),
+            Text::make(__('[id] App Id'), 'app_id')
+                ->readonly(),
+            Text::make(__('[name] Name'), 'name')
+                ->sortable()
+                ->required()
+                ->help(__('The name displayed when the app was downloaded')),
+            Text::make(__('[customerName] Customer Name'), 'customer_name')
+                ->sortable()
+                ->required()
+                ->help(__('The app customer name')),
+            Text::make(__('[android_store_link] Play Store link (android)'), 'android_store_link'),
+            Text::make(__('[ios_store_link] App Store link (iOS)'), 'ios_store_link'),
+
             Text::make(__('APP'), function () {
                 $urlAny = 'https://' . $this->model()->id . '.app.webmapp.it';
                 $urlDesktop = 'https://' . $this->model()->id . '.app.geohub.webmapp.it';
@@ -328,7 +337,8 @@ class App extends Resource
             Textarea::make('social_track_text')
                 ->help(__('Add a description for meta tags of social share. You can customize the description with these keywords: {app.name} e {track.name}'))
                 ->placeholder('Add social Meta Tag for description'),
-            Boolean::make('dashboard_show'),
+            Boolean::make('dashboard_show')
+                ->help(__('If true show a dashboard app info')),
         ];
     }
 
@@ -336,10 +346,19 @@ class App extends Resource
     {
         return [
             Boolean::make(__('Show draw track'), 'draw_track_show')
+                ->help(__('enable the draw path feature'))
                 ->default(false),
             Boolean::make(__('Show editing inline'), 'editing_inline_show')
-                ->default(false)
-
+                ->help(__('enable the geohub link to the external data modification page'))
+                ->default(false),
+            Boolean::make(__('download_track_enable'), 'download_track_enable')
+                ->default(true)
+                ->hideFromIndex()
+                ->help(__('Enable download of ever app track in GPX, KML, GEOJSON')),
+            Boolean::make(__('print_track_enable'), 'print_track_enable')
+                ->default(true)
+                ->hideFromIndex()
+                ->help(__('Enable print of ever app track in PDF')),
         ];
     }
 
@@ -347,13 +366,14 @@ class App extends Resource
     {
         return [
             NovaTabTranslatable::make([
-                Text::make(__('Welcome'), 'welcome')
-                    ->help(__('This is the welcome message displayed as the first element of the home.')),
+                NovaTinyMCE::make(__('welcome'), 'welcome')
+                    ->help(__('is the welcome message displayed as the first element of the home')),
             ]),
-            Code::Make('Config Home')->language('json')->rules('json')->default('{"HOME": []}')
-            //->help(
-            //view('layers', ['layers' => $this->layers])->render()
-
+            Code::Make('Config Home')
+                ->language('json')
+                ->rules('json')
+                ->default('{"HOME": []}')
+                ->help(view('layers', ['layers' => $this->layers])->render())
         ];
     }
 
@@ -372,7 +392,7 @@ class App extends Resource
 
 
         return [
-            Toggle::make(__('Show Auth at startup'), 'auth_show_at_startup')
+            Boolean::make(__('[auth_show_at_startup]Show Auth at startup'), 'auth_show_at_startup')
         ];
     }
 
@@ -523,20 +543,20 @@ class App extends Resource
             //     $url = '/api/v1/app/' . $this->model()->id . '/pois.geojson';
             //     return "<a class='btn btn-default btn-primary' href='$url' target='_blank'>POIS API</a>";
             // })->asHtml()->onlyOnDetail(),
-            Toggle::make('start_end_icons_show')
+            Boolean::make('start_end_icons_show')
                 ->help('Activate this option if you want to show start and end point of all tracks in the general maps. Use the start_end_icons_min_zoom option to set the minum zoom at which thi feature is activated.'),
-            Toggle::make('ref_on_track_show')
+            Boolean::make('ref_on_track_show')
                 ->help('Activate this option if you want to show ref parameter on tracks line. Use the ref_on_track_min_zoom option to set the minum zoom at which thi feature is activated.'),
-            Toggle::make(__('geolocation_record_enable'), 'geolocation_record_enable')
+            Boolean::make(__('geolocation_record_enable'), 'geolocation_record_enable')
                 //->trueValue('On')
                 //->falseValue('Off') //! error both methods do not exist
                 ->default(false)
                 ->hideFromIndex()
                 ->help('Activate this option if you want enable user track record'),
-            Toggle::make('alert_poi_show')
+            Boolean::make('alert_poi_show')
                 ->help('Activate this option if you want to show a poi proximity alert'),
             Number::make(__('alert_poi_radius'))->default(100)->help('set the radius(in meters) of the activation circle with center the user position, the nearest poi inside the circle trigger the alert'),
-            Toggle::make('flow_line_quote_show')
+            Boolean::make('flow_line_quote_show')
                 ->help('Activate this option if you want to color track by quote'),
             Number::make(__('flow_line_quote_orange'))->default(800)->help('defines the elevation by which the track turns orange'),
             Number::make(__('flow_line_quote_red'))->default(1500)->help('defines the elevation by which the track turns red'),
@@ -546,39 +566,13 @@ class App extends Resource
     protected function options_tab(): array
     {
         return [
-            Select::make(__('Start Url'), 'start_url')
-                ->options([
-                    '/main/explore' => 'Home',
-                    '/main/map' => 'Map',
-                ])
-                ->default('/main/explore'),
-            Toggle::make(__('Show Edit Link'), 'show_edit_link')
+            Boolean::make(__('Show Edit Link'), 'show_edit_link')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(false)
                 ->onlyOnForms(),
-            Toggle::make(__('Skip Route Index Download'), 'skip_route_index_download')
-                // ->trueValue('On')
-                // ->falseValue('Off')
-                ->default(true)
-                ->onlyOnForms(),
-            Toggle::make(__('Show Track Ref Label'), 'show_track_ref_label')
-                // ->trueValue('On')
-                // ->falseValue('Off')
-                ->default(false)
-                ->hideFromIndex(),
-            Toggle::make(__('download_track_enable'), 'download_track_enable')
-                // ->trueValue('On')
-                // ->falseValue('Off')
-                ->default(true)
-                ->hideFromIndex()
-                ->help(__('Enable download of ever app track in GPX, KML, GEOJSON')),
-            Toggle::make(__('print_track_enable'), 'print_track_enable')
-                // ->trueValue('On')
-                // ->falseValue('Off')
-                ->default(true)
-                ->hideFromIndex()
-                ->help(__('Enable print of ever app track in PDF')),
+
+
 
         ];
     }
@@ -586,7 +580,7 @@ class App extends Resource
     protected function routing_tab(): array
     {
         return [
-            Toggle::make(__('Enable Routing'), 'enable_routing')
+            Boolean::make(__('Enable Routing'), 'enable_routing')
                 // ->trueValue('On')
                 //     ->falseValue('Off')
                 ->default(false)
@@ -597,98 +591,98 @@ class App extends Resource
     protected function table_tab(): array
     {
         return [
-            Toggle::make(__('Show Related POI'), 'table_details_show_related_poi')
+            Boolean::make(__('Show Related POI'), 'table_details_show_related_poi')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(false)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Duration'), 'table_details_show_duration_forward')
+            Boolean::make(__('Show Duration'), 'table_details_show_duration_forward')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Duration Backward'), 'table_details_show_duration_backward')
+            Boolean::make(__('Show Duration Backward'), 'table_details_show_duration_backward')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex()
                 ->hideFromIndex(),
-            Toggle::make(__('Show Distance'), 'table_details_show_distance')
+            Boolean::make(__('Show Distance'), 'table_details_show_distance')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Ascent'), 'table_details_show_ascent')
+            Boolean::make(__('Show Ascent'), 'table_details_show_ascent')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Descent'), 'table_details_show_descent')
+            Boolean::make(__('Show Descent'), 'table_details_show_descent')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Ele Max'), 'table_details_show_ele_max')
+            Boolean::make(__('Show Ele Max'), 'table_details_show_ele_max')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Ele Min'), 'table_details_show_ele_min')
+            Boolean::make(__('Show Ele Min'), 'table_details_show_ele_min')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Ele From'), 'table_details_show_ele_from')
+            Boolean::make(__('Show Ele From'), 'table_details_show_ele_from')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Ele To'), 'table_details_show_ele_to')
+            Boolean::make(__('Show Ele To'), 'table_details_show_ele_to')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Scale'), 'table_details_show_scale')
+            Boolean::make(__('Show Scale'), 'table_details_show_scale')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Cai Scale'), 'table_details_show_cai_scale')
+            Boolean::make(__('Show Cai Scale'), 'table_details_show_cai_scale')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Mtb Scale'), 'table_details_show_mtb_scale')
+            Boolean::make(__('Show Mtb Scale'), 'table_details_show_mtb_scale')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Ref'), 'table_details_show_ref')
+            Boolean::make(__('Show Ref'), 'table_details_show_ref')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(true)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Surface'), 'table_details_show_surface')
+            Boolean::make(__('Show Surface'), 'table_details_show_surface')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(false)
                 ->hideFromIndex(),
-            Toggle::make(__('Show GPX Download'), 'table_details_show_gpx_download')
+            Boolean::make(__('Show GPX Download'), 'table_details_show_gpx_download')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(false)
                 ->hideFromIndex(),
-            Toggle::make(__('Show KML Download'), 'table_details_show_kml_download')
+            Boolean::make(__('Show KML Download'), 'table_details_show_kml_download')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(false)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Geojson Download'), 'table_details_show_geojson_download')
+            Boolean::make(__('Show Geojson Download'), 'table_details_show_geojson_download')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(false)
                 ->hideFromIndex(),
-            Toggle::make(__('Show Shapefile Download'), 'table_details_show_shapefile_download')
+            Boolean::make(__('Show Shapefile Download'), 'table_details_show_shapefile_download')
                 // ->trueValue('On')
                 // ->falseValue('Off')
                 ->default(false)
@@ -730,6 +724,132 @@ class App extends Resource
             Color::make(__('Primary color'), 'primary_color')
                 ->default('#de1b0d')
                 ->hideFromIndex(),
+        ];
+    }
+
+    protected function pois_tab(): array
+    {
+        return [
+            Boolean::make(__('Show Pois Layer on APP'), 'app_pois_api_layer')
+                ->trueValue('On')
+                ->falseValue('Off')
+                ->default(false)
+                ->hideFromIndex(),
+            Number::make(__('Poi Min Zoom'), 'poi_min_zoom')
+                ->min(5)
+                ->max(19)
+                ->default(13)
+                ->onlyOnForms(),
+            Number::make(__('Poi Min Zoom'), 'poi_min_zoom')->onlyOnDetail(),
+            Select::make(__('Poi Interaction'), 'poi_interaction')->hideFromIndex()->options($this->poi_interactions)->displayUsingLabels()->required(),
+            Code::Make(__('POI acquisition forms'), 'poi_acquisition_form')
+                ->language('json')
+                ->rules('json')
+                ->default(`
+                [
+                    {
+                        "id" : "poi",
+                        "label" : 
+                        {
+                            "it" : "Punto di interesse",
+                            "en" : "Point of interest"
+                        },
+                        "fields" :
+                        [
+                            {
+                                "name" : "title",
+                                "type" : "text",
+                                "placeholder": {
+                                    "it" : "Inserisci un titolo",
+                                    "en" : "Add a title"
+                                },
+                                "required" : true,
+                                "label" : 
+                                {
+                                    "it" : "Titolo",
+                                    "en" : "Title"
+                                }
+                            },
+                            {
+                                "name" : "waypointtype",
+                                "type" : "select",
+                                "required" : true,
+                                "label" : 
+                                {
+                                    "it" : "Tipo punto di interesse",
+                                    "en" : "Point of interest type"
+                                },
+                                "values" : [
+                                    {
+                                        "value" : "landscape",
+                                        "label" :
+                                        {
+                                            "it" : "Panorama",
+                                            "en" : "Landscape"
+                                        }
+                                    },
+                                    {
+                                        "value" : "place_to_eat",
+                                        "label" :
+                                        {
+                                            "it" : "Luogo dove mangiare",
+                                            "en" : "Place to eat"
+                                        }
+                                    },
+                                    {
+                                        "value" : "place_to_sleep",
+                                        "label" :
+                                        {
+                                            "it" : "Luogo dove dormire",
+                                            "en" : "Place to eat"
+                                        }
+                                    },
+                                    {
+                                        "value" : "natural",
+                                        "label" :
+                                        {
+                                            "it" : "Luogo di interesse naturalistico",
+                                            "en" : "Place of naturalistic interest"
+                                        }
+                                    },
+                                    {
+                                        "value" : "cultural",
+                                        "label" :
+                                        {
+                                            "it" : "Luogo di interesse culturale",
+                                            "en" : "Place of cultural interest"
+                                        }
+                                    },
+                                    {
+                                        "value" : "other",
+                                        "label" :
+                                        {
+                                            "it" : "Altri tipi ti luoghi di interesse",
+                                            "en" : "Other types of Point of interest"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "name" : "description",
+                                "type" : "textarea",
+                                "placeholder": {
+                                    "it" : "Se vuoi puoi aggiungere una descrizione",
+                                    "en" : "You can add a description if you want"
+                                },
+                                "required" : false,
+                                "label" : 
+                                {
+                                    "it" : "Descrizione",
+                                    "en" : "Title"
+                                }
+                            }
+                        ] 
+                    }
+                ]`)
+                ->help(
+                    view('poi-forms')->render()
+                )
         ];
     }
 }

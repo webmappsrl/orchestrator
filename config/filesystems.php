@@ -36,6 +36,11 @@ return [
             'throw' => false,
         ],
 
+        'conf' => [
+            'driver' => 'local',
+            'root' => storage_path('json/conf'),
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
