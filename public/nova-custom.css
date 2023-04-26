@@ -1,7 +1,7 @@
 @media screen and (min-width: 1024px) {
     header {
         position: fixed;
-        z-index: 998;
+        z-index: 55;
         width: 100%;
     }
     div[data-testid="content"] > div:nth-child(2) {
@@ -10,6 +10,5 @@
 
     .sidebar-menu {
         position: fixed;
-        z-index: 999;
     }
 }
