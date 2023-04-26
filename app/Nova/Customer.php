@@ -54,7 +54,8 @@ class Customer extends Resource
                 ID::make()->sortable(),
                 Text::make('Name')
                     ->sortable()
-                    ->rules('required', 'max:255'),
+                    ->rules('required', 'max:255')
+                    ->rules('unique:customers,name'),
                 Text::make('Full Name', 'full_name')
                     ->sortable()
                     ->nullable()
