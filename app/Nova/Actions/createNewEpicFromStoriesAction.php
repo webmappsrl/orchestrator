@@ -76,7 +76,7 @@ class createNewEpicFromStoriesAction extends Action
                 ->options(User::all()->pluck('name', 'id'))
                 ->searchable(),
             Select::make('Milestone', 'milestone_id')
-                ->options(Milestone::all()->pluck('name', 'id'))
+                ->options(Milestone::all()->sortByDesc('due_date')->pluck('name', 'id'))
                 ->searchable(),
             Select::make('Project', 'project_id')
                 ->options($options)
