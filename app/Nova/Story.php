@@ -128,7 +128,8 @@ class Story extends Resource
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
                     ->hideFromIndex()
-                    ->initialEditType(EditorType::MARKDOWN),
+                    ->initialEditType(EditorType::MARKDOWN)
+                    ->onlyOnDetail()
             ]),
         ];
     }
@@ -208,26 +209,26 @@ class Story extends Resource
         ];
 
         if ($request->viaResource == 'projects') {
-            array_push($actions,(new moveStoriesFromProjectToEpicAction)
-            ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
-            ->confirmButtonText('Confirm')
-            ->cancelButtonText('Cancel'));
-            array_push($actions,(new actions\createNewEpicFromStoriesAction)
-            ->confirmText('Click on the "Confirm" button to create a new epic with selected stories or "Cancel" to cancel.')
-            ->confirmButtonText('Confirm')
-            ->cancelButtonText('Cancel'));
+            array_push($actions, (new moveStoriesFromProjectToEpicAction)
+                ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'));
+            array_push($actions, (new actions\createNewEpicFromStoriesAction)
+                ->confirmText('Click on the "Confirm" button to create a new epic with selected stories or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'));
         }
 
         if ($request->viaResource != 'projects') {
-            array_push($actions,(new actions\moveToBacklogAction)
-            ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
-            ->confirmButtonText('Confirm')
-            ->cancelButtonText('Cancel')
-            ->showInline());
-            array_push($actions,(new MoveStoriesFromEpic)
-            ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
-            ->confirmButtonText('Confirm')
-            ->cancelButtonText('Cancel'));
+            array_push($actions, (new actions\moveToBacklogAction)
+                ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel')
+                ->showInline());
+            array_push($actions, (new MoveStoriesFromEpic)
+                ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'));
         }
 
         return $actions;
