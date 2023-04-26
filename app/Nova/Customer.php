@@ -61,8 +61,7 @@ class Customer extends Resource
                     ->hideFromIndex(),
                 Text::make('Acronym','acronym')
                     ->sortable()
-                    ->nullable()
-                    ->hideFromIndex(),
+                    ->nullable(),
                 Text::make('HS', 'hs_id')
                     ->sortable()
                     ->nullable()
