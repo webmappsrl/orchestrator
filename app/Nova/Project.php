@@ -60,7 +60,7 @@ class Project extends Resource
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),
                 Date::make('Due date')->sortable(),
-                Tag::make('Tag epics','tagEpics','App\Nova\Epic')->onlyOnDetail()->withPreview()
+                Tag::make('Tag epics', 'tagEpics', 'App\Nova\Epic')->onlyOnDetail()->withPreview()
             ]),
 
             new panel('DESCRIPTION', [
@@ -77,7 +77,7 @@ class Project extends Resource
             ]),
 
             HasMany::make('Epics'),
-            HasMany::make('Backlog Stories','Stories','App\Nova\Story'),
+            HasMany::make('Backlog Stories', 'backlogStories', Story::class),
         ];
     }
 
