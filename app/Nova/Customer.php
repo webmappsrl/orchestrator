@@ -77,31 +77,31 @@ class Customer extends Resource
                         'geohub' => 'Geohub',
                         'geobox' => 'Geobox',
                     ]
-                )->nullable()->hideFromIndex(),
+                )->sortable()->nullable(),
                 MarkdownTui::make('Migration Note','migration_note')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
-                Text::make('Contact emails','email')->copyable()->hideFromIndex(),
+                Text::make('Contact emails','email')->copyable(),
             ]),
 
             new Panel('SUBSCRIPTION INFO', [
                 Boolean::make('Subs.', 'has_subscription')
                     ->sortable()
-                    ->nullable(),
+                    ->nullable()->hideFromIndex(),
                 Currency::make('S/Amount', 'subscription_amount')
                     ->sortable()
                     ->currency('EUR')
-                    ->nullable(),
+                    ->nullable()->hideFromIndex(),
                 Date::make('S/Payment', 'subscription_last_payment')
                     ->sortable()
-                    ->nullable(),
+                    ->nullable()->hideFromIndex(),
                 Number::make('S/year', 'subscription_last_covered_year')
                     ->sortable()
                     ->nullable()
-                    ->rules('nullable', 'integer'),
+                    ->rules('nullable', 'integer')->hideFromIndex(),
                 Text::make('S/invoice', 'subscription_last_invoice')
                     ->sortable()
-                    ->nullable(),
+                    ->nullable()->hideFromIndex(),
             ]),
 
             new Panel('NOTES', [
