@@ -77,7 +77,7 @@ class Customer extends Resource
                         'geohub' => 'Geohub',
                         'geobox' => 'Geobox',
                     ]
-                )->hideFromIndex(),
+                )->nullable()->hideFromIndex(),
                 MarkdownTui::make('Migration Note','migration_note')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
