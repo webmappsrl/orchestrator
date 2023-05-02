@@ -3,15 +3,18 @@
 namespace App\Nova;
 
 
+use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
-use Laravel\Nova\Fields\Number;
-use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 class Quote extends Resource
 {
@@ -52,6 +55,12 @@ class Quote extends Resource
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
+            new Panel('NOTES', [
+                MarkdownTui::make('Notes')
+                    ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN)
+                    ->nullable()
+            ]),
             BelongsTo::make('Customer'),
             BelongsToMany::make('Products')->fields(function () {
                 return [
