@@ -105,11 +105,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         Gate::define('viewNova', function ($user) {
             $userIsAdmin = $user->hasRole(UserRole::Admin);
             $userIsEditor = $user->hasRole(UserRole::Editor);
+            $userIsDeveloper = $user->hasRole(UserRole::Developer);
+            $userIsManager = $user->hasRole(UserRole::Manager);
             $isInDevelopment = env('APP_ENV') == 'develop';
             $isInProduction = env('APP_ENV') == 'production';
 
             if ($isInDevelopment || $isInProduction) {
-                return $userIsAdmin || $userIsEditor;
+                return $userIsAdmin && $userIsEditor && $userIsDeveloper && $userIsManager;
             }
             return true;
         });
