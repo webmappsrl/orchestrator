@@ -2,21 +2,25 @@
 
 namespace App\Nova;
 
+use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
+use Eminiarts\Tabs\Tabs;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Tag;
+use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\DateTime;
+use Eminiarts\Tabs\Traits\HasTabs;
 use Laravel\Nova\Fields\BelongsTo;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Laravel\Nova\Fields\Date;
-use Laravel\Nova\Fields\DateTime;
-use Laravel\Nova\Fields\Number;
-use Laravel\Nova\Fields\Tag;
 
 class Project extends Resource
 {
+    use HasTabs;
     /**
      * The model the resource corresponds to.
      *
@@ -76,8 +80,14 @@ class Project extends Resource
                     ->nullable()
             ]),
 
-            HasMany::make('Epics'),
-            HasMany::make('Backlog Stories', 'backlogStories', Story::class),
+            new Tabs('Epics', [
+                new Tab('Epics', [
+                    HasMany::make('Epics'),
+                ]),
+                new Tab('Backlog Stories', [
+                    HasMany::make('Backlog Stories', 'backlogStories', Story::class),
+                ]),
+            ])
         ];
     }
 
