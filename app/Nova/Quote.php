@@ -2,7 +2,7 @@
 
 namespace App\Nova;
 
-
+use App\Enums\QuoteStatus;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -15,6 +15,8 @@ use Laravel\Nova\Fields\BelongsToMany;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Status;
 
 class Quote extends Resource
 {
@@ -51,7 +53,16 @@ class Quote extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('title'),
+            Text::make('Title'),
+            Status::make('Status')->loadingWhen(['new', 'sent'])->failedWhen(['closed lost']),
+            Select::make('Status')->options([
+                'new' => QuoteStatus::New,
+                'sent' => QuoteStatus::Sent,
+                'closed lost' => QuoteStatus::Closed_Lost,
+                'closed won' => QuoteStatus::Closed_Won,
+                'partially paid' =>  QuoteStatus::Partially_Paid,
+                'paid' =>  QuoteStatus::Paid,
+            ])->onlyOnForms(),
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
