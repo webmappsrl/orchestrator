@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Enums\QuoteStatus;
+use App\Nova\Actions\DuplicateQuote;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -193,6 +194,9 @@ class Quote extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new DuplicateQuote)
+                ->showInline()
+        ];
     }
 }

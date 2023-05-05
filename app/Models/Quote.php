@@ -16,6 +16,20 @@ class Quote extends Model
         'additional_services' => 'array',
     ];
 
+    protected $fillable = [
+
+        'title',
+        'name',
+        'status',
+        'additional_services',
+        'customer_id',
+        'google_drive_url',
+        'discount',
+        'notes'
+    ];
+
+
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);

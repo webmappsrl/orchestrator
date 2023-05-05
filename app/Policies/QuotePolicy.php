@@ -46,6 +46,14 @@ class QuotePolicy
     }
 
     /**
+     * Determine wether the user can replicate the model.
+     */
+    public function replicate(User $user, Quote $quote): bool
+    {
+        return false;
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, Quote $quote): bool
