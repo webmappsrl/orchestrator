@@ -19,7 +19,7 @@ class EpicObserver
             ->message('New Epic ' . $epic->name . ' has been assigned to you')
             ->type('info')
             ->icon('at-symbol')
-            ->action('View Epic', URL::remote('https://orchestrator.dev.maphub.it/resources/epics/' . $epic->id)));
+            ->action('View Epic', URL::remote('https://orchestrator.maphub.it/resources/epics/' . $epic->id)));
     }
 
     /**
