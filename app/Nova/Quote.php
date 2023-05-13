@@ -2,16 +2,22 @@
 
 namespace App\Nova;
 
-
+use App\Enums\QuoteStatus;
+use App\Nova\Actions\DuplicateQuote;
+use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
-use Laravel\Nova\Fields\Number;
-use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Status;
 
 class Quote extends Resource
 {
@@ -48,10 +54,25 @@ class Quote extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('title'),
+            Text::make('Title'),
+            Status::make('Status')->loadingWhen(['new', 'sent'])->failedWhen(['closed lost']),
+            Select::make('Status')->options([
+                'new' => QuoteStatus::New,
+                'sent' => QuoteStatus::Sent,
+                'closed lost' => QuoteStatus::Closed_Lost,
+                'closed won' => QuoteStatus::Closed_Won,
+                'partially paid' =>  QuoteStatus::Partially_Paid,
+                'paid' =>  QuoteStatus::Paid,
+            ])->onlyOnForms(),
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
+            new Panel('NOTES', [
+                MarkdownTui::make('Notes')
+                    ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN)
+                    ->nullable()
+            ]),
             BelongsTo::make('Customer'),
             BelongsToMany::make('Products')->fields(function () {
                 return [
@@ -173,6 +194,9 @@ class Quote extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new DuplicateQuote)
+                ->showInline()
+        ];
     }
 }
