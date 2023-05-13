@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a132cf0499241f8e3f8df6210c3e955d",
+    "content-hash": "68ae0297b3f1741c2218ff1386bd2feb",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -5185,6 +5185,51 @@
             "time": "2023-02-09T15:13:18+00:00"
         },
         {
+            "name": "robertboes/nova-slider-field",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/RobertBoes/nova-slider-field.git",
+                "reference": "a3f604d6d6758f1ad19331c95ee2d77bcc6006cb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/RobertBoes/nova-slider-field/zipball/a3f604d6d6758f1ad19331c95ee2d77bcc6006cb",
+                "reference": "a3f604d6d6758f1ad19331c95ee2d77bcc6006cb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Robertboes\\NovaSliderField\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Robertboes\\NovaSliderField\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova slider field.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/RobertBoes/nova-slider-field/issues",
+                "source": "https://github.com/RobertBoes/nova-slider-field/tree/v0.1.1"
+            },
+            "time": "2020-03-22T11:27:49+00:00"
+        },
+        {
             "name": "spatie/db-dumper",
             "version": "3.3.0",
             "source": {
@@ -8003,7 +8048,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feature/add_git_actions",
+            "version": "dev-feature/app_conf_API_V1",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",

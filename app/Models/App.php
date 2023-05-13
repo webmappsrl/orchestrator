@@ -3,15 +3,17 @@
 namespace App\Models;
 
 use App\Models\Layer;
+use App\Observers\AppObserver;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Arr;
+use App\Traits\ConfTrait;
+use Illuminate\Support\Facades\Storage;
 
 class App extends Model
 {
-    use HasFactory, HasTranslations;
-    //use ConfTrait;
+    use HasFactory, ConfTrait, HasTranslations;
 
 
 
@@ -23,7 +25,7 @@ class App extends Model
     public $fillable = [
         "id", "created_at", "updated_at", "name", "app_id", "customer_name", "map_max_zoom",
         "map_min_zoom", "map_def_zoom", "font_family_header", "font_family_content", "default_feature_color",
-        "primary_color", "start_url", "show_edit_link", "skip_route_index_download", "poi_min_radius", "poi_max_radius", "poi_icon_zoom", "poi_icon_radius", "poi_min_zoom", "poi_label_min_zoom", "show_track_ref_label",
+        "primary_color", "start_url", "show_edit_link", "poi_min_zoom", "show_track_ref_label",
         "table_details_show_gpx_download", "table_details_show_kml_download",  "table_details_show_related_poi", "enable_routing",
         "user_id", "external_overlays", "icon", "splash", "icon_small", "feature_image", "default_language", "available_languages",
         "auth_show_at_startup", "offline_enable", "offline_force_auth", "geolocation_record_enable", "table_details_show_duration_forward",
@@ -255,5 +257,12 @@ class App extends Model
         $appsData = json_decode(file_get_contents('https://geohub.webmapp.it/api/v1/app/all'), true);
 
         $this->fillable(array_keys($appsData[0]));
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        App::observe(AppObserver::class);
     }
 }
