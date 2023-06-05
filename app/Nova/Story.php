@@ -97,8 +97,8 @@ class Story extends Resource
                         array_push($deadlineNames, $deadline->due_date);
                     }
                 }
-                return implode(', ', $deadlineNames);
-            })->onlyOnIndex(),
+                return implode('<br/> ', $deadlineNames);
+            })->asHtml()->onlyOnIndex(),
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
