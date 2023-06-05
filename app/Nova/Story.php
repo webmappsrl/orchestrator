@@ -86,6 +86,11 @@ class Story extends Resource
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
                 ->sortable(),
+            Text::make('Deadlines Count', function () {
+                return $this->deadlines->count();
+            })
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
