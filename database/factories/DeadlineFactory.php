@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\DeadlineStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,8 @@ class DeadlineFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'due_date' => $this->faker->dateTimeBetween('now', '+1 year'),
+            'status' => collect(DeadlineStatus::cases())->random(),
         ];
     }
 }

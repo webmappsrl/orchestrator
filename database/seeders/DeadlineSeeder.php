@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Deadline;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class DeadlineSeeder extends Seeder
 {
@@ -12,6 +13,6 @@ class DeadlineSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        Deadline::factory(10)->create();
     }
 }

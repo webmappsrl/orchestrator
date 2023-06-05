@@ -8,12 +8,16 @@ use Illuminate\Auth\Access\Response;
 
 class DeadlinePolicy
 {
+    public function before(): ?bool
+    {
+        return true;
+    }
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -21,7 +25,7 @@ class DeadlinePolicy
      */
     public function view(User $user, Deadline $deadline): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +33,7 @@ class DeadlinePolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -37,7 +41,7 @@ class DeadlinePolicy
      */
     public function update(User $user, Deadline $deadline): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -45,7 +49,7 @@ class DeadlinePolicy
      */
     public function delete(User $user, Deadline $deadline): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -53,7 +57,7 @@ class DeadlinePolicy
      */
     public function restore(User $user, Deadline $deadline): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -61,6 +65,6 @@ class DeadlinePolicy
      */
     public function forceDelete(User $user, Deadline $deadline): bool
     {
-        //
+        return true;
     }
 }
