@@ -2,6 +2,7 @@
 
 namespace App\Nova\Actions;
 
+use App\Models\Project;
 use App\Models\Deadline;
 use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
@@ -47,6 +48,9 @@ class EditStoriesFromEpic extends Action
             if (isset($fields['deadlines'])) {
                 $model->deadlines()->sync($fields['deadlines']);
             }
+            if (isset($fields['project'])) {
+                $model->project_id = $fields['project'];
+            }
             $model->save();
         }
     }
@@ -76,6 +80,9 @@ class EditStoriesFromEpic extends Action
                     return [$deadline->id => $optionLabel];
                 })->toArray())
                 ->displayUsingLabels(),
+            Select::make('Project')->options(Project::all()->pluck('name', 'id'))
+                ->displayUsingLabels()
+                ->searchable()
         ];
     }
 
