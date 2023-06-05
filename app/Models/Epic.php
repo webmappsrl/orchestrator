@@ -8,7 +8,8 @@ use App\Enums\StoryStatus;
 use App\Observers\EpicObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Epic extends Model
 {
@@ -64,10 +65,15 @@ class Epic extends Model
     {
         return $this->belongsTo(Project::class);
     }
-    
+
     public function tagProjects()
     {
-        return $this->belongsToMany(Project::class,'epic_project_tags');
+        return $this->belongsToMany(Project::class, 'epic_project_tags');
+    }
+
+    public function deadlines(): MorphToMany
+    {
+        return $this->morphToMany(Deadline::class, 'deadlineable');
     }
 
     /**

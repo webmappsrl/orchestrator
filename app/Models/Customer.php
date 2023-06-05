@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Quote;
+use App\Models\Deadline;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -40,5 +41,10 @@ class Customer extends Model
     public function quotes()
     {
         return $this->hasMany(Quote::class);
+    }
+
+    public function deadline()
+    {
+        return $this->belongsTo(Deadline::class);
     }
 }
