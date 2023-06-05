@@ -2,26 +2,27 @@
 
 namespace App\Nova;
 
-use App\Enums\EpicStatus;
+use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
+use Eminiarts\Tabs\Tabs;
+use App\Enums\EpicStatus;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\HasMany;
+use Eminiarts\Tabs\Traits\HasTabs;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
+use Laravel\Nova\Fields\MorphToMany;
+use Laravel\Nova\Fields\MultiSelect;
+use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Actions\EditEpicsFromIndex;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
-use Laravel\Nova\Fields\Status;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Eminiarts\Tabs\Tab;
-use Eminiarts\Tabs\Tabs;
-use Eminiarts\Tabs\Traits\HasTabs;
-use Laravel\Nova\Fields\BelongsToMany;
-use Laravel\Nova\Fields\MorphToMany;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class Epic extends Resource
 {

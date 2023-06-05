@@ -9,6 +9,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -26,7 +27,7 @@ class Deadline extends Resource
      *
      * @var string
      */
-    public static $title = 'id';
+    public static $title = 'due_date';
 
     /**
      * The columns that should be searched.
@@ -61,8 +62,8 @@ class Deadline extends Resource
             Text::make('SAL', function () {
                 return $this->wip();
             })->hideWhenCreating()->hideWhenUpdating(),
-
-
+            MorphToMany::make('Stories')->searchable(),
+            MorphToMany::make('Epics')->searchable(),
         ];
     }
 

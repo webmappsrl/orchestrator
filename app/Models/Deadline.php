@@ -5,9 +5,10 @@ namespace App\Models;
 use App\Models\Epic;
 use App\Models\Story;
 use App\Models\Customer;
+use App\Enums\StoryStatus;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Deadline extends Model
