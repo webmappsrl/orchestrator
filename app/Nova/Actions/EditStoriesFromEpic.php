@@ -62,9 +62,18 @@ class EditStoriesFromEpic extends Action
         return [
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
             BelongsTo::make('User')->nullable(),
+            //create a multiselect field to display all the deadlines due_date plus the related customer name as option
             MultiSelect::make('Deadlines')
                 ->options(Deadline::all()->mapWithKeys(function ($deadline) {
-                    return [$deadline->id => Carbon::parse($deadline->due_date)->format('d-m-Y')];
+                    if (isset($deadline->customer) && $deadline->customer != null) {
+                        $customer = $deadline->customer;
+                        $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
+                        $optionLabel = $formattedDate . '    ' . $customer->name;
+                    } else {
+                        $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
+                        $optionLabel = $formattedDate;
+                    }
+                    return [$deadline->id => $optionLabel];
                 })->toArray())
                 ->displayUsingLabels(),
         ];
