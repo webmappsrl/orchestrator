@@ -42,7 +42,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         Nova::style('nova-custom', public_path('/nova-custom.css'));
 
-        Nova::withBreadcrumbs(true);
+        Nova::withBreadcrumbs(false);
 
         Nova::mainMenu(function (Request $request) {
             return [
