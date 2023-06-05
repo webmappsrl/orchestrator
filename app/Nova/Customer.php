@@ -2,22 +2,26 @@
 
 namespace App\Nova;
 
-use App\Nova\Filters\CustomerWpMigrationFilter;
-use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Eminiarts\Tabs\Tab;
+use Laravel\Nova\Panel;
+use Eminiarts\Tabs\Tabs;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Number;
-use Laravel\Nova\Fields\Boolean;
-use Laravel\Nova\Fields\Currency;
-use Laravel\Nova\Fields\HasMany;
-use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Currency;
+use Eminiarts\Tabs\Traits\HasTabs;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Panel;
+use App\Nova\Filters\CustomerWpMigrationFilter;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 class Customer extends Resource
 {
+    use HasTabs;
     /**
      * The model the resource corresponds to.
      *
@@ -50,68 +54,74 @@ class Customer extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            new Panel('MAIN INFO', [
-                ID::make()->sortable(),
-                Text::make('Name')
-                    ->sortable()
-                    ->rules('required', 'max:255')
-                    ->creationRules('unique:customers,name'),
-                Text::make('Full Name', 'full_name')
-                    ->sortable()
-                    ->nullable()
-                    ->hideFromIndex(),
-                Text::make('Acronym','acronym')
-                    ->sortable()
-                    ->nullable(),
-                Text::make('HS', 'hs_id')
-                    ->sortable()
-                    ->nullable()
-                    ->hideFromIndex(),
-                Text::make('Domain Name', 'domain_name')
-                    ->sortable()
-                    ->nullable()
-                    ->hideFromIndex(),
-                Select::make('WP Migration','wp_migration')->options(
-                    [
-                        'wordpress' => 'Wordpress',
-                        'geohub' => 'Geohub',
-                        'geobox' => 'Geobox',
-                    ]
-                )->sortable()->nullable(),
-                MarkdownTui::make('Migration Note','migration_note')
-                ->hideFromIndex()
-                ->initialEditType(EditorType::MARKDOWN),
-                Text::make('Contact emails','email')->copyable(),
+            new Tabs('Info', [
+                Tab::make('Main Info', [
+                    ID::make()->sortable(),
+                    Text::make('Name')
+                        ->sortable()
+                        ->rules('required', 'max:255')
+                        ->creationRules('unique:customers,name'),
+                    Text::make('Full Name', 'full_name')
+                        ->sortable()
+                        ->nullable()
+                        ->hideFromIndex(),
+                    Text::make('Acronym', 'acronym')
+                        ->sortable()
+                        ->nullable(),
+                    Text::make('HS', 'hs_id')
+                        ->sortable()
+                        ->nullable()
+                        ->hideFromIndex(),
+                    Text::make('Domain Name', 'domain_name')
+                        ->sortable()
+                        ->nullable()
+                        ->hideFromIndex(),
+                    Select::make('WP Migration', 'wp_migration')->options(
+                        [
+                            'wordpress' => 'Wordpress',
+                            'geohub' => 'Geohub',
+                            'geobox' => 'Geobox',
+                        ]
+                    )->sortable()->nullable(),
+                    MarkdownTui::make('Migration Note', 'migration_note')
+                        ->hideFromIndex()
+                        ->initialEditType(EditorType::MARKDOWN),
+                    Text::make('Contact emails', 'email')->copyable(),
+                ]),
+                Tab::make('Subscription Info', [
+                    Boolean::make('Subs.', 'has_subscription')
+                        ->sortable()
+                        ->nullable()->hideFromIndex(),
+                    Currency::make('S/Amount', 'subscription_amount')
+                        ->sortable()
+                        ->currency('EUR')
+                        ->nullable()->hideFromIndex(),
+                    Date::make('S/Payment', 'subscription_last_payment')
+                        ->sortable()
+                        ->nullable()->hideFromIndex(),
+                    Number::make('S/year', 'subscription_last_covered_year')
+                        ->sortable()
+                        ->nullable()
+                        ->rules('nullable', 'integer')->hideFromIndex(),
+                    Text::make('S/invoice', 'subscription_last_invoice')
+                        ->sortable()
+                        ->nullable()->hideFromIndex(),
+                ]),
+                Tab::make('Notes', [
+                    MarkdownTui::make('Notes', 'notes')
+                        ->initialEditType(EditorType::MARKDOWN)
+                        ->hideFromIndex(),
+                ]),
+                Tab::make('Projects', [
+                    HasMany::make('Projects', 'projects', Project::class),
+                ]),
+                Tab::make('Quotes', [
+                    HasMany::make('Quotes', 'quotes', Quote::class),
+                ]),
+                Tab::make('Deadlines', [
+                    HasMany::make('Deadlines', 'deadlines', Deadline::class),
+                ]),
             ]),
-
-            new Panel('SUBSCRIPTION INFO', [
-                Boolean::make('Subs.', 'has_subscription')
-                    ->sortable()
-                    ->nullable()->hideFromIndex(),
-                Currency::make('S/Amount', 'subscription_amount')
-                    ->sortable()
-                    ->currency('EUR')
-                    ->nullable()->hideFromIndex(),
-                Date::make('S/Payment', 'subscription_last_payment')
-                    ->sortable()
-                    ->nullable()->hideFromIndex(),
-                Number::make('S/year', 'subscription_last_covered_year')
-                    ->sortable()
-                    ->nullable()
-                    ->rules('nullable', 'integer')->hideFromIndex(),
-                Text::make('S/invoice', 'subscription_last_invoice')
-                    ->sortable()
-                    ->nullable()->hideFromIndex(),
-            ]),
-
-            new Panel('NOTES', [
-                MarkdownTui::make('Notes', 'notes')
-                ->initialEditType(EditorType::MARKDOWN)
-                ->hideFromIndex(),
-            ]),
-
-            HasMany::make('Projects'),
-            HasMany::make('Quotes'),
         ];
     }
 

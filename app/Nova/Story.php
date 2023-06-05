@@ -5,19 +5,22 @@ namespace App\Nova;
 
 use App\Models\Epic;
 use App\Models\User;
-use App\Enums\StoryStatus;
 use App\Models\Project;
+use Laravel\Nova\Panel;
+use App\Models\Deadline;
+use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\MorphToMany;
+use Laravel\Nova\Fields\MultiSelect;
 use App\Nova\Actions\MoveStoriesFromEpic;
-use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Laravel\Nova\Panel;
+use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 
 class Story extends Resource
 {
@@ -72,10 +75,30 @@ class Story extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
+            Select::make(__('Status'), 'status')->options([
+                'New' => StoryStatus::New,
+                'In Progress' => StoryStatus::Progress,
+                'Done' => StoryStatus::Done,
+                'Test' => StoryStatus::Test,
+                'Rejected' => StoryStatus::Rejected,
+            ])->onlyOnForms(),
             Status::make('Status')
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
                 ->sortable(),
+            //create a field to show all the name of deadlines and related customer name
+            Text::make(__('Deadlines'), function () {
+                $deadlines = $this->deadlines;
+                $deadlineNames = [];
+                foreach ($deadlines as $deadline) {
+                    if (isset($deadline->customer)) {
+                        array_push($deadlineNames, $deadline->due_date . ' (' . $deadline->customer->name . ')');
+                    } else {
+                        array_push($deadlineNames, $deadline->due_date);
+                    }
+                }
+                return implode('<br/> ', $deadlineNames);
+            })->asHtml()->onlyOnIndex(),
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
@@ -124,6 +147,7 @@ class Story extends Resource
                 })
                 ->searchable()
                 ->hideFromIndex(),
+            MorphToMany::make('Deadlines'),
             //add a panel to show the related epic description
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
@@ -179,7 +203,7 @@ class Story extends Resource
     {
         $actions = [
             (new actions\EditStoriesFromEpic)
-                ->confirmText('Edit Status and User for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
+                ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
 
@@ -234,15 +258,7 @@ class Story extends Resource
         return $actions;
     }
 
-    /**
-     * Get the user that owns the Story
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'foreign_key', 'other_key');
-    }
+
 
     public function indexBreadcrumb()
     {

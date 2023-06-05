@@ -15,6 +15,7 @@ use App\Nova\DoneEpic;
 use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
+use App\Nova\Deadline;
 use App\Nova\Milestone;
 use App\Nova\ProjectEpic;
 use App\Nova\ProgressEpic;
@@ -41,7 +42,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         Nova::style('nova-custom', public_path('/nova-custom.css'));
 
-        Nova::withBreadcrumbs(true);
+        Nova::withBreadcrumbs(false);
 
         Nova::mainMenu(function (Request $request) {
             return [
@@ -62,6 +63,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
                     MenuItem::resource(Quote::class),
+                    MenuItem::resource(Deadline::class)
                 ])->icon('users')->collapsable(),
 
                 MenuSection::make('DEV', [
