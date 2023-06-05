@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\DeadlineStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->date('due_date');
+            $table->string('status')->default(DeadlineStatus::New->value);
         });
     }
 
