@@ -17,6 +17,7 @@ return new class extends Migration
             $table->timestamps();
             $table->date('due_date');
             $table->string('status')->default(DeadlineStatus::New->value);
+            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('cascade');
         });
     }
 
