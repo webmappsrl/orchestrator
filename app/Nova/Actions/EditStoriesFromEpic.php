@@ -2,12 +2,15 @@
 
 namespace App\Nova\Actions;
 
+use App\Models\Deadline;
 use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Carbon;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Actions\Action;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
@@ -41,6 +44,9 @@ class EditStoriesFromEpic extends Action
             if (isset($fields['user'])) {
                 $model->user_id = $fields['user']->id;
             }
+            if (isset($fields['deadlines'])) {
+                $model->deadlines()->sync($fields['deadlines']);
+            }
             $model->save();
         }
     }
@@ -56,6 +62,11 @@ class EditStoriesFromEpic extends Action
         return [
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
             BelongsTo::make('User')->nullable(),
+            MultiSelect::make('Deadlines')
+                ->options(Deadline::all()->mapWithKeys(function ($deadline) {
+                    return [$deadline->id => Carbon::parse($deadline->due_date)->format('d-m-Y')];
+                })->toArray())
+                ->displayUsingLabels(),
         ];
     }
 

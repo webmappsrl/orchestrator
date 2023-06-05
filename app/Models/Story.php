@@ -6,6 +6,7 @@ use App\Models\Epic;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Story extends Model
 {
@@ -61,5 +62,10 @@ class Story extends Model
     public function epic(): BelongsTo
     {
         return $this->belongsTo(Epic::class);
+    }
+
+    public function deadlines(): MorphToMany
+    {
+        return $this->morphToMany(Deadline::class, 'deadlineable');
     }
 }
