@@ -2,6 +2,7 @@
 
 namespace App\Nova\Actions;
 
+use App\Models\Project;
 use App\Models\Deadline;
 use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
@@ -47,6 +48,9 @@ class EditStoriesFromEpic extends Action
             if (isset($fields['deadlines'])) {
                 $model->deadlines()->sync($fields['deadlines']);
             }
+            if (isset($fields['project'])) {
+                $model->project_id = $fields['project'];
+            }
             $model->save();
         }
     }
@@ -62,11 +66,23 @@ class EditStoriesFromEpic extends Action
         return [
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
             BelongsTo::make('User')->nullable(),
+            //create a multiselect field to display all the deadlines due_date plus the related customer name as option
             MultiSelect::make('Deadlines')
                 ->options(Deadline::all()->mapWithKeys(function ($deadline) {
-                    return [$deadline->id => Carbon::parse($deadline->due_date)->format('d-m-Y')];
+                    if (isset($deadline->customer) && $deadline->customer != null) {
+                        $customer = $deadline->customer;
+                        $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
+                        $optionLabel = $formattedDate . '    ' . $customer->name;
+                    } else {
+                        $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
+                        $optionLabel = $formattedDate;
+                    }
+                    return [$deadline->id => $optionLabel];
                 })->toArray())
                 ->displayUsingLabels(),
+            Select::make('Project')->options(Project::all()->pluck('name', 'id'))
+                ->displayUsingLabels()
+                ->searchable()
         ];
     }
 

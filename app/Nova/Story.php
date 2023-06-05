@@ -86,6 +86,19 @@ class Story extends Resource
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
                 ->sortable(),
+            //create a field to show all the name of deadlines and related customer name
+            Text::make(__('Deadlines'), function () {
+                $deadlines = $this->deadlines;
+                $deadlineNames = [];
+                foreach ($deadlines as $deadline) {
+                    if (isset($deadline->customer)) {
+                        array_push($deadlineNames, $deadline->due_date . ' (' . $deadline->customer->name . ')');
+                    } else {
+                        array_push($deadlineNames, $deadline->due_date);
+                    }
+                }
+                return implode(', ', $deadlineNames);
+            })->onlyOnIndex(),
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
