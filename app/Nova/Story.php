@@ -9,6 +9,7 @@ use App\Models\Project;
 use Laravel\Nova\Panel;
 use App\Models\Deadline;
 use App\Enums\StoryStatus;
+use App\Enums\StoryType;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
@@ -76,7 +77,7 @@ class Story extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
-            Select::make(__('Status'), 'status')->options([
+            Select::make(('Status'), 'status')->options([
                 'New' => StoryStatus::New,
                 'In Progress' => StoryStatus::Progress,
                 'Done' => StoryStatus::Done,
@@ -88,6 +89,18 @@ class Story extends Resource
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
                 ->sortable(),
+            Select::make(__('Type'), 'type')->options([
+                'Bug' => StoryType::Bug,
+                'Feature' => StoryType::Feature,
+            ])->onlyOnForms(),
+            Text::make('Type', function () {
+                // color the type of the story and make it bold
+                $type = $this->type;
+                $color = 'blue';
+                return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             //create a field to show all the name of deadlines and related customer name
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
