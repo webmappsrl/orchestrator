@@ -82,7 +82,8 @@ class Story extends Resource
                 'Done' => StoryStatus::Done,
                 'Test' => StoryStatus::Test,
                 'Rejected' => StoryStatus::Rejected,
-            ])->onlyOnForms(),
+            ])->onlyOnForms()
+                ->default('New'),
             Status::make('Status')
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
