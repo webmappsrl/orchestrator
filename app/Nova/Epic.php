@@ -67,8 +67,8 @@ class Epic extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            new Tabs('Info', [
-                Tab::make('MAIN INFO', [
+            (new Tabs('Info', [
+                Tab::make('Main Info', [
                     ID::make()->sortable(),
                     //display the relations in nova field
                     BelongsTo::make('User'),
@@ -87,8 +87,7 @@ class Epic extends Resource
                     Text::make('Name')
                         ->sortable()
                         ->rules('required', 'max:255')
-                        ->hideFromIndex(),
-
+                        ->onlyOnForms(),
                     Text::make('SAL', function () {
                         return $this->wip();
                     })->hideWhenCreating()->hideWhenUpdating(),
@@ -120,7 +119,7 @@ class Epic extends Resource
                 Tab::make('Tag projects', [
                     BelongsToMany::make('Tag projects', 'tagProjects', 'App\Nova\Project')->searchable(),
                 ]),
-            ]),
+            ]))->withToolbar(),
             new Panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
                     ->initialEditType(EditorType::MARKDOWN)
