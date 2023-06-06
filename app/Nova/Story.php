@@ -21,6 +21,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use Carbon\Carbon;
 
 class Story extends Resource
 {
@@ -56,7 +57,7 @@ class Story extends Resource
         'id', 'name', 'description'
     ];
 
-    public static $linkToParent = true;
+
 
     /**
      * Get the fields displayed by the resource.
@@ -91,10 +92,11 @@ class Story extends Resource
                 $deadlines = $this->deadlines;
                 $deadlineNames = [];
                 foreach ($deadlines as $deadline) {
+                    $dueDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
                     if (isset($deadline->customer)) {
-                        array_push($deadlineNames, $deadline->due_date . ' (' . $deadline->customer->name . ')');
+                        array_push($deadlineNames, $dueDate . ' (' . $deadline->customer->name . ')');
                     } else {
-                        array_push($deadlineNames, $deadline->due_date);
+                        array_push($deadlineNames, $dueDate);
                     }
                 }
                 return implode('<br/> ', $deadlineNames);

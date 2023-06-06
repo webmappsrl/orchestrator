@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use Carbon\Carbon;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Date;
@@ -23,11 +24,19 @@ class Deadline extends Resource
     public static $model = \App\Models\Deadline::class;
 
     /**
-     * The single value that should be used to represent the resource when being displayed.
+     * Get the displayable title of the resource.
      *
-     * @var string
+     * @return string
      */
-    public static $title = 'due_date';
+    public function title()
+    {
+        $dueDate = $this->due_date;
+
+        $formattedDate = Carbon::parse($dueDate)->format('d-m-Y');
+
+        return $formattedDate;
+    }
+
 
     /**
      * The columns that should be searched.
@@ -109,5 +118,10 @@ class Deadline extends Resource
     public function actions(NovaRequest $request)
     {
         return [];
+    }
+
+    public function indexBreadcrumb()
+    {
+        return null;
     }
 }
