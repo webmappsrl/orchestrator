@@ -2,6 +2,7 @@
 
 namespace App\Nova\Actions;
 
+use App\Enums\DeadlineStatus;
 use App\Models\Project;
 use App\Models\Deadline;
 use App\Enums\StoryStatus;
@@ -68,18 +69,28 @@ class EditStoriesFromEpic extends Action
             BelongsTo::make('User')->nullable(),
             //create a multiselect field to display all the deadlines due_date plus the related customer name as option
             MultiSelect::make('Deadlines')
-                ->options(Deadline::all()->mapWithKeys(function ($deadline) {
-                    if (isset($deadline->customer) && $deadline->customer != null) {
-                        $customer = $deadline->customer;
-                        $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
-                        $optionLabel = $formattedDate . '    ' . $customer->name;
-                    } else {
-                        $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
-                        $optionLabel = $formattedDate;
+                ->options(
+                    function () {
+                        $notExpiredDeadlines = Deadline::whereNot('status',  DeadlineStatus::Expired)->get();
+                        $options = [];
+                        //order the not expired deadlines by descending due date
+                        $notExpiredDeadlines = $notExpiredDeadlines->sortByDesc('due_date');
+                        foreach ($notExpiredDeadlines as $deadline) {
+                            if (isset($deadline->customer) && $deadline->customer != null) {
+                                $customer = $deadline->customer;
+                                //format the due_date
+                                $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
+                                //add the customer name to the option label
+                                $optionLabel = $formattedDate . '    ' . $customer->name . ' ' . $deadline->title;
+                            } else {
+                                $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
+                                $optionLabel = $formattedDate . '    ' . $deadline->title;
+                            }
+                            $options[$deadline->id] = $optionLabel;
+                        }
+                        return $options;
                     }
-                    return [$deadline->id => $optionLabel];
-                })->toArray())
-                ->displayUsingLabels(),
+                )->displayUsingLabels(),
             Select::make('Project')->options(Project::all()->pluck('name', 'id'))
                 ->displayUsingLabels()
                 ->searchable()

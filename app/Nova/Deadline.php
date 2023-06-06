@@ -2,15 +2,16 @@
 
 namespace App\Nova;
 
+use Carbon\Carbon;
 use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
+use App\Enums\DeadlineStatus;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Status;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\MorphToMany;
-use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Deadline extends Resource
@@ -27,7 +28,7 @@ class Deadline extends Resource
      *
      * @var string
      */
-    public static $title = 'due_date';
+    public static $title = 'title';
 
     /**
      * The columns that should be searched.
@@ -48,13 +49,25 @@ class Deadline extends Resource
     {
         return [
             ID::make()->sortable(),
-            Date::make('Due Date', 'due_date')->sortable(),
+            Date::make('Due Date', 'due_date')
+                ->displayUsing(function ($value) {
+                    return $value->format('Y-m-d');
+                })
+                ->sortable()
+                ->rules('required', 'date'),
+            Text::make('Title')->sortable(),
+            Textarea::make('Description')->hideFromIndex(),
             Select::make('Status')->options([
-                'new' => 'New',
-                'in progress' => 'In Progress',
-                'done' => 'Done',
-                'expired' => 'Expired',
-            ])->sortable()->searchable()->hideFromIndex(),
+                'new' => DeadlineStatus::New,
+                'progress' => DeadlineStatus::Progress,
+                'done' => DeadlineStatus::Done,
+                'expired' => DeadlineStatus::Expired,
+            ])->default('new')
+                ->onlyOnForms(),
+            Status::make('Status')
+                ->sortable()
+                ->loadingWhen(['status' => 'progress'])
+                ->failedWhen(['status' => 'expired']),
             BelongsTo::make('Customer')->sortable()->searchable(),
             Text::make('Stories Count', function () {
                 return $this->stories()->count();
@@ -109,5 +122,10 @@ class Deadline extends Resource
     public function actions(NovaRequest $request)
     {
         return [];
+    }
+
+    public function indexBreadcrumb()
+    {
+        return null;
     }
 }

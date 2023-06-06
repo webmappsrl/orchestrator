@@ -18,6 +18,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Filters\CustomerWpMigrationFilter;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Laravel\Nova\Fields\Textarea;
 
 class Customer extends Resource
 {
@@ -53,65 +54,60 @@ class Customer extends Resource
      */
     public function fields(NovaRequest $request)
     {
+        $title = 'Customer Details:' . $this->name;
         return [
-            new Tabs('Info', [
-                Tab::make('Main Info', [
-                    ID::make()->sortable(),
-                    Text::make('Name')
-                        ->sortable()
-                        ->rules('required', 'max:255')
-                        ->creationRules('unique:customers,name'),
-                    Text::make('Full Name', 'full_name')
-                        ->sortable()
-                        ->nullable()
-                        ->hideFromIndex(),
-                    Text::make('Acronym', 'acronym')
-                        ->sortable()
-                        ->nullable(),
-                    Text::make('HS', 'hs_id')
-                        ->sortable()
-                        ->nullable()
-                        ->hideFromIndex(),
-                    Text::make('Domain Name', 'domain_name')
-                        ->sortable()
-                        ->nullable()
-                        ->hideFromIndex(),
-                    Select::make('WP Migration', 'wp_migration')->options(
-                        [
-                            'wordpress' => 'Wordpress',
-                            'geohub' => 'Geohub',
-                            'geobox' => 'Geobox',
-                        ]
-                    )->sortable()->nullable(),
-                    MarkdownTui::make('Migration Note', 'migration_note')
-                        ->hideFromIndex()
-                        ->initialEditType(EditorType::MARKDOWN),
-                    Text::make('Contact emails', 'email')->copyable(),
-                ]),
-                Tab::make('Subscription Info', [
-                    Boolean::make('Subs.', 'has_subscription')
-                        ->sortable()
-                        ->nullable()->hideFromIndex(),
-                    Currency::make('S/Amount', 'subscription_amount')
-                        ->sortable()
-                        ->currency('EUR')
-                        ->nullable()->hideFromIndex(),
-                    Date::make('S/Payment', 'subscription_last_payment')
-                        ->sortable()
-                        ->nullable()->hideFromIndex(),
-                    Number::make('S/year', 'subscription_last_covered_year')
-                        ->sortable()
-                        ->nullable()
-                        ->rules('nullable', 'integer')->hideFromIndex(),
-                    Text::make('S/invoice', 'subscription_last_invoice')
-                        ->sortable()
-                        ->nullable()->hideFromIndex(),
-                ]),
-                Tab::make('Notes', [
-                    MarkdownTui::make('Notes', 'notes')
-                        ->initialEditType(EditorType::MARKDOWN)
-                        ->hideFromIndex(),
-                ]),
+            ID::make()->sortable(),
+            Text::make('Name')
+                ->sortable()
+                ->rules('required', 'max:255')
+                ->creationRules('unique:customers,name'),
+            Text::make('Full Name', 'full_name')
+                ->sortable()
+                ->nullable()
+                ->hideFromIndex(),
+            Text::make('Acronym', 'acronym')
+                ->sortable()
+                ->nullable(),
+            Text::make('HS', 'hs_id')
+                ->sortable()
+                ->nullable()
+                ->hideFromIndex(),
+            Text::make('Domain Name', 'domain_name')
+                ->sortable()
+                ->nullable()
+                ->hideFromIndex(),
+            Select::make('WP Migration', 'wp_migration')->options(
+                [
+                    'wordpress' => 'Wordpress',
+                    'geohub' => 'Geohub',
+                    'geobox' => 'Geobox',
+                ]
+            )->sortable()->nullable(),
+            MarkdownTui::make('Migration Note', 'migration_note')
+                ->hideFromIndex()
+                ->initialEditType(EditorType::MARKDOWN),
+            Text::make('Contact emails', 'email')->copyable(),
+            Boolean::make('Subs.', 'has_subscription')
+                ->sortable()
+                ->nullable()->hideFromIndex(),
+            Currency::make('S/Amount', 'subscription_amount')
+                ->sortable()
+                ->currency('EUR')
+                ->nullable()->hideFromIndex(),
+            Date::make('S/Payment', 'subscription_last_payment')
+                ->sortable()
+                ->nullable()->hideFromIndex(),
+            Number::make('S/year', 'subscription_last_covered_year')
+                ->sortable()
+                ->nullable()
+                ->rules('nullable', 'integer')->hideFromIndex(),
+            Text::make('S/invoice', 'subscription_last_invoice')
+                ->sortable()
+                ->nullable()->hideFromIndex(),
+            MarkdownTui::make('Notes', 'notes')
+                ->initialEditType(EditorType::MARKDOWN)
+                ->hideFromIndex(),
+            new Tabs('Relationships', [
                 Tab::make('Projects', [
                     HasMany::make('Projects', 'projects', Project::class),
                 ]),
@@ -121,7 +117,9 @@ class Customer extends Resource
                 Tab::make('Deadlines', [
                     HasMany::make('Deadlines', 'deadlines', Deadline::class),
                 ]),
-            ]),
+
+            ])
+
         ];
     }
 
