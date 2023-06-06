@@ -79,11 +79,11 @@ class EditStoriesFromEpic extends Action
                             if (isset($deadline->customer) && $deadline->customer != null) {
                                 $customer = $deadline->customer;
                                 //format the due_date
-                                $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
+                                $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
                                 //add the customer name to the option label
                                 $optionLabel = $formattedDate . '    ' . $customer->name;
                             } else {
-                                $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
+                                $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
                                 $optionLabel = $formattedDate;
                             }
                             $options[$deadline->id] = $optionLabel;

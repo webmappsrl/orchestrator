@@ -4,14 +4,11 @@ namespace App\Nova;
 
 use Carbon\Carbon;
 use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\MorphToMany;
-use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Deadline extends Resource
@@ -32,7 +29,7 @@ class Deadline extends Resource
     {
         $dueDate = $this->due_date;
 
-        $formattedDate = Carbon::parse($dueDate)->format('d-m-Y');
+        $formattedDate = Carbon::parse($dueDate)->format('Y-m-d');
 
         return $formattedDate;
     }
@@ -57,7 +54,12 @@ class Deadline extends Resource
     {
         return [
             ID::make()->sortable(),
-            Date::make('Due Date', 'due_date')->sortable(),
+            Date::make('Due Date', 'due_date')
+                ->displayUsing(function ($value) {
+                    return $value->format('Y-m-d');
+                })
+                ->sortable()
+                ->rules('required', 'date'),
             Select::make('Status')->options([
                 'new' => 'New',
                 'in progress' => 'In Progress',
