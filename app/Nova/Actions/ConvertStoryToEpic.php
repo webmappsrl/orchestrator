@@ -3,11 +3,14 @@
 namespace App\Nova\Actions;
 
 use App\Models\Epic;
+use App\Models\Story;
 use App\Enums\EpicStatus;
 use App\Models\Milestone;
+use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\Textarea;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
@@ -33,17 +36,32 @@ class ConvertStoryToEpic extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        $debug = $fields;
+        $textArea = $fields['lines'];
+        $lines = explode(PHP_EOL, $textArea);
+
+
         foreach ($models as $story) {
             $epic = new Epic();
             $epic->name = $story->name;
             $epic->description = $story->description;
             $epic->project_id = $story->project_id;
-            $epic->status = $fields['status'];
+            $epic->status = EpicStatus::New;
             $epic->user_id = $story->user_id;
             $epic->milestone_id = $fields['milestone'];
             $epic->save();
             $story->delete();
+        }
+        foreach ($lines as $line) {
+            if (empty(trim($line))) {
+                continue;
+            }
+            $story = new Story();
+            $story->name = $line;
+            $story->status = StoryStatus::New;
+            $story->epic_id = $epic->id;
+            $story->user_id = $epic->user_id;
+            $story->save();
+            $epic->stories()->save($story);
         }
     }
 
@@ -59,16 +77,7 @@ class ConvertStoryToEpic extends Action
             Select::make('Milestone')
                 ->options(Milestone::all()->pluck('name', 'id')->toArray())
                 ->displayUsingLabels(),
-
-            Select::make('Status', 'status')
-                ->options([
-                    'new' => EpicStatus::New,
-                    'project' => EpicStatus::Project,
-                    'progress' => EpicStatus::Progress,
-                    'testing' => EpicStatus::Test,
-                    'rejected' => EpicStatus::Rejected,
-                    'done' => EpicStatus::Done,
-                ])
+            Textarea::make('lines'),
         ];
     }
 }
