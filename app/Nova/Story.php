@@ -94,10 +94,11 @@ class Story extends Resource
                 $deadlineNames = [];
                 foreach ($deadlines as $deadline) {
                     $dueDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
+                    $deadlineTitle = $deadline->title ?? '';
                     if (isset($deadline->customer)) {
-                        array_push($deadlineNames, $dueDate . ' (' . $deadline->customer->name . ')');
+                        array_push($deadlineNames, $dueDate . ' (' . $deadline->customer->name . ')' . ' - ' . $deadlineTitle);
                     } else {
-                        array_push($deadlineNames, $dueDate);
+                        array_push($deadlineNames, $dueDate . ' - ' . $deadlineTitle);
                     }
                 }
                 return implode('<br/> ', $deadlineNames);

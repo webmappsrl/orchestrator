@@ -24,19 +24,11 @@ class Deadline extends Resource
     public static $model = \App\Models\Deadline::class;
 
     /**
-     * Get the displayable title of the resource.
+     * The single value that should be used to represent the resource when being displayed.
      *
-     * @return string
+     * @var string
      */
-    public function title()
-    {
-        $dueDate = $this->due_date;
-
-        $formattedDate = Carbon::parse($dueDate)->format('Y-m-d');
-
-        return $formattedDate;
-    }
-
+    public static $title = 'title';
 
     /**
      * The columns that should be searched.
