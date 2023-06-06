@@ -71,11 +71,11 @@ class EditStoriesFromEpic extends Action
             MultiSelect::make('Deadlines')
                 ->options(
                     function () {
-                        $notExpiredDeadlines = Deadline::whereNot('status',  DeadlineStatus::Expired)->get();
+                        $deadlines = Deadline::whereNotIn('status', [DeadlineStatus::Expired, DeadlineStatus::Done])->get();
                         $options = [];
                         //order the not expired deadlines by descending due date
-                        $notExpiredDeadlines = $notExpiredDeadlines->sortByDesc('due_date');
-                        foreach ($notExpiredDeadlines as $deadline) {
+                        $deadlines = $deadlines->sortByDesc('due_date');
+                        foreach ($deadlines as $deadline) {
                             if (isset($deadline->customer) && $deadline->customer != null) {
                                 $customer = $deadline->customer;
                                 //format the due_date
