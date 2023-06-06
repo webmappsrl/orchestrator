@@ -39,7 +39,8 @@ class ConvertStoryToEpic extends Action
         $textArea = $fields['lines'];
         $lines = explode(PHP_EOL, $textArea);
 
-
+        $deadlines = [];
+        $story_type = '';
         foreach ($models as $story) {
             $epic = new Epic();
             $epic->name = $story->name;
@@ -49,6 +50,8 @@ class ConvertStoryToEpic extends Action
             $epic->user_id = $story->user_id;
             $epic->milestone_id = $fields['milestone'];
             $epic->save();
+            $deadlines = $story->deadlines;
+            $story_type = $story->type; 
             $story->delete();
         }
         foreach ($lines as $line) {
@@ -60,9 +63,14 @@ class ConvertStoryToEpic extends Action
             $story->status = StoryStatus::New;
             $story->epic_id = $epic->id;
             $story->user_id = $epic->user_id;
+            $story->type=$story_type;
             $story->save();
-            $epic->stories()->save($story);
+            if(count($deadlines)>0) {
+                $story->deadlines()->sync($deadlines);
+            }
+            //$epic->stories()->save($story);
         }
+        return Action::visit('/resources/epics/'.$epic->id);
     }
 
     /**
