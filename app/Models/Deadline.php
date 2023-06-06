@@ -45,4 +45,17 @@ class Deadline extends Model
         }
         return $this->stories()->whereIn('status', [StoryStatus::Test, StoryStatus::Done])->count() . ' / ' . $this->stories()->count();
     }
+
+    /**
+     * Get the parent model for the relationship in breadcrumbs
+     *
+     */
+    public function parent()
+    {
+        return $this->config();
+    }
+    public function config()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 }
