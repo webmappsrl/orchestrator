@@ -81,10 +81,10 @@ class EditStoriesFromEpic extends Action
                                 //format the due_date
                                 $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
                                 //add the customer name to the option label
-                                $optionLabel = $formattedDate . '    ' . $customer->name;
+                                $optionLabel = $formattedDate . '    ' . $customer->name . ' ' . $deadline->title;
                             } else {
                                 $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
-                                $optionLabel = $formattedDate;
+                                $optionLabel = $formattedDate . '    ' . $deadline->title;
                             }
                             $options[$deadline->id] = $optionLabel;
                         }
