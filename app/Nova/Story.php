@@ -9,6 +9,7 @@ use App\Models\Project;
 use Laravel\Nova\Panel;
 use App\Models\Deadline;
 use App\Enums\StoryStatus;
+use App\Enums\StoryType;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
@@ -76,27 +77,41 @@ class Story extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
-            Select::make(__('Status'), 'status')->options([
+            Select::make(('Status'), 'status')->options([
                 'New' => StoryStatus::New,
                 'In Progress' => StoryStatus::Progress,
                 'Done' => StoryStatus::Done,
                 'Test' => StoryStatus::Test,
                 'Rejected' => StoryStatus::Rejected,
-            ])->onlyOnForms(),
+            ])->onlyOnForms()
+                ->default('New'),
             Status::make('Status')
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
                 ->sortable(),
+            Select::make(__('Type'), 'type')->options([
+                'Bug' => StoryType::Bug,
+                'Feature' => StoryType::Feature,
+            ])->onlyOnForms(),
+            Text::make('Type', function () {
+                // color the type of the story and make it bold
+                $type = $this->type;
+                $color = 'blue';
+                return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             //create a field to show all the name of deadlines and related customer name
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
                 $deadlineNames = [];
                 foreach ($deadlines as $deadline) {
-                    $dueDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
+                    $dueDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
+                    $deadlineTitle = $deadline->title ?? '';
                     if (isset($deadline->customer)) {
-                        array_push($deadlineNames, $dueDate . ' (' . $deadline->customer->name . ')');
+                        array_push($deadlineNames, $dueDate . ' (' . $deadline->customer->name . ')' . ' - ' . $deadlineTitle);
                     } else {
-                        array_push($deadlineNames, $dueDate);
+                        array_push($deadlineNames, $dueDate . ' - ' . $deadlineTitle);
                     }
                 }
                 return implode('<br/> ', $deadlineNames);
@@ -232,6 +247,12 @@ class Story extends Resource
                 ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
+
+            (new actions\ConvertStoryToEpic)
+                ->confirmText('Click on the "Confirm" button to convert the selected stories to epics or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel')
+                ->showInline(),
         ];
 
         if ($request->viaResource == 'projects') {

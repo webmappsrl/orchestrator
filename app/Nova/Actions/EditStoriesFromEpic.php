@@ -71,20 +71,20 @@ class EditStoriesFromEpic extends Action
             MultiSelect::make('Deadlines')
                 ->options(
                     function () {
-                        $notExpiredDeadlines = Deadline::whereNot('status',  DeadlineStatus::Expired)->get();
+                        $deadlines = Deadline::whereNotIn('status', [DeadlineStatus::Expired, DeadlineStatus::Done])->get();
                         $options = [];
                         //order the not expired deadlines by descending due date
-                        $notExpiredDeadlines = $notExpiredDeadlines->sortByDesc('due_date');
-                        foreach ($notExpiredDeadlines as $deadline) {
+                        $deadlines = $deadlines->sortByDesc('due_date');
+                        foreach ($deadlines as $deadline) {
                             if (isset($deadline->customer) && $deadline->customer != null) {
                                 $customer = $deadline->customer;
                                 //format the due_date
-                                $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
+                                $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
                                 //add the customer name to the option label
-                                $optionLabel = $formattedDate . '    ' . $customer->name;
+                                $optionLabel = $formattedDate . '    ' . $customer->name . ' ' . $deadline->title;
                             } else {
-                                $formattedDate = Carbon::parse($deadline->due_date)->format('d-m-Y');
-                                $optionLabel = $formattedDate;
+                                $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
+                                $optionLabel = $formattedDate . '    ' . $deadline->title;
                             }
                             $options[$deadline->id] = $optionLabel;
                         }
