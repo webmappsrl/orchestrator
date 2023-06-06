@@ -63,6 +63,9 @@ class Project extends Resource
                 Text::make('SAL', function () {
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),
+                Text::make('Backlog', function () {
+                    return $this->backlogStories()->count();
+                })->hideWhenCreating()->hideWhenUpdating(),
                 Date::make('Due date')->sortable(),
                 Tag::make('Tag epics', 'tagEpics', 'App\Nova\Epic')->onlyOnDetail()->withPreview()
             ]),
