@@ -233,6 +233,12 @@ class Story extends Resource
                 ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
+
+            (new actions\ConvertStoryToEpic)
+                ->confirmText('Click on the "Confirm" button to convert the selected stories to epics or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel')
+                ->showInline(),
         ];
 
         if ($request->viaResource == 'projects') {
