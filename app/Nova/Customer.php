@@ -54,7 +54,7 @@ class Customer extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            new Tabs('Info', [
+            (new Tabs('Info', [
                 Tab::make('Main Info', [
                     ID::make()->sortable(),
                     Text::make('Name')
@@ -121,7 +121,7 @@ class Customer extends Resource
                 Tab::make('Deadlines', [
                     HasMany::make('Deadlines', 'deadlines', Deadline::class),
                 ]),
-            ]),
+            ]))->withToolbar(),
         ];
     }
 
