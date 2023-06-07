@@ -78,13 +78,13 @@ class Story extends Resource
                 })
                 ->asHtml(),
             Select::make(('Status'), 'status')->options([
-                'New' => StoryStatus::New,
-                'In Progress' => StoryStatus::Progress,
-                'Done' => StoryStatus::Done,
-                'Test' => StoryStatus::Test,
-                'Rejected' => StoryStatus::Rejected,
+                'new' => StoryStatus::New,
+                'in Progress' => StoryStatus::Progress,
+                'done' => StoryStatus::Done,
+                'test' => StoryStatus::Test,
+                'rejected' => StoryStatus::Rejected,
             ])->onlyOnForms()
-                ->default('New'),
+                ->default('new'),
             Status::make('Status')
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
