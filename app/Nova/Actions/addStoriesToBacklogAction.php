@@ -63,7 +63,6 @@ class addStoriesToBacklogAction extends Action
         $project = $models->first();
         $project->backlogStories()->saveMany($stories);
         return Action::message('Stories added to backlog');
-        Action::visit($project->path());
     }
 
     /**
