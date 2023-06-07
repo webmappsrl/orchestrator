@@ -92,7 +92,8 @@ class Story extends Resource
             Select::make(__('Type'), 'type')->options([
                 'Bug' => StoryType::Bug,
                 'Feature' => StoryType::Feature,
-            ])->onlyOnForms(),
+            ])->onlyOnForms()
+                ->default('Feature'),
             Text::make('Type', function () {
                 // color the type of the story and make it bold
                 $type = $this->type;
