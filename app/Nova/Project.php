@@ -14,6 +14,7 @@ use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\DateTime;
 use Eminiarts\Tabs\Traits\HasTabs;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
@@ -90,7 +91,7 @@ class Project extends Resource
                 new Tab('Backlog Stories', [
                     HasMany::make('Backlog Stories', 'backlogStories', Story::class),
                 ]),
-                BelongsToMany::make('Users', 'users', User::class),
+                BelongsToMany::make('Users'),
             ])
         ];
     }

@@ -4,15 +4,16 @@ namespace App\Nova;
 
 use App\Enums\UserRole;
 use App\Models\Project;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rules;
-use Laravel\Nova\Fields\Gravatar;
-use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\MultiSelect;
-use Laravel\Nova\Fields\Password;
-use Laravel\Nova\Fields\Select;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Select;
+use Illuminate\Validation\Rules;
+use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Gravatar;
+use Laravel\Nova\Fields\Password;
+use Laravel\Nova\Fields\MultiSelect;
+use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class User extends Resource
@@ -73,7 +74,7 @@ class User extends Resource
 
             HasMany::make('Epics'),
             HasMany::make('Stories'),
-            BelongsToMany::make('Projects', 'projects', Project::class),
+            BelongsToMany::make('Projects'),
         ];
     }
 
