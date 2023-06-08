@@ -70,6 +70,12 @@ class User extends Authenticatable
         return $this->hasMany(Epic::class);
     }
 
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class);
+    }
+
+
     /**
      * Determine if the user can impersonate another user.
      *

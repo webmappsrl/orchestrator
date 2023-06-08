@@ -25,15 +25,15 @@ class Project extends Model
     {
         return $this->belongsTo(Customer::class);
     }
-    
+
     public function epics()
     {
         return $this->hasMany(Epic::class);
     }
-    
+
     public function tagEpics()
     {
-        return $this->belongsToMany(Epic::class,'epic_project_tags');
+        return $this->belongsToMany(Epic::class, 'epic_project_tags');
     }
 
     public function stories()
@@ -50,6 +50,12 @@ class Project extends Model
     {
         return $this->hasMany(Story::class)->whereNull('epic_id');
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
+
 
     /**
      * Returns the SAL of the milestone

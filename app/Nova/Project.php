@@ -90,6 +90,7 @@ class Project extends Resource
                 new Tab('Backlog Stories', [
                     HasMany::make('Backlog Stories', 'backlogStories', Story::class),
                 ]),
+                BelongsToMany::make('Users', 'users', User::class),
             ])
         ];
     }

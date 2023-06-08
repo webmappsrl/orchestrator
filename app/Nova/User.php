@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Enums\UserRole;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules;
 use Laravel\Nova\Fields\Gravatar;
@@ -72,6 +73,7 @@ class User extends Resource
 
             HasMany::make('Epics'),
             HasMany::make('Stories'),
+            BelongsToMany::make('Projects', 'projects', Project::class),
         ];
     }
 
