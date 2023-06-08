@@ -36,7 +36,7 @@ class Deadline extends Resource
      * @var array
      */
     public static $search = [
-        'due_date', 'status'
+        'due_date', 'status', 'title'
     ];
 
     /**
