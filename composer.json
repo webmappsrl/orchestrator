@@ -24,6 +24,7 @@
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.12",
         "maatwebsite/excel": "^3.1",
+        "norman-huth/nova-resource-card": "^1.0",
         "outl1ne/nova-multiselect-field": "^4.2",
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-translatable": "^6.3",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "68ae0297b3f1741c2218ff1386bd2feb",
+    "content-hash": "b7039d9eca0f2fd923478c7829e463c9",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3873,6 +3873,58 @@
             "time": "2023-01-16T22:05:37+00:00"
         },
         {
+            "name": "norman-huth/nova-resource-card",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Muetze42/nova-resource-card.git",
+                "reference": "9446dc6026132c99bf1333e7a4792f9f5688c98b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Muetze42/nova-resource-card/zipball/9446dc6026132c99bf1333e7a4792f9f5688c98b",
+                "reference": "9446dc6026132c99bf1333e7a4792f9f5688c98b",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.0",
+                "php": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "NormanHuth\\NovaResourceCard\\CardServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "NormanHuth\\NovaResourceCard\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova card.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "support": {
+                "issues": "https://github.com/Muetze42/nova-resource-card/issues",
+                "source": "https://github.com/Muetze42/nova-resource-card/tree/1.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://huth.it/coffee",
+                    "type": "custom"
+                }
+            ],
+            "time": "2023-04-09T09:43:41+00:00"
+        },
+        {
             "name": "nova-kit/nova-packages-tool",
             "version": "v1.7.1",
             "source": {
@@ -5183,51 +5235,6 @@
                 }
             ],
             "time": "2023-02-09T15:13:18+00:00"
-        },
-        {
-            "name": "robertboes/nova-slider-field",
-            "version": "v0.1.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/RobertBoes/nova-slider-field.git",
-                "reference": "a3f604d6d6758f1ad19331c95ee2d77bcc6006cb"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/RobertBoes/nova-slider-field/zipball/a3f604d6d6758f1ad19331c95ee2d77bcc6006cb",
-                "reference": "a3f604d6d6758f1ad19331c95ee2d77bcc6006cb",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Robertboes\\NovaSliderField\\FieldServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Robertboes\\NovaSliderField\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A Laravel Nova slider field.",
-            "keywords": [
-                "laravel",
-                "nova"
-            ],
-            "support": {
-                "issues": "https://github.com/RobertBoes/nova-slider-field/issues",
-                "source": "https://github.com/RobertBoes/nova-slider-field/tree/v0.1.1"
-            },
-            "time": "2020-03-22T11:27:49+00:00"
         },
         {
             "name": "spatie/db-dumper",
@@ -8048,7 +8055,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feature/app_conf_API_V1",
+            "version": "dev-feature/favorite_projects_with_external_package",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
