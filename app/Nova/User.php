@@ -74,7 +74,7 @@ class User extends Resource
 
             HasMany::make('Epics'),
             HasMany::make('Stories'),
-            BelongsToMany::make('Projects'),
+            BelongsToMany::make('Projects', 'projects'),
         ];
     }
 
