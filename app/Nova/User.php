@@ -72,9 +72,9 @@ class User extends Resource
                 ->creationRules('required', Rules\Password::defaults())
                 ->updateRules('nullable', Rules\Password::defaults()),
 
+            BelongsToMany::make('Projects', 'projects'),
             HasMany::make('Epics'),
             HasMany::make('Stories'),
-            BelongsToMany::make('Projects', 'projects'),
         ];
     }
 

@@ -3,15 +3,16 @@
 namespace App\Nova\Dashboards;
 
 use App\Enums\UserRole;
-use App\Nova\Metrics\TotApps;
 use Laravel\Nova\Cards\Help;
-use App\Nova\Metrics\TotCustomers;
+use App\Nova\Metrics\TotApps;
 use App\Nova\Metrics\TotEpics;
 use App\Nova\Metrics\TotLayers;
-use App\Nova\Metrics\TotMilestones;
-use App\Nova\Metrics\TotProjects;
 use App\Nova\Metrics\TotStories;
+use App\Nova\Metrics\TotProjects;
+use App\Nova\Metrics\TotCustomers;
+use App\Nova\Metrics\TotMilestones;
 use Laravel\Nova\Dashboards\Main as Dashboard;
+use NormanHuth\NovaResourceCard\NovaResourceCard;
 
 class Main extends Dashboard
 {
@@ -22,6 +23,10 @@ class Main extends Dashboard
      */
     public function cards()
     {
+        $loggedInUser = auth()->user();
+        $userId = $loggedInUser->id;
+        $url = url()->to('/');
+        $url .= '/resources/users/' . $userId . '/attach/projects?viaRelationship=projects&polymorphic=0';
         return [
 
 
@@ -60,9 +65,10 @@ class Main extends Dashboard
                 return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Editor);
             }),
 
-
-
-
+            (new NovaResourceCard('\App\Nova\FavoriteProjects'))
+                ->width('2/3')
+                ->setFooterLinkLabel(__('Attach projects to your favorites'))
+                ->setFooterLinkExternalUrl($url)
         ];
     }
 }

@@ -17,6 +17,7 @@ use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\RemoveFromFavoritesAction;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 class Project extends Resource
@@ -139,7 +140,12 @@ class Project extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new RemoveFromFavoritesAction)
+                ->confirmButtonText('Remove')
+                ->cancelButtonText("Cancel")
+                ->onlyInline()
+        ];
     }
 
     public function indexBreadcrumb()
