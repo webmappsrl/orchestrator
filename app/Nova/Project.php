@@ -18,6 +18,7 @@ use Laravel\Nova\Fields\BelongsToMany;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Actions\RemoveFromFavoritesAction;
+use App\Nova\Actions\addStoriesToBacklogAction;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 class Project extends Resource
@@ -141,10 +142,18 @@ class Project extends Resource
     public function actions(NovaRequest $request)
     {
         return [
+
             (new RemoveFromFavoritesAction)
                 ->confirmButtonText('Remove')
                 ->cancelButtonText("Cancel")
                 ->onlyInline()
+
+            (new addStoriesToBacklogAction)
+                ->onlyInline()
+                ->showOnDetail()
+                ->confirmButtonText('Add Stories')
+                ->confirmText('Stories will be created starting from the first line of the text area, adding one story per line and associating them to the current project backlog and the specified deadlines, type and user.')
+                ->cancelButtonText('Cancel')
         ];
     }
 
