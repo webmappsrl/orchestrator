@@ -159,7 +159,7 @@ class FavoriteProjects extends Resource
      */
     public function authorizedToDelete(Request $request): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -170,7 +170,7 @@ class FavoriteProjects extends Resource
      */
     public function authorizedToRestore(Request $request): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -192,7 +192,7 @@ class FavoriteProjects extends Resource
      */
     public function authorizedToForceDelete(Request $request): bool
     {
-        return true;
+        return false;
     }
 
     /**
