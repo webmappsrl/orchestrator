@@ -146,7 +146,7 @@ class Project extends Resource
             (new RemoveFromFavoritesAction)
                 ->confirmButtonText('Remove')
                 ->cancelButtonText("Cancel")
-                ->onlyInline()
+                ->onlyInline(),
 
             (new addStoriesToBacklogAction)
                 ->onlyInline()
