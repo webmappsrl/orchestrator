@@ -16,6 +16,7 @@ use Eminiarts\Tabs\Traits\HasTabs;
 use Laravel\Nova\Fields\BelongsTo;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\AddProjectsToFavorites;
 use App\Nova\Actions\addStoriesToBacklogAction;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
@@ -68,7 +69,16 @@ class Project extends Resource
                     return $this->backlogStories()->count();
                 })->hideWhenCreating()->hideWhenUpdating(),
                 Date::make('Due date')->sortable(),
-                Tag::make('Tag epics', 'tagEpics', 'App\Nova\Epic')->onlyOnDetail()->withPreview()
+                Tag::make('Tag epics', 'tagEpics', 'App\Nova\Epic')->onlyOnDetail()->withPreview(),
+                //create a tex field that shows the users that have this project as favorite, and link every user to its detail page
+                Text::make('Favorited By', function () {
+                    $users = [];
+                    foreach ($this->favoriters as $user) {
+                        $users[] = '<a href="/resources/users/' . $user->id . '" style="color:green; font-weight:bold; margin: 0 5px"  >' . $user->name . '</a>';
+                    }
+                    return implode('|', $users);
+                })->onlyOnDetail()
+                    ->asHtml(),
             ]),
 
             new panel('DESCRIPTION', [
@@ -144,6 +154,12 @@ class Project extends Resource
                 ->showOnDetail()
                 ->confirmButtonText('Add Stories')
                 ->confirmText('Stories will be created starting from the first line of the text area, adding one story per line and associating them to the current project backlog and the specified deadlines, type and user.')
+                ->cancelButtonText('Cancel'),
+
+            (new AddProjectsToFavorites)
+                ->showOnDetail()
+                ->showInline()
+                ->confirmButtonText('Add to favorites')
                 ->cancelButtonText('Cancel')
 
         ];
