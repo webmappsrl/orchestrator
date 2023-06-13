@@ -4,11 +4,12 @@ namespace App\Models;
 
 use App\Models\Epic;
 use Illuminate\Database\Eloquent\Model;
+use Overtrue\LaravelFavorite\Traits\Favoriteable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Project extends Model
 {
-    use HasFactory;
+    use HasFactory, Favoriteable;
 
     protected $fillable = [
         'name',
@@ -25,15 +26,15 @@ class Project extends Model
     {
         return $this->belongsTo(Customer::class);
     }
-    
+
     public function epics()
     {
         return $this->hasMany(Epic::class);
     }
-    
+
     public function tagEpics()
     {
-        return $this->belongsToMany(Epic::class,'epic_project_tags');
+        return $this->belongsToMany(Epic::class, 'epic_project_tags');
     }
 
     public function stories()
