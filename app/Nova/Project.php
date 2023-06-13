@@ -19,6 +19,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Actions\AddProjectsToFavorites;
 use App\Nova\Actions\addStoriesToBacklogAction;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use App\Nova\Actions\RemoveProjectsFromFavoritesAction;
 
 class Project extends Resource
 {
@@ -74,7 +75,7 @@ class Project extends Resource
                 Text::make('Favorited By', function () {
                     $users = [];
                     foreach ($this->favoriters as $user) {
-                        $users[] = '<a href="/resources/users/' . $user->id . '" style="color:green; font-weight:bold; margin: 0 5px"  >' . $user->name . '</a>';
+                        $users[] = '<span style="color:green; font-weight:bold; margin: 0 5px"  >' . $user->name . '</span>';
                     }
                     return implode('|', $users);
                 })->onlyOnDetail()
@@ -125,7 +126,7 @@ class Project extends Resource
     public function filters(NovaRequest $request)
     {
         return [
-            new filters\CustomerFilter
+            new filters\CustomerFilter,
         ];
     }
 
@@ -160,7 +161,13 @@ class Project extends Resource
                 ->showOnDetail()
                 ->showInline()
                 ->confirmButtonText('Add to favorites')
-                ->cancelButtonText('Cancel')
+                ->cancelButtonText('Cancel'),
+
+            (new RemoveProjectsFromFavoritesAction($request->resourceId))
+                ->showOnDetail()
+                ->showInline()
+                ->confirmButtonText('Remove from favorites')
+                ->cancelButtonText('Cancel'),
 
         ];
     }
