@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
 use Eminiarts\Tabs\Tabs;
@@ -163,11 +164,16 @@ class Project extends Resource
                 ->confirmButtonText('Add to favorites')
                 ->cancelButtonText('Cancel'),
 
-            (new RemoveProjectsFromFavoritesAction($request->resourceId))
+            (new RemoveProjectsFromFavoritesAction)
                 ->showOnDetail()
                 ->showInline()
                 ->confirmButtonText('Remove from favorites')
-                ->cancelButtonText('Cancel'),
+                ->cancelButtonText('Cancel')
+                ->canSee(
+                    function ($request) {
+                        return !$request->user()->hasRole(UserRole::Admin);
+                    }
+                )
 
         ];
     }
