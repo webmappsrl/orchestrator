@@ -2,8 +2,8 @@
 
 namespace App\Nova\Actions;
 
-use App\Models\Project;
 use App\Models\User;
+use App\Models\Project;
 use Illuminate\Bus\Queueable;
 use Laravel\Nova\Actions\Action;
 use Illuminate\Support\Collection;
@@ -12,18 +12,13 @@ use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Outl1ne\MultiselectField\Multiselect as MultiselectFieldMultiselect;
 
-class AdminAddFavoriteProjectsAction extends Action
+class AdminRemoveFavoriteProjectsAction extends Action
 {
     use InteractsWithQueue, Queueable;
 
-    /**
-     * The displayable name of the action.
-     *
-     * @var string
-     */
-
-    public $name = 'Add Projects to users favorites';
+    public $name = 'Remove Projects from Favorites';
 
     protected $model;
 
@@ -41,17 +36,13 @@ class AdminAddFavoriteProjectsAction extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        //associate the selected projects to the user
+        $projectsToRemove = Project::whereIn('id', $fields['projects'])->get();
         foreach ($models as $user) {
-            foreach ($fields->projects as $project) {
-                $projectToAdd = Project::find($project);
-                if (!$user->hasFavorited($projectToAdd)) {
-                    $user->favorite($projectToAdd);
-                } else {
-                    return Action::danger('This Project: ' . $projectToAdd->name . ' is already favorited');
-                }
+            foreach ($projectsToRemove as $project) {
+                $user->unfavorite($project);
             }
         }
+        return Action::message('Projects removed from favorites.');
     }
 
     /**
@@ -65,23 +56,23 @@ class AdminAddFavoriteProjectsAction extends Action
         if ($this->model) {
             $user = User::find($this->model);
             $favoriteProjects = $user->getFavoriteItems(Project::class)->get();
-            //options should be all the projects that are not already favorites
-            $projectsOptions = Project::whereNotIn('id', $favoriteProjects->pluck('id')->toArray())->pluck('name', 'id')->toArray();
+            $favoriteProjectsOptions = $favoriteProjects->pluck('name', 'id')->toArray();
 
             if ($user) {
+
                 return [
                     MultiSelect::make('Projects')
-                        ->options($projectsOptions)
+                        ->options($favoriteProjectsOptions)
                         ->rules('required')
-                        ->displayUsingLabels(),
+                        ->displayUsingLabels()
                 ];
             }
         }
         return [
-            MultiSelect::make('Projects')
+            Multiselect::make('Projects')
                 ->options(Project::all()->pluck('name', 'id')->toArray())
                 ->rules('required')
-                ->displayUsingLabels(),
+                ->displayUsingLabels()
         ];
     }
 }

@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\Project;
 use App\Nova\Actions\AdminAddFavoriteProjectsAction;
 use App\Nova\Actions\AdminRemoveFavoriteProjects;
+use App\Nova\Actions\AdminRemoveFavoriteProjectsAction;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules;
 use Laravel\Nova\Fields\BelongsToMany;
@@ -130,15 +131,25 @@ class User extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            (new AdminAddFavoriteProjectsAction)->canSee(
+            (new AdminAddFavoriteProjectsAction($request->resourceId))->canSee(
                 function ($request) {
                     return $request->user()->hasRole(UserRole::Admin);
                 }
-                )
+            )
                 ->showInline()
                 ->confirmText('Are you sure you want to add this project to the user\'s favorites?')
                 ->confirmButtonText('Add')
                 ->cancelButtonText("Don't add"),
+
+            (new AdminRemoveFavoriteProjectsAction($request->resourceId))->canSee(
+                function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin);
+                }
+            )
+                ->showInline()
+                ->confirmText('Are you sure you want to remove this project from the user\'s favorites?')
+                ->confirmButtonText('Remove')
+                ->cancelButtonText("Don't remove"),
         ];
     }
 }
