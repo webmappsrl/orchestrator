@@ -98,7 +98,7 @@ class Epic extends Resource
                         ->options([
                             'new' => EpicStatus::New,
                             'project' => EpicStatus::Project,
-                            'progress' => EpicStatus::Progress,
+                            'in progress' => EpicStatus::Progress,
                             'testing' => EpicStatus::Test,
                             'rejected' => EpicStatus::Rejected,
                             'done' => EpicStatus::Done,
