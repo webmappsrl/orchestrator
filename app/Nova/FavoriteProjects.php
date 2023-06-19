@@ -41,7 +41,7 @@ class FavoriteProjects extends Resource
      *
      * @return array
      */
-    public static $perPageOptions = [5];
+    public static $perPageOptions = [10];
 
     /**
      * Build an "index" query for the given resource.

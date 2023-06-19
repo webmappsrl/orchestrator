@@ -66,7 +66,7 @@ class Main extends Dashboard
             }),
 
             (new NovaResourceCard('\App\Nova\FavoriteProjects'))
-                ->width('2/3')
+                ->width('full')
                 ->setFooterLinkLabel(__('Attach projects to your favorites'))
                 ->setFooterLinkExternalUrl($url)
         ];
