@@ -3,8 +3,13 @@
 namespace App\Nova;
 
 use App\Enums\UserRole;
+use App\Models\Project;
+use App\Nova\Actions\AdminAddFavoriteProjectsAction;
+use App\Nova\Actions\AdminRemoveFavoriteProjects;
+use App\Nova\Actions\AdminRemoveFavoriteProjectsAction;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules;
+use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Gravatar;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
@@ -13,6 +18,7 @@ use Laravel\Nova\Fields\Password;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Overtrue\LaravelFavorite\Favorite;
 
 class User extends Resource
 {
@@ -72,6 +78,14 @@ class User extends Resource
 
             HasMany::make('Epics'),
             HasMany::make('Stories'),
+            Text::make('Favorite Projects', function () {
+                $projects = [];
+                $userFavorites = $this->getFavoriteItems(Project::class)->get();
+                foreach ($userFavorites as $project) {
+                    $projects[] = '<a href="/resources/projects/' . $project->id . '" style="color:green; font-weight:bold; margin: 0 5px">' . $project->name . '</a>';
+                }
+                return implode('|', $projects);
+            })->asHtml()->onlyOnDetail(),
         ];
     }
 
@@ -116,6 +130,26 @@ class User extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new AdminAddFavoriteProjectsAction($request->resourceId))->canSee(
+                function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin);
+                }
+            )
+                ->showInline()
+                ->confirmText('Are you sure you want to add this project to the user\'s favorites?')
+                ->confirmButtonText('Add')
+                ->cancelButtonText("Don't add"),
+
+            (new AdminRemoveFavoriteProjectsAction($request->resourceId))->canSee(
+                function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin);
+                }
+            )
+                ->showInline()
+                ->confirmText('Are you sure you want to remove this project from the user\'s favorites?')
+                ->confirmButtonText('Remove')
+                ->cancelButtonText("Don't remove"),
+        ];
     }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "68ae0297b3f1741c2218ff1386bd2feb",
+    "content-hash": "9aba2529bccaa956f20cf93a064af879",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -2001,6 +2001,60 @@
                 }
             ],
             "time": "2023-01-17T01:02:51+00:00"
+        },
+        {
+            "name": "interaction-design-foundation/nova-html-card",
+            "version": "3.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/InteractionDesignFoundation/nova-html-card.git",
+                "reference": "5b4fd48d116a0fb42f190cfa3d200dcc93d9416a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/InteractionDesignFoundation/nova-html-card/zipball/5b4fd48d116a0fb42f190cfa3d200dcc93d9416a",
+                "reference": "5b4fd48d116a0fb42f190cfa3d200dcc93d9416a",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "^4.0",
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "InteractionDesignFoundation\\HtmlCard\\CardServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "InteractionDesignFoundation\\HtmlCard\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova card to display arbitrary HTML content",
+            "keywords": [
+                "card",
+                "html",
+                "laravel",
+                "markdown",
+                "nova",
+                "text"
+            ],
+            "support": {
+                "issues": "https://github.com/InteractionDesignFoundation/nova-html-card/issues",
+                "source": "https://github.com/InteractionDesignFoundation/nova-html-card/tree/3.1.0"
+            },
+            "time": "2023-01-05T07:47:16+00:00"
         },
         {
             "name": "khalin/nova4-searchable-belongs-to-filter",
@@ -4220,6 +4274,76 @@
             "time": "2023-02-10T16:14:58+00:00"
         },
         {
+            "name": "overtrue/laravel-favorite",
+            "version": "5.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/overtrue/laravel-favorite.git",
+                "reference": "1faf026de253721f3424befe9e39cd4a5ecb5212"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/overtrue/laravel-favorite/zipball/1faf026de253721f3424befe9e39cd4a5ecb5212",
+                "reference": "1faf026de253721f3424befe9e39cd4a5ecb5212",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/framework": "^9.0|^10.0",
+                "php": "^8.0.2"
+            },
+            "require-dev": {
+                "brainmaestro/composer-git-hooks": "dev-master",
+                "friendsofphp/php-cs-fixer": "^3.5",
+                "laravel/pint": "^1.2",
+                "mockery/mockery": "^1.4.4",
+                "orchestra/testbench": "^8.0",
+                "phpunit/phpunit": "^10.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Overtrue\\LaravelFavorite\\FavoriteServiceProvider"
+                    ]
+                },
+                "hooks": {
+                    "pre-commit": [
+                        "composer fix-style"
+                    ],
+                    "pre-push": [
+                        "composer test"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Overtrue\\LaravelFavorite\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "overtrue",
+                    "email": "anzhengchao@gmail.com"
+                }
+            ],
+            "description": "User favorite features for Laravel Application.",
+            "support": {
+                "issues": "https://github.com/overtrue/laravel-favorite/issues",
+                "source": "https://github.com/overtrue/laravel-favorite/tree/5.1.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/overtrue",
+                    "type": "github"
+                }
+            ],
+            "time": "2023-02-15T03:23:29+00:00"
+        },
+        {
             "name": "phpoffice/phpspreadsheet",
             "version": "1.28.0",
             "source": {
@@ -5183,51 +5307,6 @@
                 }
             ],
             "time": "2023-02-09T15:13:18+00:00"
-        },
-        {
-            "name": "robertboes/nova-slider-field",
-            "version": "v0.1.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/RobertBoes/nova-slider-field.git",
-                "reference": "a3f604d6d6758f1ad19331c95ee2d77bcc6006cb"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/RobertBoes/nova-slider-field/zipball/a3f604d6d6758f1ad19331c95ee2d77bcc6006cb",
-                "reference": "a3f604d6d6758f1ad19331c95ee2d77bcc6006cb",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Robertboes\\NovaSliderField\\FieldServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Robertboes\\NovaSliderField\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A Laravel Nova slider field.",
-            "keywords": [
-                "laravel",
-                "nova"
-            ],
-            "support": {
-                "issues": "https://github.com/RobertBoes/nova-slider-field/issues",
-                "source": "https://github.com/RobertBoes/nova-slider-field/tree/v0.1.1"
-            },
-            "time": "2020-03-22T11:27:49+00:00"
         },
         {
             "name": "spatie/db-dumper",
@@ -8048,7 +8127,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feature/app_conf_API_V1",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
