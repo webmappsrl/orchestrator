@@ -38,6 +38,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     public function boot()
     {
+        $createStoryUrl = 'stories/new';
         parent::boot();
 
         Nova::style('nova-custom', public_path('/nova-custom.css'));
@@ -76,6 +77,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(DoneEpic::class),
                     MenuItem::resource(RejectedEpic::class),
                 ])->icon('code')->collapsable(),
+
+                MenuSection::make('ACTIONS', [
+                    MenuItem::link('Create a new story', '/resources/stories/new'),
+                ])->icon('pencil')->collapsable(),
             ];
         });
 

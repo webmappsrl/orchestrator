@@ -46,7 +46,7 @@ class EditStoriesFromEpic extends Action
             if (isset($fields['user'])) {
                 $model->user_id = $fields['user']->id;
             }
-            if (isset($fields['deadlines'])) {
+            if (isset($fields['deadlines']) && !empty($fields['deadlines'])) {
                 $model->deadlines()->sync($fields['deadlines']);
             }
             if (isset($fields['project'])) {

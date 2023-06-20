@@ -12,7 +12,9 @@ use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\MorphToMany;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 class Deadline extends Resource
 {
@@ -56,14 +58,18 @@ class Deadline extends Resource
                 ->sortable()
                 ->rules('required', 'date'),
             Text::make('Title')->sortable(),
-            Textarea::make('Description')->hideFromIndex(),
+            MarkdownTui::make(__('Description'))
+                ->hideFromIndex()
+                ->initialEditType(EditorType::MARKDOWN)
+                ->hideFromIndex(),
             Select::make('Status')->options([
                 'new' => DeadlineStatus::New,
                 'progress' => DeadlineStatus::Progress,
                 'done' => DeadlineStatus::Done,
                 'expired' => DeadlineStatus::Expired,
             ])->default('new')
-                ->onlyOnForms(),
+                ->hideFromDetail()
+                ->hideFromIndex(),
             Status::make('Status')
                 ->sortable()
                 ->loadingWhen(['status' => 'progress'])

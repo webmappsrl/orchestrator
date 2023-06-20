@@ -2,12 +2,13 @@
 
 namespace App\Nova\Actions;
 
+use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
+use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\ActionFields;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class moveToBacklogAction extends Action
@@ -35,6 +36,7 @@ class moveToBacklogAction extends Action
         foreach ($models as $story) {
             $story->project()->associate($story->epic->project_id);
             $story->epic()->dissociate();
+            $story->status = $story->epic_id == null ? StoryStatus::New : $story->status;
             $story->save();
         }
     }
