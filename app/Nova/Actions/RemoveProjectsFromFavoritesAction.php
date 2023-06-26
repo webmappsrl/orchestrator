@@ -2,16 +2,21 @@
 
 namespace App\Nova\Actions;
 
-use App\Enums\StoryStatus;
+use App\Models\User;
+use App\Enums\UserRole;
+use App\Models\Project;
 use Illuminate\Bus\Queueable;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Actions\Action;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\FormData;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class moveToBacklogAction extends Action
+class RemoveProjectsFromFavoritesAction extends Action
 {
     use InteractsWithQueue, Queueable;
 
@@ -20,8 +25,7 @@ class moveToBacklogAction extends Action
      *
      * @var string
      */
-    public $name = 'Move to Backlog';
-
+    public $name = 'Remove Projects from favorites';
 
     /**
      * Perform the action on the given models.
@@ -32,12 +36,14 @@ class moveToBacklogAction extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        //remove the relation between the story and the epic and assign the story to the project the epic is related with 
-        foreach ($models as $story) {
-            $story->project()->associate($story->epic->project_id);
-            $story->epic()->dissociate();
-            $story->status = $story->epic_id == null ? StoryStatus::New : $story->status;
-            $story->save();
+        $user = auth()->user();
+
+        foreach ($models as $project) {
+            if ($user->hasFavorited($project)) {
+                $user->unfavorite($project);
+            } else {
+                return Action::danger('This Project is not your favorited');
+            }
         }
     }
 

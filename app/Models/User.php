@@ -6,16 +6,16 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Support\Facades\Gate;
 use Laravel\Nova\Auth\Impersonatable;
 use Illuminate\Notifications\Notifiable;
+use Overtrue\LaravelFavorite\Traits\Favoriter;
 use Wm\WmPackage\Model\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Impersonatable, Notifiable;
+    use HasApiTokens, HasFactory, Impersonatable, Notifiable, Favoriter;
 
     /**
      * The attributes that are mass assignable.
