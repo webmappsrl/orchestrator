@@ -79,7 +79,9 @@ class Quote extends Resource
                     ->initialEditType(EditorType::MARKDOWN)
                     ->nullable()
             ]),
-            BelongsTo::make('Customer'),
+            BelongsTo::make('Customer')
+                ->filterable()
+                ->searchable(),
             BelongsToMany::make('Products')->fields(function () {
                 return [
                     Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1'),
