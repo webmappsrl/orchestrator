@@ -54,7 +54,13 @@ class Quote extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('Title'),
+            Text::make('Title')
+                ->displayUsing(function ($name, $a, $b) {
+                    $wrappedName = wordwrap($name, 75, "\n", true);
+                    $htmlName = str_replace("\n", '<br>', $wrappedName);
+                    return $htmlName;
+                })
+                ->asHtml(),
             Status::make('Status')->loadingWhen(['new', 'sent'])->failedWhen(['closed lost']),
             Select::make('Status')->options([
                 'new' => QuoteStatus::New,
