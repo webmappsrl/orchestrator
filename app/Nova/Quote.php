@@ -157,7 +157,12 @@ class Quote extends Resource
                     return '<a class="link-default" target="_blank" href="' . route('quote', ['id' => $resource->id]) . '">View Quote</a>';
                 })
                 ->asHtml()
-                ->exceptOnForms()
+                ->exceptOnForms(),
+
+            Text::make('Additional Info', 'additional_info')
+                ->hideFromIndex()
+
+
         ];
     }
 

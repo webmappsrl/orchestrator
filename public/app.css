@@ -76,6 +76,14 @@ body {
     padding-left: 20px;
     padding-right: 20px;
     line-height: 2rem;
+    word-wrap: break-word;
+}
+
+.additional-info {
+    padding-left: 20px;
+    padding-right: 20px;
+    line-height: 2rem;
+    word-wrap: break-word;
 }
 
 .costs-h2 {
@@ -129,6 +137,7 @@ td {
         padding-top: 500px;
         padding-bottom: 500px;
     }
+
     header {
         position: fixed;
         top: 0;

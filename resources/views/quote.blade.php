@@ -42,7 +42,7 @@
                 @if (count($quote->products) < 1)
                     <h2 style="color:red;">Nessun elemento disponibile</h2>
                 @else
-                    <h2 class="description-h2">Caratteristiche del servizio</h2>
+                    <h2 class="description">Caratteristiche del servizio</h2>
                     <p>Il servizio prevede:</p>
                     <div class="service-details">
                         <ul>
@@ -53,8 +53,13 @@
                     </div>
                 @endif
 
+                @if ($quote->additional_info)
+                    <h2 class="description">Informazioni aggiuntive</h2>
+                    <p class="additional-info">{{ $quote->additional_info }}</p>
+                @endif
+
                 @if ($quote->products->count() > 0)
-                    <h2 class="costs-h2">Costi</h2>
+                    <h2 class="costs">Costi</h2>
                     <p>Di seguito indichiamo i costi del servizio suddivisi in costi di attivazione e costi di
                         abbonamento
                         annuale
