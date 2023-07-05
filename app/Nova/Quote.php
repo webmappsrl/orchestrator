@@ -21,6 +21,7 @@ use Laravel\Nova\Fields\Status;
 
 class Quote extends Resource
 {
+
     /**
      * The model the resource corresponds to.
      *
@@ -84,14 +85,18 @@ class Quote extends Resource
                 ->searchable(),
             BelongsToMany::make('Products')->fields(function () {
                 return [
-                    Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1'),
+                    Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1')
+                        ->default(1)
                 ];
-            }),
+            })
+                ->searchable(),
             BelongsToMany::make('Recurring Products')->fields(function () {
                 return [
-                    Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1'),
+                    Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1')
+                        ->default(1)
                 ];
-            }),
+            })
+                ->searchable(),
             Currency::make('Total products price')
                 ->currency('EUR')
                 ->locale('it')
