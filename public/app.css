@@ -130,6 +130,11 @@ td {
     text-align: right;
 }
 
+.delivery-time {
+    align-self: flex-end;
+    margin-bottom: 3cm;
+}
+
 @media print {
     @page {
         size: A4;

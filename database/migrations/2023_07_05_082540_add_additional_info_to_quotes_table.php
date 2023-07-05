@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::table('quotes', function (Blueprint $table) {
             $table->text('additional_info')->nullable();
+            $table->text('delivery_time')->nullable();
+            $table->text('payment_plan')->nullable();
         });
     }
 
@@ -23,6 +25,8 @@ return new class extends Migration
     {
         Schema::table('quotes', function (Blueprint $table) {
             $table->dropColumn('additional_info');
+            $table->dropColumn('delivery_time');
+            $table->dropColumn('payment_plan');
         });
     }
 };

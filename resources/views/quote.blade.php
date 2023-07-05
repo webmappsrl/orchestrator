@@ -299,6 +299,11 @@
         </tfoot>
 
     </table>
+    @if ($quote->delivery_time)
+        <div class="delivery-time">
+            <h4>Tempi di consegna: {{ $quote->delivery_time }}</h4>
+        </div>
+    @endif
     <div class="message">
         <p>A disposizione per ogni eventuale chiarimento, inviamo cordiali saluti.</p>
         <br>

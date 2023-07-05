@@ -160,6 +160,9 @@ class Quote extends Resource
                 ->exceptOnForms(),
 
             Text::make('Additional Info', 'additional_info')
+                ->hideFromIndex(),
+
+            Text::make('Delivery Time', 'delivery_time')
                 ->hideFromIndex()
 
 
