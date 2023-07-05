@@ -32,11 +32,11 @@
                 {{-- additional customers info --}}
             </div>
             <div class="subject-container">
-                <p>Oggetto: {{ $quote->title }}</p>
+                <p>Oggetto: <br><br>{{ $quote->title }}</p>
                 {{-- <p>Emesso il: {{ date('d-m-Y', strtotime($quote->created_at)) }}</p>
                 <p>Scadenza: {{ date('d-m-Y', strtotime($quote->created_at->addDays(30))) }} </p> --}}
-                <h4>Con la presente inviamo il preventivo per i servizi qui sotto descritti:</h4>
             </div>
+            <h4>Con la presente inviamo il preventivo per i servizi qui sotto descritti:</h4>
 
             <main class="service-description">
                 @if (count($quote->products) < 1)

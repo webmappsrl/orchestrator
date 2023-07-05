@@ -58,7 +58,7 @@ body {
     color: rgba(23, 22, 22, 0.795);
     align-self: flex-start;
     font-weight: bold;
-    line-height: 0.5;
+    line-height: 0.5cm;
 }
 
 .subject-container h4 {
@@ -125,7 +125,7 @@ td {
 @media print {
     @page {
         size: A4;
-        margin: 10mm;
+        margin: 4mm;
         padding-top: 500px;
         padding-bottom: 500px;
     }
@@ -150,5 +150,7 @@ td {
 
     .customer-details {
         margin-top: 100px;
+        line-height: 0.5cm;
+        align-self: flex-end;
     }
 }
