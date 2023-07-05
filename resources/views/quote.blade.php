@@ -141,21 +141,47 @@
                     </tr>
                 @endforeach
                 <tr style="color: #005485;">
-                    <td>Subtotale:</td>
+                    <td>Subtotale annuo:</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="aligned-right">
+                        {{ $quote->getTotalRecurringPrice() / count($quote->recurringProducts) }}€</td>
+
+                </tr>
+                <tr style="color: #005485;">
+                    <td>Subtotale complessivo:</td>
                     <td></td>
                     <td></td>
                     <td></td>
                     <td class="aligned-right"> {{ $quote->getTotalRecurringPrice() }}€</td>
+
                 </tr>
                 <tr style="color: #005485;">
-                    <td>IVA:</td>
+                    <td>IVA annua:</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="aligned-right">
+                        {{ ($quote->getTotalRecurringPrice() / count($quote->recurringProducts)) * 0.22 }}€</td>
+                </tr>
+                <tr style="color: #005485;">
+                    <td>IVA complessiva:</td>
                     <td></td>
                     <td></td>
                     <td></td>
                     <td class="aligned-right">{{ $quote->getTotalRecurringPrice() * 0.22 }}€</td>
                 </tr>
                 <tr class="table-header-style">
-                    <td>Totale costi abbonamento annuale</td>
+                    <td>Totale costi abbonamento annuo</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="aligned-right">
+                        {{ ($quote->getTotalRecurringPrice() / count($quote->recurringProducts)) * 1.22 }}€</td>
+                </tr>
+                <tr class="table-header-style">
+                    <td>Totale costi abbonamento complessivo</td>
                     <td></td>
                     <td></td>
                     <td></td>
