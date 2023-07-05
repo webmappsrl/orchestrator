@@ -163,6 +163,9 @@ class Quote extends Resource
                 ->hideFromIndex(),
 
             Text::make('Delivery Time', 'delivery_time')
+                ->hideFromIndex(),
+
+            Text::make('Payment Plan', 'payment_plan')
                 ->hideFromIndex()
 
 

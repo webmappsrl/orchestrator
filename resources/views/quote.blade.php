@@ -299,6 +299,11 @@
         </tfoot>
 
     </table>
+    @if ($quote->payment_plan)
+        <div class="payment-plan">
+            <h4>Modalità di pagamento: {{ $quote->payment_plan }}</h4>
+        </div>
+    @endif
     @if ($quote->delivery_time)
         <div class="delivery-time">
             <h4>Tempi di consegna: {{ $quote->delivery_time }}</h4>

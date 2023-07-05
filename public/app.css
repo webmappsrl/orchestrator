@@ -132,7 +132,11 @@ td {
 
 .delivery-time {
     align-self: flex-end;
-    margin-bottom: 3cm;
+    margin-bottom: 2cm;
+}
+
+.payment-plan {
+    align-self: flex-end;
 }
 
 @media print {
