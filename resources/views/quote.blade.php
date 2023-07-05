@@ -1,3 +1,8 @@
+@php
+    $customerName = $quote->customer->full_name ?? $quote->customer->name;
+    $pdfName = 'Preventivo_WEBMAPP_' . $customerName;
+@endphp
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="/app.css">
-    <title>Quotes</title>
+    <title>{{ $pdfName }}</title>
 </head>
 
 <body>
