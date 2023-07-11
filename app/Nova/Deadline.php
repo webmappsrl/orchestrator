@@ -5,6 +5,7 @@ namespace App\Nova;
 use Carbon\Carbon;
 use Laravel\Nova\Fields\ID;
 use App\Enums\DeadlineStatus;
+use App\Nova\Actions\EditDeadlinesAction;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
@@ -59,7 +60,6 @@ class Deadline extends Resource
                 ->rules('required', 'date'),
             Text::make('Title')->sortable(),
             MarkdownTui::make(__('Description'))
-                ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN)
                 ->hideFromIndex(),
             Select::make('Status')->options([
@@ -127,7 +127,13 @@ class Deadline extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new EditDeadlinesAction)
+                ->confirmText('Are you sure you want to update the selected deadlines?')
+                ->confirmButtonText('Update')
+                ->cancelButtonText('Cancel')
+                ->showInline()
+        ];
     }
 
     public function indexBreadcrumb()

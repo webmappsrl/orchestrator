@@ -6,6 +6,7 @@ use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
 use Eminiarts\Tabs\Tabs;
 use App\Enums\EpicStatus;
+use App\Models\Milestone;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
@@ -72,7 +73,16 @@ class Epic extends Resource
                     ID::make()->sortable(),
                     //display the relations in nova field
                     BelongsTo::make('User'),
-                    BelongsTo::make('Milestone'),
+                    BelongsTo::make('Milestone')
+                        ->hideWhenCreating()
+                        ->hideWhenUpdating(),
+                    Select::make('Milestone', 'milestone_id')
+                        ->options(Milestone::all()->sortByDesc('due_date')->pluck('name', 'id'))
+                        ->onlyOnForms()
+                        ->default(function ($request) {
+                            $epic = App\Models\Epic::find($request->resourceId);
+                            return $epic->milestone_id;
+                        }),
                     BelongsTo::make('Project')->searchable(),
                     Text::make('Name')
                         ->sortable()
