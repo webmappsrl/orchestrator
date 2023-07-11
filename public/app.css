@@ -79,7 +79,7 @@ body {
     word-wrap: break-word;
 }
 
-.additional-info {
+p {
     padding-left: 20px;
     padding-right: 20px;
     line-height: 2rem;

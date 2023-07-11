@@ -18,6 +18,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
+use Laravel\Nova\Fields\Textarea;
 
 class Quote extends Resource
 {
@@ -57,7 +58,7 @@ class Quote extends Resource
             ID::make()->sortable(),
             Text::make('Title')
                 ->displayUsing(function ($name, $a, $b) {
-                    $wrappedName = wordwrap($name, 75, "\n", true);
+                    $wrappedName = wordwrap($name, 50, "\n", true);
                     $htmlName = str_replace("\n", '<br>', $wrappedName);
                     return $htmlName;
                 })
@@ -97,7 +98,7 @@ class Quote extends Resource
                 ];
             })
                 ->searchable(),
-            Currency::make('Total products price')
+            Currency::make('Products')
                 ->currency('EUR')
                 ->locale('it')
                 ->exceptOnForms()
@@ -105,7 +106,7 @@ class Quote extends Resource
                     $price = empty($this->products) ? 0 : $this->getTotalPrice();
                     return number_format($price, 2, ',', '.') . ' €';
                 })->sortable(),
-            Currency::make('Total recurring products price')
+            Currency::make('Recurring')
                 ->currency('EUR')
                 ->locale('it')
                 ->exceptOnForms()
@@ -113,7 +114,7 @@ class Quote extends Resource
                     $price = empty($this->recurringProducts) ? 0 : $this->getTotalRecurringPrice();
                     return number_format($price, 2, ',', '.') . ' €';
                 })->sortable(),
-            Currency::make('Total quote price')
+            Currency::make('Total')
                 ->currency('EUR')
                 ->locale('it')
                 ->exceptOnForms()
@@ -157,20 +158,20 @@ class Quote extends Resource
                     $iva = $this->getQuoteNetPrice() * 0.22;
                     return number_format($this->getQuoteNetPrice() + $iva, 2, ',', '.') . ' €';
                 }),
-            Text::make('Link')
+            Text::make('PDF')
                 ->resolveUsing(function ($value, $resource, $attribute) {
-                    return '<a class="link-default" target="_blank" href="' . route('quote', ['id' => $resource->id]) . '">View Quote</a>';
+                    return '<a class="link-default" target="_blank" href="' . route('quote', ['id' => $resource->id]) . '">[x]</a>';
                 })
                 ->asHtml()
                 ->exceptOnForms(),
 
-            Text::make('Additional Info', 'additional_info')
+            Textarea::make('Additional Info', 'additional_info')
                 ->hideFromIndex(),
 
-            Text::make('Delivery Time', 'delivery_time')
+            Textarea::make('Delivery Time', 'delivery_time')
                 ->hideFromIndex(),
 
-            Text::make('Payment Plan', 'payment_plan')
+            Textarea::make('Payment Plan', 'payment_plan')
                 ->hideFromIndex()
 
 
