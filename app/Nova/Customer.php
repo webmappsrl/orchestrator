@@ -65,6 +65,9 @@ class Customer extends Resource
                 ->sortable()
                 ->nullable()
                 ->hideFromIndex(),
+            Textarea::make('Heading', 'heading')
+                ->nullable()
+                ->hideFromIndex(),
             Text::make('Acronym', 'acronym')
                 ->sortable()
                 ->nullable(),

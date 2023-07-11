@@ -35,6 +35,7 @@
                 <h3>Spett.le</h3>
                 <p><strong>{{ $quote->customer->full_name ?? $quote->customer->name }}</strong></p>
                 {{-- additional customers info --}}
+                <p>{!! nl2br($quote->customer->heading) !!}</p>
             </div>
             <div class="subject-container">
                 <p>Oggetto: <br><br>{{ $quote->title }}</p>
@@ -133,6 +134,9 @@
                 <td></td>
                 <td class="aligned-right">{{ number_format($quote->getTotalPrice() * 1.22, 2, ',', '.') }} €</td>
             </tr>
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
         </tbody>
         {{-- end prodotti e servizi table --}}
         @endif
@@ -221,6 +225,9 @@
                     <td class="aligned-right">
                         {{ number_format($quote->getTotalRecurringPrice() * 1.22, 2, ',', '.') }} €</td>
                 </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
             </tbody>
             {{-- end servizi di manutenzione table --}}
         @endif
@@ -295,14 +302,14 @@
                 <td></td>
                 <td></td>
                 <td style="color: #005485;" class="aligned-right ">
-                    {{ number_format($quote->getQuoteNetPrice(), 2, ',', '.') }}€</td>
+                    {{ number_format($quote->getQuoteNetPrice(), 2, ',', '.') }} €</td>
             </tr>
             <tr>
                 <td>IVA (22%)</td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="aligned-right">{{ number_format($quote->getQuoteNetPrice() * 0.22, 2) }}€</td>
+                <td class="aligned-right">{{ number_format($quote->getQuoteNetPrice() * 0.22, 2, ',', '.') }} €</td>
             </tr>
             <tr class="table-header-style">
                 <td>Prezzo finale (con IVA)</td>
@@ -310,7 +317,7 @@
                 <td></td>
                 <td></td>
                 <td class="aligned-right">
-                    {{ number_format($quote->getQuoteNetPrice() + $quote->getQuoteNetPrice() * 0.22, 2) }}€
+                    {{ number_format($quote->getQuoteNetPrice() + $quote->getQuoteNetPrice() * 0.22, 2, ',', '.') }} €
                 </td>
             </tr>
         </tbody>
