@@ -1,3 +1,8 @@
+@php
+    $customerName = $quote->customer->full_name ?? $quote->customer->name;
+    $pdfName = 'Preventivo_WEBMAPP_' . $customerName;
+@endphp
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="/app.css">
-    <title>Quotes</title>
+    <title>{{ $pdfName }}</title>
 </head>
 
 <body>
@@ -30,19 +35,20 @@
                 <h3>Spett.le</h3>
                 <p><strong>{{ $quote->customer->full_name ?? $quote->customer->name }}</strong></p>
                 {{-- additional customers info --}}
+                <p>{!! nl2br($quote->customer->heading) !!}</p>
             </div>
             <div class="subject-container">
-                <p>Oggetto: {{ $quote->title }}</p>
+                <p>Oggetto: <br><br>{{ $quote->title }}</p>
                 {{-- <p>Emesso il: {{ date('d-m-Y', strtotime($quote->created_at)) }}</p>
                 <p>Scadenza: {{ date('d-m-Y', strtotime($quote->created_at->addDays(30))) }} </p> --}}
-                <h4>Con la presente inviamo il preventivo per i servizi qui sotto descritti:</h4>
             </div>
+            <h4>Con la presente inviamo il preventivo per i servizi qui sotto descritti:</h4>
 
             <main class="service-description">
                 @if (count($quote->products) < 1)
                     <h2 style="color:red;">Nessun elemento disponibile</h2>
                 @else
-                    <h2 class="description-h2">Caratteristiche del servizio</h2>
+                    <h2 class="description">Caratteristiche del servizio</h2>
                     <p>Il servizio prevede:</p>
                     <div class="service-details">
                         <ul>
@@ -53,8 +59,25 @@
                     </div>
                 @endif
 
+                @if ($quote->additional_info)
+                    <h2 class="description">Informazioni aggiuntive</h2>
+                    <p class="additional-info">{{ $quote->additional_info }}</p>
+                @endif
+                @if ($quote->payment_plan)
+                    <div class="payment-plan">
+                        <h2 class="description">Modalità di pagamento</h2>
+                        <p> {{ $quote->payment_plan }}</p>
+                    </div>
+                @endif
+                @if ($quote->delivery_time)
+                    <div class="delivery-time">
+                        <h2 class="description">Tempi di consegna</h2>
+                        <p> {{ $quote->delivery_time }}</p>
+                    </div>
+                @endif
+
                 @if ($quote->products->count() > 0)
-                    <h2 class="costs-h2">Costi</h2>
+                    <h2 class="costs">Costi</h2>
                     <p>Di seguito indichiamo i costi del servizio suddivisi in costi di attivazione e costi di
                         abbonamento
                         annuale
@@ -84,9 +107,10 @@
                 <tr>
                     <td>{{ $product->name }}</td>
                     <td>{{ $product->sku }}</td>
-                    <td>{{ $product->price }}€</td>
+                    <td>{{ number_format($product->price, 2, ',', '.') }} €</td>
                     <td>{{ $product->pivot->quantity }}</td>
-                    <td class="aligned-right">{{ $product->price * $product->pivot->quantity }}€</td>
+                    <td class="aligned-right">
+                        {{ number_format($product->price * $product->pivot->quantity, 2, ',', '.') }} €</td>
                 </tr>
             @endforeach
             <tr style="color: #005485;">
@@ -94,21 +118,24 @@
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="aligned-right">{{ $quote->getTotalPrice() }}€</td>
+                <td class="aligned-right">{{ number_format($quote->getTotalPrice(), 2, ',', '.') }} €</td>
             </tr>
             <tr style="color: #005485;">
                 <td>IVA:</td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="aligned-right">{{ $quote->getTotalPrice() * 0.22 }}€</td>
+                <td class="aligned-right">{{ number_format($quote->getTotalPrice() * 0.22, 2, ',', '.') }} €</td>
             </tr>
             <tr class="table-header-style">
                 <td>Totale costi attivazione</td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="aligned-right">{{ $quote->getTotalPrice() * 1.22 }}€</td>
+                <td class="aligned-right">{{ number_format($quote->getTotalPrice() * 1.22, 2, ',', '.') }} €</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
             </tr>
         </tbody>
         {{-- end prodotti e servizi table --}}
@@ -134,32 +161,72 @@
                     <tr>
                         <td>{{ $recurringProduct->name }}</td>
                         <td>{{ $recurringProduct->sku }}</td>
-                        <td>{{ $recurringProduct->price }}€</td>
+                        <td>{{ number_format($recurringProduct->price, 2, ',', '.') }} €</td>
                         <td>{{ $recurringProduct->pivot->quantity }}</td>
-                        <td class="aligned-right">{{ $recurringProduct->price * $recurringProduct->pivot->quantity }}€
+                        <td class="aligned-right">
+                            {{ number_format($recurringProduct->price * $recurringProduct->pivot->quantity, 2, ',', '.') }}
+                            €
                         </td>
                     </tr>
                 @endforeach
                 <tr style="color: #005485;">
-                    <td>Subtotale:</td>
+                    <td>Subtotale annuo:</td>
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td class="aligned-right"> {{ $quote->getTotalRecurringPrice() }}€</td>
+                    <td class="aligned-right">
+                        {{ number_format($quote->getTotalRecurringPrice() / count($quote->recurringProducts), 2, ',', '.') }}
+                        €
+                    </td>
+
                 </tr>
                 <tr style="color: #005485;">
-                    <td>IVA:</td>
+                    <td>Subtotale complessivo:</td>
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td class="aligned-right">{{ $quote->getTotalRecurringPrice() * 0.22 }}€</td>
+                    <td class="aligned-right"> {{ number_format($quote->getTotalRecurringPrice(), 2, ',', '.') }} €
+                    </td>
+
+                </tr>
+                <tr style="color: #005485;">
+                    <td>IVA annua:</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="aligned-right">
+                        {{ number_format(($quote->getTotalRecurringPrice() / count($quote->recurringProducts)) * 0.22, 2, ',', '.') }}
+                        €</td>
+                </tr>
+                <tr style="color: #005485;">
+                    <td>IVA complessiva:</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="aligned-right">{{ number_format($quote->getTotalRecurringPrice() * 0.22, 2, ',', '.') }}
+                        €
+                    </td>
                 </tr>
                 <tr class="table-header-style">
-                    <td>Totale costi abbonamento annuale</td>
+                    <td>Totale costi abbonamento annuo</td>
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td class="aligned-right">{{ $quote->getTotalRecurringPrice() * 1.22 }}€</td>
+                    <td class="aligned-right">
+                        {{ number_format(($quote->getTotalRecurringPrice() / count($quote->recurringProducts)) * 1.22, 2, ',', '.') }}
+                        €
+                    </td>
+                </tr>
+                <tr class="table-header-style">
+                    <td>Totale costi abbonamento complessivo</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="aligned-right">
+                        {{ number_format($quote->getTotalRecurringPrice() * 1.22, 2, ',', '.') }} €</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
                 </tr>
             </tbody>
             {{-- end servizi di manutenzione table --}}
@@ -187,7 +254,7 @@
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td class="aligned-right">{{ $price }}€</td>
+                        <td class="aligned-right">{{ number_format($price, 2, ',', '.') }} €</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -205,42 +272,44 @@
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="aligned-right">{{ $quote->getTotalPrice() }}€</td>
+                <td class="aligned-right">{{ number_format($quote->getTotalPrice(), 2, ',', '.') }} €</td>
             </tr>
             <tr>
                 <td>Ammontare dei costi di abbonamento annuale</td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="aligned-right">{{ $quote->getTotalRecurringPrice() }}€</td>
+                <td class="aligned-right">{{ number_format($quote->getTotalRecurringPrice(), 2, ',', '.') }} €</td>
             </tr>
             <tr>
                 <td>Ammontare dei servizi aggiuntivi</td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="aligned-right">{{ $quote->getTotalAdditionalServicesPrice() }}€</td>
+                <td class="aligned-right">{{ number_format($quote->getTotalAdditionalServicesPrice(), 2, ',', '.') }} €
+                </td>
             </tr>
             <tr>
                 <td>Sconto</td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="aligned-right">{{ $quote->discount ?? 0 }}€</td>
+                <td class="aligned-right">{{ number_format($quote->discount ?? 0, 2, ',', '.') }} €</td>
             </tr>
             <tr>
                 <td style="color: #005485;">Prezzo finale (senza IVA)</td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td style="color: #005485;" class="aligned-right ">{{ $quote->getQuoteNetPrice() }}€</td>
+                <td style="color: #005485;" class="aligned-right ">
+                    {{ number_format($quote->getQuoteNetPrice(), 2, ',', '.') }} €</td>
             </tr>
             <tr>
                 <td>IVA (22%)</td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="aligned-right">{{ number_format($quote->getQuoteNetPrice() * 0.22, 2) }}€</td>
+                <td class="aligned-right">{{ number_format($quote->getQuoteNetPrice() * 0.22, 2, ',', '.') }} €</td>
             </tr>
             <tr class="table-header-style">
                 <td>Prezzo finale (con IVA)</td>
@@ -248,7 +317,7 @@
                 <td></td>
                 <td></td>
                 <td class="aligned-right">
-                    {{ number_format($quote->getQuoteNetPrice() + $quote->getQuoteNetPrice() * 0.22, 2) }}€
+                    {{ number_format($quote->getQuoteNetPrice() + $quote->getQuoteNetPrice() * 0.22, 2, ',', '.') }} €
                 </td>
             </tr>
         </tbody>
@@ -268,6 +337,7 @@
         </tfoot>
 
     </table>
+
     <div class="message">
         <p>A disposizione per ogni eventuale chiarimento, inviamo cordiali saluti.</p>
         <br>

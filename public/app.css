@@ -58,7 +58,7 @@ body {
     color: rgba(23, 22, 22, 0.795);
     align-self: flex-start;
     font-weight: bold;
-    line-height: 0.5;
+    line-height: 0.5cm;
 }
 
 .subject-container h4 {
@@ -76,6 +76,14 @@ body {
     padding-left: 20px;
     padding-right: 20px;
     line-height: 2rem;
+    word-wrap: break-word;
+}
+
+p {
+    padding-left: 20px;
+    padding-right: 20px;
+    line-height: 2rem;
+    word-wrap: break-word;
 }
 
 .costs-h2 {
@@ -122,13 +130,23 @@ td {
     text-align: right;
 }
 
+.delivery-time {
+    align-self: flex-end;
+    margin-bottom: 2cm;
+}
+
+.payment-plan {
+    align-self: flex-end;
+}
+
 @media print {
     @page {
         size: A4;
-        margin: 10mm;
+        margin: 4mm;
         padding-top: 500px;
         padding-bottom: 500px;
     }
+
     header {
         position: fixed;
         top: 0;
@@ -150,5 +168,7 @@ td {
 
     .customer-details {
         margin-top: 100px;
+        line-height: 0.5cm;
+        align-self: flex-end;
     }
 }

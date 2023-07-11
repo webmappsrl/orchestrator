@@ -25,6 +25,11 @@ class Product extends Resource
      */
     public static $title = 'name';
 
+    public function title()
+    {
+        return $this->name . ' - ' . $this->price . '€';
+    }
+
     /**
      * The columns that should be searched.
      *

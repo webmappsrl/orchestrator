@@ -62,7 +62,9 @@ class Project extends Resource
                 Text::make('Name')
                     ->sortable()
                     ->rules('required', 'max:255'),
-                BelongsTo::make('Customer'),
+                BelongsTo::make('Customer')
+                    ->filterable()
+                    ->searchable(),
                 //add a column to display the SAL of all epics in this milestone
                 Text::make('SAL', function () {
                     return $this->wip();
@@ -126,9 +128,10 @@ class Project extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [
-            new filters\CustomerFilter,
-        ];
+        // return [
+        //     new filters\CustomerFilter,  //this filter is no longer needed because we have a BelongsTo field for the customer with the built in option filterable()
+        // ];
+        return [];
     }
 
     /**
