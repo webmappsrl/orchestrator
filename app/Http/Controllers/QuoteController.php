@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Quote;
+use Barryvdh\DomPDF\Facade\PDF;
 use App\Http\Requests\StoreQuoteRequest;
 use App\Http\Requests\UpdateQuoteRequest;
-use App\Models\Quote;
 
 class QuoteController extends Controller
 {
@@ -69,5 +70,17 @@ class QuoteController extends Controller
     public function destroy(Quote $quote)
     {
         //
+    }
+
+    /**
+     * Download the PDF version of the quote.
+     */
+    public function pdf($id)
+    {
+        $quote = Quote::findOrFail($id);
+
+        $pdf = PDF::loadView('quote', ['quote' => $quote]);
+
+        return $pdf->download('quote.pdf')->stream();
     }
 }

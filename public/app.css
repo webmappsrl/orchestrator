@@ -99,7 +99,7 @@ th {
     background-color: transparent;
 }
 
-td {
+td:not(.wrapper) {
     padding: 8px;
     /* text-align: right; */
     vertical-align: top;
@@ -157,6 +157,8 @@ td {
         position: fixed;
         bottom: 0;
         width: 100%;
+        border: 1px solid red;
+        print-color-adjust: exact;
     }
     thead {
         display: table-header-group;
