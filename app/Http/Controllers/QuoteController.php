@@ -79,8 +79,8 @@ class QuoteController extends Controller
     {
         $quote = Quote::findOrFail($id);
 
-        $pdf = PDF::loadView('quote', ['quote' => $quote]);
+        $pdf = PDF::loadView('pdf.quotePDF', ['quote' => $quote]);
 
-        return $pdf->download('quote.pdf')->stream();
+        return $pdf->stream('quote.pdf');
     }
 }
