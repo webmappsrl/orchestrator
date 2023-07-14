@@ -71,4 +71,16 @@ class QuoteController extends Controller
     {
         //
     }
+
+    /**
+     * Download the PDF version of the quote.
+     */
+    public function pdf($id)
+    {
+        $quote = Quote::findOrFail($id);
+
+        $pdf = PDF::loadView('pdf.quotePDF', ['quote' => $quote]);
+
+        return $pdf->stream('quote.pdf');
+    }
 }
