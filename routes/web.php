@@ -15,4 +15,3 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/quote/{id}', [QuoteController::class, 'show'])->name('quote');
-Route::get('/quote/{id}/pdf', [QuoteController::class, 'pdf'])->name('quote.pdf');
