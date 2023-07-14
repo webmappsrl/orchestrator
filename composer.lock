@@ -8127,7 +8127,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-main",
+            "version": "dev-hotfix/fix_pdf",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
