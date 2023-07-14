@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Quote;
+use Barryvdh\DomPDF\Facade\PDF;
 use App\Http\Requests\StoreQuoteRequest;
 use App\Http\Requests\UpdateQuoteRequest;
-use App\Models\Quote;
 
 class QuoteController extends Controller
 {

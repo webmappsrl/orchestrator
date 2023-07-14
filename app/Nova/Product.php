@@ -50,7 +50,7 @@ class Product extends Resource
         return [
             ID::make()->sortable(),
             Text::make('name')->sortable(),
-            Trix::make('description')->onlyOnDetail()->nullable(),
+            Trix::make('description')->hideFromIndex()->nullable(),
             Text::make('sku')->hideFromIndex(),
             Currency::make('price')->currency('EUR')->nullable(),
         ];
