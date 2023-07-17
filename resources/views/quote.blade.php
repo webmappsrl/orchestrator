@@ -59,7 +59,7 @@
                     <h4>Con la presente inviamo il preventivo per i servizi qui sotto descritti:</h4>
 
                     <div class="service-description">
-                        @if (count($quote->products) < 1)
+                        @if (count($quote->products) < 1 && count($quote->recurringProducts) < 1 && count($quote->additional_services) < 1)
                             <h2 style="color:red;">Nessun elemento disponibile</h2>
                         @else
                             <h2 class="description">Caratteristiche del servizio</h2>
@@ -68,6 +68,12 @@
                                 <ul>
                                     @foreach ($quote->products as $product)
                                         <li>{{ $product->description }} </li>
+                                    @endforeach
+                                    @foreach ($quote->recurringProducts as $recurringProduct)
+                                        <li>{{ $recurringProduct->description }}</li>
+                                    @endforeach
+                                    @foreach ($quote->additional_services as $description => $price)
+                                        <li>{{ $description }}</li>
                                     @endforeach
                                 </ul>
                             </div>
@@ -90,15 +96,16 @@
                             </div>
                         @endif
                     </div>
+                    <h2 style="color: #005485 page-break-before:always;">Costi</h2>
+                    <p>Di seguito indichiamo i costi del servizio suddivisi in costi di attivazione e costi
+                        di
+                        abbonamento
+                        annuale
+                    </p>
                     @if ($quote->products->count() > 0)
                         {{-- Start Prodotti e servizi table --}}
                         <div class="products-and-services-page">
-                            <h2 style="color: #005485">Costi</h2>
-                            <p>Di seguito indichiamo i costi del servizio suddivisi in costi di attivazione e costi
-                                di
-                                abbonamento
-                                annuale
-                            </p>
+
                             <thead>
                                 <tr class="table-header-style">
                                     <td class="td">
@@ -153,7 +160,7 @@
                                         €</td>
                                 </tr>
                             </thead>
-                            <thead>
+                            <thead style="page-break-after:always;">
                                 <tr class="table-header-style">
                                     <td class="td">Totale costi attivazione</td>
                                     <td class="td"></td>
@@ -164,14 +171,6 @@
                                         €</td>
                                 </tr>
                             </thead>
-
-
-                            <thead>
-                                <tr>
-                                    <td class="td">&nbsp;</td>
-                                </tr>
-                            </thead>
-
                         </div>
                         {{-- end prodotti e servizi table --}}
                     @endif
@@ -271,7 +270,7 @@
                                 </tr>
                             </thead>
                             <thead>
-                                <tr class="table-header-style">
+                                <tr style="page-break-after:always;" class="table-header-style">
                                     <td class="td">Totale costi abbonamento complessivo</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -281,12 +280,6 @@
                                     </td>
                                 </tr>
                             </thead>
-                            <thead>
-                                <tr>
-                                    <td class="td">&nbsp;</td>
-                                </tr>
-                            </thead>
-
                         </div>
                         {{-- end servizi di manutenzione table --}}
                     @endif
@@ -324,89 +317,88 @@
                         {{-- end servizi aggiuntivi table --}}
                     @endif
                     {{-- start riepilogo table --}}
-                    <thead>
-                        <tr class="table-header-style">
-                            <td>Riepilogo</td>
-                        </tr>
-                    </thead>
-                    <thead>
-                        <tr>
-                            <td class="td">Ammontare dei costi di attivazione </td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="aligned-right td">{{ number_format($quote->getTotalPrice(), 2, ',', '.') }}
-                                €
-                            </td>
-                        </tr>
-                    </thead>
-                    <thead>
-                        <tr>
-                            <td class="td">Ammontare dei costi di abbonamento annuale</td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="aligned-right td">
-                                {{ number_format($quote->getTotalRecurringPrice(), 2, ',', '.') }} €
-                            </td>
-                        </tr>
-                    </thead>
-                    <thead>
-                        <tr>
-                            <td class="td">Ammontare dei servizi aggiuntivi</td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="aligned-right td">
-                                {{ number_format($quote->getTotalAdditionalServicesPrice(), 2, ',', '.') }} €
-                            </td>
-                        </tr>
-                    </thead>
-                    <thead>
-                        <tr>
-                            <td class="td">Sconto</td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="aligned-right td">{{ number_format($quote->discount ?? 0, 2, ',', '.') }} €
-                            </td>
-                        </tr>
-                    </thead>
-                    <thead>
-                        <tr>
-                            <td class="td" style="color: #005485;">Prezzo finale (senza IVA)</td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td style="color: #005485;" class="aligned-right td ">
-                                {{ number_format($quote->getQuoteNetPrice(), 2, ',', '.') }} €</td>
-                        </tr>
-                    </thead>
-                    <thead>
-                        <tr>
-                            <td class="td">IVA (22%)</td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="aligned-right td">
-                                {{ number_format($quote->getQuoteNetPrice() * 0.22, 2, ',', '.') }} €
-                            </td>
-                        </tr>
-                    </thead>
-                    <thead>
-                        <tr class="table-header-style">
-                            <td class="td">Prezzo finale (con IVA)</td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="td"></td>
-                            <td class="aligned-right td">
-                                {{ number_format($quote->getQuoteNetPrice() + $quote->getQuoteNetPrice() * 0.22, 2, ',', '.') }}
-                                €
-                            </td>
-                        </tr>
-                    </thead>
-                    {{-- end riepilogo table --}}
-                </td>
+                    <thead style="page-break-before:always;" <tr class="table-header-style">
+                        <td>Riepilogo</td>
+            </tr>
+            </thead>
+            <thead>
+                <tr>
+                    <td class="td">Ammontare dei costi di attivazione </td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="aligned-right td">{{ number_format($quote->getTotalPrice(), 2, ',', '.') }}
+                        €
+                    </td>
+                </tr>
+            </thead>
+            <thead>
+                <tr>
+                    <td class="td">Ammontare dei costi di abbonamento annuale</td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="aligned-right td">
+                        {{ number_format($quote->getTotalRecurringPrice(), 2, ',', '.') }} €
+                    </td>
+                </tr>
+            </thead>
+            <thead>
+                <tr>
+                    <td class="td">Ammontare dei servizi aggiuntivi</td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="aligned-right td">
+                        {{ number_format($quote->getTotalAdditionalServicesPrice(), 2, ',', '.') }} €
+                    </td>
+                </tr>
+            </thead>
+            <thead>
+                <tr>
+                    <td class="td">Sconto</td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="aligned-right td">{{ number_format($quote->discount ?? 0, 2, ',', '.') }} €
+                    </td>
+                </tr>
+            </thead>
+            <thead>
+                <tr>
+                    <td class="td" style="color: #005485;">Prezzo finale (senza IVA)</td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td style="color: #005485;" class="aligned-right td ">
+                        {{ number_format($quote->getQuoteNetPrice(), 2, ',', '.') }} €</td>
+                </tr>
+            </thead>
+            <thead>
+                <tr>
+                    <td class="td">IVA (22%)</td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="aligned-right td">
+                        {{ number_format($quote->getQuoteNetPrice() * 0.22, 2, ',', '.') }} €
+                    </td>
+                </tr>
+            </thead>
+            <thead>
+                <tr class="table-header-style">
+                    <td class="td">Prezzo finale (con IVA)</td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="aligned-right td">
+                        {{ number_format($quote->getQuoteNetPrice() + $quote->getQuoteNetPrice() * 0.22, 2, ',', '.') }}
+                        €
+                    </td>
+                </tr>
+            </thead>
+            {{-- end riepilogo table --}}
+            </td>
             </tr>
         </tbody>
         <tfoot>
@@ -426,8 +418,8 @@
         <p>A disposizione per ogni eventuale chiarimento, inviamo cordiali saluti.</p>
         <br>
         <p>Pisa, {{ date('d-m-Y') }}</p>
-        <p>Alessio Piccioli</p>
-        <p>Amministratore di Webmapp</p>
+        <p>Alessio Piccioli,</p>
+        <p>Amministratore di Webmapp.</p>
     </div>
 
 
