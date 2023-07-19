@@ -13,9 +13,9 @@ return [
     |
     */
 
-    'version' => 'orchestrator.1.5.0',
-    'release' => '1.5.0',
-    'release_date' => '17/07/2023',
+    'version' => 'orchestrator.1.5.1',
+    'release' => '1.5.1',
+    'release_date' => '19/07/2023',
 
 
     /*
