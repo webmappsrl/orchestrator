@@ -16,7 +16,6 @@ use Eminiarts\Tabs\Traits\HasTabs;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use Laravel\Nova\Fields\MorphToMany;
-use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Actions\EditEpicsFromIndex;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
@@ -80,8 +79,10 @@ class Epic extends Resource
                         ->options(Milestone::all()->sortByDesc('due_date')->pluck('name', 'id'))
                         ->onlyOnForms()
                         ->default(function ($request) {
-                            $epic = App\Models\Epic::find($request->resourceId);
-                            return $epic->milestone_id;
+                            $epic = Epic::find($request->resourceId);
+                            if ($epic) {
+                                return $epic->milestone_id;
+                            }
                         }),
                     BelongsTo::make('Project')->searchable(),
                     Text::make('Name')
