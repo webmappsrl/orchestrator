@@ -4,6 +4,9 @@ namespace App\Nova;
 
 use App\Enums\QuoteStatus;
 use App\Nova\Actions\DuplicateQuote;
+use App\Nova\Metrics\NewQuotes;
+use App\Nova\Metrics\SentQuotes;
+use App\Nova\Metrics\WonQuotes;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -187,7 +190,11 @@ class Quote extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        return [];
+        return [
+            new NewQuotes,
+            new SentQuotes,
+            new WonQuotes,
+        ];
     }
 
     /**
