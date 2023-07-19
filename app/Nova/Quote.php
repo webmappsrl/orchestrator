@@ -120,7 +120,7 @@ class Quote extends Resource
                 ->locale('it')
                 ->exceptOnForms()
                 ->displayUsing(function () {
-                    $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice();
+                    $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice();
                     return number_format($quotePrice, 2, ',', '.') . ' €';
                 })->sortable(),
             Currency::make('Discount')
