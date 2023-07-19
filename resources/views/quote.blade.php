@@ -355,14 +355,16 @@
                 </tr>
             </thead>
             <thead>
-                <tr>
-                    <td class="td">Sconto</td>
-                    <td class="td"></td>
-                    <td class="td"></td>
-                    <td class="td"></td>
-                    <td class="aligned-right td">{{ number_format($quote->discount ?? 0, 2, ',', '.') }} €
-                    </td>
-                </tr>
+                @if ($quote->discount > 0)
+                    <tr>
+                        <td class="td">Sconto</td>
+                        <td class="td"></td>
+                        <td class="td"></td>
+                        <td class="td"></td>
+                        <td class="aligned-right td">{{ number_format($quote->discount, 2, ',', '.') }} €
+                        </td>
+                    </tr>
+                @endif
             </thead>
             <thead>
                 <tr>
