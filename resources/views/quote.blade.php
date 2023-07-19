@@ -81,22 +81,22 @@
 
                         @if ($quote->additional_info)
                             <h2 class="description">Informazioni aggiuntive</h2>
-                            <p class="additional-info indent-paragraph">{{ $quote->additional_info }}</p>
+                            <p class="additional-info indent-paragraph">{!! $quote->additional_info !!}</p>
                         @endif
                         @if ($quote->payment_plan)
                             <div class="payment-plan">
                                 <h2 class="description">Modalità di pagamento</h2>
-                                <p> {{ $quote->payment_plan }}</p>
+                                <p> {!! $quote->payment_plan !!}</p>
                             </div>
                         @endif
                         @if ($quote->delivery_time)
                             <div class="delivery-time">
                                 <h2 class="description">Tempi di consegna</h2>
-                                <p> {{ $quote->delivery_time }}</p>
+                                <p> {!! $quote->delivery_time !!}</p>
                             </div>
                         @endif
                     </div>
-                    <h2 style="color: #005485 page-break-before:always;">Costi</h2>
+                    <h2 style="color: #005485; page-break-before:always;">Costi</h2>
                     <p>Di seguito indichiamo i costi del servizio suddivisi in costi di attivazione e costi
                         di
                         abbonamento
