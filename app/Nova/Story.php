@@ -23,6 +23,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Carbon\Carbon;
+use Laravel\Nova\Fields\Textarea;
 
 class Story extends Resource
 {
@@ -120,6 +121,8 @@ class Story extends Resource
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
+            Textarea::make(__('Customer Request'), 'customer_request')
+                ->hideFromIndex(),
             BelongsTo::make('User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
