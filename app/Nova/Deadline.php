@@ -36,6 +36,12 @@ class Deadline extends Resource
      */
     public static $title = 'title';
 
+    public function title()
+    {
+        $dueDate = $this->due_date->format('Y-m-d');
+        return $dueDate . ' - ' . $this->title . ' (' . $this->customer->name . ')';
+    }
+
     /**
      * The columns that should be searched.
      *
