@@ -7,6 +7,7 @@ use Laravel\Nova\Fields\ID;
 use App\Enums\DeadlineStatus;
 use App\Nova\Actions\EditDeadlinesAction;
 use App\Nova\Filters\DeadlineCustomerFilter;
+use App\Nova\Filters\DeadlineStatusFilter;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
@@ -114,6 +115,7 @@ class Deadline extends Resource
         return [
             // new DeadlineCustomerFilter,
             (new NovaSearchableBelongsToFilter('Customer'))->fieldAttribute('customer')->filterBy('customer_id'),
+            (new DeadlineStatusFilter)
 
         ];
     }
