@@ -62,6 +62,10 @@ class Deadline extends Resource
             MarkdownTui::make(__('Description'))
                 ->initialEditType(EditorType::MARKDOWN)
                 ->hideFromIndex(),
+            //create a text field to show the link to the deadline-email view and render it as html
+            Text::make('Link', function () {
+                return '<a style="color:blue;" href="' . route('deadline.email', ['id' => $this->id]) . '" target="_blank">Email Template</a>';
+            })->asHtml()->onlyOnDetail(),
             Select::make('Status')->options([
                 'new' => DeadlineStatus::New,
                 'progress' => DeadlineStatus::Progress,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\StoryStatus;
 use App\Http\Requests\StoreDeadlineRequest;
 use App\Http\Requests\UpdateDeadlineRequest;
 use App\Models\Deadline;
@@ -62,5 +63,31 @@ class DeadlineController extends Controller
     public function destroy(Deadline $deadline)
     {
         //
+    }
+
+    /**
+     * Get the email for the deadline 
+     */
+    public function email($id)
+    {
+        $deadline = Deadline::findOrFail($id);
+        $stories = $deadline->stories()->get();
+        $customer = $deadline->customer()->first();
+
+        $doneStories = $deadline->stories()->where('status', StoryStatus::Done)->get();
+        $progressStories = $deadline->stories()->where('status', StoryStatus::Test)->orWhere('status', StoryStatus::Progress)->get();
+        $storiesToStart = $deadline->stories()->where('status', StoryStatus::New)->get();
+
+        return view(
+            'deadline-email',
+            [
+                'deadline' => $deadline,
+                'stories' => $stories,
+                'doneStories' => $doneStories,
+                'progressStories' => $progressStories,
+                'storiesToStart' => $storiesToStart,
+                'customer' => $customer,
+            ]
+        );
     }
 }

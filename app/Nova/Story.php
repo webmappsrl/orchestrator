@@ -23,6 +23,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Textarea;
 
 class Story extends Resource
