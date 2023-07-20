@@ -67,10 +67,13 @@
                             <div class="service-details">
                                 <ul>
                                     @foreach ($quote->products as $product)
-                                        <li>{{ $product->description }} </li>
+                                        <li> <span class="product-title">{{ $product->name }}</span> -
+                                            {{ $product->description }} </li>
                                     @endforeach
                                     @foreach ($quote->recurringProducts as $recurringProduct)
-                                        <li>{{ $recurringProduct->description }}</li>
+                                        <li><span class="product-title">{{ $recurringProduct->name }}</span> -
+                                            {{ $recurringProduct->description }}
+                                        </li>
                                     @endforeach
                                     @foreach ($quote->additional_services as $description => $price)
                                         <li>{{ $description }}</li>
