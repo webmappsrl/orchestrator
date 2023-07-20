@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Laravel\Nova\Fields\ID;
 use App\Enums\DeadlineStatus;
 use App\Nova\Actions\EditDeadlinesAction;
+use App\Nova\Filters\DeadlineCustomerFilter;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
@@ -16,6 +17,7 @@ use Laravel\Nova\Fields\MorphToMany;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class Deadline extends Resource
 {
@@ -109,7 +111,11 @@ class Deadline extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            // new DeadlineCustomerFilter,
+            (new NovaSearchableBelongsToFilter('Customer'))->fieldAttribute('customer')->filterBy('customer_id'),
+
+        ];
     }
 
     /**
