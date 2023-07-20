@@ -96,6 +96,10 @@ p.indent-paragraph {
     word-wrap: break-word;
 }
 
+span.product-title {
+    font-weight: bold;
+}
+
 p.indent-heading-customer {
     line-height: 1.1rem;
 }
