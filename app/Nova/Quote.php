@@ -178,6 +178,9 @@ class Quote extends Resource
             Trix::make('Payment Plan', 'payment_plan')
                 ->hideFromIndex(),
 
+            Textarea::make('Billing Plan', 'billing_plan')
+                ->hideFromIndex()
+
 
         ];
     }
