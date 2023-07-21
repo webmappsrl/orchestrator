@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Laravel\Nova\Fields\ID;
 use App\Enums\DeadlineStatus;
 use App\Nova\Actions\EditDeadlinesAction;
+use App\Nova\Filters\DeadlineCustomerFilter;
+use App\Nova\Filters\DeadlineStatusFilter;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
@@ -16,6 +18,7 @@ use Laravel\Nova\Fields\MorphToMany;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class Deadline extends Resource
 {
@@ -32,6 +35,12 @@ class Deadline extends Resource
      * @var string
      */
     public static $title = 'title';
+
+    public function title()
+    {
+        $dueDate = $this->due_date->format('Y-m-d');
+        return $dueDate . ' - ' . $this->title . ' (' . $this->customer->name . ')';
+    }
 
     /**
      * The columns that should be searched.
@@ -62,6 +71,10 @@ class Deadline extends Resource
             MarkdownTui::make(__('Description'))
                 ->initialEditType(EditorType::MARKDOWN)
                 ->hideFromIndex(),
+            //create a text field to show the link to the deadline-email view and render it as html
+            Text::make('Email Template', function () {
+                return '<a style="color:blue;" href="' . route('deadline.email', ['id' => $this->id]) . '" target="_blank">Template</a>';
+            })->asHtml()->onlyOnDetail(),
             Select::make('Status')->options([
                 'new' => DeadlineStatus::New,
                 'progress' => DeadlineStatus::Progress,
@@ -105,7 +118,12 @@ class Deadline extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            // new DeadlineCustomerFilter,
+            (new NovaSearchableBelongsToFilter('Customer'))->fieldAttribute('customer')->filterBy('customer_id'),
+            (new DeadlineStatusFilter)
+
+        ];
     }
 
     /**

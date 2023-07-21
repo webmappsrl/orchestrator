@@ -2,7 +2,7 @@
 
 namespace App\Nova;
 
-
+use App\Enums\StoryPriority;
 use App\Models\Epic;
 use App\Models\User;
 use App\Models\Project;
@@ -23,6 +23,8 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Textarea;
 
 class Story extends Resource
 {
@@ -85,6 +87,30 @@ class Story extends Resource
                 'rejected' => StoryStatus::Rejected,
             ])->onlyOnForms()
                 ->default('new'),
+            Select::make('Priority', 'priority')->options([
+                StoryPriority::Low->value => 'Low',
+                StoryPriority::Medium->value => 'Medium',
+                StoryPriority::High->value => 'High',
+            ])->onlyOnForms()
+                ->default($this->priority ?? StoryPriority::Low->value),
+            Text::make('Priority')->displayUsing(function () {
+                $color = 'red';
+                $priority = '';
+                if ($this->priority == StoryPriority::Low->value) {
+                    $color = 'green';
+                    $priority = 'Low';
+                } elseif ($this->priority == StoryPriority::Medium->value) {
+                    $color = 'orange';
+                    $priority = 'Medium';
+                } elseif ($this->priority == StoryPriority::High->value) {
+                    $color = 'red';
+                    $priority = 'High';
+                }
+                return '<span style="color:' . $color . '; font-weight: bold;">' . $priority . '</span>';
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating()
+                ->sortable(),
             Status::make('Status')
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
@@ -120,6 +146,8 @@ class Story extends Resource
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
+            Textarea::make(__('Customer Request'), 'customer_request')
+                ->hideFromIndex(),
             BelongsTo::make('User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
@@ -197,6 +225,7 @@ class Story extends Resource
         return [
             new filters\UserFilter,
             new filters\StoryStatusFilter,
+            new filters\StoryTypeFilter
         ];
     }
 

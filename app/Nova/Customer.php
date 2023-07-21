@@ -89,7 +89,19 @@ class Customer extends Resource
             MarkdownTui::make('Migration Note', 'migration_note')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
-            Text::make('Contact emails', 'email')->copyable(),
+            Text::make('Contact emails', function () {
+                if ($this->email == null) {
+                    return null;
+                }
+                //get the mails by exploding the string by comma or space
+                $mails = preg_split("/[\s,]+/", $this->email);
+                //add a mailto link to each mail
+                foreach ($mails as $key => $mail) {
+                    $mails[$key] = "<a href='mailto:$mail'>$mail</a>";
+                }
+                //return the string as html
+                return implode("<br>", $mails);
+            })->asHtml(),
             Boolean::make('Subs.', 'has_subscription')
                 ->sortable()
                 ->nullable()->hideFromIndex(),
