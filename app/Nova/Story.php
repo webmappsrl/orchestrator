@@ -2,7 +2,7 @@
 
 namespace App\Nova;
 
-
+use App\Enums\StoryPriority;
 use App\Models\Epic;
 use App\Models\User;
 use App\Models\Project;
@@ -87,6 +87,30 @@ class Story extends Resource
                 'rejected' => StoryStatus::Rejected,
             ])->onlyOnForms()
                 ->default('new'),
+            Select::make('Priority', 'priority')->options([
+                StoryPriority::Low->value => 'Low',
+                StoryPriority::Medium->value => 'Medium',
+                StoryPriority::High->value => 'High',
+            ])->onlyOnForms()
+                ->default($this->priority ?? StoryPriority::Low->value),
+            Text::make('Priority')->displayUsing(function () {
+                $color = 'red';
+                $priority = '';
+                if ($this->priority == StoryPriority::Low->value) {
+                    $color = 'green';
+                    $priority = 'Low';
+                } elseif ($this->priority == StoryPriority::Medium->value) {
+                    $color = 'orange';
+                    $priority = 'Medium';
+                } elseif ($this->priority == StoryPriority::High->value) {
+                    $color = 'red';
+                    $priority = 'High';
+                }
+                return '<span style="color:' . $color . '; font-weight: bold;">' . $priority . '</span>';
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating()
+                ->sortable(),
             Status::make('Status')
                 ->loadingWhen(['status' => 'progress'])
                 ->failedWhen(['status' => 'rejected'])
