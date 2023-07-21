@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\Currency;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class RecurringProduct extends Resource
@@ -50,7 +51,7 @@ class RecurringProduct extends Resource
         return [
             ID::make()->sortable(),
             Text::make('name')->sortable(),
-            Text::make('description')->hideFromIndex()->nullable(),
+            Textarea::make('description')->hideFromIndex()->nullable(),
             Text::make('sku')->hideFromIndex(),
             Currency::make('price')->currency('EUR')->nullable(),
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DeadlineController;
 use App\Http\Controllers\QuoteController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,3 +16,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/quote/{id}', [QuoteController::class, 'show'])->name('quote');
+Route::get('/deadline/{id}', [DeadlineController::class, 'email'])->name('deadline.email');

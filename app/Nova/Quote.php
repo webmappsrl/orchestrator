@@ -4,6 +4,9 @@ namespace App\Nova;
 
 use App\Enums\QuoteStatus;
 use App\Nova\Actions\DuplicateQuote;
+use App\Nova\Metrics\NewQuotes;
+use App\Nova\Metrics\SentQuotes;
+use App\Nova\Metrics\WonQuotes;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -19,6 +22,7 @@ use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\Trix;
 
 class Quote extends Resource
 {
@@ -119,7 +123,7 @@ class Quote extends Resource
                 ->locale('it')
                 ->exceptOnForms()
                 ->displayUsing(function () {
-                    $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice();
+                    $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice();
                     return number_format($quotePrice, 2, ',', '.') . ' €';
                 })->sortable(),
             Currency::make('Discount')
@@ -165,13 +169,16 @@ class Quote extends Resource
                 ->asHtml()
                 ->exceptOnForms(),
 
-            Textarea::make('Additional Info', 'additional_info')
+            Trix::make('Additional Info', 'additional_info')
                 ->hideFromIndex(),
 
-            Textarea::make('Delivery Time', 'delivery_time')
+            Trix::make('Delivery Time', 'delivery_time')
                 ->hideFromIndex(),
 
-            Textarea::make('Payment Plan', 'payment_plan')
+            Trix::make('Payment Plan', 'payment_plan')
+                ->hideFromIndex(),
+
+            Textarea::make('Billing Plan', 'billing_plan')
                 ->hideFromIndex()
 
 
@@ -186,7 +193,11 @@ class Quote extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        return [];
+        return [
+            new NewQuotes,
+            new SentQuotes,
+            new WonQuotes,
+        ];
     }
 
     /**

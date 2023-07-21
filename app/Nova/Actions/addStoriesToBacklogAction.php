@@ -36,7 +36,7 @@ class addStoriesToBacklogAction extends Action
     {
         $textArea = $fields['text_stories'];
         $lines = explode(PHP_EOL, $textArea);
-        $user = User::find($fields['user']);
+        $user = User::find($fields['user']) ?? auth()->user();
         $type = $fields['type'];
         $deadlines = $fields['deadlines'];
         $stories = [];
@@ -48,7 +48,10 @@ class addStoriesToBacklogAction extends Action
             }
             // Create a new story 
             $story = new Story();
-            $story->name = $line;
+            // divide the line by only the first ":" found to avoid splitting the description
+            $lineParts = explode(':', $line, 2);
+            $story->name = $lineParts[0];
+            $story->description = $lineParts[1] ?? '';
             $story->type = $type;
             $story->status = StoryStatus::New;
             $story->user_id = $user->id;
