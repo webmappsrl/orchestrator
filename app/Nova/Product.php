@@ -52,7 +52,7 @@ class Product extends Resource
             ID::make()->sortable(),
             Text::make('name')->sortable(),
             Textarea::make('description')->hideFromIndex()->nullable(),
-            Text::make('sku')->hideFromIndex(),
+            Text::make('sku'),
             Currency::make('price')->currency('EUR')->nullable(),
         ];
     }
