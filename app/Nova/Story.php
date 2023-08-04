@@ -147,7 +147,8 @@ class Story extends Resource
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
             Textarea::make(__('Customer Request'), 'customer_request')
-                ->hideFromIndex(),
+                ->hideFromIndex()
+                ->alwaysShow(),
             BelongsTo::make('User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
