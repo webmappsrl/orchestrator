@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Enums\QuoteStatus;
 use App\Nova\Actions\DuplicateQuote;
+use App\Nova\Filters\QuoteStatusFilter;
 use App\Nova\Metrics\NewQuotes;
 use App\Nova\Metrics\SentQuotes;
 use App\Nova\Metrics\WonQuotes;
@@ -209,7 +210,9 @@ class Quote extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            (new QuoteStatusFilter)
+        ];
     }
 
     /**
