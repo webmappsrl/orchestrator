@@ -75,7 +75,8 @@ class Quote extends Resource
                 'closed won' => QuoteStatus::Closed_Won,
                 'partially paid' =>  QuoteStatus::Partially_Paid,
                 'paid' =>  QuoteStatus::Paid,
-            ])->onlyOnForms(),
+            ])->onlyOnForms()
+                ->default(QuoteStatus::New->value),
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
