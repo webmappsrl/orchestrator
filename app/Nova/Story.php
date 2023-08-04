@@ -189,6 +189,7 @@ class Story extends Resource
                     }
                 })
                 ->searchable()
+                ->nullable()
                 ->hideFromIndex(),
             MorphToMany::make('Deadlines'),
             //add a panel to show the related epic description
