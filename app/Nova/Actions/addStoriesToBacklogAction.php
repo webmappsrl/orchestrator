@@ -46,34 +46,41 @@ class addStoriesToBacklogAction extends Action
             if (empty(trim($line))) {
                 continue;
             }
-            // Create a new story 
+
+            // Create a new story
             $story = new Story();
-            // divide the line by only the first ":" found to avoid splitting the description
             $lineParts = explode(':', $line, 2);
-            $story->name = $lineParts[0];
-            $story->description = $lineParts[1] ?? '';
+            if (count($lineParts) === 2) {
+                $story->name = $lineParts[0];
+                $descriptionAndRequest = explode('|', $lineParts[1], 2);
+                $story->description = $descriptionAndRequest[0] ?? '';
+                $story->customer_request = $descriptionAndRequest[1] ?? '';
+            } else {
+                $nameAndRequest = explode('|', $line, 2);
+                $story->name = $nameAndRequest[0];
+                $story->description = '';
+                $story->customer_request = $nameAndRequest[1] ?? '';
+            }
+
             $story->type = $type;
             $story->status = StoryStatus::New;
             $story->user_id = $user->id;
             $story->save();
             $stories[] = $story;
         }
+
         //associate the stories to the deadlines
         foreach ($stories as $story) {
             $story->deadlines()->attach($deadlines, ['deadlineable_type' => Story::class]);
         }
+
         //associate the stories to the backlog stories of the current project
         $project = $models->first();
         $project->backlogStories()->saveMany($stories);
-        return Action::message('Stories added to backlog');
+
+        return Action::message('Stories added to backlog!');
     }
 
-    /**
-     * Get the fields available on the action.
-     *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return array
-     */
     public function fields(NovaRequest $request)
     {
         return [
