@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Enums\QuoteStatus;
 use App\Nova\Actions\DuplicateQuote;
+use App\Nova\Filters\QuoteStatusFilter;
 use App\Nova\Metrics\NewQuotes;
 use App\Nova\Metrics\SentQuotes;
 use App\Nova\Metrics\WonQuotes;
@@ -75,7 +76,8 @@ class Quote extends Resource
                 'closed won' => QuoteStatus::Closed_Won,
                 'partially paid' =>  QuoteStatus::Partially_Paid,
                 'paid' =>  QuoteStatus::Paid,
-            ])->onlyOnForms(),
+            ])->onlyOnForms()
+                ->default(QuoteStatus::New->value),
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
@@ -208,7 +210,9 @@ class Quote extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            (new QuoteStatusFilter)
+        ];
     }
 
     /**

@@ -39,9 +39,7 @@
 
 <body>
     <div class="container">
-        <h1>Oggetto: Attività svolte @foreach ($stories as $story)
-                {{ $story->customer_request }}
-            @endforeach
+        <h1>Oggetto: Attività svolte {{ $deadline->title }}
             entro il {{ $deadline->due_date->format('Y-m-d') }}
         </h1>
         <p></p>
@@ -54,7 +52,7 @@
             <h2>Attività concluse:</h2>
             <ul class="task-list">
                 @foreach ($doneStories as $story)
-                    <li>{{ $story->name }}</li>
+                    <li>({{ $story->name }}) {{ $story->customer_request }}</li>
                 @endforeach
             </ul>
         @endif
@@ -63,7 +61,7 @@
             <h2>Attività in corso:</h2>
             <ul class="task-list">
                 @foreach ($progressStories as $story)
-                    <li>{{ $story->name }}</li>
+                    <li>({{ $story->name }}) {{ $story->customer_request }}</li>
                 @endforeach
             </ul>
         @endif
@@ -72,7 +70,7 @@
             <h2>Attività da iniziare:</h2>
             <ul class="task-list">
                 @foreach ($storiesToStart as $story)
-                    <li>{{ $story->name }}</li>
+                    <li>({{ $story->name }}) {{ $story->customer_request }}</li>
                 @endforeach
             </ul>
         @endif

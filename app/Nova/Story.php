@@ -131,23 +131,20 @@ class Story extends Resource
             //create a field to show all the name of deadlines and related customer name
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
-                $deadlineNames = [];
                 foreach ($deadlines as $deadline) {
                     $dueDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
                     $deadlineTitle = $deadline->title ?? '';
-                    if (isset($deadline->customer)) {
-                        array_push($deadlineNames, $dueDate . ' (' . $deadline->customer->name . ')' . ' - ' . $deadlineTitle);
-                    } else {
-                        array_push($deadlineNames, $dueDate . ' - ' . $deadlineTitle);
-                    }
+                    $customerName = isset($deadline->customer) ? $deadline->customer->name : '';
+                    $deadlineName = $dueDate . '<br/>' . $deadlineTitle . '<br/>' . $customerName;
                 }
-                return implode('<br/> ', $deadlineNames);
+                return $deadlineName ?? '';
             })->asHtml()->onlyOnIndex(),
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
             Textarea::make(__('Customer Request'), 'customer_request')
-                ->hideFromIndex(),
+                ->hideFromIndex()
+                ->alwaysShow(),
             BelongsTo::make('User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
@@ -192,6 +189,7 @@ class Story extends Resource
                     }
                 })
                 ->searchable()
+                ->nullable()
                 ->hideFromIndex(),
             MorphToMany::make('Deadlines'),
             //add a panel to show the related epic description
