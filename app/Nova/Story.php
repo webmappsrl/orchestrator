@@ -137,7 +137,7 @@ class Story extends Resource
                     $customerName = isset($deadline->customer) ? $deadline->customer->name : '';
                     $deadlineName = $dueDate . '<br/>' . $deadlineTitle . '<br/>' . $customerName;
                 }
-                return $deadlineName;
+                return $deadlineName ?? '';
             })->asHtml()->onlyOnIndex(),
             MarkdownTui::make(__('Description'), 'description')
                 ->hideFromIndex()
