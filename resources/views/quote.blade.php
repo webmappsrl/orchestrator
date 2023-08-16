@@ -237,7 +237,7 @@
 
                                 </tr>
                             </thead>
-                            <thead>
+                            {{-- <thead>
                                 <tr style="color: #005485;">
                                     <td class="td">IVA annua:</td>
                                     <td class="td"></td>
@@ -247,7 +247,7 @@
                                         {{ number_format(($quote->getTotalRecurringPrice() / count($quote->recurringProducts)) * 0.22, 2, ',', '.') }}
                                         €</td>
                                 </tr>
-                            </thead>
+                            </thead> --}}
                             <thead>
                                 <tr style="color: #005485;">
                                     <td class="td">IVA complessiva:</td>
@@ -260,7 +260,7 @@
                                     </td>
                                 </tr>
                             </thead>
-                            <thead>
+                            {{-- <thead>
                                 <tr class="table-header-style">
                                     <td class="td">Totale costi abbonamento annuo</td>
                                     <td class="td"></td>
@@ -271,7 +271,7 @@
                                         €
                                     </td>
                                 </tr>
-                            </thead>
+                            </thead> --}}
                             <thead>
                                 <tr style="page-break-after:always;" class="table-header-style">
                                     <td class="td">Totale costi abbonamento complessivo</td>
