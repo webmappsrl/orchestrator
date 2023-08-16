@@ -259,7 +259,7 @@ class Story extends Resource
                 ->cancelButtonText('Cancel'),
 
             (new actions\StoryToDoneStatusAction)
-                ->onlyInline()
+                ->showInline()
                 ->confirmText('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
