@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DeadlineStatus;
 use App\Models\Epic;
 use App\Models\Story;
 use App\Models\Customer;
@@ -57,5 +58,30 @@ class Deadline extends Model
     public function config()
     {
         return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    /**
+     * Update the status of the deadline
+     * 
+     * @return void
+     */
+    public function checkIfExpired(): void
+    {
+        //get the current data
+        $today = now();
+
+        //get the due date of the deadline
+        $dueDate = $this->due_date;
+
+        //if the deadline status is done then return
+        if ($this->status == DeadlineStatus::Done->value) {
+            return;
+        }
+
+        //if due date is before today then change the status to expired
+        if ($today->gt($dueDate)) {
+            $this->status = DeadlineStatus::Expired->value;
+            $this->save();
+        }
     }
 }

@@ -83,18 +83,21 @@ class Deadline extends Resource
             ])->default('new')
                 ->hideFromDetail()
                 ->hideFromIndex(),
-            Text::make('Status', function () {
-                //color the status text: done=green progress=orange expired=red new=grey and make it bold an a littel bigger
-                $color = 'grey';
-                if ($this->status == 'done') {
-                    $color = 'green';
-                } elseif ($this->status == 'progress') {
-                    $color = 'orange';
-                } elseif ($this->status == 'expired') {
-                    $color = 'red';
-                }
-                return '<span style="color:' . $color . ';font-weight:bold;">' . $this->status . '</span>';
-            })->asHtml(),
+            // Text::make('Status', function () {
+            //     //color the status text: done=green progress=orange expired=red new=grey and make it bold an a littel bigger
+            //     $color = 'grey';
+            //     if ($this->status == 'done') {
+            //         $color = 'green';
+            //     } elseif ($this->status == 'progress') {
+            //         $color = 'orange';
+            //     } elseif ($this->status == 'expired') {
+            //         $color = 'red';
+            //     }
+            //     return '<span style="color:' . $color . ';font-weight:bold;">' . $this->status . '</span>';
+            // })->asHtml(),
+            Status::make('Status')
+                ->loadingWhen(['status' => 'new'])
+                ->failedWhen(['status' => 'expired']),
             BelongsTo::make('Customer')->sortable()->searchable(),
             Text::make('Stories Count', function () {
                 return $this->stories()->count();

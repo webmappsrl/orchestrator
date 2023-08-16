@@ -2,28 +2,29 @@
 
 namespace App\Nova;
 
-use App\Enums\QuoteStatus;
-use App\Nova\Actions\DuplicateQuote;
-use App\Nova\Filters\QuoteStatusFilter;
-use App\Nova\Metrics\NewQuotes;
-use App\Nova\Metrics\SentQuotes;
-use App\Nova\Metrics\WonQuotes;
 use Laravel\Nova\Panel;
+use App\Enums\QuoteStatus;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Trix;
+use App\Nova\Metrics\NewQuotes;
+use App\Nova\Metrics\WonQuotes;
 use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\Status;
+use App\Nova\Metrics\SentQuotes;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
+use App\Nova\Actions\DuplicateQuote;
 use Laravel\Nova\Fields\BelongsToMany;
+use App\Nova\Filters\QuoteStatusFilter;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Laravel\Nova\Fields\Select;
-use Laravel\Nova\Fields\Status;
-use Laravel\Nova\Fields\Textarea;
-use Laravel\Nova\Fields\Trix;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 
 class Quote extends Resource
 {
@@ -181,7 +182,10 @@ class Quote extends Resource
                 ->hideFromIndex(),
 
             Textarea::make('Billing Plan', 'billing_plan')
-                ->hideFromIndex()
+                ->hideFromIndex(),
+
+            Files::make('Documents', 'documents')
+                ->hideFromIndex(),
 
 
         ];
