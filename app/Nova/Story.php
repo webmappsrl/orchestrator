@@ -81,7 +81,7 @@ class Story extends Resource
                 ->asHtml(),
             Select::make(('Status'), 'status')->options([
                 'new' => StoryStatus::New,
-                'in Progress' => StoryStatus::Progress,
+                'progress' => StoryStatus::Progress,
                 'done' => StoryStatus::Done,
                 'test' => StoryStatus::Test,
                 'rejected' => StoryStatus::Rejected,
@@ -112,7 +112,7 @@ class Story extends Resource
                 ->hideWhenUpdating()
                 ->sortable(),
             Status::make('Status')
-                ->loadingWhen(['status' => 'progress'])
+                ->loadingWhen(['status' => 'new'])
                 ->failedWhen(['status' => 'rejected'])
                 ->sortable(),
             Select::make(__('Type'), 'type')->options([
