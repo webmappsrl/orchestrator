@@ -15,7 +15,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // call the checkIfExpired() method on all deadlines everyday at 5 past midnight
+        $schedule->call(function () {
+            \App\Models\Deadline::all()->each(function ($deadline) {
+                $deadline->checkIfExpired();
+            });
+        })->timezone('Europe/Rome')
+            ->dailyAt('00:05');
     }
 
     /**
