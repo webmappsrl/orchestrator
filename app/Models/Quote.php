@@ -7,10 +7,12 @@ use App\Models\Customer;
 use App\Models\RecurringProduct;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Quote extends Model
+class Quote extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $casts = [
         'additional_services' => 'array',
@@ -103,5 +105,10 @@ class Quote extends Model
     {
         $this->discount = $this->discount ?? 0;
         return $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice() - $this->discount;
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('documents');
     }
 }
