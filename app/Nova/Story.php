@@ -67,6 +67,9 @@ class Story extends Resource
      */
     public function fields(NovaRequest $request)
     {
+        $testDev = $this->test_dev;
+        $testProd = $this->test_prod;
+
         return [
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable()
@@ -198,6 +201,40 @@ class Story extends Resource
             ]),
             Files::make('Documents', 'documents')
                 ->hideFromIndex(),
+
+            $testDev !== null ? Text::make('Test Dev', function () use ($testDev) {
+                $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . '[X]' . '</a>';
+                return $testDevLink;
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating() :
+                Text::make('Test Dev', function () {
+                    return '';
+                })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+
+            $testProd !== null ? Text::make('Test Prod', function () use ($testProd) {
+                $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . '[X]' . '</a>';
+                return $testProdLink;
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating() :
+                Text::make('Test Prod', function () {
+                    return '';
+                })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+
+            //make the text fields for the url visible in the form
+            Text::make('Test Dev', 'test_dev')
+                ->rules('nullable', 'url:http,https')
+                ->onlyOnForms()
+                ->help('Url must start with http or https'),
+            Text::make('Test Prod', 'test_prod')
+                ->rules('nullable', 'url:http,https')
+                ->onlyOnForms()
+                ->help('Url must start with http or https'),
         ];
     }
     /**
