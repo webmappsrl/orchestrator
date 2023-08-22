@@ -14,7 +14,8 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 class CreateStoriesFromText extends Action
 {
-    use InteractsWithQueue, Queueable;
+    use InteractsWithQueue;
+    use Queueable;
 
     /**
      * The displayable name of the action.
@@ -43,33 +44,40 @@ class CreateStoriesFromText extends Action
             if (empty(trim($line))) {
                 continue;
             }
-            // Create a new story 
-            $story = new Story();
-            // Associate the story with the epic and user
-            $story->name = $line;
-            $story->status = StoryStatus::New;
-            $story->epic_id = $epicId;
-            $story->user_id = $epicUserId;
-
+            // Create a new story
+            $story = $this->createStory($line, $epicId, $epicUserId);
             $story->save();
         }
     }
 
-    /**
-     * Get the fields available on the action.
-     *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return array
-     */
     public function fields(NovaRequest $request)
     {
-        return [
-            Textarea::make('lines'),
-        ];
-    }
+    return [
+        Textarea::make('lines'),
+    ];
+}
 
-    public function name()
+
+    private function createStory($line, $epicId, $epicUserId)
     {
-        return 'Create story from text';
+        $story = new Story();
+        $lineParts = explode(':', $line, 2);
+        if (count($lineParts) === 2) {
+            $story->name = $lineParts[0];
+            $descriptionAndRequest = explode('|', $lineParts[1], 2);
+            $story->description = $descriptionAndRequest[0] ?? '';
+            $story->customer_request = $descriptionAndRequest[1] ?? '';
+        } else {
+            $nameAndRequest = explode('|', $line, 2);
+            $story->name = $nameAndRequest[0];
+            $story->description = '';
+            $story->customer_request = $nameAndRequest[1] ?? '';
+        }
+        // Associate the story with the epic and user
+        $story->status = StoryStatus::New;
+        $story->epic_id = $epicId;
+        $story->user_id = $epicUserId;
+
+        return $story;
     }
 }
