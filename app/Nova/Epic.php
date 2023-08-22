@@ -22,6 +22,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class Epic extends Resource
@@ -119,8 +120,11 @@ class Epic extends Resource
                         ->default('project'),
                     Status::make('Status')
                         ->loadingWhen(['status' => 'project'])
-                        ->failedWhen(['status' => 'rejected'])
+                        ->failedWhen(['status' => 'rejected']),
+                    Files::make('Documents', 'documents')
+                        ->hideFromIndex(),
                 ]),
+
                 Tab::make('Stories', [
                     HasMany::make('Stories'),
                 ]),

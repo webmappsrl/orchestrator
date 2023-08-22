@@ -2,29 +2,26 @@
 
 namespace App\Nova;
 
-use App\Enums\StoryPriority;
+use Carbon\Carbon;
 use App\Models\Epic;
-use App\Models\User;
 use App\Models\Project;
 use Laravel\Nova\Panel;
-use App\Models\Deadline;
-use App\Enums\StoryStatus;
 use App\Enums\StoryType;
+use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
+use App\Enums\StoryPriority;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\MorphToMany;
-use Laravel\Nova\Fields\MultiSelect;
 use App\Nova\Actions\MoveStoriesFromEpic;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Textarea;
 
 class Story extends Resource
 {
@@ -70,6 +67,9 @@ class Story extends Resource
      */
     public function fields(NovaRequest $request)
     {
+        $testDev = $this->test_dev;
+        $testProd = $this->test_prod;
+
         return [
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable()
@@ -83,7 +83,7 @@ class Story extends Resource
                 'new' => StoryStatus::New,
                 'progress' => StoryStatus::Progress,
                 'done' => StoryStatus::Done,
-                'test' => StoryStatus::Test,
+                'testing' => StoryStatus::Test,
                 'rejected' => StoryStatus::Rejected,
             ])->onlyOnForms()
                 ->default('new'),
@@ -199,6 +199,42 @@ class Story extends Resource
                     ->initialEditType(EditorType::MARKDOWN)
                     ->onlyOnDetail()
             ]),
+            Files::make('Documents', 'documents')
+                ->hideFromIndex(),
+
+            $testDev !== null ? Text::make('Test Dev', function () use ($testDev) {
+                $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . '[X]' . '</a>';
+                return $testDevLink;
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating() :
+                Text::make('Test Dev', function () {
+                    return '';
+                })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+
+            $testProd !== null ? Text::make('Test Prod', function () use ($testProd) {
+                $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . '[X]' . '</a>';
+                return $testProdLink;
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating() :
+                Text::make('Test Prod', function () {
+                    return '';
+                })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+
+            //make the text fields for the url visible in the form
+            Text::make('Test Dev', 'test_dev')
+                ->rules('nullable', 'url:http,https')
+                ->onlyOnForms()
+                ->help('Url must start with http or https'),
+            Text::make('Test Prod', 'test_prod')
+                ->rules('nullable', 'url:http,https')
+                ->onlyOnForms()
+                ->help('Url must start with http or https'),
         ];
     }
     /**
