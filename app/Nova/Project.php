@@ -20,6 +20,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Actions\AddProjectsToFavorites;
 use App\Nova\Actions\addStoriesToBacklogAction;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\RemoveProjectsFromFavoritesAction;
 
 class Project extends Resource
@@ -83,6 +84,8 @@ class Project extends Resource
                     return implode('|', $users);
                 })->onlyOnDetail()
                     ->asHtml(),
+                Files::make('Documents', 'documents')
+                    ->hideFromIndex(),
             ]),
 
             new panel('DESCRIPTION', [
