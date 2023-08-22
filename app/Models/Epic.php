@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Epic extends Model
+class Epic extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
         'name',
@@ -135,5 +137,15 @@ class Epic extends Model
             return 'ND';
         }
         return $this->stories()->whereIn('status', [StoryStatus::Test, StoryStatus::Done])->count() . ' / ' . $this->stories()->count();
+    }
+
+    /**
+     * Register a spatie media collection
+     * @return void
+     * @link https://spatie.be/docs/laravel-medialibrary/v9/working-with-media-collections/defining-media-collections
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('documents');
     }
 }
