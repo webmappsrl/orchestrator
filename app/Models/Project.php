@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use App\Models\Epic;
+use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Overtrue\LaravelFavorite\Traits\Favoriteable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Project extends Model
+class Project extends Model implements HasMedia
 {
-    use HasFactory, Favoriteable;
+    use HasFactory, Favoriteable, InteractsWithMedia;
 
     protected $fillable = [
         'name',

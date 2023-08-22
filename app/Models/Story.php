@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use App\Models\Epic;
+use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
-class Story extends Model
+class Story extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
         'status'
@@ -67,5 +69,15 @@ class Story extends Model
     public function deadlines(): MorphToMany
     {
         return $this->morphToMany(Deadline::class, 'deadlineable');
+    }
+
+    /**
+     * Register a spatie media collection
+     * @return void
+     * @link https://spatie.be/docs/laravel-medialibrary/v9/working-with-media-collections/defining-media-collections
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('documents');
     }
 }
