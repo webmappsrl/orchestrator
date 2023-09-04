@@ -80,6 +80,15 @@ class Story extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
+            Text::make('Info', function () {
+                $storyProject = $this->project;
+                $storyProjectUrl = url('/resources/projects/' . $storyProject->id);
+                $storyPriority = StoryPriority::getCase($this->priority);
+                $storyStatus = $this->status;
+                $storyType = $this->type;
+                return '<a href="' . $storyProjectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . $storyProject->name . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . $storyPriority . '</span>' . ' <br> ' . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+            })->asHtml()
+                ->onlyOnIndex(),
             Select::make(('Status'), 'status')->options([
                 'new' => StoryStatus::New,
                 'progress' => StoryStatus::Progress,
@@ -111,11 +120,13 @@ class Story extends Resource
             })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
-                ->sortable(),
+                ->sortable()
+                ->hideFromIndex(),
             Status::make('Status')
                 ->loadingWhen(['status' => 'new'])
                 ->failedWhen(['status' => 'rejected'])
-                ->sortable(),
+                ->sortable()
+                ->onlyOnDetail(),
             Select::make(__('Type'), 'type')->options([
                 'Bug' => StoryType::Bug,
                 'Feature' => StoryType::Feature,
@@ -128,7 +139,8 @@ class Story extends Resource
                 return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
             })->asHtml()
                 ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->hideWhenUpdating()
+                ->onlyOnDetail(),
             //create a field to show all the name of deadlines and related customer name
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
@@ -203,25 +215,25 @@ class Story extends Resource
             Files::make('Documents', 'documents')
                 ->hideFromIndex(),
 
-            $testDev !== null ? Text::make('Test Dev', function () use ($testDev) {
+            $testDev !== null ? Text::make('DEV', function () use ($testDev) {
                 $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . '[X]' . '</a>';
                 return $testDevLink;
             })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating() :
-                Text::make('Test Dev', function () {
+                Text::make('DEV', function () {
                     return '';
                 })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
 
-            $testProd !== null ? Text::make('Test Prod', function () use ($testProd) {
+            $testProd !== null ? Text::make('PROD', function () use ($testProd) {
                 $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . '[X]' . '</a>';
                 return $testProdLink;
             })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating() :
-                Text::make('Test Prod', function () {
+                Text::make('PROD', function () {
                     return '';
                 })->asHtml()
                 ->hideWhenCreating()
