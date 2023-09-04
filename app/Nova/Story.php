@@ -325,11 +325,6 @@ class Story extends Resource
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
 
-            (new actions\ConvertStoryToEpic)
-                ->confirmText('Click on the "Confirm" button to convert the selected stories to epics or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
-                ->showInline(),
         ];
 
         if ($request->viaResource == 'projects') {
@@ -344,6 +339,11 @@ class Story extends Resource
         }
 
         if ($request->viaResource != 'projects') {
+            array_push($actions, (new actions\ConvertStoryToEpic)
+                ->confirmText('Click on the "Confirm" button to convert the selected stories to epics or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel')
+                ->showInline());
             array_push($actions, (new actions\moveToBacklogAction)
                 ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
@@ -370,29 +370,31 @@ class Story extends Resource
         return [
             Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
                 $epic = Epic::find($this->epic_id);
-                $stories = $epic->stories;
-                $stories = $stories->sortBy('id');
-                $stories = $stories->values();
+                if ($epic) {
+                    $stories = $epic->stories;
+                    $stories = $stories->sortBy('id');
+                    $stories = $stories->values();
 
-                $currentStoryIndex = $stories->search(function ($story) {
-                    return $story->id == $this->id;
-                });
+                    $currentStoryIndex = $stories->search(function ($story) {
+                        return $story->id == $this->id;
+                    });
 
-                $previousStory = $stories->get($currentStoryIndex - 1);
-                $nextStory = $stories->get($currentStoryIndex + 1);
+                    $previousStory = $stories->get($currentStoryIndex - 1);
+                    $nextStory = $stories->get($currentStoryIndex + 1);
 
-                $previousLink = '';
-                $nextLink = '';
+                    $previousLink = '';
+                    $nextLink = '';
 
-                if ($previousStory != null) {
-                    $previousLink = '<a href="/resources/stories/' . $previousStory->id . '" style="font-size: 30px;">⬅️</a>';
+                    if ($previousStory != null) {
+                        $previousLink = '<a href="/resources/stories/' . $previousStory->id . '" style="font-size: 30px;">⬅️</a>';
+                    }
+
+                    if ($nextStory != null) {
+                        $nextLink = '<a href="/resources/stories/' . $nextStory->id . '" style="font-size: 30px;">➡️</a>';
+                    }
+
+                    return $previousLink . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $nextLink;
                 }
-
-                if ($nextStory != null) {
-                    $nextLink = '<a href="/resources/stories/' . $nextStory->id . '" style="font-size: 30px;">➡️</a>';
-                }
-
-                return $previousLink . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $nextLink;
             }),
         ];
     }
