@@ -71,6 +71,7 @@ class Story extends Resource
         $testProd = $this->test_prod;
 
         return [
+            new Panel(__('Navigate to the next or previous story'), $this->navigationLinks()),
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable()
                 ->displayUsing(function ($name, $a, $b) {
@@ -350,5 +351,37 @@ class Story extends Resource
     public function indexBreadcrumb()
     {
         return null;
+    }
+
+    public function navigationLinks()
+    {
+        return [
+            Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
+                $epic = Epic::find($this->epic_id);
+                $stories = $epic->stories;
+                $stories = $stories->sortBy('id');
+                $stories = $stories->values();
+
+                $currentStoryIndex = $stories->search(function ($story) {
+                    return $story->id == $this->id;
+                });
+
+                $previousStory = $stories->get($currentStoryIndex - 1);
+                $nextStory = $stories->get($currentStoryIndex + 1);
+
+                $previousLink = '';
+                $nextLink = '';
+
+                if ($previousStory != null) {
+                    $previousLink = '<a href="/resources/stories/' . $previousStory->id . '" style="font-size: 30px;">⬅️</a>';
+                }
+
+                if ($nextStory != null) {
+                    $nextLink = '<a href="/resources/stories/' . $nextStory->id . '" style="font-size: 30px;">➡️</a>';
+                }
+
+                return $previousLink . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $nextLink;
+            }),
+        ];
     }
 }
