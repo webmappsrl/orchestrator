@@ -86,7 +86,7 @@ class Story extends Resource
                 $storyPriority = StoryPriority::getCase($this->priority);
                 $storyStatus = $this->status;
                 $storyType = $this->type;
-                return '<a href="' . $storyProjectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . $storyProject->name . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . $storyPriority . '</span>' . ' <br> ' . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+                return '<a href="' . $storyProjectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $storyProject->name . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
             })->asHtml()
                 ->onlyOnIndex(),
             Select::make(('Status'), 'status')->options([
