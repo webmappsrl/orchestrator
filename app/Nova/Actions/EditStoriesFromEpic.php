@@ -2,10 +2,11 @@
 
 namespace App\Nova\Actions;
 
-use App\Enums\DeadlineStatus;
 use App\Models\Project;
 use App\Models\Deadline;
 use App\Enums\StoryStatus;
+use App\Enums\StoryPriority;
+use App\Enums\DeadlineStatus;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Carbon;
 use Laravel\Nova\Fields\Select;
@@ -52,6 +53,9 @@ class EditStoriesFromEpic extends Action
             if (isset($fields['project'])) {
                 $model->project_id = $fields['project'];
             }
+            if (isset($fields['priority'])) {
+                $model->priority = $fields['priority'];
+            }
             $model->save();
         }
     }
@@ -93,7 +97,12 @@ class EditStoriesFromEpic extends Action
                 )->displayUsingLabels(),
             Select::make('Project')->options(Project::all()->pluck('name', 'id'))
                 ->displayUsingLabels()
-                ->searchable()
+                ->searchable(),
+            Select::make('Priority', 'priority')->options([
+                StoryPriority::Low->value => 'Low',
+                StoryPriority::Medium->value => 'Medium',
+                StoryPriority::High->value => 'High',
+            ])->default($this->priority ?? StoryPriority::Low->value),
         ];
     }
 
