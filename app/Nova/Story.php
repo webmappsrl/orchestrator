@@ -81,12 +81,19 @@ class Story extends Resource
                 })
                 ->asHtml(),
             Text::make('Info', function () {
-                $storyProject = $this->project;
-                $storyProjectUrl = url('/resources/projects/' . $storyProject->id);
+                $story = $this->resource;
+                if (!empty($story->epic_id)) {
+                    $epic = Epic::find($story->epic_id);
+                    $project = Project::find($epic->project_id);
+                } else {
+                    $project = Project::find($story->project_id);
+                }
+
+                $projectUrl = url('/resources/projects/' . $project->id);
                 $storyPriority = StoryPriority::getCase($this->priority);
                 $storyStatus = $this->status;
                 $storyType = $this->type;
-                return '<a href="' . $storyProjectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $storyProject->name . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+                return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $project->name . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
             })->asHtml()
                 ->onlyOnIndex(),
             Select::make(('Status'), 'status')->options([
