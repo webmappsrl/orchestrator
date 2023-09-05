@@ -26,6 +26,7 @@
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.12",
         "maatwebsite/excel": "^3.1",
+        "manogi/nova-tiptap": "^3.2",
         "outl1ne/nova-multiselect-field": "^4.2",
         "overtrue/laravel-favorite": "^5.1",
         "spatie/db-dumper": "^3.3",

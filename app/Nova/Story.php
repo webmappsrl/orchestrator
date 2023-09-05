@@ -71,6 +71,7 @@ class Story extends Resource
         $testProd = $this->test_prod;
 
         return [
+            new Panel(__('Navigate to the next or previous story'), $this->navigationLinks()),
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable()
                 ->displayUsing(function ($name, $a, $b) {
@@ -79,6 +80,15 @@ class Story extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
+            Text::make('Info', function () {
+                $storyProject = $this->project;
+                $storyProjectUrl = url('/resources/projects/' . $storyProject->id);
+                $storyPriority = StoryPriority::getCase($this->priority);
+                $storyStatus = $this->status;
+                $storyType = $this->type;
+                return '<a href="' . $storyProjectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $storyProject->name . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+            })->asHtml()
+                ->onlyOnIndex(),
             Select::make(('Status'), 'status')->options([
                 'new' => StoryStatus::New,
                 'progress' => StoryStatus::Progress,
@@ -110,11 +120,13 @@ class Story extends Resource
             })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
-                ->sortable(),
+                ->sortable()
+                ->hideFromIndex(),
             Status::make('Status')
                 ->loadingWhen(['status' => 'new'])
                 ->failedWhen(['status' => 'rejected'])
-                ->sortable(),
+                ->sortable()
+                ->onlyOnDetail(),
             Select::make(__('Type'), 'type')->options([
                 'Bug' => StoryType::Bug,
                 'Feature' => StoryType::Feature,
@@ -127,7 +139,8 @@ class Story extends Resource
                 return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
             })->asHtml()
                 ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->hideWhenUpdating()
+                ->onlyOnDetail(),
             //create a field to show all the name of deadlines and related customer name
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
@@ -202,25 +215,25 @@ class Story extends Resource
             Files::make('Documents', 'documents')
                 ->hideFromIndex(),
 
-            $testDev !== null ? Text::make('Test Dev', function () use ($testDev) {
+            $testDev !== null ? Text::make('DEV', function () use ($testDev) {
                 $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . '[X]' . '</a>';
                 return $testDevLink;
             })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating() :
-                Text::make('Test Dev', function () {
+                Text::make('DEV', function () {
                     return '';
                 })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
 
-            $testProd !== null ? Text::make('Test Prod', function () use ($testProd) {
+            $testProd !== null ? Text::make('PROD', function () use ($testProd) {
                 $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . '[X]' . '</a>';
                 return $testProdLink;
             })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating() :
-                Text::make('Test Prod', function () {
+                Text::make('PROD', function () {
                     return '';
                 })->asHtml()
                 ->hideWhenCreating()
@@ -312,11 +325,6 @@ class Story extends Resource
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
 
-            (new actions\ConvertStoryToEpic)
-                ->confirmText('Click on the "Confirm" button to convert the selected stories to epics or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
-                ->showInline(),
         ];
 
         if ($request->viaResource == 'projects') {
@@ -331,6 +339,11 @@ class Story extends Resource
         }
 
         if ($request->viaResource != 'projects') {
+            array_push($actions, (new actions\ConvertStoryToEpic)
+                ->confirmText('Click on the "Confirm" button to convert the selected stories to epics or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel')
+                ->showInline());
             array_push($actions, (new actions\moveToBacklogAction)
                 ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
@@ -350,5 +363,39 @@ class Story extends Resource
     public function indexBreadcrumb()
     {
         return null;
+    }
+
+    public function navigationLinks()
+    {
+        return [
+            Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
+                $epic = Epic::find($this->epic_id);
+                if ($epic) {
+                    $stories = $epic->stories;
+                    $stories = $stories->sortBy('id');
+                    $stories = $stories->values();
+
+                    $currentStoryIndex = $stories->search(function ($story) {
+                        return $story->id == $this->id;
+                    });
+
+                    $previousStory = $stories->get($currentStoryIndex - 1);
+                    $nextStory = $stories->get($currentStoryIndex + 1);
+
+                    $previousLink = '';
+                    $nextLink = '';
+
+                    if ($previousStory != null) {
+                        $previousLink = '<a href="/resources/stories/' . $previousStory->id . '" style="font-size: 30px;">⬅️</a>';
+                    }
+
+                    if ($nextStory != null) {
+                        $nextLink = '<a href="/resources/stories/' . $nextStory->id . '" style="font-size: 30px;">➡️</a>';
+                    }
+
+                    return $previousLink . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $nextLink;
+                }
+            }),
+        ];
     }
 }

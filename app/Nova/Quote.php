@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use Laravel\Nova\Panel;
+use Manogi\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -60,6 +61,39 @@ class Quote extends Resource
      */
     public function fields(NovaRequest $request)
     {
+        $allButtons = [
+            'heading',
+            '|',
+            'italic',
+            'bold',
+            '|',
+            'link',
+            'code',
+            'strike',
+            'underline',
+            'highlight',
+            '|',
+            'bulletList',
+            'orderedList',
+            'br',
+            'codeBlock',
+            'blockquote',
+            '|',
+            'horizontalRule',
+            'hardBreak',
+            '|',
+            'table',
+            '|',
+            'image',
+            '|',
+            'textAlign',
+            '|',
+            'rtl',
+            '|',
+            'history',
+            '|',
+            'editHtml',
+        ];
         return [
             ID::make()->sortable(),
             Text::make('Title')
@@ -172,17 +206,21 @@ class Quote extends Resource
                 ->asHtml()
                 ->exceptOnForms(),
 
-            Trix::make('Additional Info', 'additional_info')
-                ->hideFromIndex(),
+            Tiptap::make('Additional Info', 'additional_info')
+                ->hideFromIndex()
+                ->buttons($allButtons),
 
-            Trix::make('Delivery Time', 'delivery_time')
-                ->hideFromIndex(),
+            Tiptap::make('Delivery Time', 'delivery_time')
+                ->hideFromIndex()
+                ->buttons($allButtons),
 
-            Trix::make('Payment Plan', 'payment_plan')
-                ->hideFromIndex(),
+            Tiptap::make('Payment Plan', 'payment_plan')
+                ->hideFromIndex()
+                ->buttons($allButtons),
 
-            Textarea::make('Billing Plan', 'billing_plan')
-                ->hideFromIndex(),
+            Tiptap::make('Billing Plan', 'billing_plan')
+                ->hideFromIndex()
+                ->buttons($allButtons),
 
             Files::make('Documents', 'documents')
                 ->hideFromIndex(),
