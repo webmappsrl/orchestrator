@@ -176,10 +176,13 @@ class Quote extends Resource
                 }),
             KeyValue::make('Additional Services', 'additional_services')
                 ->hideFromIndex()
-                ->rules('json')
+                ->rules(['json', function ($attribute, $value, $fail) {
+                    if (strpos($value, ',') !== false) {
+                        $fail('The price field cannot contain commas. Use "." as decimal separator.');
+                    }
+                }])
                 ->keyLabel('Description')
-                ->valueLabel('Price (€)')
-                ->help('Add additional services to the quote. The price must be with "." as decimal separator. (Example: 100.00)'),
+                ->valueLabel('Price (€)'),
             Currency::make('Additional Services Total Price')
                 ->currency('EUR')
                 ->locale('it')
