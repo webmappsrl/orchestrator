@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\Quote;
 use App\Enums\UserRole;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Nova\Auth\Impersonatable;
@@ -68,6 +69,11 @@ class User extends Authenticatable
     public function epics()
     {
         return $this->hasMany(Epic::class);
+    }
+
+    public function quotes()
+    {
+        return $this->hasMany(Quote::class);
     }
 
     /**

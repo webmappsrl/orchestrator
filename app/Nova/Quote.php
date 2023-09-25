@@ -139,6 +139,10 @@ class Quote extends Resource
                 ];
             })
                 ->searchable(),
+            BelongsTo::make('Owner', 'user', User::class)
+                ->searchable()
+                ->filterable()
+                ->nullable(),
             Currency::make('Products')
                 ->currency('EUR')
                 ->locale('it')
@@ -253,7 +257,7 @@ class Quote extends Resource
     public function filters(NovaRequest $request)
     {
         return [
-            (new QuoteStatusFilter)
+            (new QuoteStatusFilter),
         ];
     }
 

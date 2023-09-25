@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\RecurringProduct;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\MediaLibrary\HasMedia;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Quote extends Model implements HasMedia
 {
@@ -45,6 +46,11 @@ class Quote extends Model implements HasMedia
     public function recurringProducts()
     {
         return $this->belongsToMany(RecurringProduct::class)->withPivot('quantity');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**
