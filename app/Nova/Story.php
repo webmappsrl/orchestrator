@@ -22,6 +22,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use Manogi\Tiptap\Tiptap;
 
 class Story extends Resource
 {
@@ -69,6 +70,40 @@ class Story extends Resource
     {
         $testDev = $this->test_dev;
         $testProd = $this->test_prod;
+
+        $tiptapAllButtons = $allButtons = [
+            'heading',
+            '|',
+            'italic',
+            'bold',
+            '|',
+            'link',
+            'code',
+            'strike',
+            'underline',
+            'highlight',
+            '|',
+            'bulletList',
+            'orderedList',
+            'br',
+            'codeBlock',
+            'blockquote',
+            '|',
+            'horizontalRule',
+            'hardBreak',
+            '|',
+            'table',
+            '|',
+            'image',
+            '|',
+            'textAlign',
+            '|',
+            'rtl',
+            '|',
+            'history',
+            '|',
+            'editHtml',
+        ];
 
         return [
             new Panel(__('Navigate to the next or previous story'), $this->navigationLinks()),
@@ -159,9 +194,9 @@ class Story extends Resource
                 }
                 return $deadlineName ?? '';
             })->asHtml()->onlyOnIndex(),
-            MarkdownTui::make(__('Description'), 'description')
+            Tiptap::make(__('Description'), 'description')
                 ->hideFromIndex()
-                ->initialEditType(EditorType::MARKDOWN),
+                ->buttons($tiptapAllButtons),
             Textarea::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
                 ->alwaysShow(),

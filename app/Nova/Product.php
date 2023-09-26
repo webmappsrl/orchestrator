@@ -26,6 +26,8 @@ class Product extends Resource
      */
     public static $title = 'name';
 
+    public static $perPageViaRelationship = 20;
+
     public function title()
     {
         return $this->name . ' - ' . $this->price . '€';

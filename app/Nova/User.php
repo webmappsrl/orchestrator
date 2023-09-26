@@ -78,6 +78,7 @@ class User extends Resource
 
             HasMany::make('Epics'),
             HasMany::make('Stories'),
+            HasMany::make('Quotes'),
             Text::make('Favorite Projects', function () {
                 $projects = [];
                 $userFavorites = $this->getFavoriteItems(Project::class)->get();
