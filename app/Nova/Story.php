@@ -196,7 +196,8 @@ class Story extends Resource
             })->asHtml()->onlyOnIndex(),
             Tiptap::make(__('Description'), 'description')
                 ->hideFromIndex()
-                ->buttons($tiptapAllButtons),
+                ->buttons($tiptapAllButtons)
+                ->alwaysShow(),
             Textarea::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
                 ->alwaysShow(),
