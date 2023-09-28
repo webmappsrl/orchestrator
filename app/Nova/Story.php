@@ -314,7 +314,8 @@ class Story extends Resource
         return [
             new filters\UserFilter,
             new filters\StoryStatusFilter,
-            new filters\StoryTypeFilter
+            new filters\StoryTypeFilter,
+            new filters\StoryPriorityFilter,
         ];
     }
 

@@ -2,11 +2,11 @@
 
 namespace App\Nova\Filters;
 
-use App\Enums\StoryType;
+use App\Enums\StoryPriority;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class StoryTypeFilter extends Filter
+class StoryPriorityFilter extends Filter
 {
     /**
      * The filter's component.
@@ -15,8 +15,7 @@ class StoryTypeFilter extends Filter
      */
     public $component = 'select-filter';
 
-    public $name = 'Type';
-
+    public $name = 'Priority';
     /**
      * Apply the filter to the given query.
      *
@@ -27,7 +26,7 @@ class StoryTypeFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-        return $query->where('type', $value);
+        return $query->wherePriority($value);
     }
 
     /**
@@ -38,6 +37,6 @@ class StoryTypeFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return collect(StoryType::cases());
+        return ['Low' => StoryPriority::Low, 'Medium' => StoryPriority::Medium, 'High' => StoryPriority::High];
     }
 }
