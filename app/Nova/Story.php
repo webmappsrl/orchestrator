@@ -124,11 +124,17 @@ class Story extends Resource
                     $project = Project::find($story->project_id);
                 }
 
-                $projectUrl = url('/resources/projects/' . $project->id);
+                if ($project) {
+                    $projectUrl = url('/resources/projects/' . $project->id);
+                    $projectName = $project->name;
+                } else {
+                    $projectUrl = '';
+                    $projectName = '';
+                }
                 $storyPriority = StoryPriority::getCase($this->priority);
                 $storyStatus = $this->status;
                 $storyType = $this->type;
-                return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $project->name . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+                return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
             })->asHtml()
                 ->onlyOnIndex(),
             Select::make(('Status'), 'status')->options([

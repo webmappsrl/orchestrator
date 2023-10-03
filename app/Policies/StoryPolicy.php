@@ -13,7 +13,7 @@ class StoryPolicy
 
     public function before(User $user)
     {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer) || $user->hasRole(UserRole::Customer);
     }
 
     /**
@@ -24,7 +24,7 @@ class StoryPolicy
      */
     public function viewAny(User $user)
     {
-       //
+        //
     }
 
     /**
