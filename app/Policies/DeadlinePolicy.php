@@ -2,15 +2,16 @@
 
 namespace App\Policies;
 
-use App\Models\Deadline;
 use App\Models\User;
+use App\Enums\UserRole;
+use App\Models\Deadline;
 use Illuminate\Auth\Access\Response;
 
 class DeadlinePolicy
 {
-    public function before()
+    public function before(User $user)
     {
-        return true;
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
     /**
      * Determine whether the user can view any models.

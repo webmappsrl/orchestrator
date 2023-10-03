@@ -4,6 +4,7 @@ namespace App\Nova\Actions;
 
 use App\Models\User;
 use App\Models\Story;
+use App\Enums\UserRole;
 use App\Enums\StoryType;
 use App\Models\Deadline;
 use App\Enums\StoryStatus;
@@ -71,7 +72,8 @@ class addStoriesToBacklogAction extends Action
 
         //associate the stories to the deadlines
         foreach ($stories as $story) {
-            $story->deadlines()->attach($deadlines, ['deadlineable_type' => Story::class]);
+            if ($deadlines != null)
+                $story->deadlines()->attach($deadlines, ['deadlineable_type' => Story::class]);
         }
 
         //associate the stories to the backlog stories of the current project
@@ -83,6 +85,7 @@ class addStoriesToBacklogAction extends Action
 
     public function fields(NovaRequest $request)
     {
+        $isCustomer = $request->user()->hasRole(UserRole::Customer);
         return [
             Select::make('User')
                 ->options(User::all()->pluck('name', 'id'))
@@ -93,9 +96,9 @@ class addStoriesToBacklogAction extends Action
                 ->default(StoryType::Feature->value)
                 ->displayUsingLabels(),
 
-            Textarea::make('Text Stories'),
 
-            MultiSelect::make('Deadlines')
+            !$isCustomer ?
+                MultiSelect::make('Deadlines')
                 ->options(
                     function () {
                         $deadlines = Deadline::whereNotIn('status', [DeadlineStatus::Expired, DeadlineStatus::Done])->get();
@@ -117,7 +120,8 @@ class addStoriesToBacklogAction extends Action
                         }
                         return $options;
                     }
-                )->displayUsingLabels(),
+                )->displayUsingLabels() :
+                Textarea::make('Text Stories'),
         ];
     }
 }

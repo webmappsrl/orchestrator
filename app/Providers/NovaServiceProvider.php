@@ -80,7 +80,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('ACTIONS', [
                     MenuItem::link('Create a new story', '/resources/stories/new'),
-                ])->icon('pencil')->collapsable(),
+                ])->icon('pencil')->collapsable()->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                }),
             ];
         });
 

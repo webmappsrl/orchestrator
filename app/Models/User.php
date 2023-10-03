@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Quote;
 use App\Enums\UserRole;
+use App\Models\Project;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Nova\Auth\Impersonatable;
 use Illuminate\Notifications\Notifiable;
@@ -74,6 +75,11 @@ class User extends Authenticatable
     public function quotes()
     {
         return $this->hasMany(Quote::class);
+    }
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
     }
 
     /**

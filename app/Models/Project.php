@@ -44,6 +44,10 @@ class Project extends Model implements HasMedia
         return $this->hasMany(Story::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
     /**
      * Returns only the stories that are not in some epic(backlog stories)
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
