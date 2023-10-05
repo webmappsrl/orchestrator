@@ -11,10 +11,6 @@ class StoryPolicy
 {
     use HandlesAuthorization;
 
-    public function before(User $user)
-    {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer) || $user->hasRole(UserRole::Customer);
-    }
 
     /**
      * Determine whether the user can view any models.
@@ -24,7 +20,7 @@ class StoryPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        return true;
     }
 
     /**
@@ -36,7 +32,7 @@ class StoryPolicy
      */
     public function view(User $user, Story $story)
     {
-        //
+        return true;
     }
 
     /**
@@ -47,7 +43,7 @@ class StoryPolicy
      */
     public function create(User $user)
     {
-        //
+        return true;
     }
 
     /**
@@ -59,7 +55,7 @@ class StoryPolicy
      */
     public function update(User $user, Story $story)
     {
-        //
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -71,7 +67,7 @@ class StoryPolicy
      */
     public function delete(User $user, Story $story)
     {
-        //
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -83,7 +79,7 @@ class StoryPolicy
      */
     public function restore(User $user, Story $story)
     {
-        //
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -95,6 +91,6 @@ class StoryPolicy
      */
     public function forceDelete(User $user, Story $story)
     {
-        //
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
     }
 }

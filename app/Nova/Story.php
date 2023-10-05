@@ -10,6 +10,7 @@ use App\Enums\StoryType;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use App\Enums\StoryPriority;
+use App\Enums\UserRole;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -57,6 +58,13 @@ class Story extends Resource
     public static $search = [
         'id', 'name', 'description'
     ];
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        if ($request->user()->hasRole(UserRole::Customer)) {
+            return $query->where('user_id', $request->user()->id);
+        } else return $query;
+    }
 
 
 

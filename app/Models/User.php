@@ -97,4 +97,26 @@ class User extends Authenticatable
     {
         return true;
     }
+
+    /**
+     * define if user has breadcrumbs
+     * @return boolean
+     */
+    public function wantsBreadcrumbs(): bool
+    {
+        return !$this->hasRole(UserRole::Customer);
+    }
+
+    /**
+     * Define the initial nova path for the logged user
+     * @return string
+     */
+    public function initialPath(): string
+    {
+        if ($this->hasRole(UserRole::Customer)) {
+            return '/resources/stories';
+        } else {
+            return '/dashboard/main';
+        }
+    }
 }
