@@ -62,7 +62,7 @@ class Story extends Resource
     public static function indexQuery(NovaRequest $request, $query)
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
-            return $query->where('user_id', $request->user()->id);
+            return $query->where('creator_id', $request->user()->id);
         } else return $query;
     }
 
@@ -220,6 +220,9 @@ class Story extends Resource
                     $epic = Epic::find($request->input('viaResourceId'));
                     return $epic ? $epic->user_id : null;
                 }),
+
+            BelongsTo::make('Customer', 'creator', 'App\Nova\User')
+                ->onlyOnDetail(),
             BelongsTo::make('Epic')
                 ->nullable()
                 ->default(function ($request) {
@@ -455,5 +458,11 @@ class Story extends Resource
                 }
             }),
         ];
+    }
+
+    public static function afterCreate(NovaRequest $request, $model)
+    {
+        $model->creator_id = $request->user()->id;
+        $model->save();
     }
 }

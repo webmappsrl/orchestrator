@@ -15,7 +15,8 @@ class Story extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
-        'status'
+        'status',
+        'creator_id',
     ];
     public function parent()
     {
@@ -49,6 +50,10 @@ class Story extends Model implements HasMedia
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function project()
