@@ -165,10 +165,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     public function register()
     {
-
-        // Nova::initialPath(function (Request $request) {
-        //     return $request->user()->initialPath();
-        // });
+        Nova::initialPath(function (Request $request) {
+            if (!$request->user() == null) {
+                $user = $request->user();
+                if ($user->hasRole(UserRole::Customer)) {
+                    return $user->initialPath();
+                }
+            }
+        });
     }
 
     //create a footer

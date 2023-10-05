@@ -50,14 +50,6 @@ class Project extends Resource
         'id', 'name', 'description', 'customer.name'
     ];
 
-    public static function indexQuery(NovaRequest $request, $query)
-    {
-        if ($request->user()->hasRole(UserRole::Customer)) {
-            return $query->where('user_id', $request->user()->id);
-        }
-        return $query;
-    }
-
     /**
      * Get the fields displayed by the resource.
      *
@@ -139,9 +131,6 @@ class Project extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        // return [
-        //     new filters\CustomerFilter,  //this filter is no longer needed because we have a BelongsTo field for the customer with the built in option filterable()
-        // ];
         return [];
     }
 
