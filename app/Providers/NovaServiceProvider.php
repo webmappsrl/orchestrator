@@ -7,6 +7,7 @@ use App\Nova\Epic;
 use App\Nova\User;
 use App\Nova\Layer;
 use App\Nova\Quote;
+use App\Nova\Story;
 use App\Nova\NewEpic;
 use App\Nova\Product;
 use App\Nova\Project;
@@ -20,9 +21,9 @@ use App\Nova\Milestone;
 use App\Nova\ProjectEpic;
 use App\Nova\ProgressEpic;
 use App\Nova\RejectedEpic;
-use App\Nova\RecurringProduct;
-use App\Nova\Story;
+use App\Nova\CustomerStory;
 use Illuminate\Http\Request;
+use App\Nova\RecurringProduct;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Dashboards\Main;
 use Laravel\Nova\Menu\MenuSection;
@@ -69,7 +70,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
                     MenuItem::resource(Quote::class),
-                    MenuItem::resource(Deadline::class)
+                    MenuItem::resource(Deadline::class),
+                    MenuItem::resource(CustomerStory::class)->canSee(function ($request) {
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                    }),
                 ])->icon('users')->collapsable(),
 
                 MenuSection::make('DEV', [
