@@ -75,9 +75,6 @@ class Project extends Resource
                 BelongsTo::make('Customer')
                     ->filterable()
                     ->searchable(),
-                BelongsTo::make('Customer', 'user', User::class)
-                    ->filterable()
-                    ->searchable(),
                 Text::make('SAL', function () {
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),

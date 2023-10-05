@@ -77,11 +77,6 @@ class User extends Authenticatable
         return $this->hasMany(Quote::class);
     }
 
-    public function projects()
-    {
-        return $this->hasMany(Project::class);
-    }
-
     /**
      * Determine if the user can impersonate another user.
      *
