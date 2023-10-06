@@ -294,12 +294,18 @@ class Story extends Resource
                 return $testDevLink;
             })->asHtml()
                 ->hideWhenCreating()
-                ->hideWhenUpdating() :
+                ->hideWhenUpdating()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }) :
                 Text::make('DEV', function () {
                     return '';
                 })->asHtml()
                 ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->hideWhenUpdating()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
 
             $testProd !== null ? Text::make('PROD', function () use ($testProd) {
                 $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . '[X]' . '</a>';
@@ -317,7 +323,10 @@ class Story extends Resource
             Text::make('Test Dev', 'test_dev')
                 ->rules('nullable', 'url:http,https')
                 ->onlyOnForms()
-                ->help('Url must start with http or https'),
+                ->help('Url must start with http or https')
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Text::make('Test Prod', 'test_prod')
                 ->rules('nullable', 'url:http,https')
                 ->onlyOnForms()
@@ -480,6 +489,9 @@ class Story extends Resource
     public static function afterCreate(NovaRequest $request, $model)
     {
         $model->creator_id = $request->user()->id;
+        if ($request->user()->hasRole(UserRole::Customer)) {
+            $model->priority = StoryPriority::Medium->value;
+        }
         $model->save();
     }
 }
