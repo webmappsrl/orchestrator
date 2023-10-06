@@ -80,7 +80,6 @@ class User extends Resource
             HasMany::make('Epics'),
             HasMany::make('Stories'),
             HasMany::make('Quotes'),
-            HasMany::make('Customer of', 'projects', NovaProject::class),
             Text::make('Favorite Projects', function () {
                 $projects = [];
                 $userFavorites = $this->getFavoriteItems(Project::class)->get();
@@ -89,17 +88,6 @@ class User extends Resource
                 }
                 return implode('|', $projects);
             })->asHtml()->onlyOnDetail(),
-
-            Text::make('Customer of: ', function () {
-                $projects = [];
-                $userProjects = $this->projects;
-                foreach ($userProjects as $project) {
-                    $projects[] = '<a href="/resources/projects/' . $project->id . '" style="color:green; font-weight:bold; margin: 0 5px">' . $project->name . '</a>';
-                }
-                return implode('|', $projects);
-            })->asHtml()->onlyOnDetail()
-
-
         ];
     }
 

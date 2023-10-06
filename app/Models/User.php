@@ -77,11 +77,6 @@ class User extends Authenticatable
         return $this->hasMany(Quote::class);
     }
 
-    public function projects()
-    {
-        return $this->hasMany(Project::class);
-    }
-
     /**
      * Determine if the user can impersonate another user.
      *
@@ -101,5 +96,27 @@ class User extends Authenticatable
     public function canBeImpersonated()
     {
         return true;
+    }
+
+    /**
+     * define if user has breadcrumbs
+     * @return boolean
+     */
+    public function wantsBreadcrumbs(): bool
+    {
+        return !$this->hasRole(UserRole::Customer);
+    }
+
+    /**
+     * Define the initial nova path for the logged user
+     * @return string
+     */
+    public function initialPath(): string
+    {
+        if ($this->hasRole(UserRole::Customer)) {
+            return '/resources/stories';
+        } else {
+            return '/dashboard/main';
+        }
     }
 }

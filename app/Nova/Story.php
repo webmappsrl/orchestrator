@@ -10,6 +10,7 @@ use App\Enums\StoryType;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use App\Enums\StoryPriority;
+use App\Enums\UserRole;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -57,6 +58,13 @@ class Story extends Resource
     public static $search = [
         'id', 'name', 'description'
     ];
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        if ($request->user()->hasRole(UserRole::Customer)) {
+            return $query->where('creator_id', $request->user()->id);
+        } else return $query;
+    }
 
 
 
@@ -144,13 +152,18 @@ class Story extends Resource
                 'testing' => StoryStatus::Test,
                 'rejected' => StoryStatus::Rejected,
             ])->onlyOnForms()
-                ->default('new'),
+                ->default('new')->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Select::make('Priority', 'priority')->options([
                 StoryPriority::Low->value => 'Low',
                 StoryPriority::Medium->value => 'Medium',
                 StoryPriority::High->value => 'High',
             ])->onlyOnForms()
-                ->default($this->priority ?? StoryPriority::Low->value),
+                ->default($this->priority ?? StoryPriority::High->value)
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Text::make('Priority')->displayUsing(function () {
                 $color = 'red';
                 $priority = '';
@@ -181,7 +194,6 @@ class Story extends Resource
             ])->onlyOnForms()
                 ->default('Feature'),
             Text::make('Type', function () {
-                // color the type of the story and make it bold
                 $type = $this->type;
                 $color = 'blue';
                 return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
@@ -203,7 +215,10 @@ class Story extends Resource
             Tiptap::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->buttons($tiptapAllButtons)
-                ->alwaysShow(),
+                ->alwaysShow()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Textarea::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
                 ->alwaysShow(),
@@ -211,7 +226,12 @@ class Story extends Resource
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
                     return $epic ? $epic->user_id : null;
+                })->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
                 }),
+
+            BelongsTo::make('Customer', 'creator', 'App\Nova\User')
+                ->onlyOnDetail(),
             BelongsTo::make('Epic')
                 ->nullable()
                 ->default(function ($request) {
@@ -232,7 +252,10 @@ class Story extends Resource
                         return null;
                     }
                 })
-                ->hideFromIndex(),
+                ->hideFromIndex()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             BelongsTo::make('Project')
                 ->default(function ($request) {
                     //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
@@ -252,9 +275,11 @@ class Story extends Resource
                 })
                 ->searchable()
                 ->nullable()
-                ->hideFromIndex(),
+                ->hideFromIndex()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             MorphToMany::make('Deadlines'),
-            //add a panel to show the related epic description
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
                     ->hideFromIndex()
@@ -345,6 +370,9 @@ class Story extends Resource
      */
     public function actions(NovaRequest $request)
     {
+        if ($request->user()->hasRole(UserRole::Customer)) {
+            return [];
+        }
         $actions = [
             (new actions\EditStoriesFromEpic)
                 ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
@@ -447,5 +475,11 @@ class Story extends Resource
                 }
             }),
         ];
+    }
+
+    public static function afterCreate(NovaRequest $request, $model)
+    {
+        $model->creator_id = $request->user()->id;
+        $model->save();
     }
 }

@@ -11,10 +11,10 @@ class ProjectPolicy
 {
     use HandlesAuthorization;
 
-    // public function before(User $user)
-    // {
-    //     return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
-    // }
+    public function before(User $user)
+    {
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
+    }
 
     /**
      * Determine whether the user can view any models.
@@ -24,8 +24,6 @@ class ProjectPolicy
      */
     public function viewAny(User $user)
     {
-        return
-            true;
     }
 
     /**
@@ -37,11 +35,6 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project)
     {
-        if ($user->hasRole(UserRole::Customer)) {
-            return $user->id === $project->user_id;
-        }
-        return
-            $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -52,7 +45,6 @@ class ProjectPolicy
      */
     public function create(User $user)
     {
-        return   $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -64,8 +56,6 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project)
     {
-        return
-            $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer) || $user->id === $project->user_id;
     }
 
     /**
@@ -77,8 +67,6 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project)
     {
-        return
-            $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -90,8 +78,6 @@ class ProjectPolicy
      */
     public function restore(User $user, Project $project)
     {
-        return
-            $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -103,7 +89,5 @@ class ProjectPolicy
      */
     public function forceDelete(User $user, Project $project)
     {
-        return
-            $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 }
