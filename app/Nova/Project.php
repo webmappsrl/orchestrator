@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Nova\User;
 use App\Enums\UserRole;
 use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
@@ -66,7 +67,6 @@ class Project extends Resource
                 BelongsTo::make('Customer')
                     ->filterable()
                     ->searchable(),
-                //add a column to display the SAL of all epics in this milestone
                 Text::make('SAL', function () {
                     return $this->wip();
                 })->hideWhenCreating()->hideWhenUpdating(),
@@ -131,9 +131,6 @@ class Project extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        // return [
-        //     new filters\CustomerFilter,  //this filter is no longer needed because we have a BelongsTo field for the customer with the built in option filterable()
-        // ];
         return [];
     }
 
@@ -168,7 +165,12 @@ class Project extends Resource
                 ->showOnDetail()
                 ->showInline()
                 ->confirmButtonText('Add to favorites')
-                ->cancelButtonText('Cancel'),
+                ->cancelButtonText('Cancel')
+                ->canSee(
+                    function ($request) {
+                        return !$request->user()->hasRole(UserRole::Customer);
+                    }
+                ),
 
             (new RemoveProjectsFromFavoritesAction)
                 ->showOnDetail()
@@ -177,7 +179,7 @@ class Project extends Resource
                 ->cancelButtonText('Cancel')
                 ->canSee(
                     function ($request) {
-                        return !$request->user()->hasRole(UserRole::Admin);
+                        return !$request->user()->hasRole(UserRole::Admin) && !$request->user()->hasRole(UserRole::Customer);
                     }
                 )
 

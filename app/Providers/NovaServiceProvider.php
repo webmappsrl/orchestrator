@@ -7,19 +7,21 @@ use App\Nova\Epic;
 use App\Nova\User;
 use App\Nova\Layer;
 use App\Nova\Quote;
+use App\Nova\Story;
 use App\Nova\NewEpic;
 use App\Nova\Product;
 use App\Nova\Project;
 use App\Nova\Customer;
+use App\Nova\Deadline;
 use App\Nova\DoneEpic;
 use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
-use App\Nova\Deadline;
 use App\Nova\Milestone;
 use App\Nova\ProjectEpic;
 use App\Nova\ProgressEpic;
 use App\Nova\RejectedEpic;
+use App\Nova\CustomerStory;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
 use Laravel\Nova\Menu\MenuItem;
@@ -27,6 +29,7 @@ use Laravel\Nova\Dashboards\Main;
 use Laravel\Nova\Menu\MenuSection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -38,16 +41,19 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     public function boot()
     {
-        $createStoryUrl = 'stories/new';
         parent::boot();
+        Nova::withBreadcrumbs(true);
+
+
 
         Nova::style('nova-custom', public_path('/nova-custom.css'));
 
-        Nova::withBreadcrumbs(true);
 
         Nova::mainMenu(function (Request $request) {
             return [
-                MenuSection::dashboard(Main::class)->icon('chart-bar'),
+                MenuSection::dashboard(Main::class)->icon('chart-bar')->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                }),
 
                 MenuSection::make('ADMIN', [
                     MenuItem::resource(User::class),
@@ -64,7 +70,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
                     MenuItem::resource(Quote::class),
-                    MenuItem::resource(Deadline::class)
+                    MenuItem::resource(Deadline::class),
+                    MenuItem::resource(CustomerStory::class)->canSee(function ($request) {
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                    }),
                 ])->icon('users')->collapsable(),
 
                 MenuSection::make('DEV', [
@@ -77,6 +86,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(DoneEpic::class),
                     MenuItem::resource(RejectedEpic::class),
                 ])->icon('code')->collapsable(),
+
+                MenuSection::make('CUSTOMER', [
+                    MenuItem::resource(Story::class)
+                ])->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Customer);
+                })->icon('at-symbol')->collapsable(),
 
                 MenuSection::make('ACTIONS', [
                     MenuItem::link('Create a new story', '/resources/stories/new'),
@@ -114,11 +129,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             $userIsEditor = $user->hasRole(UserRole::Editor);
             $userIsDeveloper = $user->hasRole(UserRole::Developer);
             $userIsManager = $user->hasRole(UserRole::Manager);
+            $userIsCustomer = $user->hasRole(UserRole::Customer);
             $isInDevelopment = env('APP_ENV') == 'develop';
             $isInProduction = env('APP_ENV') == 'production';
 
             if ($isInDevelopment || $isInProduction) {
-                return $userIsAdmin && $userIsEditor && $userIsDeveloper && $userIsManager;
+                return $userIsAdmin && $userIsEditor && $userIsDeveloper && $userIsManager && $userIsCustomer;
             }
             return true;
         });
@@ -153,7 +169,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     public function register()
     {
-        //
+        Nova::initialPath(function (Request $request) {
+            if (!$request->user() == null) {
+                $user = $request->user();
+                if ($user->hasRole(UserRole::Customer)) {
+                    return $user->initialPath();
+                }
+            }
+        });
     }
 
     //create a footer

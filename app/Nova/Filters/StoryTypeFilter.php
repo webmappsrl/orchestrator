@@ -15,6 +15,8 @@ class StoryTypeFilter extends Filter
      */
     public $component = 'select-filter';
 
+    public $name = 'Type';
+
     /**
      * Apply the filter to the given query.
      *

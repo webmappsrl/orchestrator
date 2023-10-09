@@ -15,6 +15,8 @@ class StoryStatusFilter extends Filter
      */
     public $component = 'select-filter';
 
+    public $name  = 'Status';
+
     /**
      * Apply the filter to the given query.
      *
@@ -41,10 +43,5 @@ class StoryStatusFilter extends Filter
             $options[$value->name] = $value->value;
         }
         return $options;
-    }
-
-    public function name()
-    {
-        return 'Story Status';
     }
 }

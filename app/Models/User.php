@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Quote;
 use App\Enums\UserRole;
+use App\Models\Project;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Nova\Auth\Impersonatable;
 use Illuminate\Notifications\Notifiable;
@@ -95,5 +96,27 @@ class User extends Authenticatable
     public function canBeImpersonated()
     {
         return true;
+    }
+
+    /**
+     * define if user has breadcrumbs
+     * @return boolean
+     */
+    public function wantsBreadcrumbs(): bool
+    {
+        return !$this->hasRole(UserRole::Customer);
+    }
+
+    /**
+     * Define the initial nova path for the logged user
+     * @return string
+     */
+    public function initialPath(): string
+    {
+        if ($this->hasRole(UserRole::Customer)) {
+            return '/resources/stories';
+        } else {
+            return '/dashboard/main';
+        }
     }
 }

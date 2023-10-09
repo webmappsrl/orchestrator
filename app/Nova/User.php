@@ -4,21 +4,23 @@ namespace App\Nova;
 
 use App\Enums\UserRole;
 use App\Models\Project;
-use App\Nova\Actions\AdminAddFavoriteProjectsAction;
-use App\Nova\Actions\AdminRemoveFavoriteProjects;
-use App\Nova\Actions\AdminRemoveFavoriteProjectsAction;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rules;
-use Laravel\Nova\Fields\BelongsToMany;
-use Laravel\Nova\Fields\Gravatar;
-use Laravel\Nova\Fields\HasMany;
+use App\Nova\Project as NovaProject;
 use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\MultiSelect;
-use Laravel\Nova\Fields\Password;
-use Laravel\Nova\Fields\Select;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Fields\Select;
+use Illuminate\Validation\Rules;
+use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\Gravatar;
+use Laravel\Nova\Fields\Password;
+use Laravel\Nova\Fields\MultiSelect;
+use Laravel\Nova\Fields\BelongsToMany;
 use Overtrue\LaravelFavorite\Favorite;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\AdminRemoveFavoriteProjects;
+use App\Nova\Actions\AdminAddFavoriteProjectsAction;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Nova\Actions\AdminRemoveFavoriteProjectsAction;
 
 class User extends Resource
 {
@@ -67,8 +69,7 @@ class User extends Resource
                 ->rules('required', 'email', 'max:254')
                 ->creationRules('unique:users,email')
                 ->updateRules('unique:users,email,{{resourceId}}'),
-            //Creates a multi-select field for 'Roles' with options populated from the UserRole::cases() method.
-            //The options are in the form of a key-value pair, with the 'name' attribute being used as the visible text and the 'value' attribute being used as the value of each option.
+
             MultiSelect::make('Roles')->options(collect(UserRole::cases())->pluck('name', 'value')),
 
             Password::make('Password')

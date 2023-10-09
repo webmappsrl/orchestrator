@@ -27,7 +27,6 @@ class DuplicateQuote extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         foreach ($models as $quote) {
-            $debug = $quote->toArray();
             //create a new quote that takes all the fields from the old quote
             $newQuote = Quote::create($quote->toArray());
             //add the new quote to the same client
@@ -36,6 +35,7 @@ class DuplicateQuote extends Action
             $newQuote->products()->attach($quote->products);
             //add recurring products to the new quote
             $newQuote->recurringProducts()->attach($quote->recurringProducts);
+            $newQuote->user()->associate($quote->user);
             //save the new quote
             $newQuote->save();
         }

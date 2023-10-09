@@ -10,6 +10,7 @@ use App\Enums\StoryType;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use App\Enums\StoryPriority;
+use App\Enums\UserRole;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -57,6 +58,13 @@ class Story extends Resource
     public static $search = [
         'id', 'name', 'description'
     ];
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        if ($request->user()->hasRole(UserRole::Customer)) {
+            return $query->where('creator_id', $request->user()->id);
+        } else return $query;
+    }
 
 
 
@@ -124,11 +132,17 @@ class Story extends Resource
                     $project = Project::find($story->project_id);
                 }
 
-                $projectUrl = url('/resources/projects/' . $project->id);
+                if ($project) {
+                    $projectUrl = url('/resources/projects/' . $project->id);
+                    $projectName = $project->name;
+                } else {
+                    $projectUrl = '';
+                    $projectName = '';
+                }
                 $storyPriority = StoryPriority::getCase($this->priority);
                 $storyStatus = $this->status;
                 $storyType = $this->type;
-                return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $project->name . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+                return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
             })->asHtml()
                 ->onlyOnIndex(),
             Select::make(('Status'), 'status')->options([
@@ -138,13 +152,18 @@ class Story extends Resource
                 'testing' => StoryStatus::Test,
                 'rejected' => StoryStatus::Rejected,
             ])->onlyOnForms()
-                ->default('new'),
+                ->default('new')->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Select::make('Priority', 'priority')->options([
                 StoryPriority::Low->value => 'Low',
                 StoryPriority::Medium->value => 'Medium',
                 StoryPriority::High->value => 'High',
             ])->onlyOnForms()
-                ->default($this->priority ?? StoryPriority::Low->value),
+                ->default($this->priority ?? StoryPriority::High->value)
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Text::make('Priority')->displayUsing(function () {
                 $color = 'red';
                 $priority = '';
@@ -175,7 +194,6 @@ class Story extends Resource
             ])->onlyOnForms()
                 ->default('Feature'),
             Text::make('Type', function () {
-                // color the type of the story and make it bold
                 $type = $this->type;
                 $color = 'blue';
                 return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
@@ -196,7 +214,11 @@ class Story extends Resource
             })->asHtml()->onlyOnIndex(),
             Tiptap::make(__('Description'), 'description')
                 ->hideFromIndex()
-                ->buttons($tiptapAllButtons),
+                ->buttons($tiptapAllButtons)
+                ->alwaysShow()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Textarea::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
                 ->alwaysShow(),
@@ -204,7 +226,12 @@ class Story extends Resource
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
                     return $epic ? $epic->user_id : null;
+                })->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
                 }),
+
+            BelongsTo::make('Customer', 'creator', 'App\Nova\User')
+                ->onlyOnDetail(),
             BelongsTo::make('Epic')
                 ->nullable()
                 ->default(function ($request) {
@@ -225,7 +252,10 @@ class Story extends Resource
                         return null;
                     }
                 })
-                ->hideFromIndex(),
+                ->hideFromIndex()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             BelongsTo::make('Project')
                 ->default(function ($request) {
                     //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
@@ -245,9 +275,11 @@ class Story extends Resource
                 })
                 ->searchable()
                 ->nullable()
-                ->hideFromIndex(),
+                ->hideFromIndex()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             MorphToMany::make('Deadlines'),
-            //add a panel to show the related epic description
             new Panel(__('Epic Description'), [
                 MarkdownTui::make(__('Description'), 'epic.description')
                     ->hideFromIndex()
@@ -262,12 +294,18 @@ class Story extends Resource
                 return $testDevLink;
             })->asHtml()
                 ->hideWhenCreating()
-                ->hideWhenUpdating() :
+                ->hideWhenUpdating()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }) :
                 Text::make('DEV', function () {
                     return '';
                 })->asHtml()
                 ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->hideWhenUpdating()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
 
             $testProd !== null ? Text::make('PROD', function () use ($testProd) {
                 $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . '[X]' . '</a>';
@@ -285,7 +323,10 @@ class Story extends Resource
             Text::make('Test Dev', 'test_dev')
                 ->rules('nullable', 'url:http,https')
                 ->onlyOnForms()
-                ->help('Url must start with http or https'),
+                ->help('Url must start with http or https')
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Text::make('Test Prod', 'test_prod')
                 ->rules('nullable', 'url:http,https')
                 ->onlyOnForms()
@@ -314,7 +355,8 @@ class Story extends Resource
         return [
             new filters\UserFilter,
             new filters\StoryStatusFilter,
-            new filters\StoryTypeFilter
+            new filters\StoryTypeFilter,
+            new filters\StoryPriorityFilter,
         ];
     }
 
@@ -337,6 +379,9 @@ class Story extends Resource
      */
     public function actions(NovaRequest $request)
     {
+        if ($request->user()->hasRole(UserRole::Customer)) {
+            return [];
+        }
         $actions = [
             (new actions\EditStoriesFromEpic)
                 ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
@@ -439,5 +484,14 @@ class Story extends Resource
                 }
             }),
         ];
+    }
+
+    public static function afterCreate(NovaRequest $request, $model)
+    {
+        $model->creator_id = $request->user()->id;
+        if ($request->user()->hasRole(UserRole::Customer)) {
+            $model->priority = StoryPriority::Medium->value;
+        }
+        $model->save();
     }
 }
