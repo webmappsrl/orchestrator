@@ -84,7 +84,13 @@ class Epic extends Resource
                             if ($epic) {
                                 return $epic->milestone_id;
                             }
-                        }),
+                            $milestone = Milestone::where('due_date', '>', now())->orderBy('due_date')->first();
+                            if ($milestone) {
+                                return $milestone->id;
+                            }
+                            return null;
+                        })
+                        ->required(),
                     BelongsTo::make('Project')->searchable(),
                     Text::make('Name')
                         ->sortable()
