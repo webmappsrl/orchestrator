@@ -123,7 +123,7 @@ class Story extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
-            Text::make('Info', function () {
+            Text::make('Info', function () use ($request) {
                 $story = $this->resource;
                 if (!empty($story->epic_id)) {
                     $epic = Epic::find($story->epic_id);
@@ -142,9 +142,17 @@ class Story extends Resource
                 $storyPriority = StoryPriority::getCase($this->priority);
                 $storyStatus = $this->status;
                 $storyType = $this->type;
-                return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+
+                if (!$request->user()->hasRole(UserRole::Customer)) {
+                    return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+                } else
+                    //return the string without projecturl and priority
+                    return "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
             })->asHtml()
-                ->onlyOnIndex(),
+                ->onlyOnIndex()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Select::make(('Status'), 'status')->options([
                 'new' => StoryStatus::New,
                 'progress' => StoryStatus::Progress,
@@ -155,6 +163,13 @@ class Story extends Resource
                 ->default('new')->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
+            Text::make('Status', function () {
+                $status = $this->status;
+                $color = 'blue';
+                return '<span style="color:' . $color . '; font-weight: bold;">' . $status . '</span>';
+            })->asHtml()->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Customer);
+            }),
             Select::make('Priority', 'priority')->options([
                 StoryPriority::Low->value => 'Low',
                 StoryPriority::Medium->value => 'Medium',
@@ -200,8 +215,9 @@ class Story extends Resource
             })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
-                ->onlyOnDetail(),
-            //create a field to show all the name of deadlines and related customer name
+                ->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Customer);
+                }),
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
                 foreach ($deadlines as $deadline) {
@@ -211,7 +227,10 @@ class Story extends Resource
                     $deadlineName = $dueDate . '<br/>' . $deadlineTitle . '<br/>' . $customerName;
                 }
                 return $deadlineName ?? '';
-            })->asHtml()->onlyOnIndex(),
+            })->asHtml()->onlyOnIndex()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Tiptap::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->buttons($tiptapAllButtons)
