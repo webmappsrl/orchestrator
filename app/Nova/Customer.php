@@ -18,6 +18,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Filters\CustomerWpMigrationFilter;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\Textarea;
 
 class Customer extends Resource
@@ -144,19 +145,8 @@ class Customer extends Resource
             MarkdownTui::make('Migration Note', 'migration_note')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
-            Text::make('Contact emails', function () {
-                if ($this->email == null) {
-                    return null;
-                }
-                //get the mails by exploding the string by comma or space
-                $mails = preg_split("/[\s,]+/", $this->email);
-                //add a mailto link to each mail
-                foreach ($mails as $key => $mail) {
-                    $mails[$key] = "<a href='mailto:$mail'>$mail</a>";
-                }
-                //return the string as html
-                return implode("<br>", $mails);
-            })->asHtml(),
+            Text::make('Contact emails', 'email')
+                ->onlyOnForms(),
             Boolean::make('Subs.', 'has_subscription')
                 ->sortable()
                 ->nullable()->hideFromIndex(),
@@ -254,5 +244,17 @@ class Customer extends Resource
     public function indexBreadcrumb()
     {
         return null;
+    }
+
+    public static function afterCreate(NovaRequest $request, Model $model)
+    {
+        $model->score = $model->score_cash + $model->score_pain + $model->score_business;
+        $model->save();
+    }
+
+    public static function afterUpdate(NovaRequest $request, Model $model)
+    {
+        $model->score = $model->score_cash + $model->score_pain + $model->score_business;
+        $model->save();
     }
 }
