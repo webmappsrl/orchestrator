@@ -488,9 +488,6 @@ class Story extends Resource
 
     public function navigationLinks(NovaRequest $request)
     {
-        // if ($request->user()->hasRole(UserRole::Customer)) {
-        //     return [];
-        // }
         return [
             Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
                 $epic = Epic::find($this->epic_id);
@@ -519,6 +516,8 @@ class Story extends Resource
 
                     return $previousLink . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $nextLink;
                 }
+            })->canSee(function ($request) {
+                return !$request->user()->hasRole(UserRole::Customer);
             }),
         ];
     }
