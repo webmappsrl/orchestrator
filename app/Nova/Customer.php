@@ -43,7 +43,7 @@ class Customer extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'hs_id', 'domain_name', 'full_name', 'subscription_amount', 'subscription_last_payment', 'subscription_last_invoice', 'notes', 'acronym'
+        'name', 'domain_name', 'full_name', 'acronym', 'email'
     ];
 
     /**
@@ -57,20 +57,75 @@ class Customer extends Resource
         $title = 'Customer Details:' . $this->name;
         return [
             ID::make()->sortable(),
+            Text::make('Customer', function () {
+                $string = '';
+                $name = $this->name;
+                $fullName = $this->full_name;
+                $emails = $this->email;
+                $acronym = $this->acronym;
+
+                if (isset($name)) {
+                    $string .= $name;
+                }
+                if (isset($fullName)) {
+                    $string .= '</br> (' . $fullName . ')';
+                }
+                if (isset($emails)) {
+                    //get the mails by exploding the string by comma or space
+                    $mails = preg_split("/[\s,]+/", $this->email);
+                    //add a mailto link to each mail
+                    foreach ($mails as $key => $mail) {
+                        $mails[$key] = "<a style='color:blue;' href='mailto:$mail'>$mail</a>";
+                    }
+                    $mails = implode(", ", $mails);
+                    $string .= '</br> ' . $mails;
+                }
+                if (isset($acronym)) {
+                    $string .= '</br> ' . $acronym;
+                }
+                return $string;
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            Text::make('Scores', function () {
+                $string = '';
+                $scoreCash = $this->score_cash;
+                $scorePain = $this->score_pain;
+                $scoreBusiness = $this->score_business;
+                if (isset($scoreCash)) {
+                    $string .= 'Cash: ' . $scoreCash;
+                }
+                if (isset($scorePain)) {
+                    $string .= '</br> Pain: ' . $scorePain;
+                }
+                if (isset($scoreBusiness)) {
+                    $string .= '</br> Business: ' . $scoreBusiness;
+                }
+                return $string;
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            Number::make('Score', 'score')
+                ->sortable()
+                ->nullable()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255')
-                ->creationRules('unique:customers,name'),
+                ->creationRules('unique:customers,name')
+                ->onlyOnForms(),
             Text::make('Full Name', 'full_name')
                 ->sortable()
                 ->nullable()
-                ->hideFromIndex(),
+                ->onlyOnForms(),
             Textarea::make('Heading', 'heading')
                 ->nullable()
                 ->hideFromIndex(),
             Text::make('Acronym', 'acronym')
                 ->sortable()
-                ->nullable(),
+                ->nullable()
+                ->onlyOnForms(),
             Text::make('HS', 'hs_id')
                 ->sortable()
                 ->nullable()
@@ -136,18 +191,17 @@ class Customer extends Resource
             ]),
             Number::make('Score Cash', 'score_cash')
                 ->sortable()
-                ->nullable(),
+                ->nullable()
+                ->onlyOnForms(),
             Number::make('Score Pain', 'score_pain')
                 ->sortable()
-                ->nullable(),
+                ->nullable()
+                ->onlyOnForms(),
             Number::make('Score Business', 'score_business')
                 ->sortable()
-                ->nullable(),
-            Number::make('Score', 'score')
-                ->sortable()
                 ->nullable()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
+                ->onlyOnForms(),
+
         ];
     }
 
