@@ -18,6 +18,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Filters\CustomerWpMigrationFilter;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\Textarea;
 
 class Customer extends Resource
@@ -43,7 +44,7 @@ class Customer extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'hs_id', 'domain_name', 'full_name', 'subscription_amount', 'subscription_last_payment', 'subscription_last_invoice', 'notes', 'acronym'
+        'name', 'domain_name', 'full_name', 'acronym', 'email'
     ];
 
     /**
@@ -57,20 +58,75 @@ class Customer extends Resource
         $title = 'Customer Details:' . $this->name;
         return [
             ID::make()->sortable(),
+            Text::make('Customer', function () {
+                $string = '';
+                $name = $this->name;
+                $fullName = $this->full_name;
+                $emails = $this->email;
+                $acronym = $this->acronym;
+
+                if (isset($name)) {
+                    $string .= $name;
+                }
+                if (isset($fullName)) {
+                    $string .= '</br> (' . $fullName . ')';
+                }
+                if (isset($emails)) {
+                    //get the mails by exploding the string by comma or space
+                    $mails = preg_split("/[\s,]+/", $this->email);
+                    //add a mailto link to each mail
+                    foreach ($mails as $key => $mail) {
+                        $mails[$key] = "<a style='color:blue;' href='mailto:$mail'>$mail</a>";
+                    }
+                    $mails = implode(", ", $mails);
+                    $string .= '</br> ' . $mails;
+                }
+                if (isset($acronym)) {
+                    $string .= '</br> ' . $acronym;
+                }
+                return $string;
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            Text::make('Scores', function () {
+                $string = '';
+                $scoreCash = $this->score_cash;
+                $scorePain = $this->score_pain;
+                $scoreBusiness = $this->score_business;
+                if (isset($scoreCash)) {
+                    $string .= 'Cash: ' . $scoreCash;
+                }
+                if (isset($scorePain)) {
+                    $string .= '</br> Pain: ' . $scorePain;
+                }
+                if (isset($scoreBusiness)) {
+                    $string .= '</br> Business: ' . $scoreBusiness;
+                }
+                return $string;
+            })->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            Number::make('Score', 'score')
+                ->sortable()
+                ->nullable()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255')
-                ->creationRules('unique:customers,name'),
+                ->creationRules('unique:customers,name')
+                ->onlyOnForms(),
             Text::make('Full Name', 'full_name')
                 ->sortable()
                 ->nullable()
-                ->hideFromIndex(),
+                ->onlyOnForms(),
             Textarea::make('Heading', 'heading')
                 ->nullable()
                 ->hideFromIndex(),
             Text::make('Acronym', 'acronym')
                 ->sortable()
-                ->nullable(),
+                ->nullable()
+                ->onlyOnForms(),
             Text::make('HS', 'hs_id')
                 ->sortable()
                 ->nullable()
@@ -89,19 +145,8 @@ class Customer extends Resource
             MarkdownTui::make('Migration Note', 'migration_note')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
-            Text::make('Contact emails', function () {
-                if ($this->email == null) {
-                    return null;
-                }
-                //get the mails by exploding the string by comma or space
-                $mails = preg_split("/[\s,]+/", $this->email);
-                //add a mailto link to each mail
-                foreach ($mails as $key => $mail) {
-                    $mails[$key] = "<a href='mailto:$mail'>$mail</a>";
-                }
-                //return the string as html
-                return implode("<br>", $mails);
-            })->asHtml(),
+            Text::make('Contact emails', 'email')
+                ->onlyOnForms(),
             Boolean::make('Subs.', 'has_subscription')
                 ->sortable()
                 ->nullable()->hideFromIndex(),
@@ -133,7 +178,19 @@ class Customer extends Resource
                     HasMany::make('Deadlines', 'deadlines', Deadline::class),
                 ]),
 
-            ])
+            ]),
+            Number::make('Score Cash', 'score_cash')
+                ->sortable()
+                ->nullable()
+                ->onlyOnForms(),
+            Number::make('Score Pain', 'score_pain')
+                ->sortable()
+                ->nullable()
+                ->onlyOnForms(),
+            Number::make('Score Business', 'score_business')
+                ->sortable()
+                ->nullable()
+                ->onlyOnForms(),
 
         ];
     }
@@ -187,5 +244,17 @@ class Customer extends Resource
     public function indexBreadcrumb()
     {
         return null;
+    }
+
+    public static function afterCreate(NovaRequest $request, Model $model)
+    {
+        $model->score = $model->score_cash + $model->score_pain + $model->score_business;
+        $model->save();
+    }
+
+    public static function afterUpdate(NovaRequest $request, Model $model)
+    {
+        $model->score = $model->score_cash + $model->score_pain + $model->score_business;
+        $model->save();
     }
 }
