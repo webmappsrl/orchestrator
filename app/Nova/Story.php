@@ -219,9 +219,9 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            Textarea::make(__('Customer Request'), 'customer_request')
+            Tiptap::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
-                ->alwaysShow(),
+                ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml']),
             BelongsTo::make('User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
