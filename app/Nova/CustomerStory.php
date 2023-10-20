@@ -23,6 +23,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Manogi\Tiptap\Tiptap;
 
 class CustomerStory extends Resource
@@ -222,9 +223,9 @@ class CustomerStory extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            Textarea::make(__('Customer Request'), 'customer_request')
+            Tiptap::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
-                ->alwaysShow(),
+                ->buttons($tiptapAllButtons),
             BelongsTo::make('User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
@@ -288,7 +289,8 @@ class CustomerStory extends Resource
             ]),
             Files::make('Documents', 'documents')
                 ->hideFromIndex(),
-
+            Images::make('Images', 'images')
+                ->hideFromIndex(),
             $testDev !== null ? Text::make('DEV', function () use ($testDev) {
                 $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . '[X]' . '</a>';
                 return $testDevLink;

@@ -4,13 +4,14 @@ namespace App\Nova;
 
 use Carbon\Carbon;
 use App\Models\Epic;
+use App\Enums\UserRole;
 use App\Models\Project;
 use Laravel\Nova\Panel;
 use App\Enums\StoryType;
+use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use App\Enums\StoryPriority;
-use App\Enums\UserRole;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -22,8 +23,8 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
-use Manogi\Tiptap\Tiptap;
 
 class Story extends Resource
 {
@@ -124,7 +125,8 @@ class Story extends Resource
                     $htmlName = str_replace("\n", '<br>', $wrappedName);
                     return $htmlName;
                 })
-                ->asHtml(),
+                ->asHtml()
+                ->required(),
             Text::make('Info', function () use ($request) {
                 $story = $this->resource;
                 if (!empty($story->epic_id)) {
@@ -255,7 +257,10 @@ class Story extends Resource
                 }),
 
             BelongsTo::make('Customer', 'creator', 'App\Nova\User')
-                ->onlyOnDetail(),
+                ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             BelongsTo::make('Epic')
                 ->nullable()
                 ->default(function ($request) {
@@ -314,6 +319,8 @@ class Story extends Resource
                     }),
             ]),
             Files::make('Documents', 'documents')
+                ->hideFromIndex(),
+            Images::make('Images', 'images')
                 ->hideFromIndex(),
 
             $testDev !== null ? Text::make('DEV', function () use ($testDev) {
