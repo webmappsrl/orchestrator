@@ -12,6 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stories', function (Blueprint $table) {
+
+            //if the column already exists, do not create it
+            if (Schema::hasColumn('stories', 'creator_id')) {
+                return;
+            }
+
             //creator_id reference id to users table
             $table->unsignedBigInteger('creator_id')->nullable();
             $table->foreign('creator_id')->references('id')->on('users');
