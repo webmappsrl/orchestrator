@@ -133,8 +133,21 @@ class Customer extends Resource
                     HasMany::make('Deadlines', 'deadlines', Deadline::class),
                 ]),
 
-            ])
-
+            ]),
+            Number::make('Score Cash', 'score_cash')
+                ->sortable()
+                ->nullable(),
+            Number::make('Score Pain', 'score_pain')
+                ->sortable()
+                ->nullable(),
+            Number::make('Score Business', 'score_business')
+                ->sortable()
+                ->nullable(),
+            Number::make('Score', 'score')
+                ->sortable()
+                ->nullable()
+                ->hideWhenCreating()
+                ->hideWhenUpdating()
         ];
     }
 
