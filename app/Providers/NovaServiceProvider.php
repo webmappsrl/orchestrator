@@ -52,6 +52,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         Nova::mainMenu(function (Request $request) {
             return [
                 MenuSection::dashboard(Main::class)->icon('chart-bar')->canSee(function ($request) {
+                    if ($request->user() == null)
+                        return false;
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
 
@@ -72,6 +74,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Quote::class),
                     MenuItem::resource(Deadline::class),
                     MenuItem::resource(CustomerStory::class)->canSee(function ($request) {
+                        if ($request->user() == null)
+                            return false;
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
                 ])->icon('users')->collapsable(),
@@ -90,6 +94,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('CUSTOMER', [
                     MenuItem::resource(Story::class)
                 ])->canSee(function ($request) {
+                    if ($request->user() == null)
+                        return false;
                     return $request->user()->hasRole(UserRole::Customer);
                 })->icon('at-symbol')->collapsable(),
 
