@@ -342,7 +342,7 @@ class Story extends Resource
                 }),
 
             $testProd !== null ? Text::make('PROD', function () use ($testProd) {
-                $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . '[X]' . '</a>';
+                $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . $testProd . '</a>';
                 return $testProdLink;
             })->asHtml()
                 ->hideWhenCreating()
