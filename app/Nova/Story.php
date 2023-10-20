@@ -114,7 +114,9 @@ class Story extends Resource
         ];
 
         return [
-            new Panel(__('Navigate to the next or previous story'), $this->navigationLinks()),
+            new Panel(__('Navigate to the next or previous story'), function () use ($request) {
+                return $this->navigationLinks($request);
+            }),
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable()
                 ->displayUsing(function ($name, $a, $b) {
@@ -202,7 +204,10 @@ class Story extends Resource
                 ->loadingWhen(['status' => 'new'])
                 ->failedWhen(['status' => 'rejected'])
                 ->sortable()
-                ->onlyOnDetail(),
+                ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             Select::make(__('Type'), 'type')->options([
                 'Bug' => StoryType::Bug,
                 'Feature' => StoryType::Feature,
@@ -304,6 +309,9 @@ class Story extends Resource
                     ->hideFromIndex()
                     ->initialEditType(EditorType::MARKDOWN)
                     ->onlyOnDetail()
+                    ->canSee(function ($request) {
+                        return !$request->user()->hasRole(UserRole::Customer);
+                    }),
             ]),
             Files::make('Documents', 'documents')
                 ->hideFromIndex(),
@@ -336,7 +344,10 @@ class Story extends Resource
                     return '';
                 })->asHtml()
                 ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->hideWhenUpdating()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
 
             //make the text fields for the url visible in the form
             Text::make('Test Dev', 'test_dev')
@@ -372,10 +383,14 @@ class Story extends Resource
     public function filters(NovaRequest $request)
     {
         return [
-            new filters\UserFilter,
+            (new filters\UserFilter)->canSee(function ($request) {
+                return !$request->user()->hasRole(UserRole::Customer);
+            }),
             new filters\StoryStatusFilter,
             new filters\StoryTypeFilter,
-            new filters\StoryPriorityFilter,
+            (new filters\StoryPriorityFilter)->canSee(function ($request) {
+                return !$request->user()->hasRole(UserRole::Customer);
+            }),
         ];
     }
 
@@ -471,8 +486,11 @@ class Story extends Resource
         return null;
     }
 
-    public function navigationLinks()
+    public function navigationLinks(NovaRequest $request)
     {
+        // if ($request->user()->hasRole(UserRole::Customer)) {
+        //     return [];
+        // }
         return [
             Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
                 $epic = Epic::find($this->epic_id);
