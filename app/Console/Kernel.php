@@ -22,6 +22,8 @@ class Kernel extends ConsoleKernel
             });
         })->timezone('Europe/Rome')
             ->dailyAt('00:05');
+
+        $schedule->job(new \App\Jobs\SendDigestEmail)->timezone('Europe/Rome')->dailyAt('19:00');
     }
 
     /**
