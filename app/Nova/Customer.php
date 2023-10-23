@@ -219,9 +219,7 @@ class Customer extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [
-            new CustomerWpMigrationFilter,
-        ];
+        return [];
     }
 
     /**
