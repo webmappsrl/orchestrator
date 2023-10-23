@@ -7,6 +7,8 @@ use App\Models\Story;
 use App\Enums\EpicStatus;
 use App\Models\Milestone;
 use App\Enums\StoryStatus;
+use App\Models\Project;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Actions\Action;
@@ -45,13 +47,13 @@ class ConvertStoryToEpic extends Action
             $epic = new Epic();
             $epic->name = $story->name;
             $epic->description = $story->description;
-            $epic->project_id = $story->project_id;
+            $epic->project_id = $story->project_id ?? $fields['project'];
             $epic->status = EpicStatus::New;
-            $epic->user_id = $story->user_id;
+            $epic->user_id = $story->user_id ?? $fields['user'];
             $epic->milestone_id = $fields['milestone'];
             $epic->save();
             $deadlines = $story->deadlines;
-            $story_type = $story->type; 
+            $story_type = $story->type;
             $story->delete();
         }
         foreach ($lines as $line) {
@@ -63,14 +65,14 @@ class ConvertStoryToEpic extends Action
             $story->status = StoryStatus::New;
             $story->epic_id = $epic->id;
             $story->user_id = $epic->user_id;
-            $story->type=$story_type;
+            $story->type = $story_type;
             $story->save();
-            if(count($deadlines)>0) {
+            if (count($deadlines) > 0) {
                 $story->deadlines()->sync($deadlines);
             }
             //$epic->stories()->save($story);
         }
-        return Action::visit('/resources/epics/'.$epic->id);
+        return Action::visit('/resources/epics/' . $epic->id);
     }
 
     /**
@@ -86,6 +88,15 @@ class ConvertStoryToEpic extends Action
                 ->options(Milestone::all()->pluck('name', 'id')->toArray())
                 ->displayUsingLabels(),
             Textarea::make('lines'),
+            Select::make('User')
+                ->options(User::all()->pluck('name', 'id')->toArray())
+                ->displayUsingLabels()
+                ->help('If empty, it will use the user of the story'),
+
+            Select::make('Project')
+                ->options(Project::all()->pluck('name', 'id')->toArray())
+                ->displayUsingLabels()
+                ->help('If empty, it will use the project of the story')
         ];
     }
 }

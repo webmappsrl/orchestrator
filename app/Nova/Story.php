@@ -229,11 +229,7 @@ class Story extends Resource
                 $color = 'blue';
                 return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
             })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
-                ->canSee(function ($request) {
-                    return $request->user()->hasRole(UserRole::Customer);
-                }),
+                ->onlyOnDetail(),
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
                 foreach ($deadlines as $deadline) {
@@ -257,6 +253,8 @@ class Story extends Resource
             Tiptap::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
                 ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml']),
+            //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
+
             BelongsTo::make('User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
