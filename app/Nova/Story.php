@@ -210,10 +210,19 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            Select::make(__('Type'), 'type')->options([
-                'Bug' => StoryType::Bug,
-                'Feature' => StoryType::Feature,
-            ])->onlyOnForms()
+            Select::make(__('Type'), 'type')->options(function () use ($request) {
+                if ($request->user()->hasRole(UserRole::Customer)) {
+                    return [
+                        StoryType::Feature->value => 'Funzionalitá',
+                        StoryType::Bug->value => 'Malfunzionamento',
+                    ];
+                } else {
+                    return [
+                        StoryType::Feature->value => 'Feature',
+                        StoryType::Bug->value => 'Bug',
+                    ];
+                }
+            })->onlyOnForms()
                 ->default('Feature'),
             Text::make('Type', function () {
                 $type = $this->type;
