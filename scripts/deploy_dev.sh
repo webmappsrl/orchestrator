@@ -23,6 +23,8 @@ php artisan clear-compiled
 composer dump-autoload
 php artisan config:clear
 php artisan optimize
+#initializes null scores for the customers (one time needed for score sorting)
+php artisan orchestrator:initialize-scores
 
 # Compile npm assets
 # npm run prod

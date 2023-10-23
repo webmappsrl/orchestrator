@@ -30,7 +30,11 @@ class Customer extends Model
         'subscription_amount',
         'subscription_last_payment',
         'subscription_last_covered_year',
-        'subscription_last_invoice'
+        'subscription_last_invoice',
+        'score',
+        'score_cash',
+        'score_pain',
+        'score_business'
 
     ];
 

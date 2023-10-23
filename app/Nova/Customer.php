@@ -65,11 +65,16 @@ class Customer extends Resource
                 $emails = $this->email;
                 $acronym = $this->acronym;
 
-                if (isset($name)) {
+                if (isset($name) & isset($acronym)) {
+                    $string .= $name . ' (' . $acronym . ')';
+                } else if (isset($name)) {
                     $string .= $name;
                 }
                 if (isset($fullName)) {
-                    $string .= '</br> (' . $fullName . ')';
+                    $fullName = wordwrap($fullName, 40, "\n", true);
+                    $fullName = explode("\n", $fullName);
+                    $fullName = implode("</br>", $fullName);
+                    $string .= '</br>' . $fullName;
                 }
                 if (isset($emails)) {
                     //get the mails by exploding the string by comma or space
@@ -78,16 +83,16 @@ class Customer extends Resource
                     foreach ($mails as $key => $mail) {
                         $mails[$key] = "<a style='color:blue;' href='mailto:$mail'>$mail</a>";
                     }
-                    $mails = implode(", ", $mails);
+                    $mails = implode(", </br>", $mails);
                     $string .= '</br> ' . $mails;
-                }
-                if (isset($acronym)) {
-                    $string .= '</br> ' . $acronym;
                 }
                 return $string;
             })->asHtml()
                 ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->hideWhenUpdating()
+                ->showOnPreview(function (NovaRequest $request, $resource) {
+                    return $resource->exists;
+                }),
             Text::make('Scores', function () {
                 $string = '';
                 $scoreCash = $this->score_cash;
@@ -249,12 +254,18 @@ class Customer extends Resource
     public static function afterCreate(NovaRequest $request, Model $model)
     {
         $model->score = $model->score_cash + $model->score_pain + $model->score_business;
+        if ($model->score == null) {
+            $model->score = 0;
+        }
         $model->save();
     }
 
     public static function afterUpdate(NovaRequest $request, Model $model)
     {
         $model->score = $model->score_cash + $model->score_pain + $model->score_business;
+        if ($model->score == null) {
+            $model->score = 0;
+        }
         $model->save();
     }
 }
