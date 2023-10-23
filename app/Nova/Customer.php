@@ -146,7 +146,7 @@ class Customer extends Resource
                     'geohub' => 'Geohub',
                     'geobox' => 'Geobox',
                 ]
-            )->sortable()->nullable(),
+            )->sortable()->nullable()->hideFromIndex(),
             MarkdownTui::make('Migration Note', 'migration_note')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
