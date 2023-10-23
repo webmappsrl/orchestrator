@@ -24,6 +24,7 @@ use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
+use Laravel\Nova\Fields\Markdown;
 use Manogi\Tiptap\Tiptap;
 
 class CustomerStory extends Resource
@@ -223,9 +224,9 @@ class CustomerStory extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            Tiptap::make(__('Customer Request'), 'customer_request')
+            TextArea::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
-                ->buttons($tiptapAllButtons),
+                ->readonly(),
             BelongsTo::make('User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
