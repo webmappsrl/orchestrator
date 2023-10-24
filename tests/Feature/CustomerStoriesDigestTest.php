@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
+use App\Mail\CustomerStoriesDigest;
 use Tests\TestCase;
+use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class CustomerStoriesDigestTest extends TestCase
 {
@@ -87,5 +89,21 @@ class CustomerStoriesDigestTest extends TestCase
         if (count($progressStories) > 0) {
             $mailable->assertSeeInHtml('Storie in Progress');
         }
+    }
+
+    /**
+     * @test
+     */
+    public function it_is_sent_to_customer()
+    {
+        $user = User::factory()->create();
+
+        Mail::fake();
+
+        Mail::to($user->email)->send(new CustomerStoriesDigest($user));
+
+        Mail::assertSent(function (CustomerStoriesDigest $mail) use ($user) {
+            return $mail->hasTo($user->email) && $mail->hasSubject('Orchestrator - Your stories digest') && $mail->hasFrom(config('mail.from.address'), config('mail.from.name'));
+        });
     }
 }
