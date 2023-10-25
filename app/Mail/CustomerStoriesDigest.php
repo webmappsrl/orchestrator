@@ -54,6 +54,7 @@ class CustomerStoriesDigest extends Mailable
                 'testStories' => $testStories,
                 'progressStories' => $progressStories,
                 'newStories' => $newStories,
+                'customer' => $this->customer,
             ],
         );
     }
