@@ -177,12 +177,25 @@ class Quote extends Resource
             KeyValue::make('Additional Services', 'additional_services')
                 ->hideFromIndex()
                 ->rules(['json', function ($attribute, $value, $fail) {
-                    if (strpos($value, ',') !== false) {
-                        $fail('The price field cannot contain commas. Use "." as decimal separator.');
+                    $json = json_decode($value, true);
+
+                    foreach ($json as $key => $price) {
+                        if (strpos($price, ',') !== false) {
+                            //replace comma with dot
+                            $price = str_replace(',', '.', $price);
+                        }
+                        if (!is_numeric($price)) {
+                            $fail('The ' . $attribute . ' must be a valid JSON.');
+                        }
+                        if (strpos($price, ',') !== false) {
+                            //replace comma with dot
+                            $value = str_replace(',', '.', $value);
+                        }
                     }
                 }])
                 ->keyLabel('Description')
-                ->valueLabel('Price (€)'),
+                ->valueLabel('Price (€)')
+                ->help('The price field cannot contain commas. Use "." as decimal separator.'),
             Currency::make('Additional Services Total Price')
                 ->currency('EUR')
                 ->locale('it')
