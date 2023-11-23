@@ -34,6 +34,14 @@ return [
     'media-library' => [
         'allowed_document_formats' => ['application/pdf', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json', 'applicationvnd.ms-powerpoint', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
         'allowed_image_formats' => ['image/jpeg', 'image/png', 'image/jpg'],
-    ]
+    ],
 
+    'wmdumps' => [
+        'key' => env('AWS_DUMPS_ACCESS_KEY_ID'),
+        'secret' => env('AWS_DUMPS_SECRET_ACCESS_KEY'),
+        'region' => env('AWS_DEFAULT_REGION'),
+        'bucket' => env('AWS_DUMPS_BUCKET'),
+        'url' => env('AWS_URL'),
+        'endpoint' => env('AWS_ENDPOINT'),
+    ],
 ];
