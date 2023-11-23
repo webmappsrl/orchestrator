@@ -65,7 +65,15 @@ return [
             'driver' => 'local',
             'root' => storage_path('imports'),
         ],
-
+        'wmdumps' => [
+            'driver' => 's3',
+            'key' => config('services.wmdumps.key'),
+            'secret' => config('services.wmdumps.secret'),
+            'region' => config('services.wmdumps.region'),
+            'bucket' => config('services.wmdumps.bucket'),
+            'url' => config('services.wmdumps.url'),
+            'endpoint' => config('services.wmdumps.endpoint'),
+        ],
     ],
 
     /*
