@@ -41,4 +41,9 @@ return [
         'url' => env('AWS_URL'),
         'endpoint' => env('AWS_ENDPOINT'),
     ],
+
+    'media-library' => [
+        'allowed_document_formats' => ['application/pdf', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json', 'applicationvnd.ms-powerpoint', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        'allowed_image_formats' => ['image/jpeg', 'image/png', 'image/jpg'],
+    ],
 ];
