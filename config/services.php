@@ -44,4 +44,6 @@ return [
         'url' => env('AWS_URL'),
         'endpoint' => env('AWS_ENDPOINT'),
     ],
+    'app_environment' => env('APP_ENV', 'production'),
+
 ];
