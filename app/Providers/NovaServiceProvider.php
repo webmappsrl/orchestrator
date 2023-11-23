@@ -138,9 +138,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             $userIsDeveloper = $user->hasRole(UserRole::Developer);
             $userIsManager = $user->hasRole(UserRole::Manager);
             $userIsCustomer = $user->hasRole(UserRole::Customer);
+            $debug = config('services.app_environment');
 
             if (config('services.app_environment') == 'production' || config('services.app_environment') == 'develop') {
-                return $userIsAdmin && $userIsEditor && $userIsDeveloper && $userIsManager && $userIsCustomer;
+                return $userIsAdmin || $userIsEditor || $userIsDeveloper || $userIsManager || $userIsCustomer;
             }
             return true;
         });
