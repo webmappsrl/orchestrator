@@ -69,7 +69,7 @@ return [
             'driver' => 's3',
             'key' => config('services.wmdumps.key'),
             'secret' => config('services.wmdumps.secret'),
-            'region' => config('services.wmdumps.region'),
+            'region' => config('services.wmdumps.region', 'eu-central-1'),
             'bucket' => config('services.wmdumps.bucket'),
             'url' => config('services.wmdumps.url'),
             'endpoint' => config('services.wmdumps.endpoint'),
