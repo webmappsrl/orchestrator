@@ -23,6 +23,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use Laravel\Nova\Query\Search\SearchableRelation;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Laravel\Nova\Fields\Markdown;
 use Manogi\Tiptap\Tiptap;
@@ -60,6 +61,13 @@ class CustomerStory extends Resource
     public static $search = [
         'id', 'name', 'description'
     ];
+
+    public static function searchableColumns()
+    {
+        return [
+            'id', 'name', new SearchableRelation('creator', 'name'),
+        ];
+    }
 
     public static function indexQuery(NovaRequest $request, $query)
     {
@@ -351,6 +359,7 @@ class CustomerStory extends Resource
             new filters\StoryStatusFilter,
             new filters\StoryTypeFilter,
             new filters\StoryPriorityFilter,
+            new filters\CustomerStoryFilter,
         ];
     }
 
