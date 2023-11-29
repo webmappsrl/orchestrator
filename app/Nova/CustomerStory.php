@@ -482,7 +482,10 @@ class CustomerStory extends Resource
 
     public static function afterCreate(NovaRequest $request, $model)
     {
-        $model->creator_id = $request->user()->id;
+        if ($request->user()->hasRole(UserRole::Customer)) {
+            $model->creator_id = $request->user()->id;
+            $model->priority = StoryPriority::Medium->value;
+        }
         $model->save();
     }
 }
