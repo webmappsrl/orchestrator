@@ -9,15 +9,13 @@ use Illuminate\Auth\Access\Response;
 
 class DeadlinePolicy
 {
-    public function before(User $user)
-    {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
-    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user)
     {
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -25,6 +23,10 @@ class DeadlinePolicy
      */
     public function view(User $user, Deadline $deadline)
     {
+        //if the deadline has stories with creator_id = user id
+        if ($deadline->stories()->where('creator_id', $user->id)->count() > 0) {
+            return true;
+        }
     }
 
     /**
@@ -32,6 +34,7 @@ class DeadlinePolicy
      */
     public function create(User $user)
     {
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -39,6 +42,7 @@ class DeadlinePolicy
      */
     public function update(User $user, Deadline $deadline)
     {
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -46,6 +50,7 @@ class DeadlinePolicy
      */
     public function delete(User $user, Deadline $deadline)
     {
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -53,6 +58,7 @@ class DeadlinePolicy
      */
     public function restore(User $user, Deadline $deadline)
     {
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 
     /**
@@ -60,5 +66,6 @@ class DeadlinePolicy
      */
     public function forceDelete(User $user, Deadline $deadline)
     {
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
     }
 }
