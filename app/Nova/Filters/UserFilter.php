@@ -41,6 +41,6 @@ class UserFilter extends Filter
 
     public function name()
     {
-        return 'User';
+        return 'Assigned To';
     }
 }
