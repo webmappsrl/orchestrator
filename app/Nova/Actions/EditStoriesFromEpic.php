@@ -44,6 +44,9 @@ class EditStoriesFromEpic extends Action
             if (isset($fields['status'])) {
                 $model->status = $fields['status'];
             }
+            if (isset($fields['creator'])) {
+                $model->creator_id = $fields['creator']->id;
+            }
             if (isset($fields['user'])) {
                 $model->user_id = $fields['user']->id;
             }
@@ -70,7 +73,8 @@ class EditStoriesFromEpic extends Action
     {
         return [
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
-            BelongsTo::make('User')->nullable(),
+            BelongsTo::make('Assigned To', 'user', 'App\Nova\User')->nullable(),
+            BelongsTo::make('Creator', 'creator', 'App\Nova\User')->nullable(),
             //create a multiselect field to display all the deadlines due_date plus the related customer name as option
             MultiSelect::make('Deadlines')
                 ->options(
