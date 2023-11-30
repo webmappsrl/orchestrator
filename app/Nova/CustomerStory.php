@@ -69,8 +69,9 @@ class CustomerStory extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        //return all resources that have creator_id set
-        return $query->whereNotNull('creator_id');
+        return $query->whereNotNull('creator_id')
+            ->join('users', 'users.id', '=', 'creator_id')
+            ->whereJsonContains('users.roles', 'customer');
     }
 
 
@@ -152,10 +153,16 @@ class CustomerStory extends Resource
                 return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
             })->asHtml()
                 ->onlyOnIndex(),
-            BelongsTo::make('Customer', 'creator', 'App\Nova\User')
+            BelongsTo::make('Creator', 'creator', 'App\Nova\User')
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
                 ->showOnIndex(),
+            BelongsTo::make('Creator', 'creator', 'App\Nova\User')
+                ->onlyOnForms()
+                ->nullable()
+                ->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin);
+                }),
             Select::make(('Status'), 'status')->options([
                 'new' => StoryStatus::New,
                 'progress' => StoryStatus::Progress,
@@ -233,7 +240,7 @@ class CustomerStory extends Resource
             Textarea::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
                 ->alwaysShow(),
-            BelongsTo::make('User')
+            BelongsTo::make('Assigned to', 'user', 'App\Nova\User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
                     return $epic ? $epic->user_id : null;
@@ -484,11 +491,5 @@ class CustomerStory extends Resource
                 }
             }),
         ];
-    }
-
-    public static function afterCreate(NovaRequest $request, $model)
-    {
-        $model->creator_id = $request->user()->id;
-        $model->save();
     }
 }
