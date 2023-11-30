@@ -48,8 +48,10 @@ class Story extends Model implements HasMedia
         });
 
         static::created(function (Story $story) {
-            $story->creator_id = auth()->user()->id;
-            $story->save();
+            if (auth()->user()) {
+                $story->creator_id = auth()->user()->id;
+                $story->save();
+            }
         });
     }
 
