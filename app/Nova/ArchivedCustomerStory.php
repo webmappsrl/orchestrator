@@ -12,6 +12,7 @@ use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use App\Enums\StoryPriority;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -26,12 +27,12 @@ use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 
-class Story extends Resource
+class ArchivedCustomerStory extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\Story>
+     * @var class-string<\App\Models\ArchivedCustomerStory>
      */
     public static $model = \App\Models\Story::class;
 
@@ -43,31 +44,18 @@ class Story extends Resource
     public static $title = 'name';
 
     /**
-     * The number of resources to show per page via relationships.
-     *
-     * @var int
-     */
-    public static $perPageViaRelationship = 20;
-
-
-
-    /**
      * The columns that should be searched.
      *
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description'
+        'id', 'name',
     ];
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        if ($request->user()->hasRole(UserRole::Customer)) {
-            return $query->where('creator_id', $request->user()->id);
-        } else return $query;
+        return $query->where('status', StoryStatus::Done)->where('creator_id', $request->user()->id);
     }
-
-
 
     /**
      * Get the fields displayed by the resource.
@@ -125,8 +113,7 @@ class Story extends Resource
                     $htmlName = str_replace("\n", '<br>', $wrappedName);
                     return $htmlName;
                 })
-                ->asHtml()
-                ->required(),
+                ->asHtml(),
             Text::make('Info', function () use ($request) {
                 $story = $this->resource;
                 if (!empty($story->epic_id)) {
@@ -210,26 +197,21 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            Select::make(__('Type'), 'type')->options(function () use ($request) {
-                if ($request->user()->hasRole(UserRole::Customer)) {
-                    return [
-                        StoryType::Feature->value => 'Funzionalitá',
-                        StoryType::Bug->value => 'Malfunzionamento',
-                    ];
-                } else {
-                    return [
-                        StoryType::Feature->value => 'Feature',
-                        StoryType::Bug->value => 'Bug',
-                    ];
-                }
-            })->onlyOnForms()
+            Select::make(__('Type'), 'type')->options([
+                'Bug' => StoryType::Bug,
+                'Feature' => StoryType::Feature,
+            ])->onlyOnForms()
                 ->default('Feature'),
             Text::make('Type', function () {
                 $type = $this->type;
                 $color = 'blue';
                 return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
             })->asHtml()
-                ->onlyOnDetail(),
+                ->hideWhenCreating()
+                ->hideWhenUpdating()
+                ->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Customer);
+                }),
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
                 foreach ($deadlines as $deadline) {
@@ -253,8 +235,6 @@ class Story extends Resource
             Tiptap::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
                 ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml']),
-            //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
-
             BelongsTo::make('User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
@@ -264,10 +244,7 @@ class Story extends Resource
                 }),
 
             BelongsTo::make('Customer', 'creator', 'App\Nova\User')
-                ->onlyOnDetail()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
+                ->onlyOnDetail(),
             BelongsTo::make('Epic')
                 ->nullable()
                 ->default(function ($request) {
@@ -349,7 +326,7 @@ class Story extends Resource
                 }),
 
             $testProd !== null ? Text::make('PROD', function () use ($testProd) {
-                $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . $testProd . '</a>';
+                $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . '[X]' . '</a>';
                 return $testProdLink;
             })->asHtml()
                 ->hideWhenCreating()
@@ -377,6 +354,7 @@ class Story extends Resource
                 ->help('Url must start with http or https'),
         ];
     }
+
     /**
      * Get the cards available for the request.
      *
@@ -396,16 +374,7 @@ class Story extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [
-            (new filters\UserFilter)->canSee(function ($request) {
-                return !$request->user()->hasRole(UserRole::Customer);
-            }),
-            new filters\StoryStatusFilter,
-            new filters\StoryTypeFilter,
-            (new filters\StoryPriorityFilter)->canSee(function ($request) {
-                return !$request->user()->hasRole(UserRole::Customer);
-            }),
-        ];
+        return [];
     }
 
     /**
@@ -493,13 +462,6 @@ class Story extends Resource
         return $actions;
     }
 
-
-
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
-
     public function navigationLinks(NovaRequest $request)
     {
         return [
@@ -536,12 +498,8 @@ class Story extends Resource
         ];
     }
 
-    public static function afterCreate(NovaRequest $request, $model)
+    public static function authorizedToCreate(Request $request)
     {
-        if ($request->user()->hasRole(UserRole::Customer)) {
-            $model->creator_id = $request->user()->id;
-            $model->priority = StoryPriority::Medium->value;
-        }
-        $model->save();
+        return false;
     }
 }

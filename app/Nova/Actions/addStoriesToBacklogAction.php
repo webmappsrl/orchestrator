@@ -96,9 +96,7 @@ class addStoriesToBacklogAction extends Action
                 ->default(StoryType::Feature->value)
                 ->displayUsingLabels(),
 
-
-            !$isCustomer ?
-                MultiSelect::make('Deadlines')
+            MultiSelect::make('Deadlines')
                 ->options(
                     function () {
                         $deadlines = Deadline::whereNotIn('status', [DeadlineStatus::Expired, DeadlineStatus::Done])->get();
@@ -120,8 +118,11 @@ class addStoriesToBacklogAction extends Action
                         }
                         return $options;
                     }
-                )->displayUsingLabels() :
-                Textarea::make('Text Stories'),
+                )->displayUsingLabels()
+                ->canSee(function () use ($isCustomer) {
+                    return !$isCustomer;
+                }),
+            Textarea::make('Text Stories'),
         ];
     }
 }

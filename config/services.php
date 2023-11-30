@@ -31,7 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'app_environment' => env('APP_ENV', 'production'),
+    'media-library' => [
+        'allowed_document_formats' => ['application/pdf', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json', 'applicationvnd.ms-powerpoint', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        'allowed_image_formats' => ['image/jpeg', 'image/png', 'image/jpg'],
+    ],
 
     'wmdumps' => [
         'key' => env('AWS_DUMPS_ACCESS_KEY_ID'),
@@ -41,9 +44,6 @@ return [
         'url' => env('AWS_URL'),
         'endpoint' => env('AWS_ENDPOINT'),
     ],
+    'app_environment' => env('APP_ENV', 'production'),
 
-    'media-library' => [
-        'allowed_document_formats' => ['application/pdf', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json', 'applicationvnd.ms-powerpoint', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-        'allowed_image_formats' => ['image/jpeg', 'image/png', 'image/jpg'],
-    ],
 ];

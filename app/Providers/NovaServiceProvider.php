@@ -17,6 +17,7 @@ use App\Nova\DoneEpic;
 use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
+use App\Nova\ArchivedCustomerStory;
 use App\Nova\Milestone;
 use App\Nova\ProjectEpic;
 use App\Nova\ProgressEpic;
@@ -92,7 +93,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('code')->collapsable(),
 
                 MenuSection::make('CUSTOMER', [
-                    MenuItem::resource(Story::class)
+                    MenuItem::resource(Story::class),
+                    MenuItem::resource(ArchivedCustomerStory::class)
                 ])->canSee(function ($request) {
                     if ($request->user() == null)
                         return false;

@@ -48,8 +48,10 @@ class Story extends Model implements HasMedia
         });
 
         static::created(function (Story $story) {
-            $story->creator_id = auth()->user()->id;
-            $story->save();
+            if (auth()->user()) {
+                $story->creator_id = auth()->user()->id;
+                $story->save();
+            }
         });
     }
 
@@ -89,6 +91,9 @@ class Story extends Model implements HasMedia
      */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('documents');
+
+        $this->addMediaCollection('documents')->acceptsMimeTypes(config('services.media-library.allowed_document_formats'));
+
+        $this->addMediaCollection('images')->acceptsMimeTypes(config('services.media-library.allowed_image_formats'));
     }
 }

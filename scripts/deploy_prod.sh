@@ -21,6 +21,9 @@ php artisan config:clear
 
 php artisan optimize
 
+#initializes null scores for the customers (one time needed for score sorting)
+php artisan orchestrator:initialize-scores
+
 php artisan up
 
 echo "Deployment finished!"
