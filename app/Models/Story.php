@@ -13,6 +13,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Facades\Log;
 
 class Story extends Model implements HasMedia
 {
@@ -58,7 +59,11 @@ class Story extends Model implements HasMedia
                 if (auth()->user()->hasRole(UserRole::Customer) && $story->creator_id == auth()->user()->id) {
                     $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                     foreach ($developers as $developer) {
-                        Mail::to($developer->email)->queue(new CustomerNewStoryCreated($story));
+                        try {
+                            Mail::to($developer->email)->send(new CustomerNewStoryCreated($story));
+                        } catch (\Exception $e) {
+                            Log::error($e->getMessage());
+                        }
                     }
                 }
             }

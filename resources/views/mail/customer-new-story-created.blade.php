@@ -35,13 +35,15 @@
         <div class="content">
             <p>A new story has been created by {{ $creator->name }}.</p>
             <p>Story Title: {{ $story->name }}</p>
-            <p>Story Content: {{ $story->customer_request }}</p>
-            <p>Link: <a href="{{ url('/resources/customer-stories/' . $story->id) }}">See the story</a></p>
+            <div class="content">
+                <p>Story Content:</p>
+                {!! $story->customer_request !!}
+                <p>Link: <a href="{{ url('/resources/customer-stories/' . $story->id) }}">See the story</a></p>
+            </div>
+            <div class="footer">
+                <p>Orchestrator©</p>
+            </div>
         </div>
-        <div class="footer">
-            <p>Orchestrator©</p>
-        </div>
-    </div>
 </body>
 
 </html>
