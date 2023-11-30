@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Epic;
+use AWS\CRT\HTTP\Request;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -44,6 +45,11 @@ class Story extends Model implements HasMedia
                 $epic->status = $epic->getStatusFromStories()->value;
                 $epic->save();
             }
+        });
+
+        static::created(function (Story $story) {
+            $story->creator_id = auth()->user()->id;
+            $story->save();
         });
     }
 
