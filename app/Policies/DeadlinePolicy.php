@@ -23,10 +23,7 @@ class DeadlinePolicy
      */
     public function view(User $user, Deadline $deadline)
     {
-        //if the deadline has stories with creator_id = user id
-        if ($deadline->stories()->where('creator_id', $user->id)->count() > 0) {
-            return true;
-        }
+        return true;
     }
 
     /**
