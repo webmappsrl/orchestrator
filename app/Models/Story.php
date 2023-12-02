@@ -68,6 +68,34 @@ class Story extends Model implements HasMedia
                 }
             }
         });
+
+        static::updated(function (Story $story) {
+            $devHasUpdatedStatus = $story->isDirty('status') && $story->status == 'progress' || $story->status == 'test';
+            $testerHasUpdatedStatus = $story->isDirty('status') && $story->status == 'done' || $story->status == 'rejected';
+            $devAndTesterAreTheSamePerson = $story->tester_id == $story->user_id;
+            if ($devHasUpdatedStatus) {
+                if ($story->tester_id && !$devAndTesterAreTheSamePerson) {
+                    $tester = User::find($story->tester_id);
+                    try {
+                        Mail::to($tester->email)->send(new \App\Mail\StoryStatusUpdated($story));
+                    } catch (\Exception $e) {
+                        Log::error($e->getMessage());
+                        throw new \Exception($e->getMessage());
+                    }
+                }
+            }
+            if ($testerHasUpdatedStatus) {
+                if ($story->user_id && !$devAndTesterAreTheSamePerson) {
+                    $developer = User::find($story->user_id);
+                    try {
+                        Mail::to($developer->email)->send(new \App\Mail\StoryStatusUpdated($story));
+                    } catch (\Exception $e) {
+                        Log::error($e->getMessage());
+                        throw new \Exception($e->getMessage());
+                    }
+                }
+            }
+        });
     }
 
     public function developer()
