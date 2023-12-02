@@ -253,7 +253,7 @@ class Story extends Resource
                 ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml']),
             //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
 
-            BelongsTo::make('User')
+            BelongsTo::make('Developer', 'developer', 'App\Nova\User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
                     return $epic ? $epic->user_id : null;

@@ -70,9 +70,9 @@ class Story extends Model implements HasMedia
         });
     }
 
-    public function user()
+    public function developer()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
     public function creator()
     {
