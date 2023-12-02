@@ -26,7 +26,7 @@ use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 
-class Story extends Resource
+class ToBeTestedStory extends Resource
 {
     /**
      * The model the resource corresponds to.
@@ -62,9 +62,7 @@ class Story extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        if ($request->user()->hasRole(UserRole::Customer)) {
-            return $query->where('creator_id', $request->user()->id)->where('status', '!=', StoryStatus::Done);
-        }
+        return $query->where('status', StoryStatus::Test)->where('tester_id', $request->user()->id);
     }
 
 
@@ -164,7 +162,7 @@ class Story extends Resource
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
             Select::make(('Status'), 'status')->options($storyStatusOptions)->onlyOnForms()
-                ->default('new')->canSee(function ($request) {
+                ->default(StoryStatus::Test->value)->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
             Text::make('Status', function () {

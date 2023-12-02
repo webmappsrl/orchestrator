@@ -26,7 +26,7 @@ use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 
-class Story extends Resource
+class AssignedToMeStory extends Resource
 {
     /**
      * The model the resource corresponds to.
@@ -62,9 +62,7 @@ class Story extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        if ($request->user()->hasRole(UserRole::Customer)) {
-            return $query->where('creator_id', $request->user()->id)->where('status', '!=', StoryStatus::Done);
-        }
+        return $query->where('user_id', $request->user()->id);
     }
 
 
@@ -255,8 +253,7 @@ class Story extends Resource
 
             BelongsTo::make('Developer', 'developer', 'App\Nova\User')
                 ->default(function ($request) {
-                    $epic = Epic::find($request->input('viaResourceId'));
-                    return $epic ? $epic->user_id : null;
+                    return $request->user()->id;
                 })->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
