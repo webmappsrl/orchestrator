@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\DeadlineController;
-use App\Http\Controllers\QuoteController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\DeadlineController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +18,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/quote/{id}', [QuoteController::class, 'show'])->name('quote');
 Route::get('/deadline/{id}', [DeadlineController::class, 'email'])->name('deadline.email');
+
+//route to test the mailable
+Route::get('/mailable', function () {
+    //get the first user where roles contains customer
+    $user = User::whereJsonContains('roles', 'customer')->firstOrFail();
+    return new App\Mail\CustomerStoriesDigest($user);
+});

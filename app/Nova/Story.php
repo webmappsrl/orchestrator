@@ -63,7 +63,7 @@ class Story extends Resource
     public static function indexQuery(NovaRequest $request, $query)
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
-            return $query->where('creator_id', $request->user()->id);
+            return $query->where('creator_id', $request->user()->id)->where('status', '!=', StoryStatus::Done);
         } else return $query;
     }
 
