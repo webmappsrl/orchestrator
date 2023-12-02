@@ -332,7 +332,7 @@ class ToBeTestedStory extends Resource
                 ->hideFromIndex(),
 
             $testDev !== null ? Text::make('DEV', function () use ($testDev) {
-                $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . '[X]' . '</a>';
+                $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . $testDev . '</a>';
                 return $testDevLink;
             })->asHtml()
                 ->hideWhenCreating()
