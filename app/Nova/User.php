@@ -4,15 +4,16 @@ namespace App\Nova;
 
 use App\Enums\UserRole;
 use App\Models\Project;
-use App\Nova\Project as NovaProject;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Illuminate\Validation\Rules;
+use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Gravatar;
 use Laravel\Nova\Fields\Password;
+use App\Nova\Project as NovaProject;
 use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Fields\BelongsToMany;
 use Overtrue\LaravelFavorite\Favorite;
@@ -21,6 +22,7 @@ use App\Nova\Actions\AdminRemoveFavoriteProjects;
 use App\Nova\Actions\AdminAddFavoriteProjectsAction;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Nova\Actions\AdminRemoveFavoriteProjectsAction;
+use Laravel\Nova\Fields\FormData;
 
 class User extends Resource
 {
@@ -88,6 +90,34 @@ class User extends Resource
                 }
                 return implode('|', $projects);
             })->asHtml()->onlyOnDetail(),
+            Boolean::make('Help Desk Chat', 'help_desk_chat')
+                ->onlyOnForms()
+                ->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin);
+                }),
+            Boolean::make('Help Desk Chat', 'help_desk_chat')
+                ->onlyOnDetail(),
+            Text::make('Help Desk Chat URL')
+                ->onlyOnForms()
+                ->dependsOn(['help_desk_chat'], function (Text $field, NovaRequest $request, FormData $formData) {
+                    if ($formData->boolean('help_desk_chat') === true) {
+                        $field->show()->rules('required', 'url');
+                    } else {
+                        $field->hide();
+                    }
+                }),
+
+            Text::make('Help Desk Chat URL')
+                ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    return $this->help_desk_chat;
+                })
+                ->asHtml()
+                ->resolveUsing(function () {
+                    $url = $this->help_desk_chat_url;
+                    return '<a style="color: darkblue;" href="' . $url . '" target="_blank">' . $url . '</a>';
+                }),
+
         ];
     }
 
