@@ -52,11 +52,12 @@ class Story extends Model implements HasMedia
         });
 
         static::created(function (Story $story) {
-            if (auth()->user()) {
-                $story->creator_id = auth()->user()->id;
+            $user = auth()->user();
+            if ($user) {
+                $story->creator_id = $user->id;
                 $story->save();
 
-                if (auth()->user()->hasRole(UserRole::Customer) && $story->creator_id == auth()->user()->id) {
+                if ($user->hasRole(UserRole::Customer) && $story->creator_id == $user->id) {
                     $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                     foreach ($developers as $developer) {
                         try {
