@@ -78,6 +78,11 @@ class Story extends Model implements HasMedia
     {
         return $this->belongsTo(User::class, 'creator_id');
     }
+    public function tester()
+    {
+        return $this->belongsTo(User::class, 'tester_id');
+    }
+
 
     public function project()
     {
@@ -99,10 +104,6 @@ class Story extends Model implements HasMedia
         return $this->morphToMany(Deadline::class, 'deadlineable');
     }
 
-    public function tester()
-    {
-        return $this->belongsTo(User::class, 'tester_id');
-    }
 
     /**
      * Register a spatie media collection

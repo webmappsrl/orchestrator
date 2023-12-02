@@ -77,10 +77,16 @@ class Story extends Resource
      */
     public function fields(NovaRequest $request)
     {
+        $loggedUser = auth()->user();
+        $options = $this->getOptions($loggedUser);
+        $storyStatusOptions = $options['options'];
+        $loggedUserIsDeveloperAssigned = $options['loggedUserIsDeveloperAssigned'];
+        $loggedUserIsTesterAssigned = $options['loggedUserIsTesterAssigned'];
+
         $testDev = $this->test_dev;
         $testProd = $this->test_prod;
 
-        $tiptapAllButtons = $allButtons = [
+        $tiptapAllButtons = [
             'heading',
             '|',
             'italic',
@@ -157,15 +163,9 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            Select::make(('Status'), 'status')->options([
-                'new' => StoryStatus::New,
-                'progress' => StoryStatus::Progress,
-                'done' => StoryStatus::Done,
-                'testing' => StoryStatus::Test,
-                'rejected' => StoryStatus::Rejected,
-            ])->onlyOnForms()
-                ->default('new')->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
+            Select::make(('Status'), 'status')->options($storyStatusOptions)->onlyOnForms()
+                ->default('new')->canSee(function ($request) use ($loggedUserIsDeveloperAssigned, $loggedUserIsTesterAssigned) {
+                    return !$request->user()->hasRole(UserRole::Customer) && $loggedUserIsDeveloperAssigned || $loggedUserIsTesterAssigned;
                 }),
             Text::make('Status', function () {
                 $status = $this->status;
@@ -263,6 +263,11 @@ class Story extends Resource
 
             BelongsTo::make('Customer', 'creator', 'App\Nova\User')
                 ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
+            BelongsTo::make('Tester', 'tester', 'App\Nova\User')
+                ->hideFromIndex()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
@@ -534,12 +539,37 @@ class Story extends Resource
         ];
     }
 
-    public static function afterCreate(NovaRequest $request, $model)
+    private function getOptions($loggedUser): array
     {
-        if ($request->user()->hasRole(UserRole::Customer)) {
-            $model->creator_id = $request->user()->id;
-            $model->priority = StoryPriority::Medium->value;
+        $loggedUserIsDeveloperAssigned = false;
+        $loggedUserIsTesterAssigned = false;
+        $storyStatusOptions = [
+            'new' => StoryStatus::New,
+            'progress' => StoryStatus::Progress,
+            'done' => StoryStatus::Done,
+            'testing' => StoryStatus::Test,
+            'rejected' => StoryStatus::Rejected,
+        ];
+
+        if ($this->resource->exists) {
+            $loggedUserIsDeveloperAssigned = $this->resource->developer && $loggedUser->id == $this->resource->developer->id;
+            $loggedUserIsTesterAssigned = $this->resource->tester && $loggedUser->id == $this->resource->tester->id;
+
+            if ($loggedUserIsDeveloperAssigned) {
+                $storyStatusOptions = [
+                    'new' => StoryStatus::New,
+                    'progress' => StoryStatus::Progress,
+                    'test' => StoryStatus::Done,
+                ];
+            } elseif ($loggedUserIsTesterAssigned) {
+                $storyStatusOptions = [
+                    'progress' => StoryStatus::Progress,
+                    'done' => StoryStatus::Done,
+                    'rejected' => StoryStatus::Rejected,
+                ];
+            }
         }
-        $model->save();
+
+        return ['options' => $storyStatusOptions, 'loggedUserIsDeveloperAssigned' => $loggedUserIsDeveloperAssigned, 'loggedUserIsTesterAssigned' => $loggedUserIsTesterAssigned];
     }
 }
