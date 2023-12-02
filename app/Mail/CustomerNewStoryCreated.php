@@ -46,7 +46,7 @@ class CustomerNewStoryCreated extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'mail.customer-new-story-created',
+            view: 'mails.customer-new-story-created',
             with: [
                 'story' => $this->story,
                 'creator' => $this->creator,

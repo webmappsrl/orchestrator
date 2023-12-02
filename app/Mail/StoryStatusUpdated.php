@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Story;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -16,13 +17,15 @@ class StoryStatusUpdated extends Mailable
     use Queueable, SerializesModels;
 
     public Story $story;
+    public User $user;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Story $story)
+    public function __construct(Story $story, User $user)
     {
         $this->story = $story;
+        $this->user = $user;
     }
 
     /**
@@ -43,10 +46,13 @@ class StoryStatusUpdated extends Mailable
      */
     public function content(): Content
     {
+        $userType = $this->story->tester_id == $this->user->id ? 'tester' : 'developer';
         return new Content(
-            view: 'mail.story-status-updated',
+            markdown: 'mails.story-status-updated',
             with: [
                 'story' => $this->story,
+                'user' => $this->user,
+                'userType' => $userType,
             ],
         );
     }
