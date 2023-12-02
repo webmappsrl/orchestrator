@@ -3,10 +3,12 @@
 namespace App\Nova\Filters;
 
 use App\Models\User;
+use App\Models\Story;
+use App\Models\Customer;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class UserFilter extends Filter
+class CustomerStoryFilter extends Filter
 {
     /**
      * The filter's component.
@@ -25,7 +27,7 @@ class UserFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-        return $query->where('user_id', $value);
+        return $query->where('creator_id', $value);
     }
 
     /**
@@ -36,11 +38,13 @@ class UserFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return User::pluck('id', 'name')->toArray();
+        return
+            User::whereJsonContains('roles', ['customer'])->orderBy('name')
+            ->pluck('id', 'name')->toArray();
     }
 
     public function name()
     {
-        return 'Assigned To';
+        return 'Creator';
     }
 }

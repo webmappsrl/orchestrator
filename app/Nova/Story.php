@@ -237,12 +237,10 @@ class Story extends Resource
                     $deadlineTitle = $deadline->title ?? '';
                     $customerName = isset($deadline->customer) ? $deadline->customer->name : '';
                     $deadlineName = $dueDate . '<br/>' . $deadlineTitle . '<br/>' . $customerName;
+                    $deadlineLink = '<a href="' . url('/') . '/resources/deadlines/' . $deadline->id . '" style="color: green;">' . $deadlineName . '</a>';
                 }
-                return $deadlineName ?? '';
-            })->asHtml()->onlyOnIndex()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
+                return $deadlineLink ?? '';
+            })->asHtml(),
             Tiptap::make(__('Description'), 'description')
                 ->hideFromIndex()
                 ->buttons($tiptapAllButtons)

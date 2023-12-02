@@ -23,6 +23,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use Laravel\Nova\Query\Search\SearchableRelation;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Laravel\Nova\Fields\Markdown;
 use Manogi\Tiptap\Tiptap;
@@ -61,11 +62,19 @@ class CustomerStory extends Resource
         'id', 'name', 'description'
     ];
 
-    public static function indexQuery(NovaRequest $request, $query)
+    public static function searchableColumns()
     {
-        //return all resources that have creator_id set
-        return $query->whereNotNull('creator_id');
+        return [
+            'id', 'name', new SearchableRelation('creator', 'name'),
+        ];
     }
+
+    // public static function indexQuery(NovaRequest $request, $query)
+    // {
+    //     return $query->whereNotNull('creator_id')
+    //         ->join('users', 'users.id', '=', 'creator_id')
+    //         ->whereJsonContains('users.roles', 'customer');
+    // }
 
 
 
@@ -146,10 +155,16 @@ class CustomerStory extends Resource
                 return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . $storyStatus . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
             })->asHtml()
                 ->onlyOnIndex(),
-            BelongsTo::make('Customer', 'creator', 'App\Nova\User')
+            BelongsTo::make('Creator', 'creator', 'App\Nova\User')
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
                 ->showOnIndex(),
+            BelongsTo::make('Creator', 'creator', 'App\Nova\User')
+                ->onlyOnForms()
+                ->nullable()
+                ->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin);
+                }),
             Select::make(('Status'), 'status')->options([
                 'new' => StoryStatus::New,
                 'progress' => StoryStatus::Progress,
@@ -226,8 +241,8 @@ class CustomerStory extends Resource
                 }),
             TextArea::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
-                ->readonly(),
-            BelongsTo::make('User')
+                ->alwaysShow(),
+            BelongsTo::make('Assigned to', 'user', 'App\Nova\User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
                     return $epic ? $epic->user_id : null;
@@ -351,6 +366,7 @@ class CustomerStory extends Resource
             new filters\StoryStatusFilter,
             new filters\StoryTypeFilter,
             new filters\StoryPriorityFilter,
+            new filters\CustomerStoryFilter,
         ];
     }
 
@@ -479,13 +495,3 @@ class CustomerStory extends Resource
             }),
         ];
     }
-
-    public static function afterCreate(NovaRequest $request, $model)
-    {
-        if ($request->user()->hasRole(UserRole::Customer)) {
-            $model->creator_id = $request->user()->id;
-            $model->priority = StoryPriority::Medium->value;
-        }
-        $model->save();
-    }
-}

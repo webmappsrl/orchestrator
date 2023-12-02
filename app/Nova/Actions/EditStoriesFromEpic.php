@@ -2,6 +2,8 @@
 
 namespace App\Nova\Actions;
 
+use App\Models\User;
+use App\Enums\UserRole;
 use App\Models\Project;
 use App\Models\Deadline;
 use App\Enums\StoryStatus;
@@ -44,8 +46,11 @@ class EditStoriesFromEpic extends Action
             if (isset($fields['status'])) {
                 $model->status = $fields['status'];
             }
-            if (isset($fields['user'])) {
-                $model->user_id = $fields['user']->id;
+            if (isset($fields['creator'])) {
+                $model->creator_id = $fields['creator'];
+            }
+            if (isset($fields['assigned_to'])) {
+                $model->user_id = $fields['assigned_to'];
             }
             if (isset($fields['deadlines']) && !empty($fields['deadlines'])) {
                 $model->deadlines()->sync($fields['deadlines']);
@@ -70,8 +75,8 @@ class EditStoriesFromEpic extends Action
     {
         return [
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
-            BelongsTo::make('User')->nullable(),
-            //create a multiselect field to display all the deadlines due_date plus the related customer name as option
+            Select::make('Assigned To')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
+            Select::make('Creator')->options(User::whereJsonContains('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             MultiSelect::make('Deadlines')
                 ->options(
                     function () {

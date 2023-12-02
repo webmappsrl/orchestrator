@@ -97,6 +97,11 @@ class Quote extends Model implements HasMedia
         if (empty($this->additional_services)) return $totalAdditionalServicesPrice;
 
         foreach ($this->additional_services as $description => $price) {
+            //format $price to float
+            if (strpos($price, ',') !== false) {
+                $price = str_replace(',', '.', $price);
+            }
+
 
             $totalAdditionalServicesPrice += $price ?? 0;
         }

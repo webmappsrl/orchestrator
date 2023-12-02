@@ -3,12 +3,17 @@
 namespace App\Models;
 
 use App\Models\Epic;
+use App\Enums\UserRole;
+use AWS\CRT\HTTP\Request;
 use Spatie\MediaLibrary\HasMedia;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CustomerNewStoryCreated;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Facades\Log;
 
 class Story extends Model implements HasMedia
 {
@@ -43,6 +48,24 @@ class Story extends Model implements HasMedia
                 $epic = $story->epic;
                 $epic->status = $epic->getStatusFromStories()->value;
                 $epic->save();
+            }
+        });
+
+        static::created(function (Story $story) {
+            if (auth()->user()) {
+                $story->creator_id = auth()->user()->id;
+                $story->save();
+
+                if (auth()->user()->hasRole(UserRole::Customer) && $story->creator_id == auth()->user()->id) {
+                    $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
+                    foreach ($developers as $developer) {
+                        try {
+                            Mail::to($developer->email)->send(new CustomerNewStoryCreated($story));
+                        } catch (\Exception $e) {
+                            Log::error($e->getMessage());
+                        }
+                    }
+                }
             }
         });
     }
