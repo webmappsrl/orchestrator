@@ -52,11 +52,12 @@ class Story extends Model implements HasMedia
         });
 
         static::created(function (Story $story) {
-            if (auth()->user()) {
-                $story->creator_id = auth()->user()->id;
+            $user = auth()->user();
+            if ($user) {
+                $story->creator_id = $user->id;
                 $story->save();
 
-                if (auth()->user()->hasRole(UserRole::Customer) && $story->creator_id == auth()->user()->id) {
+                if ($user->hasRole(UserRole::Customer)) {
                     $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                     foreach ($developers as $developer) {
                         try {
@@ -68,16 +69,54 @@ class Story extends Model implements HasMedia
                 }
             }
         });
+
+        static::updated(function (Story $story) {
+            $storyHasDeveloper = isset($story->user_id);
+            $storyHasTester = isset($story->tester_id);
+            $devIsLoggedIn = $storyHasDeveloper ? auth()->user()->id == $story->user_id : false;
+            $testerIsLoggedIn = $storyHasTester ? auth()->user()->id == $story->tester_id : false;
+            $devHasUpdatedStatus = $devIsLoggedIn && $story->isDirty('status') && $story->status == 'progress' || $story->status == 'test';
+            $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $story->status == 'progress' || $story->status == 'done' || $story->status == 'rejected';
+            $devAndTesterAreTheSamePerson = $story->tester_id == $story->user_id;
+
+            if ($devAndTesterAreTheSamePerson) {
+                return;
+            }
+
+            if ($devHasUpdatedStatus && $storyHasTester) {
+                $story->sendStatusUpdatedEmail($story, $story->tester_id);
+            }
+
+            if ($testerHasUpdatedStatus && $storyHasDeveloper) {
+                $story->sendStatusUpdatedEmail($story, $story->user_id);
+            }
+        });
     }
 
-    public function user()
+    public function sendStatusUpdatedEmail(Story $story, $userId)
     {
-        return $this->belongsTo(User::class);
+        $user = User::find($userId);
+        try {
+            Mail::to($user->email)->send(new \App\Mail\StoryStatusUpdated($story, $user));
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    public function developer()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
     public function creator()
     {
         return $this->belongsTo(User::class, 'creator_id');
     }
+    public function tester()
+    {
+        return $this->belongsTo(User::class, 'tester_id');
+    }
+
 
     public function project()
     {
@@ -98,6 +137,7 @@ class Story extends Model implements HasMedia
     {
         return $this->morphToMany(Deadline::class, 'deadlineable');
     }
+
 
     /**
      * Register a spatie media collection

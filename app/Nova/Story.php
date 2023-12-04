@@ -64,7 +64,7 @@ class Story extends Resource
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
             return $query->where('creator_id', $request->user()->id)->where('status', '!=', StoryStatus::Done);
-        } else return $query;
+        }
     }
 
 
@@ -77,10 +77,13 @@ class Story extends Resource
      */
     public function fields(NovaRequest $request)
     {
+        $loggedUser = auth()->user();
+        $options = $this->getOptions($loggedUser);
+        $storyStatusOptions = $options;
         $testDev = $this->test_dev;
         $testProd = $this->test_prod;
 
-        $tiptapAllButtons = $allButtons = [
+        $tiptapAllButtons = [
             'heading',
             '|',
             'italic',
@@ -157,13 +160,7 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            Select::make(('Status'), 'status')->options([
-                'new' => StoryStatus::New,
-                'progress' => StoryStatus::Progress,
-                'done' => StoryStatus::Done,
-                'testing' => StoryStatus::Test,
-                'rejected' => StoryStatus::Rejected,
-            ])->onlyOnForms()
+            Select::make(('Status'), 'status')->options($storyStatusOptions)->onlyOnForms()
                 ->default('new')->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
@@ -253,7 +250,7 @@ class Story extends Resource
                 ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml']),
             //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
 
-            BelongsTo::make('User')
+            BelongsTo::make('Developer', 'developer', 'App\Nova\User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
                     return $epic ? $epic->user_id : null;
@@ -262,7 +259,10 @@ class Story extends Resource
                 }),
 
             BelongsTo::make('Customer', 'creator', 'App\Nova\User')
-                ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
+            BelongsTo::make('Tester', 'tester', 'App\Nova\User')
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
@@ -329,19 +329,17 @@ class Story extends Resource
                 ->hideFromIndex(),
 
             $testDev !== null ? Text::make('DEV', function () use ($testDev) {
-                $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . '[X]' . '</a>';
+                $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . $testDev . '</a>';
                 return $testDevLink;
             })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
+                ->onlyOnDetail()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }) :
                 Text::make('DEV', function () {
                     return '';
                 })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
+                ->onlyOnDetail()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
@@ -350,13 +348,11 @@ class Story extends Resource
                 $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . $testProd . '</a>';
                 return $testProdLink;
             })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating() :
+                ->onlyOnDetail() :
                 Text::make('PROD', function () {
                     return '';
                 })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
+                ->onlyOnDetail()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
@@ -534,12 +530,48 @@ class Story extends Resource
         ];
     }
 
-    public static function afterCreate(NovaRequest $request, $model)
+    private function getOptions($loggedUser): array
     {
-        if ($request->user()->hasRole(UserRole::Customer)) {
-            $model->creator_id = $request->user()->id;
-            $model->priority = StoryPriority::Medium->value;
+        $loggedUserIsDeveloperAssigned = false;
+        $loggedUserIsTesterAssigned = false;
+        $storyStatusOptions = [
+            'new' => StoryStatus::New,
+            'progress' => StoryStatus::Progress,
+            'done' => StoryStatus::Done,
+            'testing' => StoryStatus::Test,
+            'rejected' => StoryStatus::Rejected,
+        ];
+
+        if ($this->resource->exists) {
+            $loggedUserIsDeveloperAssigned = $this->resource->developer && $loggedUser->id == $this->resource->developer->id;
+            $loggedUserIsTesterAssigned = $this->resource->tester && $loggedUser->id == $this->resource->tester->id;
+
+            if ($loggedUserIsDeveloperAssigned && $loggedUserIsTesterAssigned) {
+                $storyStatusOptions = [
+                    'new' => StoryStatus::New,
+                    'progress' => StoryStatus::Progress,
+                    'done' => StoryStatus::Done,
+                    'testing' => StoryStatus::Test,
+                    'rejected' => StoryStatus::Rejected,
+                ];
+                return $storyStatusOptions;
+            }
+            if ($loggedUserIsDeveloperAssigned) {
+                $storyStatusOptions = [
+                    'new' => StoryStatus::New,
+                    'progress' => StoryStatus::Progress,
+                    'test' => StoryStatus::Test,
+                ];
+            }
+            if ($loggedUserIsTesterAssigned) {
+                $storyStatusOptions = [
+                    'progress' => StoryStatus::Progress,
+                    'done' => StoryStatus::Done,
+                    'rejected' => StoryStatus::Rejected,
+                ];
+            }
         }
-        $model->save();
+
+        return $storyStatusOptions;
     }
 }

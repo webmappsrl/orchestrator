@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Story;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -11,20 +12,20 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class CustomerNewStoryCreated extends Mailable
+class StoryStatusUpdated extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $story;
-    public $creator;
+    public Story $story;
+    public User $user;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Story $story)
+    public function __construct(Story $story, User $user)
     {
         $this->story = $story;
-        $this->creator = $story->creator;
+        $this->user = $user;
     }
 
     /**
@@ -32,11 +33,11 @@ class CustomerNewStoryCreated extends Mailable
      */
     public function envelope(): Envelope
     {
-        $fromName = config('mail.from.name');
-        $fromAddress = config('mail.from.address');
+        $from = config('mail.from.address');
+        $name = config('mail.from.name');
         return new Envelope(
-            from: new Address($fromAddress, $fromName),
-            subject: $this->creator->name . ' ha creato una nuova storia',
+            from: new Address($from, $name),
+            subject: 'Lo stato della storia ' . $this->story->id . ' è stata aggiornata',
         );
     }
 
@@ -45,11 +46,13 @@ class CustomerNewStoryCreated extends Mailable
      */
     public function content(): Content
     {
+        $userType = $this->story->tester_id == $this->user->id ? 'tester' : 'developer';
         return new Content(
-            view: 'mails.customer-new-story-created',
+            markdown: 'mails.story-status-updated',
             with: [
                 'story' => $this->story,
-                'creator' => $this->creator,
+                'user' => $this->user,
+                'userType' => $userType,
             ],
         );
     }

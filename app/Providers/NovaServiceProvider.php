@@ -18,6 +18,7 @@ use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
 use App\Nova\ArchivedCustomerStory;
+use App\Nova\AssignedToMeStory;
 use App\Nova\Milestone;
 use App\Nova\ProjectEpic;
 use App\Nova\ProgressEpic;
@@ -25,6 +26,7 @@ use App\Nova\RejectedEpic;
 use App\Nova\CustomerStory;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
+use App\Nova\ToBeTestedStory;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Dashboards\Main;
 use Laravel\Nova\Menu\MenuSection;
@@ -73,23 +75,17 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
                     MenuItem::resource(Quote::class),
+                ])->icon('users')->collapsable(),
+
+                MenuSection::make('DEV', [
+                    MenuItem::resource(AssignedToMeStory::class),
+                    MenuItem::resource(ToBeTestedStory::class),
                     MenuItem::resource(Deadline::class),
                     MenuItem::resource(CustomerStory::class)->canSee(function ($request) {
                         if ($request->user() == null)
                             return false;
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
-                ])->icon('users')->collapsable(),
-
-                MenuSection::make('DEV', [
-                    MenuItem::resource(Milestone::class),
-                    MenuItem::resource(Epic::class),
-                    MenuItem::resource(NewEpic::class),
-                    MenuItem::resource(ProjectEpic::class),
-                    MenuItem::resource(ProgressEpic::class),
-                    MenuItem::resource(TestEpic::class),
-                    MenuItem::resource(DoneEpic::class),
-                    MenuItem::resource(RejectedEpic::class),
                 ])->icon('code')->collapsable(),
 
                 MenuSection::make('CUSTOMER', [

@@ -45,6 +45,6 @@ class CustomerStoryFilter extends Filter
 
     public function name()
     {
-        return 'Creator';
+        return 'Customer';
     }
 }

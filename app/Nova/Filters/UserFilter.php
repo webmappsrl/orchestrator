@@ -36,7 +36,7 @@ class UserFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return User::pluck('id', 'name')->toArray();
+        return User::whereJsonContains('roles', 'developer')->get()->pluck('id', 'name')->toArray();
     }
 
     public function name()

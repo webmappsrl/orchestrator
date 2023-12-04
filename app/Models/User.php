@@ -72,6 +72,11 @@ class User extends Authenticatable
         return $this->hasMany(Story::class, 'creator_id');
     }
 
+    public function testerStories()
+    {
+        return $this->hasMany(Story::class, 'tester_id');
+    }
+
     public function epics()
     {
         return $this->hasMany(Epic::class);
