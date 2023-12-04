@@ -30,6 +30,6 @@ class AssignedToMeStory extends Story
 {
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->where('user_id', $request->user()->id);
+        return $query->where('user_id', $request->user()->id)->whereIn('status', [StoryStatus::Progress, StoryStatus::New]);
     }
 }
