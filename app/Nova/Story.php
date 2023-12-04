@@ -79,10 +79,7 @@ class Story extends Resource
     {
         $loggedUser = auth()->user();
         $options = $this->getOptions($loggedUser);
-        $storyStatusOptions = $options['options'];
-        $loggedUserIsDeveloperAssigned = $options['loggedUserIsDeveloperAssigned'];
-        $loggedUserIsTesterAssigned = $options['loggedUserIsTesterAssigned'];
-
+        $storyStatusOptions = $options;
         $testDev = $this->test_dev;
         $testProd = $this->test_prod;
 
@@ -262,12 +259,10 @@ class Story extends Resource
                 }),
 
             BelongsTo::make('Customer', 'creator', 'App\Nova\User')
-                ->onlyOnDetail()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
             BelongsTo::make('Tester', 'tester', 'App\Nova\User')
-                ->hideFromIndex()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
@@ -337,16 +332,14 @@ class Story extends Resource
                 $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . $testDev . '</a>';
                 return $testDevLink;
             })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
+                ->onlyOnDetail()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }) :
                 Text::make('DEV', function () {
                     return '';
                 })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
+                ->onlyOnDetail()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
@@ -355,13 +348,11 @@ class Story extends Resource
                 $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . $testProd . '</a>';
                 return $testProdLink;
             })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating() :
+                ->onlyOnDetail() :
                 Text::make('PROD', function () {
                     return '';
                 })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
+                ->onlyOnDetail()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
@@ -555,13 +546,24 @@ class Story extends Resource
             $loggedUserIsDeveloperAssigned = $this->resource->developer && $loggedUser->id == $this->resource->developer->id;
             $loggedUserIsTesterAssigned = $this->resource->tester && $loggedUser->id == $this->resource->tester->id;
 
+            if ($loggedUserIsDeveloperAssigned && $loggedUserIsTesterAssigned) {
+                $storyStatusOptions = [
+                    'new' => StoryStatus::New,
+                    'progress' => StoryStatus::Progress,
+                    'done' => StoryStatus::Done,
+                    'testing' => StoryStatus::Test,
+                    'rejected' => StoryStatus::Rejected,
+                ];
+                return $storyStatusOptions;
+            }
             if ($loggedUserIsDeveloperAssigned) {
                 $storyStatusOptions = [
                     'new' => StoryStatus::New,
                     'progress' => StoryStatus::Progress,
                     'test' => StoryStatus::Test,
                 ];
-            } elseif ($loggedUserIsTesterAssigned) {
+            }
+            if ($loggedUserIsTesterAssigned) {
                 $storyStatusOptions = [
                     'progress' => StoryStatus::Progress,
                     'done' => StoryStatus::Done,
@@ -570,6 +572,6 @@ class Story extends Resource
             }
         }
 
-        return ['options' => $storyStatusOptions, 'loggedUserIsDeveloperAssigned' => $loggedUserIsDeveloperAssigned, 'loggedUserIsTesterAssigned' => $loggedUserIsTesterAssigned];
+        return $storyStatusOptions;
     }
 }
