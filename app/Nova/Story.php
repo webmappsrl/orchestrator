@@ -256,15 +256,32 @@ class Story extends Resource
                     return $epic ? $epic->user_id : null;
                 })->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
-                }),
+                })->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                    $query->whereJsonContains('roles', UserRole::Developer);
+                })->nullable(),
 
             BelongsTo::make('Customer', 'creator', 'App\Nova\User')
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
+                })->nullable()
+                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                    $query->whereJsonContains('roles', UserRole::Customer);
+                })
+                ->default(function ($request) {
+                    if (auth()->user()->hasRole(UserRole::Customer)) {
+                        return auth()->user()->id;
+                    }
                 }),
             BelongsTo::make('Tester', 'tester', 'App\Nova\User')
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
+                })
+                ->nullable()
+                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                    !$query->whereJsonDoesntContain('roles', UserRole::Customer);
+                })
+                ->default(function ($request) {
+                    return auth()->user()->id;
                 }),
             BelongsTo::make('Epic')
                 ->nullable()
