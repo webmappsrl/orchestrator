@@ -18,6 +18,7 @@ use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
 use App\Nova\ArchivedCustomerStory;
+use App\Nova\ArchivedStories;
 use App\Nova\AssignedToMeStory;
 use App\Nova\Milestone;
 use App\Nova\ProjectEpic;
@@ -80,6 +81,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('DEV', [
                     MenuItem::resource(AssignedToMeStory::class),
                     MenuItem::resource(ToBeTestedStory::class),
+                    MenuItem::resource(ArchivedStories::class),
                     MenuItem::resource(Deadline::class),
                     MenuItem::resource(CustomerStory::class)->canSee(function ($request) {
                         if ($request->user() == null)
