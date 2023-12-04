@@ -57,7 +57,7 @@ class Story extends Model implements HasMedia
                 $story->creator_id = $user->id;
                 $story->save();
 
-                if ($user->hasRole(UserRole::Customer) && $story->creator_id == $user->id) {
+                if ($user->hasRole(UserRole::Customer)) {
                     $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                     foreach ($developers as $developer) {
                         try {
@@ -79,29 +79,29 @@ class Story extends Model implements HasMedia
             $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $story->status == 'progress' || $story->status == 'done' || $story->status == 'rejected';
             $devAndTesterAreTheSamePerson = $story->tester_id == $story->user_id;
 
-            if ($devHasUpdatedStatus) {
-                if ($storyHasTester && !$devAndTesterAreTheSamePerson) {
-                    $tester = User::find($story->tester_id);
-                    try {
-                        Mail::to($tester->email)->send(new \App\Mail\StoryStatusUpdated($story, $tester));
-                    } catch (\Exception $e) {
-                        Log::error($e->getMessage());
-                        throw new \Exception($e->getMessage());
-                    }
-                }
+            if ($devAndTesterAreTheSamePerson) {
+                return;
             }
-            if ($testerHasUpdatedStatus) {
-                if ($storyHasDeveloper && !$devAndTesterAreTheSamePerson) {
-                    $developer = User::find($story->user_id);
-                    try {
-                        Mail::to($developer->email)->send(new \App\Mail\StoryStatusUpdated($story, $developer));
-                    } catch (\Exception $e) {
-                        Log::error($e->getMessage());
-                        throw new \Exception($e->getMessage());
-                    }
-                }
+
+            if ($devHasUpdatedStatus && $storyHasTester) {
+                $story->sendStatusUpdatedEmail($story, $story->tester_id);
+            }
+
+            if ($testerHasUpdatedStatus && $storyHasDeveloper) {
+                $story->sendStatusUpdatedEmail($story, $story->user_id);
             }
         });
+    }
+
+    public function sendStatusUpdatedEmail(Story $story, $userId)
+    {
+        $user = User::find($userId);
+        try {
+            Mail::to($user->email)->send(new \App\Mail\StoryStatusUpdated($story, $user));
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            throw new \Exception($e->getMessage());
+        }
     }
 
     public function developer()
