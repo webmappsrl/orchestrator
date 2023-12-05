@@ -83,12 +83,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(ToBeTestedStory::class),
                     MenuItem::resource(ArchivedStories::class),
                     MenuItem::resource(Deadline::class),
-                    MenuItem::resource(CustomerStory::class)->canSee(function ($request) {
-                        if ($request->user() == null)
-                            return false;
-                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
-                    }),
-                ])->icon('code')->collapsable(),
+                    MenuItem::resource(CustomerStory::class)
+                ])->icon('code')->collapsable()->canSee(function ($request) {
+                    if ($request->user() == null)
+                        return false;
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                }),
 
                 MenuSection::make('CUSTOMER', [
                     MenuItem::resource(Story::class),
