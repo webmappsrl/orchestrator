@@ -55,7 +55,7 @@ class StoryPolicy
      */
     public function update(User $user, Story $story)
     {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
+        return true;
     }
 
     /**

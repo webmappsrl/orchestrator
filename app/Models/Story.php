@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Models\Epic;
 use App\Enums\UserRole;
 use AWS\CRT\HTTP\Request;
+use App\Enums\StoryStatus;
 use Spatie\MediaLibrary\HasMedia;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CustomerNewStoryCreated;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +15,6 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Support\Facades\Log;
 
 class Story extends Model implements HasMedia
 {
@@ -54,10 +55,9 @@ class Story extends Model implements HasMedia
         static::created(function (Story $story) {
             $user = auth()->user();
             if ($user) {
-                $story->creator_id = $user->id;
-                $story->save();
-
                 if ($user->hasRole(UserRole::Customer)) {
+                    $story->creator_id = $user->id;
+                    $story->save();
                     $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                     foreach ($developers as $developer) {
                         try {
@@ -150,5 +150,63 @@ class Story extends Model implements HasMedia
         $this->addMediaCollection('documents')->acceptsMimeTypes(config('services.media-library.allowed_document_formats'));
 
         $this->addMediaCollection('images')->acceptsMimeTypes(config('services.media-library.allowed_image_formats'));
+    }
+
+    /**
+     * Add a response to the story customer_request field
+     * @return void
+     */
+    public function addResponse($response)
+    {
+        $sender = auth()->user();
+        $senderType = '';
+        $style = '';
+        $divider = "<div style='height: 2px; background-color: #e2e8f0; margin: 20px 0;'></div>";
+
+        if ($sender->id === $this->user_id) {
+            $senderType = 'developer';
+            $style = "style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 10px 20px;'";
+        } else if ($sender->id === $this->tester_id) {
+            $senderType = 'tester';
+            $style = "style='background-color: #e6f7ff; border-left: 4px solid #1890ff; padding: 10px 20px;'";
+        } else if ($sender->id === $this->creator_id) {
+            $senderType = 'customer';
+            $style = "style='background-color: #fff7e6; border-left: 4px solid #ffa940; padding: 10px 20px;'";
+        } else {
+            throw new \Exception('User is not allowed to add a response to this story');
+        }
+
+        $formattedResponse = $sender->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <div $style> <p>" . $response . " </p> </div>" . $divider;
+        $this->customer_request = $formattedResponse . $this->customer_request;
+        $this->save();
+
+        if ($this->creator_id && $senderType != 'customer') {
+            Mail::to($this->creator->email)->send(new \App\Mail\StoryResponse($this, $this->creator, $sender, $response));
+        }
+
+        switch ($senderType) {
+            case 'developer':
+                if ($this->tester_id) {
+                    if ($this->tester_id != $this->user_id) {
+                        Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
+                    }
+                }
+                break;
+            case 'tester':
+                if ($this->user_id) {
+                    if ($this->tester_id != $this->user_id) {
+                        Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
+                    }
+                }
+                break;
+            case 'customer':
+                if ($this->user_id) {
+                    Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
+                }
+                if ($this->tester_id) {
+                    Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
+                }
+                break;
+        }
     }
 }
