@@ -71,9 +71,9 @@ class CustomerStory extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->whereNotNull('creator_id')
-            ->join('users', 'users.id', '=', 'creator_id')
-            ->whereJsonContains('users.roles', 'customer');
+        return $query->whereNotNull('creator_id')->whereHas('creator', function ($query) {
+            $query->whereJsonContains('roles', UserRole::Customer);
+        });
     }
 
 
@@ -89,7 +89,7 @@ class CustomerStory extends Resource
         $testDev = $this->test_dev;
         $testProd = $this->test_prod;
 
-        $tiptapAllButtons = $allButtons = [
+        $tiptapAllButtons =  [
             'heading',
             '|',
             'italic',
@@ -239,8 +239,9 @@ class CustomerStory extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            TextArea::make(__('Customer Request'), 'customer_request')
+            Tiptap::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
+                ->buttons($tiptapAllButtons)
                 ->alwaysShow(),
             BelongsTo::make('Assigned to', 'developer', 'App\Nova\User')
                 ->default(function ($request) {
