@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Models\Epic;
 use App\Enums\UserRole;
 use AWS\CRT\HTTP\Request;
+use App\Enums\StoryStatus;
 use Spatie\MediaLibrary\HasMedia;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CustomerNewStoryCreated;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +15,6 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Support\Facades\Log;
 
 class Story extends Model implements HasMedia
 {
@@ -54,10 +55,9 @@ class Story extends Model implements HasMedia
         static::created(function (Story $story) {
             $user = auth()->user();
             if ($user) {
-                $story->creator_id = $user->id;
-                $story->save();
-
                 if ($user->hasRole(UserRole::Customer)) {
+                    $story->creator_id = $user->id;
+                    $story->save();
                     $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                     foreach ($developers as $developer) {
                         try {
@@ -150,5 +150,23 @@ class Story extends Model implements HasMedia
         $this->addMediaCollection('documents')->acceptsMimeTypes(config('services.media-library.allowed_document_formats'));
 
         $this->addMediaCollection('images')->acceptsMimeTypes(config('services.media-library.allowed_image_formats'));
+    }
+
+    /**
+     * Add a response to the story customer_request field
+     * @return void
+     */
+    public function addResponse($response)
+    {
+        $user = auth()->user();
+
+        if ($this->status == StoryStatus::Done) {
+            throw new \Exception('Cannot add response to a done story');
+        }
+
+        $this->customer_request .= "\n\n-----------\n" . $user->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n" . $response;
+        $this->save();
+
+        \Mail::to($this->creator->email)->send(new \App\Mail\StoryResponse($this, $user, $response));
     }
 }
