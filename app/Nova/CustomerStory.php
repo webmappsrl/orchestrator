@@ -4,16 +4,19 @@ namespace App\Nova;
 
 use Carbon\Carbon;
 use App\Models\Epic;
+use App\Enums\UserRole;
 use App\Models\Project;
 use Laravel\Nova\Panel;
 use App\Enums\StoryType;
+use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use App\Enums\StoryPriority;
-use App\Enums\UserRole;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
+use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\MorphToMany;
@@ -22,11 +25,10 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
-use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
-use Laravel\Nova\Query\Search\SearchableRelation;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
-use Laravel\Nova\Fields\Markdown;
-use Manogi\Tiptap\Tiptap;
+use Laravel\Nova\Query\Search\SearchableRelation;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 
 class CustomerStory extends Resource
 {
@@ -242,13 +244,34 @@ class CustomerStory extends Resource
             Tiptap::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
                 ->buttons($tiptapAllButtons)
-                ->alwaysShow(),
+                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    $user = auth()->user();
+                    $response = $request[$requestAttribute];
+                    if (empty(trim($response)) || trim($response) == '<p></p>') {
+                        $model->{$attribute} = '';
+                    } else {
+                        $currentContent = $model->{$attribute} ?? '';
+                        $formattedResponse = $user->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <blockquote> <p>" . $response . " </p> </blockquote> <hr>";
+                        $model->{$attribute} = $formattedResponse . $currentContent;
+                    }
+                }),
             BelongsTo::make('Assigned to', 'developer', 'App\Nova\User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
                     return $epic ? $epic->user_id : null;
                 })->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
+                }),
+            BelongsTo::make('Tester', 'tester', 'App\Nova\User')
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                })
+                ->nullable()
+                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                    !$query->whereJsonDoesntContain('roles', UserRole::Customer);
+                })
+                ->default(function ($request) {
+                    return auth()->user()->id;
                 }),
             BelongsTo::make('Epic')
                 ->nullable()
@@ -391,9 +414,30 @@ class CustomerStory extends Resource
     public function actions(NovaRequest $request)
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
-            return [];
+            return [
+                (new actions\RespondToStoryRequest())
+                    ->showInline()
+                    ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
+                    ->confirmButtonText('Confirm')
+                    ->cancelButtonText('Cancel')
+                    ->canSee(
+                        function ($request) {
+                            return $this->status !== StoryStatus::Done;
+                        }
+                    ),
+            ];
         }
         $actions = [
+            (new actions\RespondToStoryRequest())
+                ->showInline()
+                ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel')
+                ->canSee(
+                    function ($request) {
+                        return $this->status !== StoryStatus::Done;
+                    }
+                ),
             (new actions\EditStoriesFromEpic())
                 ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')

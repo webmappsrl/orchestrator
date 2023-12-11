@@ -156,17 +156,29 @@ class Story extends Model implements HasMedia
      * Add a response to the story customer_request field
      * @return void
      */
-    public function addResponse($response)
+    public function addCustomerResponse($response)
     {
         $user = auth()->user();
 
         if ($this->status == StoryStatus::Done) {
             throw new \Exception('Cannot add response to a done story');
         }
+        $style = '';
 
-        $this->customer_request .= "\n\n-----------\n" . $user->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n" . $response;
+        if ($user->id == $this->user_id) {
+            $style = "style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 10px 20px;'";
+        } else if ($user->id == $this->tester_id) {
+            $style = "style='background-color: #e6f7ff; border-left: 4px solid #1890ff; padding: 10px 20px;'";
+        } else if ($user->id == $this->creator_id) {
+            $style = "style='background-color: #fff7e6; border-left: 4px solid #ffa940; padding: 10px 20px;'";
+        } else {
+            throw new \Exception('User is not allowed to add a response to this story');
+        }
+
+        $formattedResponse = $user->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <blockquote $style> <p>" . $response . " </p> </blockquote> <div style='height: 2px; background-color: #e2e8f0; margin: 20px 0;'></div>";
+        $this->customer_request = $formattedResponse . $this->customer_request;
         $this->save();
 
-        \Mail::to($this->creator->email)->send(new \App\Mail\StoryResponse($this, $user, $response));
+        // \Mail::to($this->creator->email)->send(new \App\Mail\StoryResponse($this, $user, $response));
     }
 }

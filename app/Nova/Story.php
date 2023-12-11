@@ -247,6 +247,9 @@ class Story extends Resource
                 }),
             Tiptap::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
+                ->showOnUpdating(function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                })
                 ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml']),
             //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
 
@@ -439,7 +442,18 @@ class Story extends Resource
     public function actions(NovaRequest $request)
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
-            return [];
+            return [
+                (new actions\RespondToStoryRequest())
+                    ->showInline()
+                    ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
+                    ->confirmButtonText('Confirm')
+                    ->cancelButtonText('Cancel')
+                    ->canSee(
+                        function ($request) {
+                            return $this->status !== StoryStatus::Done;
+                        }
+                    ),
+            ];
         }
         $actions = [
             (new actions\EditStoriesFromEpic)
