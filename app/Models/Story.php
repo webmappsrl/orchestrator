@@ -175,7 +175,7 @@ class Story extends Model implements HasMedia
             throw new \Exception('User is not allowed to add a response to this story');
         }
 
-        $formattedResponse = $user->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <blockquote $style> <p>" . $response . " </p> </blockquote> <div style='height: 2px; background-color: #e2e8f0; margin: 20px 0;'></div>";
+        $formattedResponse = $user->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <div $style> <p>" . $response . " </p> </div> <div style='height: 2px; background-color: #e2e8f0; margin: 20px 0;'></div>";
         $this->customer_request = $formattedResponse . $this->customer_request;
         $this->save();
 

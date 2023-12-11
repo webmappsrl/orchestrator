@@ -2,14 +2,17 @@
 
 namespace App\Nova\Actions;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Collection;
-use Laravel\Nova\Actions\Action;
-use Laravel\Nova\Fields\ActionFields;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use Manogi\Tiptap\Tiptap;
+use App\Enums\StoryStatus;
+use Closure;
+use Illuminate\Bus\Queueable;
+use Laravel\Nova\Actions\Action;
+use Illuminate\Support\Collection;
+use Laravel\Nova\Fields\ActionFields;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Nova;
 
 class RespondToStoryRequest extends Action
 {
@@ -27,6 +30,9 @@ class RespondToStoryRequest extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         foreach ($models as $model) {
+            if ($model->status == StoryStatus::Done->value) {
+                return Action::danger('This story is already done!');
+            }
 
             $model->addCustomerResponse($fields->response);
         }

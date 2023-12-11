@@ -445,17 +445,29 @@ class Story extends Resource
             return [
                 (new actions\RespondToStoryRequest())
                     ->showInline()
+                    ->sole()
                     ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
                     ->confirmButtonText('Confirm')
                     ->cancelButtonText('Cancel')
                     ->canSee(
                         function ($request) {
-                            return $this->status !== StoryStatus::Done;
+                            return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                         }
-                    ),
+                    )
             ];
         }
         $actions = [
+            (new actions\RespondToStoryRequest())
+                ->showInline()
+                ->sole()
+                ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel')
+                ->canSee(
+                    function ($request) {
+                        return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
+                    }
+                ),
             (new actions\EditStoriesFromEpic)
                 ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')

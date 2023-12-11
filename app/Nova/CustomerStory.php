@@ -417,12 +417,13 @@ class CustomerStory extends Resource
             return [
                 (new actions\RespondToStoryRequest())
                     ->showInline()
+                    ->sole()
                     ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
                     ->confirmButtonText('Confirm')
                     ->cancelButtonText('Cancel')
                     ->canSee(
                         function ($request) {
-                            return $this->status !== StoryStatus::Done;
+                            return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                         }
                     ),
             ];
@@ -430,12 +431,13 @@ class CustomerStory extends Resource
         $actions = [
             (new actions\RespondToStoryRequest())
                 ->showInline()
+                ->sole()
                 ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel')
                 ->canSee(
                     function ($request) {
-                        return $this->status !== StoryStatus::Done;
+                        return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                     }
                 ),
             (new actions\EditStoriesFromEpic())
