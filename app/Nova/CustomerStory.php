@@ -243,18 +243,7 @@ class CustomerStory extends Resource
                 }),
             Tiptap::make(__('Customer Request'), 'customer_request')
                 ->hideFromIndex()
-                ->buttons($tiptapAllButtons)
-                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
-                    $user = auth()->user();
-                    $response = $request[$requestAttribute];
-                    if (empty(trim($response)) || trim($response) == '<p></p>') {
-                        $model->{$attribute} = '';
-                    } else {
-                        $currentContent = $model->{$attribute} ?? '';
-                        $formattedResponse = $user->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <blockquote> <p>" . $response . " </p> </blockquote> <hr>";
-                        $model->{$attribute} = $formattedResponse . $currentContent;
-                    }
-                }),
+                ->buttons($tiptapAllButtons),
             BelongsTo::make('Assigned to', 'developer', 'App\Nova\User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));

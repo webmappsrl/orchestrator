@@ -1,21 +1,21 @@
 @component('mail::message')
-    <!-- IMPORTANT: DO NOT INDENT MARKDOWN OR IT WILL NOT BE RENDERED CORRECTLY-->
+ <!-- IMPORTANT: DO NOT INDENT MARKDOWN OR IT WILL NOT BE RENDERED CORRECTLY-->
 
-    # Ciao {{ $recipient->name }},
+# Ciao {{ $recipient->name }},
 
-    **Storia:** {{ $story->name }}
+**Storia:** {{ $story->name }}
 
-    **Risposta da:** {{ $sender->name }}
+**Risposta da:** {{ $sender->name }}
 
-    **Risposta:**
+**Risposta:**
 
-    {!! $response !!}
+{!! $response !!}
 
-    ---
+---
 
-    Puoi visualizzare la storia e tutte le risposte accedendo a questo [link]({{ url('resources/stories/' . $story->id) }}).
+Puoi visualizzare la storia e tutte le risposte accedendo a questo [link]({{ url('resources/stories/' . $story->id) }}).
 
-    Cordiali saluti,
+Cordiali saluti,
 
-    Il team di {{ config('app.name') }}
+Il team di {{ config('app.name') }}
 @endcomponent

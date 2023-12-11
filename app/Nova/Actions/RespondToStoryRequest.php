@@ -34,7 +34,7 @@ class RespondToStoryRequest extends Action
                 return Action::danger('This story is already done!');
             }
 
-            $model->addCustomerResponse($fields->response);
+            $model->addResponse($fields->response);
         }
 
         return Action::message('The response has been added successfully!');
