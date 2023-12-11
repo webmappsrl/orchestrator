@@ -16,16 +16,18 @@ class StoryResponse extends Mailable
     use Queueable, SerializesModels;
 
     public Story $story;
-    public User $user;
+    public User $recipient;
+    public User $sender;
     public string $response;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Story $story, User $user, string $response)
+    public function __construct(Story $story, User $recipient, User $sender,  string $response)
     {
         $this->story = $story;
-        $this->user = $user;
+        $this->recipient = $recipient;
+        $this->sender = $sender;
         $this->response = $response;
     }
 
@@ -35,7 +37,7 @@ class StoryResponse extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Story Response',
+            subject: $this->sender->name . ' responded to story ' . $this->story->id,
         );
     }
 
@@ -45,7 +47,13 @@ class StoryResponse extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            markdown: 'mails.customer-story-answer',
+            with: [
+                'story' => $this->story,
+                'recipient' => $this->recipient,
+                'sender' => $this->sender,
+                'response' => $this->response,
+            ],
         );
     }
 
