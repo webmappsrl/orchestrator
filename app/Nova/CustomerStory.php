@@ -69,12 +69,12 @@ class CustomerStory extends Resource
         ];
     }
 
-    // public static function indexQuery(NovaRequest $request, $query)
-    // {
-    //     return $query->whereNotNull('creator_id')
-    //         ->join('users', 'users.id', '=', 'creator_id')
-    //         ->whereJsonContains('users.roles', 'customer');
-    // }
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        return $query->whereNotNull('creator_id')
+            ->join('users', 'users.id', '=', 'creator_id')
+            ->whereJsonContains('users.roles', 'customer');
+    }
 
 
 
