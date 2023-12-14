@@ -132,11 +132,9 @@ class Story extends Resource
                 ->asHtml()
                 ->required(),
             DateTime::make('Created At')->sortable()
-                ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->onlyOnDetail(),
             DateTime::make('Updated At')->sortable()
-                ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->onlyOnDetail(),
             Text::make('Info', function () use ($request) {
                 $story = $this->resource;
                 if (!empty($story->epic_id)) {
