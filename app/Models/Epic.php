@@ -28,13 +28,6 @@ class Epic extends Model implements HasMedia
         'notes',
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        Epic::observe(EpicObserver::class);
-    }
-
     /**
      * Get the parent model for the relationship in breadcrumbs
      *
