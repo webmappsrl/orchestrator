@@ -16,6 +16,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Actions\Action;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
@@ -137,6 +138,9 @@ class CustomerStory extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
+            DateTime::make('Created At')->sortable(),
+            DateTime::make('Updated At')->sortable(),
+
             Text::make('Info', function () {
                 $story = $this->resource;
                 if (!empty($story->epic_id)) {
