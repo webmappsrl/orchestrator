@@ -138,9 +138,12 @@ class CustomerStory extends Resource
                     return $htmlName;
                 })
                 ->asHtml(),
-            DateTime::make('Created At')->sortable(),
-            DateTime::make('Updated At')->sortable(),
-
+            DateTime::make('Created At')->sortable()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            DateTime::make('Updated At')->sortable()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             Text::make('Info', function () {
                 $story = $this->resource;
                 if (!empty($story->epic_id)) {
@@ -172,6 +175,24 @@ class CustomerStory extends Resource
                 ->nullable()
                 ->canSee(function ($request) {
                     return $request->user()->hasRole(UserRole::Admin);
+                }),
+            BelongsTo::make('Assigned to', 'developer', 'App\Nova\User')
+                ->default(function ($request) {
+                    $epic = Epic::find($request->input('viaResourceId'));
+                    return $epic ? $epic->user_id : null;
+                })->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
+            BelongsTo::make('Tester', 'tester', 'App\Nova\User')
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                })
+                ->nullable()
+                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                    !$query->whereJsonDoesntContain('roles', UserRole::Customer);
+                })
+                ->default(function ($request) {
+                    return auth()->user()->id;
                 }),
             Select::make(('Status'), 'status')->options([
                 'new' => StoryStatus::New,
@@ -229,7 +250,6 @@ class CustomerStory extends Resource
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
                 ->onlyOnDetail(),
-            //create a field to show all the name of deadlines and related customer name
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
                 foreach ($deadlines as $deadline) {
@@ -246,27 +266,6 @@ class CustomerStory extends Resource
                 ->alwaysShow()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            Tiptap::make(__('Customer Request'), 'customer_request')
-                ->hideFromIndex()
-                ->buttons($tiptapAllButtons),
-            BelongsTo::make('Assigned to', 'developer', 'App\Nova\User')
-                ->default(function ($request) {
-                    $epic = Epic::find($request->input('viaResourceId'));
-                    return $epic ? $epic->user_id : null;
-                })->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            BelongsTo::make('Tester', 'tester', 'App\Nova\User')
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                })
-                ->nullable()
-                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
-                    !$query->whereJsonDoesntContain('roles', UserRole::Customer);
-                })
-                ->default(function ($request) {
-                    return auth()->user()->id;
                 }),
             BelongsTo::make('Epic')
                 ->nullable()
@@ -359,6 +358,22 @@ class CustomerStory extends Resource
                 ->rules('nullable', 'url:http,https')
                 ->onlyOnForms()
                 ->help('Url must start with http or https'),
+            Tiptap::make(__('Customer Request'), 'customer_request')
+                ->hideFromIndex()
+                ->hideWhenUpdating()
+                ->buttons($tiptapAllButtons)
+                ->alwaysShow(),
+            Tiptap::make('Answer to ticket')
+                ->canSee(function ($request) {
+                    //can only see if the story status is not done or rejected
+                    return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
+                })
+                ->onlyOnForms()
+                ->hideWhenCreating()
+                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    $model->addResponse($request[$requestAttribute]);
+                })
+                ->buttons($tiptapAllButtons),
         ];
     }
     /**
