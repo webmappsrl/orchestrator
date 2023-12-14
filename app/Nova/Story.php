@@ -252,8 +252,11 @@ class Story extends Resource
                 }),
             BelongsTo::make('Developer', 'developer', 'App\Nova\User')
                 ->default(function ($request) {
-                    $epic = Epic::find($request->input('viaResourceId'));
-                    return $epic ? $epic->user_id : null;
+                    if ($this->user_id) {
+                        return $this->user_id;
+                    } else {
+                        return auth()->user()->id;
+                    }
                 })->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 })->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
@@ -402,6 +405,9 @@ class Story extends Resource
                 ->onlyOnForms()
                 ->hideWhenCreating()
                 ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    if (empty($request[$requestAttribute])) {
+                        return;
+                    }
                     $model->addResponse($request[$requestAttribute]);
                 })
                 ->buttons($tiptapAllButtons),
