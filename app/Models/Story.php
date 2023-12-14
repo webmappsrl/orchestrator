@@ -15,6 +15,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Laravel\Nova\Notifications\NovaNotification;
 
 class Story extends Model implements HasMedia
 {
@@ -75,8 +76,8 @@ class Story extends Model implements HasMedia
             $storyHasTester = isset($story->tester_id);
             $devIsLoggedIn = $storyHasDeveloper ? auth()->user()->id == $story->user_id : false;
             $testerIsLoggedIn = $storyHasTester ? auth()->user()->id == $story->tester_id : false;
-            $devHasUpdatedStatus = $devIsLoggedIn && $story->isDirty('status') && $story->status == 'progress' || $story->status == 'test';
-            $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $story->status == 'progress' || $story->status == 'done' || $story->status == 'rejected';
+            $devHasUpdatedStatus = $devIsLoggedIn && $story->isDirty('status') && $story->status->value == 'progress' || $story->status->value == 'testing';
+            $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $story->status->value == 'progress' || $story->status->value == 'done' || $story->status->value == 'rejected';
             $devAndTesterAreTheSamePerson = $story->tester_id == $story->user_id;
 
             if ($devAndTesterAreTheSamePerson) {
@@ -85,10 +86,22 @@ class Story extends Model implements HasMedia
 
             if ($devHasUpdatedStatus && $storyHasTester) {
                 $story->sendStatusUpdatedEmail($story, $story->tester_id);
+
+                $story->tester->notify(NovaNotification::make()
+                    ->type('info')
+                    ->message('The status of the story ' . $story->id . ' has been updated to ' . $story->status->value . ' by ' . auth()->user()->name)
+                    ->action('View story', url('/nova/resources/stories/' . $story->id))
+                    ->icon('star'));
             }
 
             if ($testerHasUpdatedStatus && $storyHasDeveloper) {
                 $story->sendStatusUpdatedEmail($story, $story->user_id);
+
+                $story->developer->notify(NovaNotification::make()
+                    ->type('info')
+                    ->message('The status of the story ' . $story->id . ' has been updated to ' . $story->status->value . ' by ' . auth()->user()->name)
+                    ->action('View story', url('/nova/resources/stories/' . $story->id))
+                    ->icon('star'));
             }
         });
     }
