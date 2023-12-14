@@ -52,6 +52,9 @@ class EditStoriesFromEpic extends Action
             if (isset($fields['assigned_to'])) {
                 $model->user_id = $fields['assigned_to'];
             }
+            if (isset($fields['tester'])) {
+                $model->tester_id = $fields['tester'];
+            }
             if (isset($fields['deadlines']) && !empty($fields['deadlines'])) {
                 $model->deadlines()->sync($fields['deadlines']);
             }
@@ -76,6 +79,7 @@ class EditStoriesFromEpic extends Action
         return [
             Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
             Select::make('Assigned To')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
+            Select::make('Tester')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             Select::make('Creator')->options(User::whereJsonContains('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             MultiSelect::make('Deadlines')
                 ->options(
