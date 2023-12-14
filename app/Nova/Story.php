@@ -446,7 +446,7 @@ class Story extends Resource
                 (new actions\RespondToStoryRequest())
                     ->showInline()
                     ->sole()
-                    ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
+                    ->confirmText('Click on the "Confirm" button to send the response or "Cancel" to cancel.')
                     ->confirmButtonText('Confirm')
                     ->cancelButtonText('Cancel')
                     ->canSee(
@@ -460,7 +460,7 @@ class Story extends Resource
             (new actions\RespondToStoryRequest())
                 ->showInline()
                 ->sole()
-                ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
+                ->confirmText('Click on the "Confirm" button to send the response or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel')
                 ->canSee(
