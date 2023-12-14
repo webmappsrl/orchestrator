@@ -625,7 +625,7 @@ class Story extends Resource
                 $storyStatusOptions = [
                     'new' => StoryStatus::New,
                     'progress' => StoryStatus::Progress,
-                    'test' => StoryStatus::Test,
+                    'testing' => StoryStatus::Test,
                 ];
             }
             if ($loggedUserIsTesterAssigned) {
