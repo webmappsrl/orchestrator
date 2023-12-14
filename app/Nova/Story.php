@@ -15,6 +15,7 @@ use App\Enums\StoryPriority;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\MorphToMany;
 use App\Nova\Actions\MoveStoriesFromEpic;
@@ -130,6 +131,12 @@ class Story extends Resource
                 })
                 ->asHtml()
                 ->required(),
+            DateTime::make('Created At')->sortable()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
+            DateTime::make('Updated At')->sortable()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             Text::make('Info', function () use ($request) {
                 $story = $this->resource;
                 if (!empty($story->epic_id)) {
@@ -245,14 +252,6 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            Tiptap::make(__('Customer Request'), 'customer_request')
-                ->hideFromIndex()
-                ->showOnUpdating(function ($request) {
-                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
-                })
-                ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml']),
-            //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
-
             BelongsTo::make('Developer', 'developer', 'App\Nova\User')
                 ->default(function ($request) {
                     $epic = Epic::find($request->input('viaResourceId'));
@@ -261,7 +260,7 @@ class Story extends Resource
                     return !$request->user()->hasRole(UserRole::Customer);
                 })->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
                     $query->whereJsonContains('roles', UserRole::Developer);
-                })->nullable(),
+                })->required(),
 
             BelongsTo::make('Customer', 'creator', 'App\Nova\User')
                 ->canSee(function ($request) {
@@ -389,6 +388,25 @@ class Story extends Resource
                 ->rules('nullable', 'url:http,https')
                 ->onlyOnForms()
                 ->help('Url must start with http or https'),
+            Tiptap::make(__('Customer Request'), 'customer_request')
+                ->hideFromIndex()
+                ->showOnUpdating(function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                })
+                ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml'])
+                ->alwaysShow(),
+            //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
+            Tiptap::make('Answer to ticket')
+                ->canSee(function ($request) {
+                    //can only see if the story status is not done or rejected
+                    return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
+                })
+                ->onlyOnForms()
+                ->hideWhenCreating()
+                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    $model->addResponse($request[$requestAttribute]);
+                })
+                ->buttons($tiptapAllButtons),
         ];
     }
     /**
