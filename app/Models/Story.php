@@ -159,21 +159,27 @@ class Story extends Model implements HasMedia
     public function addResponse($response)
     {
         $sender = auth()->user();
-        $senderType = '';
+        $senderRoles = $sender->roles->toArray();
         $style = '';
         $divider = "<div style='height: 2px; background-color: #e2e8f0; margin: 20px 0;'></div>";
 
-        if ($sender->id === $this->user_id) {
+        if (array_search(UserRole::Developer, $senderRoles) !== false) {
             $senderType = 'developer';
             $style = "style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 10px 20px;'";
-        } else if ($sender->id === $this->tester_id) {
+        } else if ($sender->id == $this->tester_id) {
             $senderType = 'tester';
             $style = "style='background-color: #e6f7ff; border-left: 4px solid #1890ff; padding: 10px 20px;'";
-        } else if ($sender->id === $this->creator_id) {
+        } else if (array_search(UserRole::Customer, $senderRoles) !== false) {
             $senderType = 'customer';
             $style = "style='background-color: #fff7e6; border-left: 4px solid #ffa940; padding: 10px 20px;'";
         } else {
-            throw new \Exception('User is not allowed to add a response to this story');
+            $senderType = 'other';
+            $style = "style='background-color: #d7f7de; border-left: 4px solid #6c757d; padding: 10px 20px;'";
+            $string = '';
+            foreach ($senderRoles as $role) {
+                $string .= $role->value . ', ';
+            }
+            Log::info('Sender answering to story with id: ' . $this->id .  ' has roles: ' . $string);
         }
 
         $formattedResponse = $sender->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <div $style> <p>" . $response . " </p> </div>" . $divider;
@@ -207,6 +213,13 @@ class Story extends Model implements HasMedia
                     Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
                 }
                 break;
+            default:
+                if ($this->user_id) {
+                    Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
+                }
+                if ($this->tester_id) {
+                    Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
+                }
         }
     }
 }
