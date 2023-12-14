@@ -73,9 +73,11 @@ class CustomerStory extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->whereNotNull('creator_id')->whereHas('creator', function ($query) {
-            $query->whereJsonContains('roles', UserRole::Customer);
-        });
+        return $query->whereNotNull('creator_id')
+            ->whereHas('creator', function ($query) {
+                $query->whereJsonContains('roles', UserRole::Customer);
+            })
+            ->where('status', '!=', StoryStatus::Done->value);
     }
 
 
@@ -407,7 +409,7 @@ class CustomerStory extends Resource
                 (new actions\RespondToStoryRequest())
                     ->showInline()
                     ->sole()
-                    ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
+                    ->confirmText('Click on the "Confirm" button to send the response or "Cancel" to cancel.')
                     ->confirmButtonText('Confirm')
                     ->cancelButtonText('Cancel')
                     ->canSee(
@@ -421,7 +423,7 @@ class CustomerStory extends Resource
             (new actions\RespondToStoryRequest())
                 ->showInline()
                 ->sole()
-                ->confirmText('Click on the "Confirm" button to send the response to the developer or "Cancel" to cancel.')
+                ->confirmText('Click on the "Confirm" button to send the response or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel')
                 ->canSee(
