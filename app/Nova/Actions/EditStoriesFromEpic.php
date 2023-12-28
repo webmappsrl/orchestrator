@@ -76,8 +76,15 @@ class EditStoriesFromEpic extends Action
      */
     public function fields(NovaRequest $request)
     {
+        $storyStatusOptions = [
+            'new' => StoryStatus::New,
+            'progress' => StoryStatus::Progress,
+            'done' => StoryStatus::Done,
+            'testing' => StoryStatus::Test,
+            'rejected' => StoryStatus::Rejected,
+        ];
         return [
-            Select::make('Status')->options(collect(StoryStatus::cases())->pluck('name', 'value'))->displayUsingLabels(),
+            Select::make('Status')->options($storyStatusOptions),
             Select::make('Assigned To')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             Select::make('Tester')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             Select::make('Creator')->options(User::whereJsonContains('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
