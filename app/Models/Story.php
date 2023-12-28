@@ -81,6 +81,7 @@ class Story extends Model implements HasMedia
 
             $devHasUpdatedStatus = $devIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'testing';
             $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'done' || $status == 'rejected';
+
             $devAndTesterAreTheSamePerson = $story->tester_id == $story->user_id;
 
             if ($devAndTesterAreTheSamePerson) {
