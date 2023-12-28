@@ -166,7 +166,7 @@ class Story extends Resource
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
             Select::make(('Status'), 'status')->options($storyStatusOptions)->onlyOnForms()
-                ->default('new')->canSee(function ($request) {
+                ->default(StoryStatus::New)->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
             Text::make('Status', function () {
@@ -630,6 +630,7 @@ class Story extends Resource
             }
             if ($loggedUserIsTesterAssigned) {
                 $storyStatusOptions = [
+                    'new' => StoryStatus::New,
                     'progress' => StoryStatus::Progress,
                     'done' => StoryStatus::Done,
                     'rejected' => StoryStatus::Rejected,
