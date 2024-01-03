@@ -66,18 +66,27 @@
                             <p>Il servizio prevede:</p>
                             <div class="service-details">
                                 <ul>
-                                    @foreach ($quote->products as $product)
-                                        <li> <span class="product-title">{{ $product->name }}</span> -
-                                            {{ $product->description }} </li>
-                                    @endforeach
-                                    @foreach ($quote->recurringProducts as $recurringProduct)
-                                        <li><span class="product-title">{{ $recurringProduct->name }}</span> -
-                                            {{ $recurringProduct->description }}
-                                        </li>
-                                    @endforeach
-                                    @foreach ($quote->additional_services as $description => $price)
-                                        <li>{{ $description }}</li>
-                                    @endforeach
+                                    @if (count($quote->products) > 0)
+                                        <h3 class="description">Servizi di attivazione:</h3>
+                                        @foreach ($quote->products as $product)
+                                            <li> <span class="product-title">{{ $product->name }}</span> -
+                                                {{ $product->description }} </li>
+                                        @endforeach
+                                    @endif
+                                    @if (count($quote->recurringProducts) > 0)
+                                        <h3 class="description">Servizi di Manutenzione:</h3>
+                                        @foreach ($quote->recurringProducts as $recurringProduct)
+                                            <li><span class="product-title">{{ $recurringProduct->name }}</span> -
+                                                {{ $recurringProduct->description }}
+                                            </li>
+                                        @endforeach
+                                    @endif
+                                    @if (count($quote->additional_services) > 0)
+                                        <h3 class="description">Servizi Aggiuntivi:</h3>
+                                        @foreach ($quote->additional_services as $description => $price)
+                                            <li>{{ $description }}</li>
+                                        @endforeach
+                                    @endif
                                 </ul>
                             </div>
                         @endif
