@@ -93,7 +93,7 @@ class Story extends Model implements HasMedia
 
                 $story->tester->notify(NovaNotification::make()
                     ->type('info')
-                    ->message('The status of the story ' . $story->id . ' has been updated to ' . $story->status->value . ' by ' . auth()->user()->name)
+                    ->message('The status of the story ' . $story->id . ' has been updated to ' . $story->status . ' by ' . auth()->user()->name)
                     ->action('View story', url('/nova/resources/stories/' . $story->id))
                     ->icon('star'));
             }
@@ -103,7 +103,7 @@ class Story extends Model implements HasMedia
 
                 $story->developer->notify(NovaNotification::make()
                     ->type('info')
-                    ->message('The status of the story ' . $story->id . ' has been updated to ' . $story->status->value . ' by ' . auth()->user()->name)
+                    ->message('The status of the story ' . $story->id . ' has been updated to ' . $story->status . ' by ' . auth()->user()->name)
                     ->action('View story', url('/nova/resources/stories/' . $story->id))
                     ->icon('star'));
             }
