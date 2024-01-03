@@ -158,7 +158,7 @@ class Project extends Resource
                 ->onlyInline()
                 ->showOnDetail()
                 ->confirmButtonText('Add Stories')
-                ->confirmText('Stories will be created starting from the first line of the text area, adding one story per line and associating them to the current project backlog and the specified deadlines, type and user.')
+                ->confirmText('Stories will be created starting from the first line of the text area, adding one story per line and associating them to the current project backlog and the specified deadlines, type and user. Please follow this syntax: Story Name: Description | Customer Request')
                 ->cancelButtonText('Cancel'),
 
             (new AddProjectsToFavorites)
