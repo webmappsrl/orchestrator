@@ -12,6 +12,7 @@ use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use App\Enums\StoryPriority;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -31,5 +32,11 @@ class ToBeTestedStory extends Story
     public static function indexQuery(NovaRequest $request, $query)
     {
         return $query->where('status', StoryStatus::Test)->where('tester_id', $request->user()->id);
+    }
+
+
+    public static function authorizedToCreate(Request $request)
+    {
+        return false;
     }
 }

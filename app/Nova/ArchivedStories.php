@@ -15,4 +15,9 @@ class ArchivedStories extends Story
         $allowedStatuses = [StoryStatus::Done, StoryStatus::Rejected];
         return $query->whereIn('status', $allowedStatuses)->where('user_id', $request->user()->id);
     }
+
+    public static function authorizedToCreate(Request $request)
+    {
+        return false;
+    }
 }

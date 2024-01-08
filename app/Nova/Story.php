@@ -157,7 +157,7 @@ class Story extends Resource
 
                 $statusColorMapping = [
                     'new' => 'rgb(0, 0, 255)', // Blue
-                    'progress' => 'rgb(255, 255, 0)', // Yellow
+                    'progress' => 'rgb(204, 204, 0)', // Yellow
                     'testing' => 'rgb(255, 165, 0)', // Orange
                     'rejected' => 'rgb(255, 0, 0)', // Red
                     'done' => 'rgb(0, 128, 0)' // Green
@@ -167,10 +167,10 @@ class Story extends Resource
 
 
                 if (!$request->user()->hasRole(UserRole::Customer)) {
-                    return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . '<span style="color:' . $statusColor . '">' . $storyStatus . '</span>' . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+                    return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $storyStatus . '</span>' . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
                 } else {
                     //return the string without projecturl and priority
-                    return "Status: " . '<span style="color:' . $statusColor . '">' . $storyStatus . '</span>' . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+                    return "Status: " . '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $storyStatus . '</span>' . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
                 }
             })->asHtml()
                 ->onlyOnIndex()
