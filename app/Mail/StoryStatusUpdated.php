@@ -47,12 +47,16 @@ class StoryStatusUpdated extends Mailable
     public function content(): Content
     {
         $userType = $this->story->tester_id == $this->user->id ? 'tester' : 'developer';
+        $storyStatusColorMapping = config('orchestrator.story.status.color-mapping');
+        $storyStatus = is_object($this->story->status) ? $this->story->status->value : $this->story->status;
         return new Content(
             markdown: 'mails.story-status-updated',
             with: [
                 'story' => $this->story,
+                'status' => $storyStatus,
                 'user' => $this->user,
                 'userType' => $userType,
+                'colorMapping' => $storyStatusColorMapping
             ],
         );
     }
