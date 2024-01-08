@@ -25,11 +25,17 @@ use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use Illuminate\Http\Request;
 
 class AssignedToMeStory extends Story
 {
     public static function indexQuery(NovaRequest $request, $query)
     {
         return $query->where('user_id', $request->user()->id)->whereIn('status', [StoryStatus::Progress, StoryStatus::New]);
+    }
+
+    public static function authorizedToCreate(Request $request)
+    {
+        return false;
     }
 }
