@@ -7,11 +7,13 @@ use App\Models\Epic;
 use App\Enums\UserRole;
 use App\Models\Project;
 use Laravel\Nova\Panel;
+use App\Nova\Actions\EditStories;
 use App\Enums\StoryType;
 use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use App\Enums\StoryPriority;
+use App\Models\Deadline;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -292,33 +294,32 @@ class Story extends Resource
                 ->default(function ($request) {
                     return auth()->user()->id;
                 }),
-            BelongsTo::make('Epic')
-                ->nullable()
-                ->default(function ($request) {
-                    //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
-                    $fromEpic =
-                        $request->input('viaResource') === 'epics' ||
-                        $request->input('viaResource') === 'new-epics' ||
-                        $request->input('viaResource') === 'project-epics' ||
-                        $request->input('viaResource') === 'progress-epics' ||
-                        $request->input('viaResource') === 'test-epics' ||
-                        $request->input('viaResource') === 'done-epics' ||
-                        $request->input('viaResource') === 'rejected-epics';
+            // BelongsTo::make('Epic') 
+            //     ->nullable()
+            //     ->default(function ($request) {
+            //         //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
+            //         $fromEpic =
+            //             $request->input('viaResource') === 'epics' ||
+            //             $request->input('viaResource') === 'new-epics' ||
+            //             $request->input('viaResource') === 'project-epics' ||      //TODO: delete when epic model will be deleted
+            //             $request->input('viaResource') === 'progress-epics' ||
+            //             $request->input('viaResource') === 'test-epics' ||
+            //             $request->input('viaResource') === 'done-epics' ||
+            //             $request->input('viaResource') === 'rejected-epics';
 
-                    if ($fromEpic) {
-                        $epic = Epic::find($request->input('viaResourceId'));
-                        return $epic->id;
-                    } else {
-                        return null;
-                    }
-                })
-                ->hideFromIndex()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
+            //         if ($fromEpic) {
+            //             $epic = Epic::find($request->input('viaResourceId'));
+            //             return $epic->id;
+            //         } else {
+            //             return null;
+            //         }
+            //     })
+            //     ->hideFromIndex()
+            //     ->canSee(function ($request) {
+            //         return !$request->user()->hasRole(UserRole::Customer);
+            //     }),
             BelongsTo::make('Project')
                 ->default(function ($request) {
-                    //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
                     $fromEpic =
                         $request->input('viaResource') === 'epics' ||
                         $request->input('viaResource') === 'new-epics' ||
@@ -340,15 +341,15 @@ class Story extends Resource
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
             MorphToMany::make('Deadlines'),
-            new Panel(__('Epic Description'), [
-                MarkdownTui::make(__('Description'), 'epic.description')
-                    ->hideFromIndex()
-                    ->initialEditType(EditorType::MARKDOWN)
-                    ->onlyOnDetail()
-                    ->canSee(function ($request) {
-                        return !$request->user()->hasRole(UserRole::Customer);
-                    }),
-            ]),
+            // new Panel(__('Epic Description'), [ 
+            //     MarkdownTui::make(__('Description'), 'epic.description')
+            //         ->hideFromIndex()
+            //         ->initialEditType(EditorType::MARKDOWN)    //TODO: delete when epic model will be deleted
+            //         ->onlyOnDetail()
+            //         ->canSee(function ($request) {
+            //             return !$request->user()->hasRole(UserRole::Customer);
+            //         }),
+            // ]),
             Files::make('Documents', 'documents')
                 ->hideFromIndex(),
             Images::make('Images', 'images')
@@ -496,7 +497,7 @@ class Story extends Resource
                         return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                     }
                 ),
-            (new actions\EditStoriesFromEpic)
+            (new EditStories)
                 ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
@@ -539,20 +540,20 @@ class Story extends Resource
         }
 
         if ($request->viaResource != 'projects') {
-            array_push($actions, (new actions\ConvertStoryToEpic)
-                ->confirmText('Click on the "Confirm" button to convert the selected stories to epics or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
-                ->showInline());
+            // array_push($actions, (new actions\ConvertStoryToEpic)
+            //     ->confirmText('Click on the "Confirm" button to convert the selected stories to epics or "Cancel" to cancel.')
+            //     ->confirmButtonText('Confirm')
+            //     ->cancelButtonText('Cancel')      //TODO: delete when epic model will be deleted
+            //     ->showInline());
             array_push($actions, (new actions\moveToBacklogAction)
                 ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel')
                 ->showInline());
-            array_push($actions, (new MoveStoriesFromEpic)
-                ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'));
+            // array_push($actions, (new MoveStoriesFromEpic)
+            //     ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
+            //     ->confirmButtonText('Confirm')       //TODO: delete when epic model will be deleted
+            //     ->cancelButtonText('Cancel'));
         }
 
         return $actions;
@@ -569,9 +570,9 @@ class Story extends Resource
     {
         return [
             Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
-                $epic = Epic::find($this->epic_id);
-                if ($epic) {
-                    $stories = $epic->stories;
+                $deadline = $this->resource->deadlines->first();
+                if ($deadline) {
+                    $stories = $deadline->stories;
                     $stories = $stories->sortBy('id');
                     $stories = $stories->values();
 
