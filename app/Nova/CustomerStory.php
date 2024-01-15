@@ -78,7 +78,9 @@ class CustomerStory extends Resource
             ->whereHas('creator', function ($query) {
                 $query->whereJsonContains('roles', UserRole::Customer);
             })
-            ->where('status', '!=', StoryStatus::Done->value);
+            ->where('status', '!=', StoryStatus::Done->value)
+            ->where('type', '!=', StoryType::Feature->value)
+            ->whereNull('project_id');
     }
 
 
@@ -132,15 +134,12 @@ class CustomerStory extends Resource
             new Panel(__('Navigate to the next or previous story'), $this->navigationLinks()),
             ID::make()->sortable(),
             Text::make(__('Name'), 'name')->sortable()
-                ->displayUsing(function ($name, $a, $b) {
-                    $wrappedName = wordwrap($name, 75, "\n", true);
-                    $htmlName = str_replace("\n", '<br>', $wrappedName);
-                    return $htmlName;
+                ->displayUsing(function ($name) {
+                    return wrap_and_format_name($name);
                 })
                 ->asHtml(),
             DateTime::make('Created At')->sortable()
-                ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->onlyOnDetail(),
             DateTime::make('Updated At')->sortable()
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
@@ -407,6 +406,7 @@ class CustomerStory extends Resource
             new filters\StoryTypeFilter(),
             new filters\StoryPriorityFilter(),
             new filters\CustomerStoryFilter(),
+            new filters\CustomerStoryWithDeadlineFilter(),
         ];
     }
 

@@ -1,7 +1,9 @@
 <?php
 
 return [
-
+    'utility' => [
+        'word-wrap-length' => 20,
+    ],
     'story' => [
         'status' => [
             'color-mapping' => [
