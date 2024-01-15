@@ -145,7 +145,9 @@ class Story extends Resource
             Text::make('Type', 'type')
                 ->canSee(function () {
                     return auth()->user()->hasRole(UserRole::Customer);
-                }),
+                })
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             Text::make('Info', function () use ($request) {
                 $story = $this->resource;
                 if (!empty($story->epic_id)) {
@@ -188,8 +190,10 @@ class Story extends Resource
                 }),
             Text::make('Status', function () {
                 $status = $this->status;
-                $color = 'blue';
-                return '<span style="color:' . $color . '; font-weight: bold;">' . $status . '</span>';
+                $statusColorMapping = config('orchestrator.story.status.color-mapping');
+
+                $statusColor = $statusColorMapping[$status] ?? 'black';
+                return  '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $status . '</span>';
             })->asHtml()->canSee(function ($request) {
                 return $request->user()->hasRole(UserRole::Customer);
             }),
