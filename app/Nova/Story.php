@@ -356,7 +356,8 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            MorphToMany::make('Deadlines'),
+            MorphToMany::make('Deadlines')
+                ->showCreateRelationButton(),
             // new Panel(__('Epic Description'), [ 
             //     MarkdownTui::make(__('Description'), 'epic.description')
             //         ->hideFromIndex()
