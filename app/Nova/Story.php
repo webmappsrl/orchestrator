@@ -137,6 +137,15 @@ class Story extends Resource
                 ->onlyOnDetail(),
             DateTime::make('Updated At')->sortable()
                 ->onlyOnDetail(),
+            DateTime::make('Updated At')->sortable()
+                ->onlyOnIndex()
+                ->canSee(function () {
+                    return auth()->user()->hasRole(UserRole::Customer);
+                }),
+            Text::make('Type', 'type')
+                ->canSee(function () {
+                    return auth()->user()->hasRole(UserRole::Customer);
+                }),
             Text::make('Info', function () use ($request) {
                 $story = $this->resource;
                 if (!empty($story->epic_id)) {
@@ -239,7 +248,10 @@ class Story extends Resource
                 $color = 'blue';
                 return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
             })->asHtml()
-                ->onlyOnDetail(),
+                ->onlyOnDetail()
+                ->canSee(function () {
+                    return !auth()->user()->hasRole(UserRole::Customer);
+                }),
             Text::make(__('Deadlines'), function () {
                 $deadlines = $this->deadlines;
                 foreach ($deadlines as $deadline) {
