@@ -22,7 +22,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
-class EditStoriesFromEpic extends Action
+class EditStories extends Action
 {
     use InteractsWithQueue, Queueable;
 

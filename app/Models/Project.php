@@ -51,7 +51,10 @@ class Project extends Model implements HasMedia
 
     public function backlogStories()
     {
-        return $this->hasMany(Story::class)->whereNull('epic_id');
+        return $this->hasMany(Story::class)
+            ->whereNull('epic_id')
+            ->where('status', '!=', 'done')
+            ->doesntHave('deadlines');
     }
 
     /**

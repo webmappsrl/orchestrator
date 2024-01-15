@@ -400,7 +400,7 @@ class ArchivedCustomerStory extends Resource
             return [];
         }
         $actions = [
-            (new actions\EditStoriesFromEpic)
+            (new actions\EditStories)
                 ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),

@@ -74,8 +74,6 @@ class Project extends Resource
                     return $this->backlogStories()->count();
                 })->hideWhenCreating()->hideWhenUpdating(),
                 Date::make('Due date')->sortable(),
-                Tag::make('Tag epics', 'tagEpics', 'App\Nova\Epic')->onlyOnDetail()->withPreview(),
-                //create a tex field that shows the users that have this project as favorite, and link every user to its detail page
                 Text::make('Favorited By', function () {
                     $users = [];
                     foreach ($this->favoriters as $user) {
@@ -101,10 +99,7 @@ class Project extends Resource
                     ->nullable()
             ]),
 
-            new Tabs('Epics', [
-                new Tab('Epics', [
-                    HasMany::make('Epics'),
-                ]),
+            new Tabs('Backlog', [
                 new Tab('Backlog Stories', [
                     HasMany::make('Backlog Stories', 'backlogStories', Story::class),
                 ]),

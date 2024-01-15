@@ -34,9 +34,19 @@ class moveToBacklogAction extends Action
     {
         //remove the relation between the story and the epic and assign the story to the project the epic is related with 
         foreach ($models as $story) {
-            $story->project()->associate($story->epic->project_id);
-            $story->epic()->dissociate();
-            $story->status = $story->epic_id == null ? StoryStatus::New : $story->status;
+            if (!$story->project_id) {
+                return Action::danger('Story is not related to a project');
+            }
+            $deadlines = $story->deadlines;
+            if ($deadlines->count() > 0) {
+                foreach ($deadlines as $deadline) {
+                    $deadline->stories()->detach($story->id);
+                }
+            }
+            if ($story->epic_id) {
+                $story->epic()->dissociate();
+            }
+            $story->status = StoryStatus::New;
             $story->save();
         }
     }
