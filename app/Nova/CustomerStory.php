@@ -79,7 +79,6 @@ class CustomerStory extends Resource
                 $query->whereJsonContains('roles', UserRole::Customer);
             })
             ->where('status', '!=', StoryStatus::Done->value)
-            ->where('type', '!=', StoryType::Feature->value)
             ->whereNull('project_id');
     }
 
@@ -88,7 +87,7 @@ class CustomerStory extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $requests
      * @return array
      */
     public function fields(NovaRequest $request)
