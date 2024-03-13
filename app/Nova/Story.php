@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Epic;
 use App\Enums\UserRole;
 use App\Models\Project;
+use App\Models\User;
 use Laravel\Nova\Panel;
 use App\Nova\Actions\EditStories;
 use App\Enums\StoryType;
@@ -20,6 +21,7 @@ use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\MorphToMany;
+use Laravel\Nova\Fields\BooleanGroup;
 use App\Nova\Actions\MoveStoriesFromEpic;
 use Illuminate\Database\Eloquent\Builder;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
@@ -80,9 +82,6 @@ class Story extends Resource
      */
     public function fields(NovaRequest $request)
     {
-        $loggedUser = auth()->user();
-        $options = $this->getOptions($loggedUser);
-        $storyStatusOptions = $options;
         $testDev = $this->test_dev;
         $testProd = $this->test_prod;
 
@@ -125,7 +124,85 @@ class Story extends Resource
                 return $this->navigationLinks($request);
             }),
             ID::make()->sortable(),
-            Text::make(__('Name'), 'name')->sortable()
+            Status::make(('Status'), 'status')
+                ->loadingWhen([StoryStatus::Assigned->value, StoryStatus::Progress->value, StoryStatus::Test->value, StoryStatus::Tested->value])
+                ->failedWhen([StoryStatus::Rejected->value, StoryStatus::New->value]),
+            Select::make(('Status'), 'status')
+                ->options($this->getOptions())
+                ->default(StoryStatus::New)
+                ->readonly(function ($request) {
+                    return $request->user()->hasRole(UserRole::Customer) && $this->resource->status !== StoryStatus::Released->value;
+                })
+                ->onlyOnForms(),
+
+            BelongsTo::make('Customer', 'creator', 'App\Nova\User')
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                })->nullable()
+                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                    $query->whereJsonContains('roles', UserRole::Customer);
+                })
+                ->default(function ($request) {
+                    if (auth()->user()->hasRole(UserRole::Customer)) {
+                        return auth()->user()->id;
+                    }
+                })
+                ->onlyOnDetail(),
+            Text::make('Info', function () use ($request) {
+                $story = $this->resource;
+                $projectUrl = '';
+                $customerUrl = '';
+                $projectName = '';
+                $customerName = '';
+                $customer  = false;
+                if (!empty($story->epic_id)) {
+                    $epic = Epic::find($story->epic_id);
+                    $project = Project::find($epic->project_id);
+                } else {
+                    $project = Project::find($story->project_id);
+                    $customer = $story->creator;
+                }
+
+                if ($project) {
+                    $projectUrl = url('/resources/projects/' . $project->id);
+                    $projectName = $project->name;
+                }
+                if ($customer) {
+                    $customerUrl = url('/resources/users/' . $customer->id);
+                    $customerName = $customer->name;
+                }
+                $storyStatus = $this->status;
+                $storyType = $this->type;
+
+                $statusColorMapping = config('orchestrator.story.status.color-mapping');
+
+                $statusColor = $statusColorMapping[$storyStatus] ?? 'black';
+
+
+                if (!$request->user()->hasRole(UserRole::Customer)) {
+                    $priorityColor = $this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red');
+                    $projectLink = '';
+                    $customerLink = '';
+                    if (!empty($projectName)) {
+                        $projectLink = "<a href=\"{$projectUrl}\" target=\"_blank\" style=\"color:orange; font-weight:bold;\">Project: {$projectName}</a> <br>";
+                    }
+                    if (!empty($customerName)) {
+                        $customerLink = "<a href=\"{$customerUrl}\" target=\"_blank\" style=\"color:chocolate; font-weight:bold;\">Creator: {$customerName}</a> <br>";
+                    }
+                    return  <<<HTML
+                    {$projectLink}
+                    {$customerLink}
+                    HTML;
+                } else {
+                    //return the string without projecturl and priority
+                    return "Status: " . '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $storyStatus . '</span>' . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
+                }
+            })->asHtml()
+                ->onlyOnIndex()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
+            Text::make(__('Title'), 'name')->sortable()
                 ->displayUsing(function ($name, $a, $b) {
                     $wrappedName = wordwrap($name, 75, "\n", true);
                     $htmlName = str_replace("\n", '<br>', $wrappedName);
@@ -148,55 +225,8 @@ class Story extends Resource
                 })
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
-            Text::make('Info', function () use ($request) {
-                $story = $this->resource;
-                if (!empty($story->epic_id)) {
-                    $epic = Epic::find($story->epic_id);
-                    $project = Project::find($epic->project_id);
-                } else {
-                    $project = Project::find($story->project_id);
-                }
-
-                if ($project) {
-                    $projectUrl = url('/resources/projects/' . $project->id);
-                    $projectName = $project->name;
-                } else {
-                    $projectUrl = '';
-                    $projectName = '';
-                }
-                $storyPriority = StoryPriority::getCase($this->priority);
-                $storyStatus = $this->status;
-                $storyType = $this->type;
-
-                $statusColorMapping = config('orchestrator.story.status.color-mapping');
-
-                $statusColor = $statusColorMapping[$storyStatus] ?? 'black';
 
 
-                if (!$request->user()->hasRole(UserRole::Customer)) {
-                    return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $storyStatus . '</span>' . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
-                } else {
-                    //return the string without projecturl and priority
-                    return "Status: " . '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $storyStatus . '</span>' . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
-                }
-            })->asHtml()
-                ->onlyOnIndex()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            Select::make(('Status'), 'status')->options($storyStatusOptions)->onlyOnForms()
-                ->default(StoryStatus::New)->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            Text::make('Status', function () {
-                $status = $this->status;
-                $statusColorMapping = config('orchestrator.story.status.color-mapping');
-
-                $statusColor = $statusColorMapping[$status] ?? 'black';
-                return  '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $status . '</span>';
-            })->asHtml()->canSee(function ($request) {
-                return $request->user()->hasRole(UserRole::Customer);
-            }),
             Select::make('Priority', 'priority')->options([
                 StoryPriority::Low->value => 'Low',
                 StoryPriority::Medium->value => 'Medium',
@@ -225,14 +255,6 @@ class Story extends Resource
                 ->hideWhenUpdating()
                 ->sortable()
                 ->hideFromIndex(),
-            Status::make('Status')
-                ->loadingWhen(['status' => 'new'])
-                ->failedWhen(['status' => 'rejected'])
-                ->sortable()
-                ->onlyOnDetail()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
             Select::make(__('Type'), 'type')->options(function () use ($request) {
                 if ($request->user()->hasRole(UserRole::Customer)) {
                     return [
@@ -246,6 +268,9 @@ class Story extends Resource
                     ];
                 }
             })->onlyOnForms()
+                ->readonly(function ($request) {
+                    return $request->user()->hasRole(UserRole::Customer);
+                })
                 ->default('Feature'),
             Text::make('Type', function () {
                 $type = $this->type;
@@ -274,7 +299,7 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            BelongsTo::make('Developer', 'developer', 'App\Nova\User')
+            BelongsTo::make(__('assigned to'), 'developer', 'App\Nova\User')
                 ->default(function ($request) {
                     if ($this->user_id) {
                         return $this->user_id;
@@ -287,19 +312,7 @@ class Story extends Resource
                     $query->whereJsonContains('roles', UserRole::Developer);
                 })->required(),
 
-            BelongsTo::make('Customer', 'creator', 'App\Nova\User')
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                })->nullable()
-                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
-                    $query->whereJsonContains('roles', UserRole::Customer);
-                })
-                ->default(function ($request) {
-                    if (auth()->user()->hasRole(UserRole::Customer)) {
-                        return auth()->user()->id;
-                    }
-                }),
-            BelongsTo::make('Tester', 'tester', 'App\Nova\User')
+            BelongsTo::make(__('tested by'), 'tester', 'App\Nova\User')
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 })
@@ -583,7 +596,7 @@ class Story extends Resource
         return null;
     }
 
-    public function navigationLinks(NovaRequest $request)
+    public function navigationLinks()
     {
         return [
             Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
@@ -619,46 +632,43 @@ class Story extends Resource
         ];
     }
 
-    private function getOptions($loggedUser): array
+    public function getOptions(): array
     {
+        $loggedUser = auth()->user();
         $loggedUserIsDeveloperAssigned = false;
         $loggedUserIsTesterAssigned = false;
         $storyStatusOptions = [
-            'new' => StoryStatus::New,
-            'progress' => StoryStatus::Progress,
-            'done' => StoryStatus::Done,
-            'testing' => StoryStatus::Test,
-            'rejected' => StoryStatus::Rejected,
+            StoryStatus::New->value => StoryStatus::New,
+            StoryStatus::Assigned->value => StoryStatus::Assigned,
+            StoryStatus::Progress->value => StoryStatus::Progress,
+            StoryStatus::Test->value => StoryStatus::Test,
+            StoryStatus::Tested->value => StoryStatus::Tested,
+            StoryStatus::Released->value => StoryStatus::Released,
+            StoryStatus::Rejected->value => StoryStatus::Rejected,
+            StoryStatus::Done->value => StoryStatus::Done,
         ];
+        if ($loggedUser->hasRole(UserRole::Customer)) {
 
+            return $storyStatusOptions;
+        }
         if ($this->resource->exists) {
             $loggedUserIsDeveloperAssigned = $this->resource->developer && $loggedUser->id == $this->resource->developer->id;
             $loggedUserIsTesterAssigned = $this->resource->tester && $loggedUser->id == $this->resource->tester->id;
 
             if ($loggedUserIsDeveloperAssigned && $loggedUserIsTesterAssigned) {
-                $storyStatusOptions = [
-                    'new' => StoryStatus::New,
-                    'progress' => StoryStatus::Progress,
-                    'done' => StoryStatus::Done,
-                    'testing' => StoryStatus::Test,
-                    'rejected' => StoryStatus::Rejected,
-                ];
                 return $storyStatusOptions;
             }
             if ($loggedUserIsDeveloperAssigned) {
-                $storyStatusOptions = [
-                    'new' => StoryStatus::New,
-                    'progress' => StoryStatus::Progress,
-                    'testing' => StoryStatus::Test,
-                ];
+                unset($storyStatusOptions[StoryStatus::New->value]);
+                unset($storyStatusOptions[StoryStatus::Tested->value]);
+                unset($storyStatusOptions[StoryStatus::Done->value]);
+                unset($storyStatusOptions[StoryStatus::Released->value]);
+                return $storyStatusOptions;
             }
             if ($loggedUserIsTesterAssigned) {
-                $storyStatusOptions = [
-                    'new' => StoryStatus::New,
-                    'progress' => StoryStatus::Progress,
-                    'done' => StoryStatus::Done,
-                    'rejected' => StoryStatus::Rejected,
-                ];
+                unset($storyStatusOptions[StoryStatus::New->value]);
+                unset($storyStatusOptions[StoryStatus::Test->value]);
+                return $storyStatusOptions;
             }
         }
 

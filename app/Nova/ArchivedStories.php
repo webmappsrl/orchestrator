@@ -12,7 +12,7 @@ class ArchivedStories extends Story
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        $allowedStatuses = [StoryStatus::Done, StoryStatus::Rejected];
+        $allowedStatuses = [StoryStatus::Released, StoryStatus::Rejected];
         return $query->whereIn('status', $allowedStatuses)->where('user_id', $request->user()->id);
     }
 
