@@ -29,9 +29,17 @@ use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 
 class ToBeTestedStory extends Story
 {
+
+    public static function label()
+    {
+        return __('To be tested stories');
+    }
+
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->where('status', StoryStatus::Test)->where('tester_id', $request->user()->id);
+        return $query
+            ->where('tester_id', $request->user()->id)
+            ->where('status', StoryStatus::Test);
     }
 
 

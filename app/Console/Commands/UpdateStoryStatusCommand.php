@@ -20,13 +20,13 @@ class UpdateStoryStatusCommand extends Command
                 $story->save();
                 $this->info("ASSIGNED Story ID {$story->id} updated.");
             });
-        Story::where('status', StoryStatus::Done->value)
+        Story::whereNull('creator_id')
+            ->whereNotNull('user_id')
             ->each(function ($story) {
-                $story->status = StoryStatus::Released->value;
+                $story->creator_id = $story->user_id;
                 $story->save();
-                $this->info("DONE Story ID {$story->id} updated.");
+                $this->info("CREATOR for Story ID {$story->id} set to USER ID.");
             });
-
         $this->info('All applicable stories have been updated.');
     }
 }

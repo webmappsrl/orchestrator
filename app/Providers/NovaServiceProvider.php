@@ -3,27 +3,19 @@
 namespace App\Providers;
 
 use App\Nova\App;
-use App\Nova\Epic;
 use App\Nova\User;
 use App\Nova\Layer;
 use App\Nova\Quote;
-use App\Nova\Story;
-use App\Nova\NewEpic;
 use App\Nova\Product;
 use App\Nova\Project;
 use App\Nova\Customer;
 use App\Nova\Deadline;
-use App\Nova\DoneEpic;
-use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
-use App\Nova\ArchivedCustomerStory;
+use App\Nova\ArchivedStoryShowedByCustomer;
 use App\Nova\ArchivedStories;
+use App\Nova\StoryShowedByCustomer;
 use App\Nova\AssignedToMeStory;
-use App\Nova\Milestone;
-use App\Nova\ProjectEpic;
-use App\Nova\ProgressEpic;
-use App\Nova\RejectedEpic;
 use App\Nova\CustomerStory;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
@@ -91,8 +83,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 }),
 
                 MenuSection::make('CUSTOMER', [
-                    MenuItem::resource(Story::class),
-                    MenuItem::resource(ArchivedCustomerStory::class)
+                    MenuItem::resource(StoryShowedByCustomer::class),
+                    MenuItem::resource(ArchivedStoryShowedByCustomer::class)
                 ])->canSee(function ($request) {
                     if ($request->user() == null)
                         return false;

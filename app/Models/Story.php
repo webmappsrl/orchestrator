@@ -6,6 +6,7 @@ use App\Models\Epic;
 use App\Enums\UserRole;
 use AWS\CRT\HTTP\Request;
 use App\Enums\StoryStatus;
+use App\Enums\StoryType;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -64,14 +65,24 @@ class Story extends Model implements HasMedia
                 $epic->status = $epic->getStatusFromStories()->value;
                 $epic->save();
             }
+            if ($story->isDirty('user_id')) {
+                $this->sendStatusUpdatedEmail($story, $story->user_id);
+            }
+            if ($story->isDirty('tester_id')) {
+                $this->sendStatusUpdatedEmail($story, $story->tester_id);
+            }
         });
 
         static::created(function (Story $story) {
             $user = auth()->user();
             if ($user) {
+                $story->creator_id = $user->id;
+                if (!isset($story->type)) {
+                    $story->type = StoryType::Helpdesk->value;
+                }
+
+                $story->save();
                 if ($user->hasRole(UserRole::Customer)) {
-                    $story->creator_id = $user->id;
-                    $story->save();
                     $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                     foreach ($developers as $developer) {
                         try {
