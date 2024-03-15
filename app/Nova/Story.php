@@ -126,7 +126,7 @@ class Story extends Resource
         $fields = [
             ID::make()->sortable(),
             $this->statusField($request),
-            $this->typeField('index'),
+            $this->typeField($request),
             $this->infoField($request),
             $this->titleField(),
             $this->createdAtField(),
@@ -141,9 +141,6 @@ class Story extends Resource
 
     public  function fieldsInDetails(NovaRequest $request)
     {
-        $testDev = $this->test_dev;
-        $testProd = $this->test_prod;
-
         $fields = [
             ID::make()->sortable(),
             $this->createdAtField(),
@@ -172,7 +169,7 @@ class Story extends Resource
             $this->creatorField(),
             $this->assignedToField(),
             $this->testedByField(),
-            $this->typeField('edit'),
+            $this->typeField($request),
             $this->deadlineField($request),
             $this->projectField(),
             Files::make('Documents', 'documents'),
@@ -218,36 +215,35 @@ class Story extends Resource
             })
             ->canSee($this->canSee($fieldName));
     }
-    public function typeField($view, $fieldName = 'type')
+    public function typeField(NovaRequest $request, $fieldName = 'type')
     {
-        switch ($view) {
-            case 'edit':
-                return  Select::make(__('Type'), $fieldName)
-                    ->options(function () {
-                        return [
-                            StoryType::Feature->value =>  StoryType::Feature,
-                            StoryType::Bug->value => StoryType::Bug,
-                            StoryType::Helpdesk->value => StoryType::Helpdesk
-                        ];
-                    })
-                    ->default(StoryType::Helpdesk->value)
-                    ->canSee($this->canSee($fieldName));
-            case 'index':
-            default:
-                return Text::make(__('Type'), $fieldName, function () {
-                    $color = 'green';
-                    if ($this->type === StoryType::Bug->value) {
-                        $color = 'red';
-                    } elseif ($this->type === StoryType::Feature->value) {
-                        $color = 'blue'; // Assumendo che 'Feature' debba essere blu
-                    }
+        $isEdit = $request->isCreateOrAttachRequest() || $request->isUpdateOrUpdateAttachedRequest();
+        if ($isEdit) {
+            return  Select::make(__('Type'), $fieldName)
+                ->options(function () {
+                    return [
+                        StoryType::Feature->value =>  StoryType::Feature,
+                        StoryType::Bug->value => StoryType::Bug,
+                        StoryType::Helpdesk->value => StoryType::Helpdesk
+                    ];
+                })
+                ->default(StoryType::Helpdesk->value)
+                ->canSee($this->canSee($fieldName));
+        } else {
+            return Text::make(__('Type'), $fieldName, function () {
+                $color = 'green';
+                if ($this->type === StoryType::Bug->value) {
+                    $color = 'red';
+                } elseif ($this->type === StoryType::Feature->value) {
+                    $color = 'blue'; // Assumendo che 'Feature' debba essere blu
+                }
 
-                    return <<<HTML
+                return <<<HTML
     <span style="color:{$color}; font-weight: bold;">{$this->type}</span>
     HTML;
-                })
-                    ->asHtml()
-                    ->canSee($this->canSee($fieldName));
+            })
+                ->asHtml()
+                ->canSee($this->canSee($fieldName));
         }
     }
     public function priorityField()
