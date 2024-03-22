@@ -527,25 +527,7 @@ class Story extends Resource
         return [];
     }
 
-    /**
-     * Get the filters available for the resource.
-     *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return array
-     */
-    public function filters(NovaRequest $request)
-    {
-        return [
-            (new filters\UserFilter)->canSee(function ($request) {
-                return !$request->user()->hasRole(UserRole::Customer);
-            }),
-            new filters\StoryStatusFilter,
-            new filters\StoryTypeFilter,
-            (new filters\StoryPriorityFilter)->canSee(function ($request) {
-                return !$request->user()->hasRole(UserRole::Customer);
-            }),
-        ];
-    }
+
 
     /**
      * Get the lenses available for the resource.
@@ -752,5 +734,22 @@ class Story extends Resource
             StoryStatus::Done->value => StoryStatus::Done,
         ];
         return $statusOptions[$statusValue] != null ? [$statusOptions[$statusValue]->value => $statusOptions[$statusValue]] : [];
+    }
+
+    /**
+     * Get the filters available for the resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function filters(NovaRequest $request)
+    {
+        return [
+            new filters\CreatorStoryFilter(),
+            new filters\UserFilter(),
+            new filters\StoryStatusFilter(),
+            new filters\StoryTypeFilter(),
+            new filters\CustomerStoryWithDeadlineFilter(),
+        ];
     }
 }

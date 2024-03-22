@@ -10,7 +10,10 @@ class StoryShowedByCustomer extends Story
 {
 
     public $hideFields = ['description', 'deadlines', 'info', 'updated_at', 'project', 'creator', 'type'];
-
+    public static function label()
+    {
+        return __('my stories');
+    }
     public static function indexQuery(NovaRequest $request, $query)
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
@@ -37,5 +40,19 @@ class StoryShowedByCustomer extends Story
         ];
 
         return $storyStatusOptions;
+    }
+
+    /**
+     * Get the filters available for the resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function filters(NovaRequest $request)
+    {
+        return [
+            new filters\StoryStatusFilter,
+            new filters\StoryTypeFilter,
+        ];
     }
 }

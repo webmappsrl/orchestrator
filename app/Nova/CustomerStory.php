@@ -33,25 +33,4 @@ class CustomerStory extends Story
             })
             ->where('status', '!=', StoryStatus::Done->value);
     }
-
-
-
-
-    /**
-     * Get the filters available for the resource.
-     *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return array
-     */
-    public function filters(NovaRequest $request)
-    {
-        return [
-            new filters\UserFilter(),
-            new filters\StoryStatusFilter(),
-            new filters\StoryTypeFilter(),
-            new filters\StoryPriorityFilter(),
-            new filters\CustomerStoryFilter(),
-            new filters\CustomerStoryWithDeadlineFilter(),
-        ];
-    }
 }

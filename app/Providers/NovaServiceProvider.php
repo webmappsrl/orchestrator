@@ -41,11 +41,15 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         Nova::withBreadcrumbs(true);
 
 
-
         Nova::style('nova-custom', public_path('/nova-custom.css'));
 
 
         Nova::mainMenu(function (Request $request) {
+            $newStoryUrl = '/resources/stories/new';
+            if (auth()->user()->hasRole(UserRole::Customer)) {
+                $newStoryUrl = '/resources/story-showed-by-customers/new';
+            }
+
             return [
                 MenuSection::dashboard(Main::class)->icon('chart-bar')->canSee(function ($request) {
                     if ($request->user() == null)
@@ -92,7 +96,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 })->icon('at-symbol')->collapsable(),
 
                 MenuSection::make('ACTIONS', [
-                    MenuItem::link('Create a new story', '/resources/stories/new'),
+                    MenuItem::link('Create a new story', $newStoryUrl),
                 ])->icon('pencil')->collapsable(),
             ];
         });

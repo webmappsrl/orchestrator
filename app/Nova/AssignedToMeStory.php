@@ -25,4 +25,20 @@ class AssignedToMeStory extends Story
     {
         return false;
     }
+
+
+    /**
+     * Get the filters available for the resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function filters(NovaRequest $request)
+    {
+        return [
+            new filters\CreatorStoryFilter(),
+            new filters\StoryTypeFilter(),
+            new filters\CustomerStoryWithDeadlineFilter(),
+        ];
+    }
 }

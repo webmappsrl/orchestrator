@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Models\Epic;
 use App\Enums\UserRole;
-use AWS\CRT\HTTP\Request;
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
 use Spatie\MediaLibrary\HasMedia;
@@ -58,8 +57,14 @@ class Story extends Model implements HasMedia
 
     protected static function booted()
     {
+        $customerRole = UserRole::Customer;
+        $releasedStatus = StoryStatus::Released->value;
         //update epic status whenever a story is created or updated
-        static::saved(function (Story $story) {
+        static::saved(function (Story $story) use ($customerRole, $releasedStatus) {
+
+            if ($story->creator->hasRole($customerRole) && $story->status === $releasedStatus) {
+                $story->sendStatusUpdatedEmail($story, $story->creator_id);
+            }
             if (!empty($story->epic)) {
                 $epic = $story->epic;
                 $epic->status = $epic->getStatusFromStories()->value;

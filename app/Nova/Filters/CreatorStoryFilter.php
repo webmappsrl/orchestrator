@@ -3,12 +3,10 @@
 namespace App\Nova\Filters;
 
 use App\Models\User;
-use App\Models\Story;
-use App\Models\Customer;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class CustomerStoryFilter extends Filter
+class CreatorStoryFilter extends Filter
 {
     /**
      * The filter's component.
@@ -45,6 +43,6 @@ class CustomerStoryFilter extends Filter
 
     public function name()
     {
-        return 'Customer';
+        return 'Creator';
     }
 }
