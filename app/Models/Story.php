@@ -62,7 +62,7 @@ class Story extends Model implements HasMedia
         //update epic status whenever a story is created or updated
         static::saved(function (Story $story) use ($customerRole, $releasedStatus) {
 
-            if ($story->creator->hasRole($customerRole) && $story->status === $releasedStatus) {
+            if (isset($story->creator_id) && $story->creator->hasRole($customerRole) && $story->status === $releasedStatus) {
                 $story->sendStatusUpdatedEmail($story, $story->creator_id);
             }
             if (!empty($story->epic)) {
