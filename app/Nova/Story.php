@@ -172,7 +172,6 @@ class Story extends Resource
             $this->assignedToField(),
             $this->testedByField(),
             $this->typeField($request),
-            $this->deadlineField($request),
             $this->projectField(),
             Files::make('Documents', 'documents'),
             $this->titleField(),
