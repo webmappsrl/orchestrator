@@ -154,7 +154,6 @@ class Story extends Resource
             $this->deadlineField($request),
             $this->projectField(),
             Files::make('Documents', 'documents')
-                ->rules('application/pdf', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json', 'applicationvnd.ms-powerpoint', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
             $this->descriptionField(),
             $this->customerRequestField($request),
@@ -176,7 +175,6 @@ class Story extends Resource
             $this->typeField($request),
             $this->projectField(),
             Files::make('Documents', 'documents')
-                ->rules('application/pdf', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json', 'applicationvnd.ms-powerpoint', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
             $this->titleField(),
             $this->descriptionField(),
