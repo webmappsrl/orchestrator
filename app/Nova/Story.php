@@ -156,6 +156,8 @@ class Story extends Resource
             Files::make('Documents', 'documents'),
             $this->descriptionField(),
             $this->customerRequestField($request),
+            MorphToMany::make('Deadlines')
+                ->showCreateRelationButton()
         ];
         return array_map(function ($field) {
             return $field->onlyOnDetail();
@@ -177,6 +179,8 @@ class Story extends Resource
             $this->descriptionField(),
             $this->customerRequestField($request),
             $this->answerToTicketField(),
+            MorphToMany::make('Deadlines')
+                ->showCreateRelationButton()
         ];
         return array_map(function ($field) {
             return $field->onlyOnForms();
@@ -260,25 +264,19 @@ class Story extends Resource
     }
     public function deadlineField(NovaRequest $request)
     {
-
-        if ($request->isResourceIndexRequest()) {
-            return Text::make(__('Deadlines'), 'deadlines', function () {
-                $deadlines = $this->deadlines;
-                foreach ($deadlines as $deadline) {
-                    $dueDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
-                    $deadlineTitle = $deadline->title ?? '';
-                    $customerName = isset($deadline->customer) ? $deadline->customer->name : '';
-                    $deadlineName = $dueDate . '<br/>' . $deadlineTitle . '<br/>' . $customerName;
-                    $deadlineLink = '<a href="' . url('/') . '/resources/deadlines/' . $deadline->id . '" style="color: green;">' . $deadlineName . '</a>';
-                }
-                return $deadlineLink ?? '';
-            })
-                ->canSee($this->canSee('deadlines'))
-                ->asHtml();
-        } else {
-            return MorphToMany::make('Deadlines')
-                ->showCreateRelationButton();
-        }
+        return Text::make(__('Deadlines'), 'deadlines', function () {
+            $deadlines = $this->deadlines;
+            foreach ($deadlines as $deadline) {
+                $dueDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
+                $deadlineTitle = $deadline->title ?? '';
+                $customerName = isset($deadline->customer) ? $deadline->customer->name : '';
+                $deadlineName = $dueDate . '<br/>' . $deadlineTitle . '<br/>' . $customerName;
+                $deadlineLink = '<a href="' . url('/') . '/resources/deadlines/' . $deadline->id . '" style="color: green;">' . $deadlineName . '</a>';
+            }
+            return $deadlineLink ?? '';
+        })
+            ->canSee($this->canSee('deadlines'))
+            ->asHtml();
     }
     /**
      * Definisci un campo Status comune, con personalizzazioni per la vista.
