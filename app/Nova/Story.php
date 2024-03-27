@@ -154,6 +154,7 @@ class Story extends Resource
             $this->deadlineField($request),
             $this->projectField(),
             Files::make('Documents', 'documents')
+                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json')
                 ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
             $this->descriptionField(),
             $this->customerRequestField($request),
@@ -175,6 +176,7 @@ class Story extends Resource
             $this->typeField($request),
             $this->projectField(),
             Files::make('Documents', 'documents')
+                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json')
                 ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
             $this->titleField(),
             $this->descriptionField(),
