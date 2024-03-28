@@ -126,6 +126,7 @@ class Story extends Resource
         $fields = [
             ID::make()->sortable(),
             $this->statusField($request),
+            $this->assignedToField(),
             $this->typeField($request),
             $this->infoField($request),
             $this->titleField(),

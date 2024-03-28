@@ -9,7 +9,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 class StoryShowedByCustomer extends Story
 {
 
-    public $hideFields = ['description', 'deadlines', 'info', 'updated_at', 'project', 'creator', 'type'];
+    public $hideFields = ['description', 'deadlines', 'info', 'updated_at', 'project', 'creator', 'type', 'developer'];
     public static function label()
     {
         return __('my stories');
