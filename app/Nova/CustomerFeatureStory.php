@@ -8,14 +8,14 @@ use App\Enums\StoryType;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Query\Search\SearchableRelation;
 
-class CustomerStory extends Story
+class CustomerFeatureStory extends Story
 {
 
     public $hideFields = ['updated_at'];
 
     public static function label()
     {
-        return __('Customer stories');
+        return __('Customer  Feature stories');
     }
 
 
@@ -33,6 +33,6 @@ class CustomerStory extends Story
                 $query->whereJsonContains('roles', UserRole::Customer);
             })
             ->where('status', '!=', StoryStatus::Done->value)
-            ->where('type', '!=', StoryType::Feature->value);
+            ->where('type', '=', StoryType::Feature->value);
     }
 }
