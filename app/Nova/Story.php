@@ -20,6 +20,7 @@ use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\MorphToMany;
+use Laravel\Nova\Fields\Number;
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
@@ -71,7 +72,7 @@ class Story extends Resource
             return !in_array($fieldName, $this->hideFields);
         };
     }
-    public $hideFields = [];
+    public $hideFields = ['estimated_hours'];
     /**
      * The columns that should be searched.
      *
@@ -130,6 +131,7 @@ class Story extends Resource
             $this->typeField($request),
             $this->infoField($request),
             $this->titleField(),
+            $this->estimatedHoursField($request),
             $this->createdAtField(),
             $this->updatedAtField(),
             $this->deadlineField($request),
@@ -145,12 +147,14 @@ class Story extends Resource
         $fields = [
             ID::make()->sortable(),
             $this->createdAtField(),
+            $this->typeField($request),
             $this->statusField($request),
             $this->creatorField(),
             $this->assignedToField(),
             $this->testedByField(),
             $this->infoField($request),
             $this->titleField(),
+            $this->estimatedHoursField($request),
             $this->updatedAtField(),
             $this->deadlineField($request),
             $this->projectField(),
@@ -180,6 +184,7 @@ class Story extends Resource
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json')
                 ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
             $this->titleField(),
+            $this->estimatedHoursField($request),
             $this->descriptionField(),
             $this->customerRequestField($request),
             $this->answerToTicketField(),
@@ -425,6 +430,20 @@ class Story extends Resource
         })
             ->canSee($this->canSee($fieldName))
             ->asHtml();
+    }
+    public function estimatedHoursFieldCanSee($fieldName)
+    {
+        return function ($request) use ($fieldName) {
+            return $this->type === StoryType::Feature->value && ($request->user()->hasRole(UserRole::Developer) || $request->user()->hasRole(UserRole::Admin));
+        };
+    }
+    public function estimatedHoursField(NovaRequest $request, $fieldName = 'estimated_hours')
+    {
+        return Number::make(__('Estimated Hours'), $fieldName)
+            ->sortable()
+            ->rules('nullable', 'numeric', 'min:0')
+            ->help('Inserisci il tempo stimato per la risoluzione della storia in ore.')
+            ->canSee($this->estimatedHoursFieldCanSee($fieldName));
     }
 
     private function getCustomerInfo()

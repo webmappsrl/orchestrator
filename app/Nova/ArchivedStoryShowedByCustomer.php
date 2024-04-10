@@ -12,7 +12,7 @@ use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 class ArchivedStoryShowedByCustomer extends Story
 {
 
-    public $hideFields = ['description', 'deadlines', 'info', 'updated_at', 'project', 'creator', 'developer'];
+    public $hideFields = ['description', 'deadlines', 'info', 'updated_at', 'project', 'creator', 'developer', 'type'];
 
     public static function label()
     {
