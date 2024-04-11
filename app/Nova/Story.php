@@ -13,24 +13,37 @@ use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Fields\ID;
 use App\Enums\StoryPriority;
-use App\Models\Deadline;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\MorphToMany;
-use App\Nova\Actions\MoveStoriesFromEpic;
+use Laravel\Nova\Fields\Number;
 use Illuminate\Database\Eloquent\Builder;
-use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
-use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 
 class Story extends Resource
 {
+
+    public static function label()
+    {
+        return __('Stories');
+    }
+
+    /**
+     * Get the plural label of the resource.
+     *
+     * @return string
+     */
+    public static function singularLabel()
+    {
+        return __('Story'); // Il nome plurale personalizzato
+    }
+
     /**
      * The model the resource corresponds to.
      *
@@ -53,7 +66,13 @@ class Story extends Resource
     public static $perPageViaRelationship = 20;
 
 
-
+    public function canSee($fieldName)
+    {
+        return function ($request) use ($fieldName) {
+            return !in_array($fieldName, $this->hideFields);
+        };
+    }
+    public $hideFields = ['estimated_hours'];
     /**
      * The columns that should be searched.
      *
@@ -63,6 +82,39 @@ class Story extends Resource
         'id', 'name', 'description'
     ];
 
+    public $tiptapAllButtons = [
+        'heading',
+        '|',
+        'italic',
+        'bold',
+        '|',
+        'link',
+        'code',
+        'strike',
+        'underline',
+        'highlight',
+        '|',
+        'bulletList',
+        'orderedList',
+        'br',
+        'codeBlock',
+        'blockquote',
+        '|',
+        'horizontalRule',
+        'hardBreak',
+        '|',
+        'table',
+        '|',
+        'image',
+        '|',
+        'textAlign',
+        '|',
+        'rtl',
+        '|',
+        'history',
+        '|',
+        'editHtml',
+    ];
     public static function indexQuery(NovaRequest $request, $query)
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
@@ -70,7 +122,402 @@ class Story extends Resource
         }
     }
 
+    public  function fieldsInIndex(NovaRequest $request)
+    {
+        $fields = [
+            ID::make()->sortable(),
+            $this->statusField($request),
+            $this->assignedToField(),
+            $this->typeField($request),
+            $this->infoField($request),
+            $this->titleField(),
+            $this->estimatedHoursField($request),
+            $this->createdAtField(),
+            $this->updatedAtField(),
+            $this->deadlineField($request),
 
+        ];
+        return array_map(function ($field) {
+            return $field->onlyOnIndex();
+        }, $fields);
+    }
+
+    public  function fieldsInDetails(NovaRequest $request)
+    {
+        $fields = [
+            ID::make()->sortable(),
+            $this->createdAtField(),
+            $this->typeField($request),
+            $this->statusField($request),
+            $this->creatorField(),
+            $this->assignedToField(),
+            $this->testedByField(),
+            $this->infoField($request),
+            $this->titleField(),
+            $this->estimatedHoursField($request),
+            $this->updatedAtField(),
+            $this->deadlineField($request),
+            $this->projectField(),
+            Files::make('Documents', 'documents')
+                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json')
+                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
+            $this->descriptionField(),
+            $this->customerRequestField($request),
+            MorphToMany::make('Deadlines')
+                ->showCreateRelationButton()
+        ];
+        return array_map(function ($field) {
+            return $field->onlyOnDetail();
+        }, $fields);
+    }
+    public  function fieldsInEdit(NovaRequest $request)
+    {
+        $fields = [
+            ID::make()->sortable(),
+            $this->statusField($request),
+            $this->creatorField(),
+            $this->assignedToField(),
+            $this->testedByField(),
+            $this->typeField($request),
+            $this->projectField(),
+            Files::make('Documents', 'documents')
+                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json')
+                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
+            $this->titleField(),
+            $this->estimatedHoursField($request),
+            $this->descriptionField(),
+            $this->customerRequestField($request),
+            $this->answerToTicketField(),
+            MorphToMany::make('Deadlines')
+                ->showCreateRelationButton()
+        ];
+        return array_map(function ($field) {
+            return $field->onlyOnForms();
+        }, $fields);
+    }
+
+    public function titleField($fieldName = 'name')
+    {
+        return Text::make(__('Title'), $fieldName)
+            ->displayUsing(function ($name, $a, $b) {
+                $wrappedName = wordwrap($name, 75, "\n", true);
+                $htmlName = str_replace("\n", '<br>', $wrappedName);
+                return $htmlName;
+            })
+            ->sortable()
+            ->readonly(function ($request) {
+                return $request->resourceId !== null;
+            })
+            ->required();
+    }
+    public function createdAtField($fieldName = 'created_at')
+    {
+        return DateTime::make(__('Created At'), $fieldName)
+            ->sortable()
+            ->displayUsing(function ($createdAt) {
+                return Carbon::parse($createdAt)->format('d/m/Y, H:i');
+            })
+            ->canSee($this->canSee($fieldName));
+    }
+    public function updatedAtField($fieldName = 'updated_at')
+    {
+        return DateTime::make(__('Updated At'), $fieldName)
+            ->sortable()
+            ->displayUsing(function ($createdAt) {
+                return Carbon::parse($createdAt)->format('d/m/Y, H:i');
+            })
+            ->canSee($this->canSee($fieldName));
+    }
+    public function typeField(NovaRequest $request, $fieldName = 'type')
+    {
+        $isEdit = $request->isCreateOrAttachRequest() || $request->isUpdateOrUpdateAttachedRequest();
+        if ($isEdit) {
+            return  Select::make(__('Type'), $fieldName)
+                ->options(function () {
+                    return [
+                        StoryType::Feature->value =>  StoryType::Feature,
+                        StoryType::Bug->value => StoryType::Bug,
+                        StoryType::Helpdesk->value => StoryType::Helpdesk
+                    ];
+                })
+                ->default(StoryType::Helpdesk->value)
+                ->canSee($this->canSee($fieldName));
+        } else {
+            return Text::make(__('Type'), $fieldName, function () {
+                $color = 'green';
+                if ($this->type === StoryType::Bug->value) {
+                    $color = 'red';
+                } elseif ($this->type === StoryType::Feature->value) {
+                    $color = 'blue'; // Assumendo che 'Feature' debba essere blu
+                }
+
+                return <<<HTML
+    <span style="color:{$color}; font-weight: bold;">{$this->type}</span>
+    HTML;
+            })
+                ->asHtml()
+                ->canSee($this->canSee($fieldName));
+        }
+    }
+    public function priorityField()
+    {
+        return  Select::make('Priority', 'priority')->options([
+            StoryPriority::Low->value => 'Low',
+            StoryPriority::Medium->value => 'Medium',
+            StoryPriority::High->value => 'High',
+        ])
+            ->default($this->priority ?? StoryPriority::High->value)
+            ->canSee(function ($request) {
+                return !$request->user()->hasRole(UserRole::Customer);
+            });
+    }
+    public function deadlineField(NovaRequest $request)
+    {
+        return Text::make(__('Deadlines'), 'deadlines', function () {
+            $deadlines = $this->deadlines;
+            foreach ($deadlines as $deadline) {
+                $dueDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
+                $deadlineTitle = $deadline->title ?? '';
+                $customerName = isset($deadline->customer) ? $deadline->customer->name : '';
+                $deadlineName = $dueDate . '<br/>' . $deadlineTitle . '<br/>' . $customerName;
+                $deadlineLink = '<a href="' . url('/') . '/resources/deadlines/' . $deadline->id . '" style="color: green;">' . $deadlineName . '</a>';
+            }
+            return $deadlineLink ?? '';
+        })
+            ->canSee($this->canSee('deadlines'))
+            ->asHtml();
+    }
+    /**
+     * Definisci un campo Status comune, con personalizzazioni per la vista.
+     *
+     * @return \Laravel\Nova\Fields\Field
+     */
+    public function statusField($request, $fieldName = 'status')
+    {
+        $isEdit = $request->isCreateOrAttachRequest() || $request->isUpdateOrUpdateAttachedRequest();
+        if ($isEdit) {
+            return   Select::make(__('Status'), $fieldName)
+                ->options($this->getOptions())
+                ->default(StoryStatus::New)
+                ->readonly(function ($request) {
+                    return $request->user()->hasRole(UserRole::Customer) && $this->resource->status !== StoryStatus::Released->value;
+                });
+        } else {
+            return Status::make('Status', 'status')
+                ->loadingWhen([
+                    StoryStatus::Assigned->value, StoryStatus::Progress->value,
+                    StoryStatus::Test->value, StoryStatus::Tested->value
+                ])
+                ->failedWhen([StoryStatus::New->value, StoryStatus::Rejected->value]);
+        }
+    }
+
+    public function assignedToField()
+    {
+        return BelongsTo::make(__('assigned to'), 'developer', 'App\Nova\User')
+            ->default(function ($request) {
+                return auth()->user()->id;
+            })
+            ->canSee(function ($request) {
+                return !$request->user()->hasRole(UserRole::Customer);
+            })
+            ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                !$query->whereJsonDoesntContain('roles', UserRole::Customer);
+            })
+            ->nullable();
+    }
+    public function testedByField()
+    {
+        return BelongsTo::make(__('tested by'), 'tester', 'App\Nova\User')
+            ->canSee(function ($request) {
+                return !$request->user()->hasRole(UserRole::Customer);
+            })
+            ->nullable()
+            ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                !$query->whereJsonDoesntContain('roles', UserRole::Customer);
+            })
+            ->default(function ($request) {
+                return auth()->user()->id;
+            });
+    }
+    public function projectField($fieldName = 'project')
+    {
+
+        return BelongsTo::make(__('Project'), $fieldName)
+            ->default(function ($request) {
+                $fromEpic =
+                    $request->input('viaResource') === 'epics' ||
+                    $request->input('viaResource') === 'new-epics' ||
+                    $request->input('viaResource') === 'project-epics' ||
+                    $request->input('viaResource') === 'progress-epics' ||
+                    $request->input('viaResource') === 'test-epics' ||
+                    $request->input('viaResource') === 'done-epics' ||
+                    $request->input('viaResource') === 'rejected-epics';
+                if ($fromEpic) {
+                    $epic = Epic::find($request->input('viaResourceId'));
+                    $project = Project::find($epic->project_id);
+                    return $project ? $project->id : null;
+                }
+            })
+            ->searchable()
+            ->nullable()
+            ->canSee($this->canSee($fieldName));
+    }
+    public function customerRequestField(NovaRequest $request, $fieldName = 'customer_request')
+    {
+        $customerRequestFieldEdit = Tiptap::make(__('Customer Request'), $fieldName)
+            ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml'])
+            ->required()
+            ->canSee(function ($request) use ($fieldName) {
+                $creator = auth()->user();
+                return  $creator->hasRole(UserRole::Customer);
+            });
+
+        if ($request->isCreateOrAttachRequest()) {
+            return $customerRequestFieldEdit;
+        } else if ($request->isResourceDetailRequest()) {
+            return Text::make(__('Customer Request'), $fieldName)
+                ->asHtml()
+                ->canSee(function ($request) use ($fieldName) {
+                    $creator = $this->resource->creator;
+                    return $this->canSee($fieldName) &&  (isset($creator) && $creator->hasRole(UserRole::Customer));
+                });
+        } else {
+            $creator = auth()->user();
+            if (isset($creator) && $creator->hasRole(UserRole::Customer) && !isset($request->resourceId)) {
+                return $customerRequestFieldEdit;
+            } else {
+                return Trix::make(__('Customer Request'), $fieldName)
+                    ->readOnly()
+                    ->canSee($this->canSee($fieldName));
+            }
+        }
+    }
+    public function answerToTicketField($fieldName = 'answer_to_ticket')
+    {
+        //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
+        return  Tiptap::make('Answer to ticket', $fieldName)
+            ->canSee(
+                function ($request) use ($fieldName) {
+                    return  $this->canSee($fieldName) && $request->resourceId !== null;
+                }
+            )
+            ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                if (empty($request[$requestAttribute])) {
+                    return;
+                }
+                $model->addResponse($request[$requestAttribute]);
+            })
+            ->buttons($this->tiptapAllButtons);
+    }
+    public function descriptionField()
+    {
+        return  Tiptap::make(__('Description'), 'description')
+            ->hideFromIndex()
+            ->buttons($this->tiptapAllButtons)
+            ->canSee($this->canSee('description'))
+            ->alwaysShow();
+    }
+
+    public function infoField(NovaRequest $request, $fieldName = 'info')
+    {
+        return Text::make(__('Info'), $fieldName, function () use ($request) {
+            if ($request->user()->hasRole(UserRole::Customer)) {
+                return $this->getCustomerInfo();
+            } else {
+                return $this->getNonCustomerInfo();
+            }
+        })
+            ->canSee($this->canSee($fieldName))
+            ->asHtml();
+    }
+    public function estimatedHoursFieldCanSee($fieldName)
+    {
+        return function ($request) use ($fieldName) {
+            return $this->type === StoryType::Feature->value && ($request->user()->hasRole(UserRole::Developer) || $request->user()->hasRole(UserRole::Admin));
+        };
+    }
+    public function estimatedHoursField(NovaRequest $request, $fieldName = 'estimated_hours')
+    {
+        return Number::make(__('Estimated Hours'), $fieldName)
+            ->sortable()
+            ->rules('nullable', 'numeric', 'min:0')
+            ->help('Inserisci il tempo stimato per la risoluzione della storia in ore.')
+            ->canSee($this->estimatedHoursFieldCanSee($fieldName));
+    }
+
+    private function getCustomerInfo()
+    {
+        $statusColor = $this->getStatusColor($this->status);
+        $storyType = $this->type;
+        return <<<HTML
+            Status: <span style="background-color:{$statusColor}; color: white; padding: 2px 4px;">{$this->status}</span> 
+            <br> 
+            <span style="color:blue">{$storyType}</span>
+            HTML;
+    }
+    private function getNonCustomerInfo()
+    {
+        $projectLink = $this->getProjectLink();
+        $creatorLink = $this->getCreatorLink();
+        return "{$projectLink}{$creatorLink}";
+    }
+
+    private function getProjectLink()
+    {
+        $project = $this->resource->project ?? $this->resource->epic->project ?? null;
+        if ($project) {
+            $url = url("/resources/projects/{$project->id}");
+            return <<<HTML
+            <a 
+                href="{$url}" 
+                target="_blank" 
+                style="color:orange; font-weight:bold;">
+                Project: {$project->name}
+            </a> <br>
+            HTML;
+        }
+        return '';
+    }
+    private function getCreatorLink()
+    {
+        $creator = $this->resource->creator;
+        if ($creator) {
+            $url = url("/resources/users/{$creator->id}");
+            return <<<HTML
+            <a 
+                href="{$url}" 
+                target="_blank" 
+                style="color:chocolate; font-weight:bold;">
+                Creator: {$creator->name}
+            </a> <br>
+            HTML;
+        }
+        return '';
+    }
+
+
+    private function getStatusColor($status)
+    {
+        $mapping = config('orchestrator.story.status.color-mapping');
+        return $mapping[$status] ?? 'black';
+    }
+    /**
+     * Definisce un campo comune per il 'Creatore' con logiche specifiche.
+     *
+     * @return \Laravel\Nova\Fields\BelongsTo
+     */
+    public function creatorField()
+    {
+        $fieldName = 'creator';
+        return BelongsTo::make('Creator', $fieldName, 'App\Nova\User')
+            ->nullable()
+            ->default(function ($request) {
+                return auth()->user()->id;
+            })
+            ->readonly()
+            ->canSee($this->canSee($fieldName));
+    }
 
     /**
      * Get the fields displayed by the resource.
@@ -80,361 +527,14 @@ class Story extends Resource
      */
     public function fields(NovaRequest $request)
     {
-        $loggedUser = auth()->user();
-        $options = $this->getOptions($loggedUser);
-        $storyStatusOptions = $options;
-        $testDev = $this->test_dev;
-        $testProd = $this->test_prod;
-
-        $tiptapAllButtons = [
-            'heading',
-            '|',
-            'italic',
-            'bold',
-            '|',
-            'link',
-            'code',
-            'strike',
-            'underline',
-            'highlight',
-            '|',
-            'bulletList',
-            'orderedList',
-            'br',
-            'codeBlock',
-            'blockquote',
-            '|',
-            'horizontalRule',
-            'hardBreak',
-            '|',
-            'table',
-            '|',
-            'image',
-            '|',
-            'textAlign',
-            '|',
-            'rtl',
-            '|',
-            'history',
-            '|',
-            'editHtml',
-        ];
-
         return [
             new Panel(__('Navigate to the next or previous story'), function () use ($request) {
                 return $this->navigationLinks($request);
             }),
-            ID::make()->sortable(),
-            Text::make(__('Name'), 'name')->sortable()
-                ->displayUsing(function ($name, $a, $b) {
-                    $wrappedName = wordwrap($name, 75, "\n", true);
-                    $htmlName = str_replace("\n", '<br>', $wrappedName);
-                    return $htmlName;
-                })
-                ->asHtml()
-                ->required(),
-            DateTime::make('Created At')->sortable()
-                ->onlyOnDetail(),
-            DateTime::make('Updated At')->sortable()
-                ->onlyOnDetail(),
-            DateTime::make('Updated At')->sortable()
-                ->onlyOnIndex()
-                ->canSee(function () {
-                    return auth()->user()->hasRole(UserRole::Customer);
-                }),
-            Text::make('Type', 'type')
-                ->canSee(function () {
-                    return auth()->user()->hasRole(UserRole::Customer);
-                })
-                ->hideWhenCreating()
-                ->hideWhenUpdating(),
-            Text::make('Info', function () use ($request) {
-                $story = $this->resource;
-                if (!empty($story->epic_id)) {
-                    $epic = Epic::find($story->epic_id);
-                    $project = Project::find($epic->project_id);
-                } else {
-                    $project = Project::find($story->project_id);
-                }
+            ...$this->fieldsInIndex($request),
+            ...$this->fieldsInDetails($request),
+            ...$this->fieldsInEdit($request),
 
-                if ($project) {
-                    $projectUrl = url('/resources/projects/' . $project->id);
-                    $projectName = $project->name;
-                } else {
-                    $projectUrl = '';
-                    $projectName = '';
-                }
-                $storyPriority = StoryPriority::getCase($this->priority);
-                $storyStatus = $this->status;
-                $storyType = $this->type;
-
-                $statusColorMapping = config('orchestrator.story.status.color-mapping');
-
-                $statusColor = $statusColorMapping[$storyStatus] ?? 'black';
-
-
-                if (!$request->user()->hasRole(UserRole::Customer)) {
-                    return '<a href="' . $projectUrl . '" target="_blank" style="color:grey; font-weight:bold;">' . "Project: " . $projectName . '</a>' . ' <br> ' . '<span style="color:' . ($this->priority == StoryPriority::Low->value ? 'green' : ($this->priority == StoryPriority::Medium->value ? 'orange' : 'red')) . '">' . "Priority: " . $storyPriority . '</span>' . ' <br> ' . "Status: " . '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $storyStatus . '</span>' . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
-                } else {
-                    //return the string without projecturl and priority
-                    return "Status: " . '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $storyStatus . '</span>' . ' <br> ' . '<span style="color:blue">' . $storyType . '</span>';
-                }
-            })->asHtml()
-                ->onlyOnIndex()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            Select::make(('Status'), 'status')->options($storyStatusOptions)->onlyOnForms()
-                ->default(StoryStatus::New)->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            Text::make('Status', function () {
-                $status = $this->status;
-                $statusColorMapping = config('orchestrator.story.status.color-mapping');
-
-                $statusColor = $statusColorMapping[$status] ?? 'black';
-                return  '<span style="background-color:' . $statusColor . '; color: white; padding: 2px 4px;">' . $status . '</span>';
-            })->asHtml()->canSee(function ($request) {
-                return $request->user()->hasRole(UserRole::Customer);
-            }),
-            Select::make('Priority', 'priority')->options([
-                StoryPriority::Low->value => 'Low',
-                StoryPriority::Medium->value => 'Medium',
-                StoryPriority::High->value => 'High',
-            ])->onlyOnForms()
-                ->default($this->priority ?? StoryPriority::High->value)
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            Text::make('Priority')->displayUsing(function () {
-                $color = 'red';
-                $priority = '';
-                if ($this->priority == StoryPriority::Low->value) {
-                    $color = 'green';
-                    $priority = 'Low';
-                } elseif ($this->priority == StoryPriority::Medium->value) {
-                    $color = 'orange';
-                    $priority = 'Medium';
-                } elseif ($this->priority == StoryPriority::High->value) {
-                    $color = 'red';
-                    $priority = 'High';
-                }
-                return '<span style="color:' . $color . '; font-weight: bold;">' . $priority . '</span>';
-            })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
-                ->sortable()
-                ->hideFromIndex(),
-            Status::make('Status')
-                ->loadingWhen(['status' => 'new'])
-                ->failedWhen(['status' => 'rejected'])
-                ->sortable()
-                ->onlyOnDetail()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            Select::make(__('Type'), 'type')->options(function () use ($request) {
-                if ($request->user()->hasRole(UserRole::Customer)) {
-                    return [
-                        StoryType::Feature->value => 'Funzionalitá',
-                        StoryType::Bug->value => 'Malfunzionamento',
-                    ];
-                } else {
-                    return [
-                        StoryType::Feature->value => 'Feature',
-                        StoryType::Bug->value => 'Bug',
-                    ];
-                }
-            })->onlyOnForms()
-                ->default('Feature'),
-            Text::make('Type', function () {
-                $type = $this->type;
-                $color = 'blue';
-                return '<span style="color:' . $color . '; font-weight: bold;">' . $type . '</span>';
-            })->asHtml()
-                ->onlyOnDetail()
-                ->canSee(function () {
-                    return !auth()->user()->hasRole(UserRole::Customer);
-                }),
-            Text::make(__('Deadlines'), function () {
-                $deadlines = $this->deadlines;
-                foreach ($deadlines as $deadline) {
-                    $dueDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
-                    $deadlineTitle = $deadline->title ?? '';
-                    $customerName = isset($deadline->customer) ? $deadline->customer->name : '';
-                    $deadlineName = $dueDate . '<br/>' . $deadlineTitle . '<br/>' . $customerName;
-                    $deadlineLink = '<a href="' . url('/') . '/resources/deadlines/' . $deadline->id . '" style="color: green;">' . $deadlineName . '</a>';
-                }
-                return $deadlineLink ?? '';
-            })->asHtml(),
-            Tiptap::make(__('Description'), 'description')
-                ->hideFromIndex()
-                ->buttons($tiptapAllButtons)
-                ->alwaysShow()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            BelongsTo::make('Developer', 'developer', 'App\Nova\User')
-                ->default(function ($request) {
-                    if ($this->user_id) {
-                        return $this->user_id;
-                    } else {
-                        return auth()->user()->id;
-                    }
-                })->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                })->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
-                    $query->whereJsonContains('roles', UserRole::Developer);
-                })->required(),
-
-            BelongsTo::make('Customer', 'creator', 'App\Nova\User')
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                })->nullable()
-                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
-                    $query->whereJsonContains('roles', UserRole::Customer);
-                })
-                ->default(function ($request) {
-                    if (auth()->user()->hasRole(UserRole::Customer)) {
-                        return auth()->user()->id;
-                    }
-                }),
-            BelongsTo::make('Tester', 'tester', 'App\Nova\User')
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                })
-                ->nullable()
-                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
-                    !$query->whereJsonDoesntContain('roles', UserRole::Customer);
-                })
-                ->default(function ($request) {
-                    return auth()->user()->id;
-                }),
-            // BelongsTo::make('Epic') 
-            //     ->nullable()
-            //     ->default(function ($request) {
-            //         //handling the cases when the story is created from the epic page. Will no longer need when the create policy will be fixed.(create epic only from project)
-            //         $fromEpic =
-            //             $request->input('viaResource') === 'epics' ||
-            //             $request->input('viaResource') === 'new-epics' ||
-            //             $request->input('viaResource') === 'project-epics' ||      //TODO: delete when epic model will be deleted
-            //             $request->input('viaResource') === 'progress-epics' ||
-            //             $request->input('viaResource') === 'test-epics' ||
-            //             $request->input('viaResource') === 'done-epics' ||
-            //             $request->input('viaResource') === 'rejected-epics';
-
-            //         if ($fromEpic) {
-            //             $epic = Epic::find($request->input('viaResourceId'));
-            //             return $epic->id;
-            //         } else {
-            //             return null;
-            //         }
-            //     })
-            //     ->hideFromIndex()
-            //     ->canSee(function ($request) {
-            //         return !$request->user()->hasRole(UserRole::Customer);
-            //     }),
-            BelongsTo::make('Project')
-                ->default(function ($request) {
-                    $fromEpic =
-                        $request->input('viaResource') === 'epics' ||
-                        $request->input('viaResource') === 'new-epics' ||
-                        $request->input('viaResource') === 'project-epics' ||
-                        $request->input('viaResource') === 'progress-epics' ||
-                        $request->input('viaResource') === 'test-epics' ||
-                        $request->input('viaResource') === 'done-epics' ||
-                        $request->input('viaResource') === 'rejected-epics';
-                    if ($fromEpic) {
-                        $epic = Epic::find($request->input('viaResourceId'));
-                        $project = Project::find($epic->project_id);
-                        return $project ? $project->id : null;
-                    }
-                })
-                ->searchable()
-                ->nullable()
-                ->hideFromIndex()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            MorphToMany::make('Deadlines')
-                ->showCreateRelationButton(),
-            // new Panel(__('Epic Description'), [ 
-            //     MarkdownTui::make(__('Description'), 'epic.description')
-            //         ->hideFromIndex()
-            //         ->initialEditType(EditorType::MARKDOWN)    //TODO: delete when epic model will be deleted
-            //         ->onlyOnDetail()
-            //         ->canSee(function ($request) {
-            //             return !$request->user()->hasRole(UserRole::Customer);
-            //         }),
-            // ]),
-            Files::make('Documents', 'documents')
-                ->hideFromIndex(),
-            Images::make('Images', 'images')
-                ->hideFromIndex(),
-
-            $testDev !== null ? Text::make('DEV', function () use ($testDev) {
-                $testDevLink = '<a style="color:green; font-weight:bold;" href="' . $testDev . '" target="_blank">' . $testDev . '</a>';
-                return $testDevLink;
-            })->asHtml()
-                ->onlyOnDetail()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }) :
-                Text::make('DEV', function () {
-                    return '';
-                })->asHtml()
-                ->onlyOnDetail()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-
-            $testProd !== null ? Text::make('PROD', function () use ($testProd) {
-                $testProdLink = '<a  style="color:green; font-weight:bold;" href="' . $testProd . '" target="_blank">' . $testProd . '</a>';
-                return $testProdLink;
-            })->asHtml()
-                ->onlyOnDetail() :
-                Text::make('PROD', function () {
-                    return '';
-                })->asHtml()
-                ->onlyOnDetail()
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-
-            //make the text fields for the url visible in the form
-            Text::make('Test Dev', 'test_dev')
-                ->rules('nullable', 'url:http,https')
-                ->onlyOnForms()
-                ->help('Url must start with http or https')
-                ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            Text::make('Test Prod', 'test_prod')
-                ->rules('nullable', 'url:http,https')
-                ->onlyOnForms()
-                ->help('Url must start with http or https'),
-            Tiptap::make(__('Customer Request'), 'customer_request')
-                ->hideFromIndex()
-                ->showOnUpdating(function ($request) {
-                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
-                })
-                ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml'])
-                ->alwaysShow(),
-            //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
-            Tiptap::make('Answer to ticket')
-                ->canSee(function ($request) {
-                    //can only see if the story status is not done or rejected
-                    return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
-                })
-                ->onlyOnForms()
-                ->hideWhenCreating()
-                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
-                    if (empty($request[$requestAttribute])) {
-                        return;
-                    }
-                    $model->addResponse($request[$requestAttribute]);
-                })
-                ->buttons($tiptapAllButtons),
         ];
     }
     /**
@@ -448,25 +548,7 @@ class Story extends Resource
         return [];
     }
 
-    /**
-     * Get the filters available for the resource.
-     *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return array
-     */
-    public function filters(NovaRequest $request)
-    {
-        return [
-            (new filters\UserFilter)->canSee(function ($request) {
-                return !$request->user()->hasRole(UserRole::Customer);
-            }),
-            new filters\StoryStatusFilter,
-            new filters\StoryTypeFilter,
-            (new filters\StoryPriorityFilter)->canSee(function ($request) {
-                return !$request->user()->hasRole(UserRole::Customer);
-            }),
-        ];
-    }
+
 
     /**
      * Get the lenses available for the resource.
@@ -583,7 +665,7 @@ class Story extends Resource
         return null;
     }
 
-    public function navigationLinks(NovaRequest $request)
+    public function navigationLinks()
     {
         return [
             Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
@@ -619,16 +701,20 @@ class Story extends Resource
         ];
     }
 
-    private function getOptions($loggedUser): array
+    public function getOptions(): array
     {
+        $loggedUser = auth()->user();
         $loggedUserIsDeveloperAssigned = false;
         $loggedUserIsTesterAssigned = false;
-        $storyStatusOptions = [
-            'new' => StoryStatus::New,
-            'progress' => StoryStatus::Progress,
-            'done' => StoryStatus::Done,
-            'testing' => StoryStatus::Test,
-            'rejected' => StoryStatus::Rejected,
+        $statusOptions = [
+            StoryStatus::New->value => StoryStatus::New,
+            StoryStatus::Assigned->value => StoryStatus::Assigned,
+            StoryStatus::Progress->value => StoryStatus::Progress,
+            StoryStatus::Test->value => StoryStatus::Test,
+            StoryStatus::Tested->value => StoryStatus::Tested,
+            StoryStatus::Released->value => StoryStatus::Released,
+            StoryStatus::Rejected->value => StoryStatus::Rejected,
+            StoryStatus::Done->value => StoryStatus::Done,
         ];
 
         if ($this->resource->exists) {
@@ -636,32 +722,55 @@ class Story extends Resource
             $loggedUserIsTesterAssigned = $this->resource->tester && $loggedUser->id == $this->resource->tester->id;
 
             if ($loggedUserIsDeveloperAssigned && $loggedUserIsTesterAssigned) {
-                $storyStatusOptions = [
-                    'new' => StoryStatus::New,
-                    'progress' => StoryStatus::Progress,
-                    'done' => StoryStatus::Done,
-                    'testing' => StoryStatus::Test,
-                    'rejected' => StoryStatus::Rejected,
-                ];
-                return $storyStatusOptions;
+                return $statusOptions;
             }
             if ($loggedUserIsDeveloperAssigned) {
-                $storyStatusOptions = [
-                    'new' => StoryStatus::New,
-                    'progress' => StoryStatus::Progress,
-                    'testing' => StoryStatus::Test,
-                ];
+                unset($statusOptions[StoryStatus::New->value]);
+                unset($statusOptions[StoryStatus::Tested->value]);
+                unset($statusOptions[StoryStatus::Done->value]);
+                unset($statusOptions[StoryStatus::Released->value]);
+                return $statusOptions;
             }
             if ($loggedUserIsTesterAssigned) {
-                $storyStatusOptions = [
-                    'new' => StoryStatus::New,
-                    'progress' => StoryStatus::Progress,
-                    'done' => StoryStatus::Done,
-                    'rejected' => StoryStatus::Rejected,
-                ];
+                unset($statusOptions[StoryStatus::New->value]);
+                unset($statusOptions[StoryStatus::Test->value]);
+                return $statusOptions;
             }
         }
 
-        return $storyStatusOptions;
+        return $statusOptions;
+    }
+
+
+    function getStatusLabel($statusValue)
+    {
+        $statusOptions = [
+            StoryStatus::New->value => StoryStatus::New,
+            StoryStatus::Assigned->value => StoryStatus::Assigned,
+            StoryStatus::Progress->value => StoryStatus::Progress,
+            StoryStatus::Test->value => StoryStatus::Test,
+            StoryStatus::Tested->value => StoryStatus::Tested,
+            StoryStatus::Released->value => StoryStatus::Released,
+            StoryStatus::Rejected->value => StoryStatus::Rejected,
+            StoryStatus::Done->value => StoryStatus::Done,
+        ];
+        return $statusOptions[$statusValue] != null ? [$statusOptions[$statusValue]->value => $statusOptions[$statusValue]] : [];
+    }
+
+    /**
+     * Get the filters available for the resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function filters(NovaRequest $request)
+    {
+        return [
+            new filters\CreatorStoryFilter(),
+            new filters\UserFilter(),
+            new filters\StoryStatusFilter(),
+            new filters\StoryTypeFilter(),
+            new filters\CustomerStoryWithDeadlineFilter(),
+        ];
     }
 }

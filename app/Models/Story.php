@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Models\Epic;
 use App\Enums\UserRole;
-use AWS\CRT\HTTP\Request;
 use App\Enums\StoryStatus;
+use App\Enums\StoryType;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -40,25 +40,56 @@ class Story extends Model implements HasMedia
             return $this->belongsTo(Project::class, 'project_id');
         }
     }
+    public static function boot()
+    {
+        parent::boot();
 
+        static::saving(function ($model) {
+            // Controlla se lo stato è 'New' e se è stato assegnato un developer.
+            if ($model->status == StoryStatus::New->value && $model->user_id && $model->isDirty('user_id')) {
+                $model->status = StoryStatus::Assigned->value;
+            }
+            if ($model->status == StoryStatus::New->value && $model->isDirty('status')) {
+                $model->user_id = null;
+            }
+        });
+    }
 
     protected static function booted()
     {
+        $customerRole = UserRole::Customer;
+        $releasedStatus = StoryStatus::Released->value;
         //update epic status whenever a story is created or updated
-        static::saved(function (Story $story) {
+        static::saved(function (Story $story) use ($customerRole, $releasedStatus) {
+
+            if (isset($story->creator_id) && $story->creator->hasRole($customerRole) && $story->status === $releasedStatus) {
+                $story->sendStatusUpdatedEmail($story, $story->creator_id);
+            }
             if (!empty($story->epic)) {
                 $epic = $story->epic;
                 $epic->status = $epic->getStatusFromStories()->value;
                 $epic->save();
+            }
+            if ($story->user_id != $story->tester_id) {
+                if ($story->isDirty('user_id')) {
+                    $story->sendStatusUpdatedEmail($story, $story->user_id);
+                }
+                if ($story->isDirty('tester_id')) {
+                    $story->sendStatusUpdatedEmail($story, $story->tester_id);
+                }
             }
         });
 
         static::created(function (Story $story) {
             $user = auth()->user();
             if ($user) {
+                $story->creator_id = $user->id;
+                if (!isset($story->type)) {
+                    $story->type = StoryType::Helpdesk->value;
+                }
+
+                $story->save();
                 if ($user->hasRole(UserRole::Customer)) {
-                    $story->creator_id = $user->id;
-                    $story->save();
                     $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                     foreach ($developers as $developer) {
                         try {
@@ -72,40 +103,43 @@ class Story extends Model implements HasMedia
         });
 
         static::updated(function (Story $story) {
-            $storyHasDeveloper = isset($story->user_id);
-            $storyHasTester = isset($story->tester_id);
-            $devIsLoggedIn = $storyHasDeveloper ? auth()->user()->id == $story->user_id : false;
-            $testerIsLoggedIn = $storyHasTester ? auth()->user()->id == $story->tester_id : false;
+            if (auth()->user()) {
 
-            $status = is_object($story->status) ? $story->status->value : $story->status;
+                $storyHasDeveloper = isset($story->user_id);
+                $storyHasTester = isset($story->tester_id);
+                $devIsLoggedIn = $storyHasDeveloper ? auth()->user()->id == $story->user_id : false;
+                $testerIsLoggedIn = $storyHasTester ? auth()->user()->id == $story->tester_id : false;
 
-            $devHasUpdatedStatus = $devIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'testing';
-            $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'done' || $status == 'rejected';
+                $status = is_object($story->status) ? $story->status->value : $story->status;
 
-            $devAndTesterAreTheSamePerson = $story->tester_id == $story->user_id;
+                $devHasUpdatedStatus = $devIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'testing';
+                $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'done' || $status == 'rejected';
 
-            if ($devAndTesterAreTheSamePerson) {
-                return;
-            }
+                $devAndTesterAreTheSamePerson = $story->tester_id == $story->user_id;
 
-            if ($devHasUpdatedStatus && $storyHasTester) {
-                $story->sendStatusUpdatedEmail($story, $story->tester_id);
+                if ($devAndTesterAreTheSamePerson) {
+                    return;
+                }
 
-                $story->tester->notify(NovaNotification::make()
-                    ->type('info')
-                    ->message('The status of the story ' . $story->id . ' has been updated to ' . $status . ' by ' . auth()->user()->name)
-                    ->action('View story', url('/nova/resources/stories/' . $story->id))
-                    ->icon('star'));
-            }
+                if ($devHasUpdatedStatus && $storyHasTester) {
+                    $story->sendStatusUpdatedEmail($story, $story->tester_id);
 
-            if ($testerHasUpdatedStatus && $storyHasDeveloper) {
-                $story->sendStatusUpdatedEmail($story, $story->user_id);
+                    $story->tester->notify(NovaNotification::make()
+                        ->type('info')
+                        ->message('The status of the story ' . $story->id . ' has been updated to ' . $status . ' by ' . auth()->user()->name)
+                        ->action('View story', url('/nova/resources/stories/' . $story->id))
+                        ->icon('star'));
+                }
 
-                $story->developer->notify(NovaNotification::make()
-                    ->type('info')
-                    ->message('The status of the story ' . $story->id . ' has been updated to ' . $status . ' by ' . auth()->user()->name)
-                    ->action('View story', url('/nova/resources/stories/' . $story->id))
-                    ->icon('star'));
+                if ($testerHasUpdatedStatus && $storyHasDeveloper) {
+                    $story->sendStatusUpdatedEmail($story, $story->user_id);
+
+                    $story->developer->notify(NovaNotification::make()
+                        ->type('info')
+                        ->message('The status of the story ' . $story->id . ' has been updated to ' . $status . ' by ' . auth()->user()->name)
+                        ->action('View story', url('/nova/resources/stories/' . $story->id))
+                        ->icon('star'));
+                }
             }
         });
     }

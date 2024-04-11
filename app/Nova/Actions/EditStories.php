@@ -77,11 +77,14 @@ class EditStories extends Action
     public function fields(NovaRequest $request)
     {
         $storyStatusOptions = [
-            'new' => StoryStatus::New,
-            'progress' => StoryStatus::Progress,
-            'done' => StoryStatus::Done,
-            'testing' => StoryStatus::Test,
-            'rejected' => StoryStatus::Rejected,
+            StoryStatus::New->value => StoryStatus::New,
+            StoryStatus::Assigned->value => StoryStatus::Assigned,
+            StoryStatus::Progress->value => StoryStatus::Progress,
+            StoryStatus::Test->value => StoryStatus::Test,
+            StoryStatus::Tested->value => StoryStatus::Tested,
+            StoryStatus::Released->value => StoryStatus::Released,
+            StoryStatus::Rejected->value => StoryStatus::Rejected,
+            StoryStatus::Done->value => StoryStatus::Done,
         ];
         return [
             Select::make('Status')->options($storyStatusOptions),

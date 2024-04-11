@@ -3,28 +3,22 @@
 namespace App\Providers;
 
 use App\Nova\App;
-use App\Nova\Epic;
 use App\Nova\User;
 use App\Nova\Layer;
 use App\Nova\Quote;
-use App\Nova\Story;
-use App\Nova\NewEpic;
 use App\Nova\Product;
 use App\Nova\Project;
 use App\Nova\Customer;
 use App\Nova\Deadline;
-use App\Nova\DoneEpic;
-use App\Nova\TestEpic;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
-use App\Nova\ArchivedCustomerStory;
+use App\Nova\ArchivedStoryShowedByCustomer;
 use App\Nova\ArchivedStories;
+use App\Nova\StoryShowedByCustomer;
 use App\Nova\AssignedToMeStory;
-use App\Nova\Milestone;
-use App\Nova\ProjectEpic;
-use App\Nova\ProgressEpic;
-use App\Nova\RejectedEpic;
 use App\Nova\CustomerStory;
+use App\Nova\CustomerFeatureStory;
+use App\Nova\DeveloperStory;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
 use App\Nova\ToBeTestedStory;
@@ -49,11 +43,15 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         Nova::withBreadcrumbs(true);
 
 
-
         Nova::style('nova-custom', public_path('/nova-custom.css'));
 
 
         Nova::mainMenu(function (Request $request) {
+            $newStoryUrl = '/resources/stories/new';
+            if (auth()->user()->hasRole(UserRole::Customer)) {
+                $newStoryUrl = '/resources/story-showed-by-customers/new';
+            }
+
             return [
                 MenuSection::dashboard(Main::class)->icon('chart-bar')->canSee(function ($request) {
                     if ($request->user() == null)
@@ -83,7 +81,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(ToBeTestedStory::class),
                     MenuItem::resource(ArchivedStories::class),
                     MenuItem::resource(Deadline::class),
-                    MenuItem::resource(CustomerStory::class)
+                    MenuItem::resource(CustomerStory::class),
+                    MenuItem::resource(CustomerFeatureStory::class),
+                    MenuItem::resource(DeveloperStory::class)
                 ])->icon('code')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null)
                         return false;
@@ -91,8 +91,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 }),
 
                 MenuSection::make('CUSTOMER', [
-                    MenuItem::resource(Story::class),
-                    MenuItem::resource(ArchivedCustomerStory::class)
+                    MenuItem::resource(StoryShowedByCustomer::class),
+                    MenuItem::resource(ArchivedStoryShowedByCustomer::class)
                 ])->canSee(function ($request) {
                     if ($request->user() == null)
                         return false;
@@ -100,7 +100,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 })->icon('at-symbol')->collapsable(),
 
                 MenuSection::make('ACTIONS', [
-                    MenuItem::link('Create a new story', '/resources/stories/new'),
+                    MenuItem::link('Create a new story', $newStoryUrl),
                 ])->icon('pencil')->collapsable(),
             ];
         });
