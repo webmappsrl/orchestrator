@@ -67,7 +67,7 @@ class Customer extends Resource
 
                 if (isset($name) & isset($acronym)) {
                     $string .= $name . ' (' . $acronym . ')';
-                } else if (isset($name)) {
+                } elseif (isset($name)) {
                     $string .= $name;
                 }
                 if (isset($fullName)) {
@@ -146,7 +146,7 @@ class Customer extends Resource
                     'geohub' => 'Geohub',
                     'geobox' => 'Geobox',
                 ]
-            )->sortable()->nullable()->hideFromIndex(),
+            )->sortable()->nullable(),
             MarkdownTui::make('Migration Note', 'migration_note')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
