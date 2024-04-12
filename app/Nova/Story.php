@@ -208,7 +208,8 @@ class Story extends Resource
             ->readonly(function ($request) {
                 return $request->resourceId !== null;
             })
-            ->required();
+            ->required()
+            ->asHtml();
     }
     public function createdAtField($fieldName = 'created_at')
     {
