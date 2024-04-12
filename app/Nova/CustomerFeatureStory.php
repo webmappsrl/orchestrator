@@ -11,7 +11,7 @@ use Laravel\Nova\Query\Search\SearchableRelation;
 class CustomerFeatureStory extends Story
 {
 
-    public $hideFields = ['updated_at', 'type'];
+    public $hideFields = ['updated_at'];
 
     public static function label()
     {
