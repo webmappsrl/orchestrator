@@ -200,7 +200,7 @@ class Story extends Resource
     {
         return Text::make(__('Title'), $fieldName)
             ->displayUsing(function ($name, $a, $b) {
-                $wrappedName = wordwrap($name, 75, "\n", true);
+                $wrappedName = wordwrap($name, 50, "\n", true);
                 $htmlName = str_replace("\n", '<br>', $wrappedName);
                 return $htmlName;
             })
