@@ -79,9 +79,11 @@ class User extends Resource
                 ->creationRules('required', Rules\Password::defaults())
                 ->updateRules('nullable', Rules\Password::defaults()),
 
+            BelongsToMany::make('Apps'),
             HasMany::make('Epics'),
             HasMany::make('Stories'),
             HasMany::make('Quotes'),
+
             Text::make('Favorite Projects', function () {
                 $projects = [];
                 $userFavorites = $this->getFavoriteItems(Project::class)->get();

@@ -459,11 +459,30 @@ class Story extends Resource
     }
     private function getNonCustomerInfo()
     {
+        $appLink = $this->getAppLink();
         $projectLink = $this->getProjectLink();
         $creatorLink = $this->getCreatorLink();
-        return "{$projectLink}{$creatorLink}";
-    }
 
+        return "{$appLink}{$projectLink}{$creatorLink}";
+    }
+    private function getAppLink()
+    {
+        $creator = $this->resource->creator;
+        $app = $creator->apps && count($creator->apps) > 0 ? $creator->apps[0] : null;
+
+        if ($app) {
+            $url = url("/resources/apps/{$app->id}");
+            return <<<HTML
+            <a 
+                href="{$url}" 
+                target="_blank" 
+                style="color:red; font-weight:bold;">
+                App: {$app->name}
+            </a> <br>
+            HTML;
+        }
+        return '';
+    }
     private function getProjectLink()
     {
         $project = $this->resource->project ?? $this->resource->epic->project ?? null;

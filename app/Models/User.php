@@ -129,4 +129,9 @@ class User extends Authenticatable
             return '/dashboard/main';
         }
     }
+
+    public function apps()
+    {
+        return $this->belongsToMany(App::class, 'user_app', 'user_id', 'app_id');
+    }
 }

@@ -189,6 +189,11 @@ class App extends Model
         $this->BuildConfJson();
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_app', 'app_id', 'user_id');
+    }
+
     public function config_update_jido_time()
     {
         $confUri = $this->id . ".json";
@@ -198,6 +203,7 @@ class App extends Model
             Storage::disk('conf')->put($confUri, json_encode($json));
         }
     }
+
     public function config_get_jido_time()
     {
         $confUri = $this->id . ".json";
