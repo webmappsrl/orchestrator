@@ -153,7 +153,6 @@ class Story extends Resource
             $this->assignedToField(),
             $this->testedByField(),
             $this->infoField($request),
-            $this->titleField(),
             $this->estimatedHoursField($request),
             $this->updatedAtField(),
             $this->deadlineField($request),
@@ -162,6 +161,7 @@ class Story extends Resource
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json')
                 ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
             $this->descriptionField(),
+            $this->titleField(),
             $this->customerRequestField($request),
             MorphToMany::make('Deadlines')
                 ->showCreateRelationButton()
@@ -183,9 +183,9 @@ class Story extends Resource
             Files::make('Documents', 'documents')
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json')
                 ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
-            $this->titleField(),
             $this->estimatedHoursField($request),
             $this->descriptionField(),
+            $this->titleField(),
             $this->customerRequestField($request),
             $this->answerToTicketField(),
             MorphToMany::make('Deadlines')
