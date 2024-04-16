@@ -468,7 +468,7 @@ class Story extends Resource
     private function getAppLink()
     {
         $creator = $this->resource->creator;
-        $app = $creator->apps && count($creator->apps) > 0 ? $creator->apps[0] : null;
+        $app = isset($creator) && isset($creator->apps) && count($creator->apps) > 0 ? $creator->apps[0] : null;
 
         if ($app) {
             $url = url("/resources/apps/{$app->id}");
