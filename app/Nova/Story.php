@@ -127,6 +127,7 @@ class Story extends Resource
     {
         $fields = [
             ID::make()->sortable(),
+            $this->createdAtField(),
             $this->statusField($request),
             $this->assignedToField(),
             $this->typeField($request),
@@ -134,7 +135,6 @@ class Story extends Resource
             $this->titleField(),
             $this->ChildField($request),
             $this->estimatedHoursField($request),
-            $this->createdAtField(),
             $this->updatedAtField(),
             $this->deadlineField($request),
 
@@ -240,7 +240,7 @@ class Story extends Resource
         return DateTime::make(__('Created At'), $fieldName)
             ->sortable()
             ->displayUsing(function ($createdAt) {
-                return Carbon::parse($createdAt)->format('d/m/Y, H:i');
+                return Carbon::parse($createdAt)->format('d/m/Y');
             })
             ->canSee($this->canSee($fieldName));
     }
