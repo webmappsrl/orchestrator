@@ -98,7 +98,7 @@ class SendMailWhenStatusUpdatedTest extends TestCase
             'status' => StoryStatus::Progress->value
         ]);
 
-        $story->status = StoryStatus::Done;
+        $story->status = StoryStatus::Done->value;
         $story->save();
 
         Mail::assertNotSent(\App\Mail\StoryStatusUpdated::class);
