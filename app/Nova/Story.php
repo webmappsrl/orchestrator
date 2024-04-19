@@ -150,6 +150,7 @@ class Story extends Resource
             ID::make()->sortable(),
             $this->createdAtField(),
             $this->typeField($request),
+            $this->historyLogField($request),
             $this->statusField($request),
             $this->creatorField(),
             $this->assignedToField(),
@@ -295,6 +296,16 @@ class Story extends Resource
             ->canSee(function ($request) {
                 return !$request->user()->hasRole(UserRole::Customer);
             });
+    }
+
+    public function historyLogField(NovaRequest $request,)
+    {
+        return  Text::make('History Log')
+            ->onlyOnDetail()
+            ->canSee(function ($request) {
+                return !$request->user()->hasRole(UserRole::Customer);
+            })
+            ->asHtml();
     }
     public function ChildField(NovaRequest $request)
 
