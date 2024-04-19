@@ -6,14 +6,15 @@ use App\Models\Epic;
 use App\Enums\UserRole;
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
-use Spatie\MediaLibrary\HasMedia;
+use App\Mail\CustomerNewStoryCreated;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\CustomerNewStoryCreated;
-use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Laravel\Nova\Notifications\NovaNotification;
 
@@ -22,8 +23,10 @@ class Story extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
+        'name',
         'status',
         'creator_id',
+        'parent_id'
     ];
     public function parent()
     {
@@ -104,7 +107,54 @@ class Story extends Model implements HasMedia
 
         static::updated(function (Story $story) {
             if (auth()->user()) {
+                $tablePivot = DB::table('story_story');
+                if ($story->isDirty('status')) {
+                    foreach ($story->childStories as $child) {
+                        $child->status = $story->status;
+                        $child->save();
+                    }
+                }
+                if ($story->isDirty('parent_id')) {
+                    try {
 
+                        $originalStory = $story->getOriginal();
+                        $originalParentStoryId = $originalStory['parent_id'];
+                        if (isset($story->parent_id)) {
+                            $exists = DB::table('story_story')
+                                ->where('parent_id', $story->parent_id)
+                                ->where('child_id',  $story->id)
+                                ->exists();
+                            if (is_null($originalParentStoryId)) {
+                                if ($exists === false) {
+                                    $tablePivot
+                                        ->insert([
+                                            'parent_id' => $story->parent_id,
+                                            'child_id' => $story->id
+                                        ]);
+                                }
+                            } else if ($story->parent_id != $originalParentStoryId) {
+                                $tablePivot
+                                    ->where('parent_id', $originalParentStoryId)
+                                    ->where('child_id', $story->id)
+                                    ->delete();
+                                $tablePivot
+                                    ->insert([
+                                        'parent_id' => $story->parent_id,
+                                        'child_id' => $story->id
+                                    ]);
+                            }
+                        } else {
+                            if ($originalParentStoryId) {
+                                $tablePivot
+                                    ->where('parent_id', $originalParentStoryId)
+                                    ->where('child_id', $originalStory['id'])
+                                    ->delete();
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        $e;
+                    }
+                }
                 $storyHasDeveloper = isset($story->user_id);
                 $storyHasTester = isset($story->tester_id);
                 $devIsLoggedIn = $storyHasDeveloper ? auth()->user()->id == $story->user_id : false;
@@ -140,6 +190,12 @@ class Story extends Model implements HasMedia
                         ->action('View story', url('/nova/resources/stories/' . $story->id))
                         ->icon('star'));
                 }
+            }
+        });
+        static::saving(function ($story) {
+            if ($story->parent_id && $story->childStories()->exists()) {
+                // Lancia un'eccezione o rifiuta il salvataggio
+                throw new \Exception('Una storia che è figlia non può avere figli.');
             }
         });
     }
@@ -187,6 +243,18 @@ class Story extends Model implements HasMedia
     public function deadlines(): MorphToMany
     {
         return $this->morphToMany(Deadline::class, 'deadlineable');
+    }
+
+    // Relazione per ottenere la storia genitore
+    public function parentStory()
+    {
+        return $this->belongsTo(Story::class, 'parent_id');
+    }
+
+    // Relazione per ottenere le storie figlie
+    public function childStories()
+    {
+        return $this->belongsToMany(Story::class, 'story_story', 'parent_id', 'child_id')->using(StoryPivot::class);
     }
 
 

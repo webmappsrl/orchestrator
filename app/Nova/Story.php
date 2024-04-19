@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use Laravel\Nova\Fields\BelongsToMany;
 
 class Story extends Resource
 {
@@ -164,7 +165,16 @@ class Story extends Resource
             $this->titleField(),
             $this->customerRequestField($request),
             MorphToMany::make('Deadlines')
-                ->showCreateRelationButton()
+                ->showCreateRelationButton(),
+            BelongsToMany::make('Child Stories', 'childStories', CustomerStory::class)
+                ->nullable()
+                ->searchable()
+                ->canSee(function ($request) {
+                    return empty($this->parent_id);
+                })->filterable(),
+            BelongsTo::make('Parent Story', 'parentStory', CustomerStory::class)
+                ->nullable()
+                ->searchable()
         ];
         return array_map(function ($field) {
             return $field->onlyOnDetail();
@@ -188,6 +198,9 @@ class Story extends Resource
             $this->titleField(),
             $this->customerRequestField($request),
             $this->answerToTicketField(),
+            BelongsTo::make('Parent Story', 'parentStory', CustomerStory::class)
+                ->nullable()
+                ->searchable(),
             MorphToMany::make('Deadlines')
                 ->showCreateRelationButton()
         ];
