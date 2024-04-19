@@ -132,6 +132,7 @@ class Story extends Resource
             $this->typeField($request),
             $this->infoField($request),
             $this->titleField(),
+            $this->ChildField($request),
             $this->estimatedHoursField($request),
             $this->createdAtField(),
             $this->updatedAtField(),
@@ -164,13 +165,13 @@ class Story extends Resource
             $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
-            BelongsToMany::make('Child Stories', 'childStories', CustomerStory::class)
+            BelongsToMany::make('Child Stories', 'childStories', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
                     return empty($this->parent_id) &&  !$request->user()->hasRole(UserRole::Customer);
                 })->filterable(),
-            BelongsTo::make('Parent Story', 'parentStory', CustomerStory::class)
+            BelongsTo::make('Parent Story', 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
@@ -219,9 +220,7 @@ class Story extends Resource
     {
         return Text::make(__('Title'), $fieldName)
             ->displayUsing(function ($name, $a, $b) {
-                $wrappedName = wordwrap($name, 50, "\n", true);
-                $htmlName = str_replace("\n", '<br>', $wrappedName);
-                return $htmlName;
+                return $this->trimText($name);
             })
             ->sortable()
             ->readonly(function ($request) {
@@ -229,6 +228,12 @@ class Story extends Resource
             })
             ->required()
             ->asHtml();
+    }
+    public function trimText($text, $treshold = 50)
+    {
+        $wrappedText = wordwrap($text, $treshold, "\n", true);
+        $htmlText = str_replace("\n", '<br>', $wrappedText);
+        return $htmlText;
     }
     public function createdAtField($fieldName = 'created_at')
     {
@@ -291,9 +296,32 @@ class Story extends Resource
                 return !$request->user()->hasRole(UserRole::Customer);
             });
     }
+    public function ChildField(NovaRequest $request)
+
+    {
+        return Text::make(__('Childs'), 'childs', function () use ($request) {
+            $childStories = $this->childStories;
+            $childStoryLink = '';
+            foreach ($childStories as $childStory) {
+                $app = $this->getAppLink();
+                $url = url("/resources/stories/{$childStory->id}");
+                $story = <<<HTML
+                <a 
+                    href="{$url}" 
+                    style="color: green;">
+                    {$childStory->id}
+                    </a>
+                HTML;
+                $childStoryLink .= $story . $app . $this->trimText($childStory->name, 30) . '<br>';
+            }
+            return $childStoryLink ?? '';
+        })
+            ->asHtml();
+    }
     public function deadlineField(NovaRequest $request)
     {
         return Text::make(__('Deadlines'), 'deadlines', function () {
+
             $deadlines = $this->deadlines;
             foreach ($deadlines as $deadline) {
                 $dueDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
