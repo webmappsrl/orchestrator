@@ -164,17 +164,20 @@ class Story extends Resource
             $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
-            MorphToMany::make('Deadlines')
-                ->showCreateRelationButton(),
             BelongsToMany::make('Child Stories', 'childStories', CustomerStory::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
-                    return empty($this->parent_id);
+                    return empty($this->parent_id) &&  !$request->user()->hasRole(UserRole::Customer);
                 })->filterable(),
             BelongsTo::make('Parent Story', 'parentStory', CustomerStory::class)
                 ->nullable()
                 ->searchable()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
+            MorphToMany::make('Deadlines')
+                ->showCreateRelationButton()
         ];
         return array_map(function ($field) {
             return $field->onlyOnDetail();
@@ -200,7 +203,10 @@ class Story extends Resource
             $this->answerToTicketField(),
             BelongsTo::make('Parent Story', 'parentStory', CustomerStory::class)
                 ->nullable()
-                ->searchable(),
+                ->searchable()
+                ->canSee(function ($request) {
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
             MorphToMany::make('Deadlines')
                 ->showCreateRelationButton()
         ];
