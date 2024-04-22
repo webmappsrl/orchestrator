@@ -361,7 +361,7 @@ class Story extends Resource
                 if (is_null(($parentStory))) {
                     return $parentStoryLink;
                 }
-                $app = $this->getAppLink();
+                $app = $this->getAppLink($parentStory->creator);
                 $url = url("/resources/stories/{$parentStory->id}");
                 $story = <<<HTML
                     <h3>PARENT:<h3/>
@@ -383,7 +383,7 @@ class Story extends Resource
                 <h3>CHILDS:<h3/>
                 HTML;
                 foreach ($childStories as $childStory) {
-                    $app = $this->getAppLink();
+                    $app = $this->getAppLink($childStory->creator);
                     $url = url("/resources/stories/{$childStory->id}");
                     $story = <<<HTML
                     <a 
@@ -595,9 +595,11 @@ class Story extends Resource
 
         return "{$appLink}{$projectLink}{$creatorLink}";
     }
-    private function getAppLink()
+    private function getAppLink($creator = null)
     {
-        $creator = $this->resource->creator;
+        if (is_null($creator)) {
+            $creator = $this->resource->creator;
+        }
         $app = isset($creator) && isset($creator->apps) && count($creator->apps) > 0 ? $creator->apps[0] : null;
 
         if ($app) {
