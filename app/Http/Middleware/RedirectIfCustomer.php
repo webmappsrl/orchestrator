@@ -31,6 +31,17 @@ class RedirectIfCustomer
                 // Reindirizza alla nuova URL includendo l'ID
                 return redirect('resources/story-showed-by-customers/' . $id);
             }
+        } else {
+            if ($request->is('resources/stories')) {
+                return redirect('resources/developer-stories');
+            } elseif ($request->is('resources/stories/*')) {
+                // Estrai l'ID della storia dalla URL
+                $path = $request->path(); // es. 'resources/stories/3084'
+                $pathParts = explode('/', $path);
+                $id = end($pathParts);
+                // Reindirizza alla nuova URL includendo l'ID
+                return redirect('resources/developer-stories/' . $id);
+            }
         }
 
         return $next($request);
