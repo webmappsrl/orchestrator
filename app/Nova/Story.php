@@ -73,7 +73,7 @@ class Story extends Resource
             return !in_array($fieldName, $this->hideFields);
         };
     }
-    public $hideFields = ['estimated_hours'];
+    public $hideFields = [];
     /**
      * The columns that should be searched.
      *
@@ -493,7 +493,7 @@ class Story extends Resource
     public function estimatedHoursFieldCanSee($fieldName)
     {
         return function ($request) use ($fieldName) {
-            return $this->type === StoryType::Feature->value && ($request->user()->hasRole(UserRole::Developer) || $request->user()->hasRole(UserRole::Admin));
+            return ($request->user()->hasRole(UserRole::Developer) || $request->user()->hasRole(UserRole::Admin));
         };
     }
     public function estimatedHoursField(NovaRequest $request, $fieldName = 'estimated_hours')

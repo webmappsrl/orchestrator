@@ -5,8 +5,6 @@ namespace App\Http\Middleware;
 use Closure;
 use App\Enums\UserRole;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class RedirectIfCustomer
@@ -18,8 +16,6 @@ class RedirectIfCustomer
      */
     public function handle(Request $request, Closure $next): Response
     {
-        Log::info('Guard in use: ' . Auth::getDefaultDriver());
-        Log::info('User authenticated: ' . Auth::check());
         $customerRole = UserRole::Customer;
         $user = $request->user();
         // Controlla se l'utente è autenticato e ha il ruolo di 'customer'
