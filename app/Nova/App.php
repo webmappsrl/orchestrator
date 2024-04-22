@@ -168,12 +168,10 @@ class App extends Resource
                 if (strtolower($value) !== $value) {
                     return $fail('The ' . $attribute . ' field must be lowercase.');
                 }
-                if (strlen($value) > 20) {
-                    return $fail('The ' . $attribute . ' field must be minor of 20.');
+                if (strlen($value) > 25) {
+                    return $fail('The ' . $attribute . ' field must be minor of 25.');
                 }
-                if ('it.webmapp.' == $value) {
-                    return $fail('The ' . $attribute . ' field must be have a name instance.');
-                }
+
                 if (substr_count($value, 'it.webmapp.') != 1) {
                     return $fail('The ' . $attribute . ' field must be contain "it.webmapp." one time');
                 }
