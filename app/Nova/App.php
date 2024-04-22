@@ -172,10 +172,6 @@ class App extends Resource
                     return $fail('The ' . $attribute . ' field must be minor of 25.');
                 }
 
-                if (substr_count($value, 'it.webmapp.') != 1) {
-                    return $fail('The ' . $attribute . ' field must be contain "it.webmapp." one time');
-                }
-
                 if (str_starts_with($value, 'it.webmapp.') === false) {
                     return $fail('The ' . $attribute . ' field must be start with "it.webmapp."');
                 }
