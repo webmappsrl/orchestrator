@@ -171,10 +171,6 @@ class App extends Resource
                 if (strlen($value) > 25) {
                     return $fail('The ' . $attribute . ' field must be minor of 25.');
                 }
-
-                if (str_starts_with($value, 'it.webmapp.') === false) {
-                    return $fail('The ' . $attribute . ' field must be start with "it.webmapp."');
-                }
             })->help(__('identify the app in the stores')),
             Text::make(__('Name'), 'name')->sortable()->help(__('The name displayed when the app was downloaded'))->required(),
             Text::make(__('Customer Name'), 'customer_name')->sortable()->help(__('the name of the client note does not influence the creation of the app'))->required(),
