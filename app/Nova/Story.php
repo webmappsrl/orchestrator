@@ -133,7 +133,7 @@ class Story extends Resource
             $this->typeField($request),
             $this->infoField($request),
             $this->titleField(),
-            $this->ChildField($request),
+            $this->relationshipField($request),
             $this->estimatedHoursField($request),
             $this->updatedAtField(),
             $this->deadlineField($request),
@@ -308,7 +308,6 @@ class Story extends Resource
             ->asHtml();
     }
     public function ChildField(NovaRequest $request)
-
     {
         return Text::make(__('Childs'), 'childs', function () use ($request) {
             $childStories = $this->childStories;
@@ -328,6 +327,79 @@ class Story extends Resource
             return $childStoryLink ?? '';
         })
             ->asHtml();
+    }
+    public function parentField(NovaRequest $request)
+    {
+        return Text::make(__('Parent'), 'parent', function () use ($request) {
+            $parentStory = $this->parentStory;
+            $parentStoryLink = '';
+            if (is_null(($parentStory))) {
+                return $parentStoryLink;
+            }
+            $app = $this->getAppLink();
+            $url = url("/resources/stories/{$parentStory->id}");
+            $story = <<<HTML
+                <a 
+                    href="{$url}" 
+                    style="color: green;">
+                    {$parentStory->id}
+                    </a>
+                HTML;
+            $parentStoryLink .= $story . $app . $this->trimText($parentStory->name, 30) . '<br>';
+            return $parentStoryLink ?? '';
+        })
+            ->asHtml();
+    }
+
+    public function relationshipField(NovaRequest $request)
+    {
+        return Text::make(__('Relationship'), function () use ($request) {
+            // Controllo per la parent story
+            if ($this->parentStory) {
+                $parentStory = $this->parentStory;
+                $parentStoryLink = '';
+                if (is_null(($parentStory))) {
+                    return $parentStoryLink;
+                }
+                $app = $this->getAppLink();
+                $url = url("/resources/stories/{$parentStory->id}");
+                $story = <<<HTML
+                    <h3>PARENT:<h3/>
+                    <a 
+                        href="{$url}" 
+                        style="color: green;">
+                        {$parentStory->id}
+                        </a>
+                    HTML;
+                $parentStoryLink .= $story . $app . $this->trimText($parentStory->name, 30) . '<br>';
+                return $parentStoryLink ?? '';
+            }
+
+            // Controllo per le child stories
+            if ($this->childStories->isNotEmpty()) {
+                $childStories = $this->childStories;
+                $childStoryLink = '';
+                $storyHeader = <<<HTML
+                <h3>CHILDS:<h3/>
+                HTML;
+                foreach ($childStories as $childStory) {
+                    $app = $this->getAppLink();
+                    $url = url("/resources/stories/{$childStory->id}");
+                    $story = <<<HTML
+                    <a 
+                        href="{$url}" 
+                        style="color: green;">
+                        {$childStory->id}
+                        </a>
+                    HTML;
+                    $childStoryLink .= $story . $app . $this->trimText($childStory->name, 30) . '<br>';
+                }
+                return $storyHeader . $childStoryLink ?? '';
+            }
+
+            // Nessuna parent o child story
+            return 'No relationship';
+        })->asHtml();
     }
     public function deadlineField(NovaRequest $request)
     {
