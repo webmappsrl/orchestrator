@@ -353,7 +353,7 @@ class Story extends Resource
 
     public function relationshipField(NovaRequest $request)
     {
-        return Text::make(__('Relationship'), function () use ($request) {
+        return Text::make(__('Relationship'), 'relationship', function () use ($request) {
             // Controllo per la parent story
             if ($this->parentStory) {
                 $parentStory = $this->parentStory;
@@ -399,7 +399,7 @@ class Story extends Resource
 
             // Nessuna parent o child story
             return 'No relationship';
-        })->asHtml();
+        })->canSee($this->canSee('relationship'))->asHtml();
     }
     public function deadlineField(NovaRequest $request)
     {
