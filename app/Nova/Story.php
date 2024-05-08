@@ -267,7 +267,9 @@ class Story extends Resource
                     ];
                 })
                 ->default(StoryType::Helpdesk->value)
-                ->canSee($this->canSee($fieldName));
+                ->canSee(function ($request) {
+                    return  !$request->user()->hasRole(UserRole::Customer);
+                });
         } else {
             return Text::make(__('Type'), $fieldName, function () {
                 $color = 'green';
