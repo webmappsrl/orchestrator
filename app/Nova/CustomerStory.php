@@ -40,7 +40,8 @@ class CustomerStory extends Story
     {
         return [
             new Metrics\StoriesByType(),
-            new Metrics\StoriesByAssigned(),
+            new Metrics\StoriesByUser(),
+            new Metrics\StoriesByUser('user_id', 'Assigned'),
         ];
     }
 }

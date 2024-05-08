@@ -7,12 +7,20 @@ use App\Models\User;
 use Laravel\Nova\Metrics\Partition;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class StoriesByAssigned extends Partition
+class StoriesByUser extends Partition
 {
+    public $fieldName;
+    public $label;
+
+    public function __construct($fieldName = 'creator_id', $label = 'Customer')
+    {
+        $this->fieldName = $fieldName;
+        $this->label = $label;
+    }
 
     public function name()
     {
-        return 'Stories by Assigned';
+        return 'Stories by ' . ucfirst($this->label);
     }
 
 
@@ -24,10 +32,11 @@ class StoriesByAssigned extends Partition
      */
     public function calculate(NovaRequest $request)
     {
-        return $this->count($request, Story::class, 'user_id')->label(function ($value) {
-            $user = User::find($value);
-            return $user ? $user->name : 'User not found';
-        });
+        return $this->count($request, Story::class, $this->fieldName)
+            ->label(function ($value) {
+                $user = User::find($value);
+                return $user ? $user->name : 'User not found';
+            });
     }
 
     /**
@@ -47,6 +56,6 @@ class StoriesByAssigned extends Partition
      */
     public function uriKey()
     {
-        return 'stories-by-assigned';
+        return 'stories-by-' . $this->label;
     }
 }
