@@ -14,11 +14,13 @@ class StoriesByUser extends Partition
 {
     public $fieldName;
     public $label;
+    public $query;
 
-    public function __construct($fieldName = 'creator_id', $label = 'Customer')
+    public function __construct($fieldName = 'creator_id', $label = 'Customer', $query = null)
     {
         $this->fieldName = $fieldName;
         $this->label = $label;
+        $this->query = $query;
     }
 
     public function name()
@@ -34,17 +36,23 @@ class StoriesByUser extends Partition
      */
     public function calculate(NovaRequest $request)
     {
-        $results = Story::whereNotNull($this->fieldName)
-            ->whereHas('creator', function ($query) {
-                $query->whereJsonContains('roles', UserRole::Customer);
-            })
-            ->where('status', '!=', StoryStatus::Done->value)
-            ->where('type', '!=', StoryType::Feature->value)
+        if (is_null($this->query)) {
+            $this->query = Story::whereNotNull($this->fieldName)
+                ->whereHas('creator', function ($query) {
+                    $query->whereJsonContains('roles', UserRole::Customer);
+                })
+                ->where('status', '!=', StoryStatus::Done->value)
+                ->where('type', '!=', StoryType::Feature->value);
+        }
+        $results = $this->query
             ->get()
             ->groupBy($this->fieldName)
             ->mapWithKeys(function ($items, $key) {
-                $user = User::find($key);
-                return [$user ? $user->name : 'User not found' => count($items)];
+                if (!empty($key)) {
+                    $user = User::find($key);
+                    return [$user ? $user->name : 'User not found' => count($items)];
+                }
+                return ['User not found' => count($items)];
             })
             ->sortByDesc(function ($count, $name) {
                 return $count;
@@ -60,7 +68,8 @@ class StoriesByUser extends Partition
      */
     public function cacheFor()
     {
-        return now()->addMinutes(5);
+        // Return the cache time in seconds
+        //   return now()->addMinutes(5);
     }
 
     /**

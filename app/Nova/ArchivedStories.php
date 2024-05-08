@@ -39,4 +39,14 @@ class ArchivedStories extends Story
             new filters\CustomerStoryWithDeadlineFilter(),
         ];
     }
+
+    public function cards(NovaRequest $request)
+    {
+        $query = $this->indexQuery($request,  Story::query());
+        return [
+            new Metrics\StoriesByType('type', 'Type', $query),
+            new Metrics\StoriesByUser('creator_id', 'Customer', $query),
+            new Metrics\StoriesByUser('user_id', 'Assigned',  $query),
+        ];
+    }
 }

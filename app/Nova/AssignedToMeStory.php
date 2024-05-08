@@ -41,4 +41,14 @@ class AssignedToMeStory extends Story
             new filters\CustomerStoryWithDeadlineFilter(),
         ];
     }
+
+    public function cards(NovaRequest $request)
+    {
+        $query = $this->indexQuery($request,  Story::query());
+        return [
+            new Metrics\StoriesByType('type', 'Type', $this->indexQuery($request,  Story::query())),
+            new Metrics\StoriesByUser('creator_id', 'Customer', $this->indexQuery($request,  Story::query())),
+            new Metrics\StoriesByUser('user_id', 'Assigned',  $this->indexQuery($request,  Story::query())),
+        ];
+    }
 }

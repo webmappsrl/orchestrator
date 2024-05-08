@@ -11,6 +11,18 @@ use App\Enums\StoryType;
 
 class StoriesByType extends Partition
 {
+
+    public $fieldName;
+    public $label;
+    public $query;
+
+    public function __construct($fieldName = 'type', $label = 'Type', $query = null)
+    {
+        $this->fieldName = $fieldName;
+        $this->label = $label;
+        $this->query = $query;
+    }
+
     /**
      * Calculate the value of the metric.
      *
@@ -19,23 +31,18 @@ class StoriesByType extends Partition
      */
     public function calculate(NovaRequest $request)
     {
-        $query =  Story::whereNotNull('creator_id')
-            ->whereHas('creator', function ($query) {
-                $query->whereJsonContains('roles', UserRole::Customer);
-            })
-            ->where('status', '!=', StoryStatus::Done->value)
-            ->where('type', '!=', StoryType::Feature->value);
+        if (is_null($this->query)) {
+            $this->query =  Story::whereNotNull('creator_id')
+                ->whereHas('creator', function ($query) {
+                    $query->whereJsonContains('roles', UserRole::Customer);
+                })
+                ->where('status', '!=', StoryStatus::Done->value)
+                ->where('type', '!=', StoryType::Feature->value);
+        }
 
-        return $this->count($request, $query, 'type')
+        return $this->count($request, $this->query, $this->fieldName)
             ->label(function ($value) {
-                switch ($value) {
-                    case StoryType::Helpdesk->value:
-                        return 'Help Desk';
-                    case StoryType::Bug->value:
-                        return 'Bug';
-                    default:
-                        return ucfirst($value);
-                }
+                return ucfirst($value);
             });
     }
 
@@ -47,7 +54,7 @@ class StoriesByType extends Partition
     public function cacheFor()
     {
         // Return the cache time in seconds
-        return now()->addMinutes(5);
+        //    return now()->addMinutes(5);
     }
 
     /**
