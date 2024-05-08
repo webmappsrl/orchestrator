@@ -44,7 +44,13 @@ class Deadline extends Model
         if (count($this->stories) == 0) {
             return 'ND';
         }
-        return $this->stories()->whereIn('status', [StoryStatus::Test, StoryStatus::Done])->count() . ' / ' . $this->stories()->count();
+        $counts = $this->stories()->get()->groupBy('status')->map->count();
+        $html = '<ul>';
+        foreach ($counts as $status => $count) {
+            $html .= '<li>' . htmlspecialchars($status) . ': ' . $count . '</li>';
+        }
+        $html .= '</ul>';
+        return $html;
     }
 
     /**

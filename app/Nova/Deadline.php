@@ -92,7 +92,7 @@ class Deadline extends Resource
             })->hideWhenCreating()->hideWhenUpdating(),
             Text::make('SAL', function () {
                 return $this->wip();
-            })->hideWhenCreating()->hideWhenUpdating(),
+            })->asHtml()->hideWhenCreating()->hideWhenUpdating(),
             MorphToMany::make('Stories')->searchable()->showCreateRelationButton(),
         ];
     }
