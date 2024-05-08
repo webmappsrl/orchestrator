@@ -26,7 +26,6 @@ class StoriesByUser extends Partition
         return 'Stories by ' . ucfirst($this->label);
     }
 
-
     /**
      * Calculate the value of the metric.
      *
@@ -35,18 +34,23 @@ class StoriesByUser extends Partition
      */
     public function calculate(NovaRequest $request)
     {
-        $query =  Story::whereNotNull('creator_id')
+        $results = Story::whereNotNull($this->fieldName)
             ->whereHas('creator', function ($query) {
                 $query->whereJsonContains('roles', UserRole::Customer);
             })
             ->where('status', '!=', StoryStatus::Done->value)
-            ->where('type', '!=', StoryType::Feature->value);
-
-        return $this->count($request, $query, $this->fieldName)
-            ->label(function ($value) {
-                $user = User::find($value);
-                return $user ? $user->name : 'User not found';
+            ->where('type', '!=', StoryType::Feature->value)
+            ->get()
+            ->groupBy($this->fieldName)
+            ->mapWithKeys(function ($items, $key) {
+                $user = User::find($key);
+                return [$user ? $user->name : 'User not found' => count($items)];
+            })
+            ->sortByDesc(function ($count, $name) {
+                return $count;
             });
+
+        return $this->result($results->toArray());
     }
 
     /**
