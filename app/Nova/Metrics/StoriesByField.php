@@ -9,7 +9,7 @@ use App\Enums\UserRole;
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
 
-class StoriesByType extends Partition
+class StoriesByField extends Partition
 {
 
     public $fieldName;
@@ -40,10 +40,20 @@ class StoriesByType extends Partition
                 ->where('type', '!=', StoryType::Feature->value);
         }
 
-        return $this->count($request, $this->query, $this->fieldName)
-            ->label(function ($value) {
-                return ucfirst($value);
+        $results = $this->query
+            ->get()
+            ->groupBy($this->fieldName)
+            ->mapWithKeys(function ($items, $key) {
+                if (!empty($key)) {
+                    return [$key => count($items)];
+                }
+                return ['No ' . $this->label => count($items)];
+            })
+            ->sortByDesc(function ($count, $name) {
+                return $count;
             });
+
+        return $this->result($results->toArray());
     }
 
     /**
@@ -64,6 +74,11 @@ class StoriesByType extends Partition
      */
     public function uriKey()
     {
-        return 'stories-by-type';
+        return 'stories-by-' . $this->label;
+    }
+
+    public function name()
+    {
+        return 'Stories by ' . ucfirst($this->label);
     }
 }

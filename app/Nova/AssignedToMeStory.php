@@ -46,9 +46,9 @@ class AssignedToMeStory extends Story
     {
         $query = $this->indexQuery($request,  Story::query());
         return [
-            new Metrics\StoriesByType('type', 'Type', $this->indexQuery($request,  Story::query())),
-            new Metrics\StoriesByUser('creator_id', 'Customer', $this->indexQuery($request,  Story::query())),
-            new Metrics\StoriesByUser('user_id', 'Assigned',  $this->indexQuery($request,  Story::query())),
+            (new Metrics\StoriesByField('type', 'Type', $query))->width('1/3'),
+            (new Metrics\StoriesByField('status', 'Status', $query))->width('1/3'),
+            (new Metrics\StoriesByUser('creator_id', 'Customer', $query))->width('1/3'),
         ];
     }
 }

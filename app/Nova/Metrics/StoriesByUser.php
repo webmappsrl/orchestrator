@@ -52,7 +52,7 @@ class StoriesByUser extends Partition
                     $user = User::find($key);
                     return [$user ? $user->name : 'User not found' => count($items)];
                 }
-                return ['User not found' => count($items)];
+                return ['No ' . $this->label => count($items)];
             })
             ->sortByDesc(function ($count, $name) {
                 return $count;

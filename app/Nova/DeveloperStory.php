@@ -38,9 +38,10 @@ class DeveloperStory extends Story
     {
         $query = $this->indexQuery($request,  Story::query());
         return [
-            new Metrics\StoriesByType('type', 'Type', $query),
-            new Metrics\StoriesByUser('creator_id', 'Customer', $query),
-            new Metrics\StoriesByUser('user_id', 'Assigned',  $query),
+            (new Metrics\StoriesByField('type', 'Type', $query))->width('1/2'),
+            (new Metrics\StoriesByField('status', 'Status', $query))->width('1/2'),
+            (new Metrics\StoriesByUser('creator_id', 'Customer', $query))->width('1/2'),
+            (new Metrics\StoriesByUser('user_id', 'Assigned',  $query))->width('1/2'),
         ];
     }
 }
