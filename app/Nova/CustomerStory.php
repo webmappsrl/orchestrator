@@ -35,4 +35,12 @@ class CustomerStory extends Story
             ->where('status', '!=', StoryStatus::Done->value)
             ->where('type', '!=', StoryType::Feature->value);
     }
+
+    public function cards(NovaRequest $request)
+    {
+        return [
+            new Metrics\StoriesByType(),
+            new Metrics\StoriesByAssigned(),
+        ];
+    }
 }
