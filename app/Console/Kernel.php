@@ -25,6 +25,7 @@ class Kernel extends ConsoleKernel
 
 
         $schedule->command('queue:work --stop-when-empty')->timezone('Europe/Rome')->hourly()->withoutOverlapping();
+        $schedule->command('story:auto-update-status')->daily();
         $schedule->job(new \App\Jobs\SendDigestEmail)->timezone('Europe/Rome')->dailyAt('19:00');
     }
 
