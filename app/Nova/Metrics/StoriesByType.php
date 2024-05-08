@@ -5,6 +5,8 @@ namespace App\Nova\Metrics;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
 use App\Models\Story;
+use App\Enums\UserRole;
+use App\Enums\StoryStatus;
 use App\Enums\StoryType;
 
 class StoriesByType extends Partition
@@ -17,7 +19,14 @@ class StoriesByType extends Partition
      */
     public function calculate(NovaRequest $request)
     {
-        return $this->count($request, Story::class, 'type')
+        $query =  Story::whereNotNull('creator_id')
+            ->whereHas('creator', function ($query) {
+                $query->whereJsonContains('roles', UserRole::Customer);
+            })
+            ->where('status', '!=', StoryStatus::Done->value)
+            ->where('type', '!=', StoryType::Feature->value);
+
+        return $this->count($request, $query, 'type')
             ->label(function ($value) {
                 switch ($value) {
                     case StoryType::Helpdesk->value:
