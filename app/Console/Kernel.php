@@ -15,28 +15,18 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $timezone = 'Europe/Rome';
         // call the checkIfExpired() method on all deadlines everyday at 5 past midnight
-        $schedule
-            ->call(function () {
-                \App\Models\Deadline::all()->each(function ($deadline) {
-                    $deadline->checkIfExpired();
-                });
-            })
-            ->timezone($timezone)
-            ->daily();
-        $schedule
-            ->command('queue:work --stop-when-empty')
-            ->timezone($timezone)
-            ->hourly()
-            ->withoutOverlapping();
-        $schedule
-            ->command('story:auto-update-status')
-            ->daily();
-        $schedule
-            ->job(new \App\Jobs\SendDigestEmail)
-            ->timezone($timezone)
-            ->dailyAt('19:00');
+        $schedule->call(function () {
+            \App\Models\Deadline::all()->each(function ($deadline) {
+                $deadline->checkIfExpired();
+            });
+        })->timezone('Europe/Rome')
+            ->dailyAt('00:05');
+
+
+        $schedule->command('queue:work --stop-when-empty')->timezone('Europe/Rome')->hourly()->withoutOverlapping();
+        $schedule->command('story:auto-update-status')->daily();
+        $schedule->job(new \App\Jobs\SendDigestEmail)->timezone('Europe/Rome')->dailyAt('19:00');
     }
 
     /**
