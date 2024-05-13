@@ -9,6 +9,7 @@ use Spatie\Translatable\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Arr;
 use App\Traits\ConfTrait;
+use Exception;
 use Illuminate\Support\Facades\Storage;
 
 class App extends Model
@@ -278,8 +279,11 @@ class App extends Model
             $tag = Tag::firstOrCreate([
                 'name' => class_basename($entity) . ': ' . $entity->name
             ]);
-            $tag->taggable()->saveQuietly($entity);
-            $entity->tags()->saveQuietly($entity);
+            try {
+                $tag->taggable()->saveQuietly($entity);
+                $entity->tags()->saveQuietly($entity);
+            } catch (Exception $e) {
+            }
         });
         App::observe(AppObserver::class);
     }

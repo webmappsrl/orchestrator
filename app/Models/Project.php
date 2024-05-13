@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Epic;
+use App\Models\Tag;
+use Exception;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -86,8 +88,11 @@ class Project extends Model implements HasMedia
             $tag = Tag::firstOrCreate([
                 'name' => class_basename($entity) . ': ' . $entity->name
             ]);
-            $tag->taggable()->saveQuietly($entity);
-            $entity->tags()->saveQuietly($entity);
+            try {
+                $tag->taggable()->saveQuietly($entity);
+                $entity->tags()->saveQuietly($entity);
+            } catch (Exception $e) {
+            }
         });
     }
 }

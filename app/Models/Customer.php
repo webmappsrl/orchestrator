@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Quote;
 use App\Models\Deadline;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -66,8 +67,11 @@ class Customer extends Model
             $tag = Tag::firstOrCreate([
                 'name' => class_basename($entity) . ': ' . $entity->name
             ]);
-            $tag->taggable()->saveQuietly($entity);
-            $entity->tags()->saveQuietly($entity);
+            try {
+                $tag->taggable()->saveQuietly($entity);
+                $entity->tags()->saveQuietly($entity);
+            } catch (Exception $e) {
+            }
         });
     }
 }
