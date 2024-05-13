@@ -30,7 +30,6 @@ class Tag extends Model
         $resourcePath = Str::kebab(Str::plural($baseName));
 
         $url = url("resources/{$resourcePath}/{$this->taggable_id}");
-        Log::info("Generated URL: {$url}");  // Log l'URL generato
         return $url;
     }
 }
