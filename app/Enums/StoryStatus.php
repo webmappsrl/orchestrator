@@ -9,6 +9,7 @@ enum StoryStatus: string
     case Progress = 'progress';
     case Test = 'testing';
     case Tested = 'tested';
+    case Waiting = 'waiting';
     case Done = 'done';
     case Rejected = 'rejected';
     case Released = 'released';

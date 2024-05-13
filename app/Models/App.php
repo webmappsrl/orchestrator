@@ -68,7 +68,13 @@ class App extends Model
     {
         return $this->hasMany(UgcTrack::class);
     }
-
+    /**
+     * Get all the tags for the project.
+     */
+    public function tags()
+    {
+        return $this->morphMany(Tag::class, 'taggable');
+    }
     public function getGeojson()
     {
         $tracks = EcTrack::where('user_id', $this->user_id)->get();
@@ -268,7 +274,13 @@ class App extends Model
     protected static function boot()
     {
         parent::boot();
-
+        static::saved(function (App $entity) {
+            $tag = Tag::firstOrCreate([
+                'name' => class_basename($entity) . ': ' . $entity->name
+            ]);
+            $tag->taggable()->save($entity);
+            $entity->tags()->save($entity);
+        });
         App::observe(AppObserver::class);
     }
 }

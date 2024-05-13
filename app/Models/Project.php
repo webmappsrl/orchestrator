@@ -34,6 +34,16 @@ class Project extends Model implements HasMedia
         return $this->hasMany(Epic::class);
     }
 
+
+
+    /**
+     * Get all the tags for the project.
+     */
+    public function tags()
+    {
+        return $this->morphMany(Tag::class, 'taggable');
+    }
+
     public function tagEpics()
     {
         return $this->belongsToMany(Epic::class, 'epic_project_tags');
@@ -68,5 +78,16 @@ class Project extends Model implements HasMedia
         $doneEpics = $this->epics->where('status', 'done')->count();
 
         return count($this->epics) == 0 ? 'ND' : $doneEpics . '/' . $totalEpics;
+    }
+
+    protected static function booted()
+    {
+        static::saved(function (Project $entity) {
+            $tag = Tag::firstOrCreate([
+                'name' => class_basename($entity) . ': ' . $entity->name
+            ]);
+            $tag->taggable()->save($entity);
+            $entity->tags()->save($entity);
+        });
     }
 }

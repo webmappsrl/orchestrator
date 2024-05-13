@@ -7,6 +7,7 @@ use App\Models\Epic;
 use App\Enums\UserRole;
 use App\Models\Project;
 use Laravel\Nova\Panel;
+use App\Nova\Tag as novaTag;
 use App\Nova\Actions\EditStories;
 use App\Enums\StoryType;
 use Manogi\Tiptap\Tiptap;
@@ -26,6 +27,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\Tag;
 
 class Story extends Resource
 {
@@ -123,6 +125,7 @@ class Story extends Resource
         }
     }
 
+
     public  function fieldsInIndex(NovaRequest $request)
     {
         $fields = [
@@ -159,6 +162,7 @@ class Story extends Resource
             $this->estimatedHoursField($request),
             $this->updatedAtField(),
             $this->deadlineField($request),
+            $this->tagsField(),
             $this->projectField(),
             Files::make('Documents', 'documents')
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json')
@@ -193,6 +197,7 @@ class Story extends Resource
             $this->creatorField(),
             $this->assignedToField(),
             $this->testedByField(),
+            $this->tagsField(),
             $this->typeField($request),
             $this->projectField(),
             Files::make('Documents', 'documents')
@@ -473,6 +478,14 @@ class Story extends Resource
                 return auth()->user()->id;
             });
     }
+
+    public function tagsField($fieldName = 'tags')
+    {
+        return
+            Tag::make('Tags', $fieldName, novaTag::class)
+            ->withPreview()
+            ->canSee($this->canSee($fieldName));
+    }
     public function projectField($fieldName = 'project')
     {
 
@@ -592,10 +605,10 @@ class Story extends Resource
     private function getNonCustomerInfo()
     {
         $appLink = $this->getAppLink();
-        $projectLink = $this->getProjectLink();
+        $tagLinks = $this->getTagLinks();
         $creatorLink = $this->getCreatorLink();
 
-        return "{$appLink}{$projectLink}{$creatorLink}";
+        return "{$appLink}{$tagLinks}{$creatorLink}";
     }
     private function getAppLink($creator = null)
     {
@@ -617,19 +630,23 @@ class Story extends Resource
         }
         return '';
     }
-    private function getProjectLink()
+    private function getTagLinks()
     {
-        $project = $this->resource->project ?? $this->resource->epic->project ?? null;
-        if ($project) {
-            $url = url("/resources/projects/{$project->id}");
-            return <<<HTML
+        $tags = $this->resource->tags;
+        $HTML = '';
+        if ($tags) {
+            foreach ($tags as $tag) {
+                $url = $tag->getResourceUrlAttribute();
+                $HTML .=    <<<HTML
             <a 
-                href="{$url}" 
+                href="$url"
                 target="_blank" 
                 style="color:orange; font-weight:bold;">
-                Project: {$project->name}
+                {$tag->name}
             </a> <br>
             HTML;
+            }
+            return $HTML;
         }
         return '';
     }
@@ -866,6 +883,7 @@ class Story extends Resource
             StoryStatus::Progress->value => StoryStatus::Progress,
             StoryStatus::Test->value => StoryStatus::Test,
             StoryStatus::Tested->value => StoryStatus::Tested,
+            StoryStatus::Waiting->value => StoryStatus::Waiting,
             StoryStatus::Released->value => StoryStatus::Released,
             StoryStatus::Rejected->value => StoryStatus::Rejected,
             StoryStatus::Done->value => StoryStatus::Done,
@@ -875,7 +893,7 @@ class Story extends Resource
             $loggedUserIsDeveloperAssigned = $this->resource->developer && $loggedUser->id == $this->resource->developer->id;
             $loggedUserIsTesterAssigned = $this->resource->tester && $loggedUser->id == $this->resource->tester->id;
 
-            if ($loggedUserIsDeveloperAssigned && $loggedUserIsTesterAssigned) {
+            if ($loggedUserIsDeveloperAssigned && ($loggedUserIsTesterAssigned || is_null($this->resource->tester))) {
                 return $statusOptions;
             }
             if ($loggedUserIsDeveloperAssigned) {

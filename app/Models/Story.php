@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Epic;
+use App\Models\Tag;
 use App\Enums\UserRole;
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
@@ -199,7 +200,10 @@ class Story extends Model implements HasMedia
             }
         });
     }
-
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
     public function sendStatusUpdatedEmail(Story $story, $userId)
     {
         $user = User::find($userId);
@@ -209,6 +213,10 @@ class Story extends Model implements HasMedia
             Log::error($e->getMessage());
             throw new \Exception($e->getMessage());
         }
+    }
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'story_project');
     }
 
     public function developer()
