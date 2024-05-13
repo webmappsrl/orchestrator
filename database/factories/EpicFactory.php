@@ -19,18 +19,18 @@ class EpicFactory extends Factory
      * @return array<string, mixed>
      */
     public function definition()
-    {   
+    {
 
         if (User::whereJsonContains('roles', UserRole::Developer)->count() == 0) {
             User::factory(10)->create(['roles' => UserRole::Developer]);
         }
 
-        if(Milestone::count() == 0) {
+        if (Milestone::count() == 0) {
             Milestone::factory(10)->create();
         }
 
-        if(Project::count() == 0) {
-            Project::factory(10)->create();
+        if (Project::count() == 0) {
+            Project::factory(10)->createQuietly();
         }
 
         return [
