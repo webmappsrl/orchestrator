@@ -4,6 +4,7 @@ namespace App\Nova\Filters;
 
 use App\Models\Story;
 use App\Nova\CustomerStory;
+use Exception;
 use Illuminate\Http\Request;
 use Laravel\Nova\Filters\Filter;
 use Illuminate\Support\Facades\DB;
@@ -41,8 +42,7 @@ class TaggableTypeFilter extends Filter
      */
     public function options(Request $request)
     {
-        $resourceClass = $request->resource(); // "App\Nova\CustomerStory"
-
+        $resourceClass = $request->resource();
         if (class_exists($resourceClass)) {
             $novaResource = new $resourceClass($request);
             if (method_exists($novaResource, 'indexQuery')) {
@@ -51,13 +51,15 @@ class TaggableTypeFilter extends Filter
         } else {
             $query = CustomerStory::indexQuery($request,  Story::query());
         }
-        $tags =  $query
-            ->join('taggables', 'taggables.taggable_id', '=', 'stories.id')
-            ->join('tags', 'taggables.tag_id', '=', 'tags.id')
-            ->where('taggables.taggable_type', Story::class)
-            ->distinct()
-            ->pluck('tags.id', 'tags.name')
-            ->toArray();
-        return $tags;
+        if (!is_null($query)) {
+            $tags =  $query
+                ->join('taggables', 'taggables.taggable_id', '=', 'stories.id')
+                ->join('tags', 'taggables.tag_id', '=', 'tags.id')
+                ->where('taggables.taggable_type', Story::class)
+                ->distinct()
+                ->pluck('tags.id', 'tags.name')
+                ->toArray();
+            return $tags;
+        }
     }
 }
