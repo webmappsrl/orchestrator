@@ -86,8 +86,8 @@ class Project extends Model implements HasMedia
             $tag = Tag::firstOrCreate([
                 'name' => class_basename($entity) . ': ' . $entity->name
             ]);
-            $tag->taggable()->save($entity);
-            $entity->tags()->save($entity);
+            $tag->taggable()->saveQuietly($entity);
+            $entity->tags()->saveQuietly($entity);
         });
     }
 }
