@@ -941,6 +941,7 @@ class Story extends Resource
             new filters\CreatorStoryFilter(),
             new filters\UserFilter(),
             new filters\StoryStatusFilter(),
+            new Filters\TaggableTypeFilter(),
             new filters\StoryTypeFilter(),
             new filters\CustomerStoryWithDeadlineFilter(),
         ];
