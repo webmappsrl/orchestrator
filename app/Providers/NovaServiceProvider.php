@@ -12,7 +12,7 @@ use App\Nova\Customer;
 use App\Nova\Deadline;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
-use App\Nova\ArchivedDeadline;
+use App\Nova\ArchivedDeadlines;
 use App\Nova\ArchivedStoryShowedByCustomer;
 use App\Nova\ArchivedStories;
 use App\Nova\StoryShowedByCustomer;
@@ -80,7 +80,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('DEV', [
                     MenuGroup::make('Archived', [
-                        MenuItem::resource(ArchivedDeadline::class),
+                        MenuItem::resource(ArchivedDeadlines::class),
                         MenuItem::resource(ArchivedStories::class),
                     ])->collapsable(),
                     MenuGroup::make('my work', [

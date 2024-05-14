@@ -5,7 +5,7 @@ namespace App\Nova;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class ArchivedDeadline extends Deadline
+class ArchivedDeadlines extends Deadline
 {
 
     public static function label()
