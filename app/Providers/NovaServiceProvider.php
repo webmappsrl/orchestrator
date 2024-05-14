@@ -12,6 +12,7 @@ use App\Nova\Customer;
 use App\Nova\Deadline;
 use Laravel\Nova\Nova;
 use App\Enums\UserRole;
+use App\Nova\ArchivedDeadline;
 use App\Nova\ArchivedStoryShowedByCustomer;
 use App\Nova\ArchivedStories;
 use App\Nova\StoryShowedByCustomer;
@@ -28,6 +29,7 @@ use Laravel\Nova\Menu\MenuSection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Menu\MenuGroup;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -77,13 +79,18 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('users')->collapsable(),
 
                 MenuSection::make('DEV', [
-                    MenuItem::resource(AssignedToMeStory::class),
-                    MenuItem::resource(ToBeTestedStory::class),
-                    MenuItem::resource(ArchivedStories::class),
+                    MenuGroup::make('Archived', [
+                        MenuItem::resource(ArchivedDeadline::class),
+                        MenuItem::resource(ArchivedStories::class),
+                    ])->collapsable(),
+                    MenuGroup::make('my work', [
+                        MenuItem::resource(AssignedToMeStory::class),
+                        MenuItem::resource(ToBeTestedStory::class),
+                    ])->collapsable(),
                     MenuItem::resource(Deadline::class),
-                    MenuItem::resource(CustomerStory::class),
                     MenuItem::resource(CustomerFeatureStory::class),
-                    MenuItem::resource(DeveloperStory::class)
+                    MenuItem::resource(CustomerStory::class),
+                    MenuItem::resource(DeveloperStory::class),
                 ])->icon('code')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null)
                         return false;

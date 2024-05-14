@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Enums\UserRole;
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
+use App\Models\Customer;
+use App\Models\Deadline;
 use Laravel\Nova\Metrics\Partition;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -16,7 +18,7 @@ class StoriesByUser extends Partition
     public $label;
     public $query;
 
-    public function __construct($fieldName = 'creator_id', $label = 'Customer', $query = null)
+    public function __construct($fieldName = 'customer_id', $label = 'Customer', $query = null)
     {
         $this->fieldName = $fieldName;
         $this->label = $label;
@@ -37,19 +39,15 @@ class StoriesByUser extends Partition
     public function calculate(NovaRequest $request)
     {
         if (is_null($this->query)) {
-            $this->query = Story::whereNotNull($this->fieldName)
-                ->whereHas('creator', function ($query) {
-                    $query->whereJsonContains('roles', UserRole::Customer);
-                })
-                ->where('status', '!=', StoryStatus::Done->value)
-                ->where('type', '!=', StoryType::Feature->value);
+            $this->query = Deadline::whereNotNull($this->fieldName)
+                ->where('status', '!=', StoryStatus::Done->value);
         }
         $results = $this->query
             ->get()
             ->groupBy($this->fieldName)
             ->mapWithKeys(function ($items, $key) {
                 if (!empty($key)) {
-                    $user = User::find($key);
+                    $user = Customer::find($key);
                     return [$user ? $user->name : 'User not found' => count($items)];
                 }
                 return ['No ' . $this->label => count($items)];

@@ -74,11 +74,11 @@ class StoriesByField extends Partition
      */
     public function uriKey()
     {
-        return 'stories-by-' . $this->label;
+        return 'by-' . $this->label;
     }
 
     public function name()
     {
-        return 'Stories by ' . ucfirst($this->label);
+        return  'by ' . ucfirst($this->label);
     }
 }

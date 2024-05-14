@@ -2,21 +2,19 @@
 
 namespace App\Nova;
 
-use Carbon\Carbon;
 use Laravel\Nova\Fields\ID;
 use App\Enums\DeadlineStatus;
+use App\Enums\StoryStatus;
 use App\Nova\Actions\EditDeadlinesAction;
-use App\Nova\Filters\DeadlineCustomerFilter;
 use App\Nova\Filters\DeadlineStatusFilter;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
-use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\MorphToMany;
-use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
@@ -36,6 +34,10 @@ class Deadline extends Resource
      */
     public static $title = 'title';
 
+    public static function label()
+    {
+        return __('Deadlines');
+    }
     public function title()
     {
         $dueDate = $this->due_date->format('Y-m-d');
@@ -50,6 +52,11 @@ class Deadline extends Resource
     public static $search = [
         'due_date', 'status', 'title'
     ];
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        return $query->where('status', '!=', StoryStatus::Done);
+    }
 
     /**
      * Get the fields displayed by the resource.
@@ -105,7 +112,11 @@ class Deadline extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        return [];
+        $query = $this->indexQuery($request,  Deadline::query());
+        return [
+            (new Metrics\StoriesByField('status', 'Status', $query))->width('1/2'),
+            (new Metrics\StoriesByUser('customer_id', 'Customer', $query))->width('1/2'),
+        ];
     }
 
     /**
