@@ -28,6 +28,7 @@ use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Tag;
+use Laravel\Nova\Fields\Stack;
 
 class Story extends Resource
 {
@@ -126,19 +127,23 @@ class Story extends Resource
     }
 
 
+
     public  function fieldsInIndex(NovaRequest $request)
     {
         $fields = [
             ID::make()->sortable(),
-            $this->createdAtField(),
             $this->statusField($request),
-            $this->assignedToField(),
-            $this->typeField($request),
+            Stack::make('Title', [
+                $this->typeField($request),
+                $this->titleField(),
+                $this->relationshipField($request),
+            ]),
+            Stack::make('Assigned/estimated hours', [
+                $this->assignedToField(),
+                $this->estimatedHoursField($request),
+            ]),
             $this->infoField($request),
-            $this->titleField(),
-            $this->relationshipField($request),
-            $this->estimatedHoursField($request),
-            $this->updatedAtField(),
+            $this->createdAtField(),
             $this->deadlineField($request),
 
         ];
@@ -371,7 +376,7 @@ class Story extends Resource
                 $app = $this->getAppLink($parentStory->creator);
                 $url = url("/resources/stories/{$parentStory->id}");
                 $story = <<<HTML
-                    <h3>PARENT:<h3/>
+                    <h3 style="color:yellow; font-weight: bold">PARENT:<h3/>
                     <a 
                         href="{$url}" 
                         style="color: green;">
@@ -387,7 +392,7 @@ class Story extends Resource
                 $childStories = $this->childStories;
                 $childStoryLink = '';
                 $storyHeader = <<<HTML
-                <h3>CHILDS:<h3/>
+                <h3  style="color:yellow; font-weight: bold">CHILDS:<h3/>
                 HTML;
                 foreach ($childStories as $childStory) {
                     $app = $this->getAppLink($childStory->creator);

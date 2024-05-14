@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Nova\Actions\MoveStoriesFromEpic;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use Laravel\Nova\Fields\ID;
 
 class ArchivedStoryShowedByCustomer extends Story
 {
@@ -27,7 +28,26 @@ class ArchivedStoryShowedByCustomer extends Story
             ->where('status', StoryStatus::Done);
     }
 
+    public  function fieldsInIndex(NovaRequest $request)
+    {
+        $fields = [
+            ID::make()->sortable(),
+            $this->createdAtField(),
+            $this->statusField($request),
+            $this->assignedToField(),
+            $this->typeField($request),
+            $this->infoField($request),
+            $this->titleField(),
+            $this->relationshipField($request),
+            $this->estimatedHoursField($request),
+            $this->updatedAtField(),
+            $this->deadlineField($request),
 
+        ];
+        return array_map(function ($field) {
+            return $field->onlyOnIndex();
+        }, $fields);
+    }
     /**
      * Get the actions available for the resource.
      *

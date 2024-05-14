@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Enums\UserRole;
 use App\Enums\StoryStatus;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Fields\ID;
 
 class StoryShowedByCustomer extends Story
 {
@@ -20,7 +21,26 @@ class StoryShowedByCustomer extends Story
             return $query->where('creator_id', $request->user()->id)->where('status', '!=', StoryStatus::Done);
         }
     }
+    public  function fieldsInIndex(NovaRequest $request)
+    {
+        $fields = [
+            ID::make()->sortable(),
+            $this->createdAtField(),
+            $this->statusField($request),
+            $this->assignedToField(),
+            $this->typeField($request),
+            $this->infoField($request),
+            $this->titleField(),
+            $this->relationshipField($request),
+            $this->estimatedHoursField($request),
+            $this->updatedAtField(),
+            $this->deadlineField($request),
 
+        ];
+        return array_map(function ($field) {
+            return $field->onlyOnIndex();
+        }, $fields);
+    }
     public function statusField($view, $fieldName = 'status')
     {
         return  parent::statusField($view)->readonly(function ($request) {
