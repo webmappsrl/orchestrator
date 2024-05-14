@@ -79,6 +79,6 @@ class StoriesByUser extends Partition
      */
     public function uriKey()
     {
-        return 'by-' . $this->label;
+        return class_basename($this) . '-by-' . $this->label;
     }
 }

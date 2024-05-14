@@ -121,7 +121,7 @@ class Deadline extends Resource
         $query = $this->indexQuery($request,  Deadline::query());
         return [
             (new Metrics\StoriesByField('status', 'Status', $query))->width('1/2'),
-            (new Metrics\StoriesByUser('customer_id', 'Customer', $query))->width('1/2'),
+            (new Metrics\StoriesByCustomer('customer_id', 'Customer', $query))->width('1/2'),
         ];
     }
 

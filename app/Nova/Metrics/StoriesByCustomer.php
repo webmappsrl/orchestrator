@@ -2,17 +2,13 @@
 
 namespace App\Nova\Metrics;
 
-use App\Models\Story;
-use App\Models\User;
-use App\Enums\UserRole;
 use App\Enums\StoryStatus;
-use App\Enums\StoryType;
 use App\Models\Customer;
 use App\Models\Deadline;
 use Laravel\Nova\Metrics\Partition;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class StoriesByUser extends Partition
+class StoriesByCustomer extends Partition
 {
     public $fieldName;
     public $label;
@@ -77,6 +73,6 @@ class StoriesByUser extends Partition
      */
     public function uriKey()
     {
-        return 'by-' . $this->label;
+        return class_basename($this) . '-by-' . $this->label;
     }
 }
