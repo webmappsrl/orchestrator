@@ -12,14 +12,15 @@ class ArchivedStories extends Story
     {
         return __('Archived stories');
     }
-    public static function uriKey()
-    {
-        return 'archived-deadlines';
-    }
+
     public static function indexQuery(NovaRequest $request, $query)
     {
         return $query
             ->where('status', StoryStatus::Done);
+    }
+    public static function uriKey()
+    {
+        return 'archived-stories';
     }
 
     public static function authorizedToCreate(Request $request)

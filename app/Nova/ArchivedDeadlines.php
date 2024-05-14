@@ -13,6 +13,11 @@ class ArchivedDeadline extends Deadline
         return __('Archived deadlines');
     }
 
+    public static function uriKey()
+    {
+        return 'archived-deadlines';
+    }
+
     public static function indexQuery(NovaRequest $request, $query)
     {
         return $query->where('status', StoryStatus::Done);

@@ -38,6 +38,12 @@ class Deadline extends Resource
     {
         return __('Deadlines');
     }
+
+    public static function uriKey()
+    {
+        return 'deadlines';
+    }
+
     public function title()
     {
         $dueDate = $this->due_date->format('Y-m-d');
