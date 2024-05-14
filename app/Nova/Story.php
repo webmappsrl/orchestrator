@@ -209,8 +209,8 @@ class Story extends Resource
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json')
                 ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON).'),
             $this->estimatedHoursField($request),
-            $this->descriptionField(),
             $this->titleField(),
+            $this->descriptionField(),
             $this->customerRequestField($request),
             $this->answerToTicketField(),
             BelongsTo::make('Parent Story', 'parentStory', CustomerStory::class)
