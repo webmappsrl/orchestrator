@@ -613,7 +613,7 @@ class Story extends Resource
         $tagLinks = $this->getTagLinks();
         $creatorLink = $this->getCreatorLink();
 
-        return "{$appLink}{$tagLinks}{$creatorLink}";
+        return "{$appLink}{$creatorLink}{$tagLinks}";
     }
     private function getAppLink($creator = null)
     {
