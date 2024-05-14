@@ -448,10 +448,17 @@ class Story extends Resource
         } else {
             return Status::make('Status', 'status')
                 ->loadingWhen([
-                    StoryStatus::Assigned->value, StoryStatus::Progress->value,
-                    StoryStatus::Test->value, StoryStatus::Tested->value
+                    StoryStatus::Assigned->value,
+                    StoryStatus::Progress->value,
+                    StoryStatus::Test->value,
+                    StoryStatus::Tested->value
                 ])
-                ->failedWhen([StoryStatus::New->value, StoryStatus::Rejected->value]);
+                ->failedWhen([
+                    StoryStatus::New->value,
+                    StoryStatus::Rejected->value,
+                    storyStatus::Test->value,
+                    StoryStatus::Waiting->value
+                ]);
         }
     }
 
