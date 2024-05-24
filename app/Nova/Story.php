@@ -26,6 +26,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use Formfeed\Breadcrumbs\Breadcrumb;
+use Formfeed\Breadcrumbs\Breadcrumbs;
+use Illuminate\Support\Facades\Session;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Tag;
 use Laravel\Nova\Fields\Stack;
@@ -47,7 +50,22 @@ class Story extends Resource
     {
         return __('Story'); // Il nome plurale personalizzato
     }
+    public static $linkToParent = false;
+    public static $resolveParentBreadcrumbs = false;
 
+    public function indexBreadcrumb(NovaRequest $resourceClass, Breadcrumbs $breadcrumbs, Breadcrumb $indexBreadcrumb)
+    {
+        $previousUrl = url()->previous();
+        $previousPath = parse_url($previousUrl, PHP_URL_PATH) . '?' . parse_url($previousUrl, PHP_URL_QUERY);
+        if (strlen($previousPath) > 60) {
+            Session::put('breadcrumb_path', $previousPath);
+        }
+        $bp = Session::get('breadcrumb_path');
+        if (!is_null($bp)) {
+            $indexBreadcrumb->path = $bp;
+        }
+        return $indexBreadcrumb;
+    }
     /**
      * The model the resource corresponds to.
      *
@@ -843,10 +861,7 @@ class Story extends Resource
 
 
 
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
+
 
     public function navigationLinks()
     {

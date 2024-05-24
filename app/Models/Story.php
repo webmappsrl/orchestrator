@@ -29,21 +29,7 @@ class Story extends Model implements HasMedia
         'creator_id',
         'parent_id'
     ];
-    public function parent()
-    {
-        return $this->config();
-    }
 
-    public function config()
-    {
-        //if the user was in the epic view, the epic name will be shown in the breadcrumbs, otherwise the project name
-
-        if ($this->belongsTo(Epic::class)) {
-            return $this->belongsTo(Epic::class, 'epic_id');
-        } else {
-            return $this->belongsTo(Project::class, 'project_id');
-        }
-    }
     public static function boot()
     {
         parent::boot();
