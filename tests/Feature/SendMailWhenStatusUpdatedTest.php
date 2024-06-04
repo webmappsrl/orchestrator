@@ -24,10 +24,10 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         $story = Story::factory()->create([
             'user_id' => $developer->id,
             'tester_id' => $tester->id,
-            'status' => StoryStatus::Progress->value
+            'status' => StoryStatus::Progress,
         ]);
 
-        $story->status = StoryStatus::Test->value;
+        $story->status = StoryStatus::Test;
         $story->save();
 
         Mail::assertSent(\App\Mail\StoryStatusUpdated::class, function ($mail) use ($story, $tester) {
@@ -49,10 +49,10 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         $story = Story::factory()->create([
             'user_id' => $developer->id,
             'tester_id' => $tester->id,
-            'status' => StoryStatus::Progress->value
+            'status' => StoryStatus::Progress,
         ]);
 
-        $story->status = StoryStatus::Done->value;
+        $story->status = StoryStatus::Done;
         $story->save();
 
         Mail::assertSent(\App\Mail\StoryStatusUpdated::class, function ($mail) use ($story, $developer) {
@@ -73,12 +73,12 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         $story = Story::factory()->create([
             'user_id' => $user->id,
             'tester_id' => $user->id,
-            'status' => StoryStatus::Progress->value
+            'status' => StoryStatus::Progress
         ]);
 
 
 
-        $story->status = StoryStatus::Test->value;
+        $story->status = StoryStatus::Test;
         $story->save();
 
         Mail::assertNotSent(\App\Mail\StoryStatusUpdated::class);
@@ -95,10 +95,10 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         $story = Story::factory()->create([
             'user_id' => $user->id,
             'tester_id' => $user->id,
-            'status' => StoryStatus::Progress->value
+            'status' => StoryStatus::Progress
         ]);
 
-        $story->status = StoryStatus::Done->value;
+        $story->status = StoryStatus::Done;
         $story->save();
 
         Mail::assertNotSent(\App\Mail\StoryStatusUpdated::class);

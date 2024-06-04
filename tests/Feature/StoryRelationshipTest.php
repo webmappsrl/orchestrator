@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\StoryStatus;
 use App\Models\Story;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -73,15 +74,15 @@ class StoryRelationshipTest extends TestCase
     /** @test */
     public function it_propagates_status_changes_from_parent_to_child()
     {
-        $parentStory = Story::create(['name' => 'Parent Story', 'status' => 'new']);
-        $childStory = Story::create(['name' => 'Child Story', 'status' => 'new']);
+        $parentStory = Story::create(['name' => 'Parent Story', 'status' => StoryStatus::New]);
+        $childStory = Story::create(['name' => 'Child Story', 'status' => StoryStatus::New]);
         $user = User::factory()->create(); // Assicurati di avere una factory per gli utenti.
         $this->actingAs($user);
 
         $parentStory->childStories()->attach($childStory->id);
         $parentStory = $parentStory->fresh();
         $childStory = $childStory->fresh();
-        $parentStory->update(['status' => 'done']);
+        $parentStory->update(['status' => StoryStatus::Done]);
         $parentStory = $parentStory->fresh();
 
         // Assumendo che lo stato debba propagarsi
