@@ -806,26 +806,36 @@ class Story extends Resource
                 ->onlyInline()
                 ->confirmText('Click on the "Confirm" button to save the status in Progress or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
+                ->cancelButtonText('Cancel')
+                ->canSee(function () {
+                    return $this->status !== StoryStatus::Progress->value;
+                }),
             (new actions\StoryToDoneStatusAction)
                 ->showInline()
                 ->confirmText('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
+                ->cancelButtonText('Cancel')
+                ->canSee(function () {
+                    return $this->status !== StoryStatus::Done->value;
+                }),
 
             (new actions\StoryToTestStatusAction)
                 ->onlyInline()
                 ->confirmText('Click on the "Confirm" button to save the status in Test or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
+                ->cancelButtonText('Cancel')
+                ->canSee(function () {
+                    return $this->status !== StoryStatus::Test->value;
+                }),
 
             (new actions\StoryToRejectedStatusAction)
                 ->onlyInline()
                 ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
+                ->cancelButtonText('Cancel')
+                ->canSee(function () {
+                    return $this->status !== StoryStatus::Rejected->value;
+                }),
         ];
 
         if ($request->viaResource == 'projects') {

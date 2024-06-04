@@ -25,7 +25,7 @@ class StoryObserver
         $userName = $user ? $user->name : 'Unknown User'; // Controlla se l'utente è loggato
 
         if ($story->isDirty('status')) {
-            $changes[] = "Status changed to <strong>{$story->status}</strong>";
+            $changes[] = "Status changed to <strong>{$story->status->value}</strong>";
         }
 
         if ($story->isDirty('assigned_to')) {
