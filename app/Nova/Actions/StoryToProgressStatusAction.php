@@ -26,7 +26,7 @@ class StoryToProgressStatusAction extends Action
     {
         foreach ($models as $model) {
             $model->update([
-                'status' => StoryStatus::Progress,
+                'status' => StoryStatus::Progress->value,
             ]);
         }
 

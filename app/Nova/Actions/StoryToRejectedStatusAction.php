@@ -26,7 +26,7 @@ class StoryToRejectedStatusAction extends Action
     {
         foreach ($models as $model) {
             $model->update([
-                'status' => StoryStatus::Rejected,
+                'status' => StoryStatus::Rejected->value,
             ]);
 
             return Action::message('Status changed correctly');

@@ -26,7 +26,7 @@ class StoryToDoneStatusAction extends Action
     {
         foreach ($models as $model) {
             $model->update([
-                'status' => StoryStatus::Done,
+                'status' => StoryStatus::Done->value,
             ]);
         }
 

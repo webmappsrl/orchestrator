@@ -26,7 +26,7 @@ class StoryToTestStatusAction extends Action
     {
         foreach ($models as $model) {
             $model->update([
-                'status' => StoryStatus::Test,
+                'status' => StoryStatus::Test->value,
             ]);
         }
 
