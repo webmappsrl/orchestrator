@@ -959,6 +959,7 @@ class Story extends Resource
             StoryStatus::New->value => StoryStatus::New,
             StoryStatus::Assigned->value => StoryStatus::Assigned,
             StoryStatus::Progress->value => StoryStatus::Progress,
+            StoryStatus::Waiting->value => StoryStatus::Waiting,
             StoryStatus::Test->value => StoryStatus::Test,
             StoryStatus::Tested->value => StoryStatus::Tested,
             StoryStatus::Released->value => StoryStatus::Released,
