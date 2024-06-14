@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Overtrue\LaravelFavorite\Traits\Favoriteable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 
 class Project extends Model implements HasMedia
 {
@@ -85,13 +86,21 @@ class Project extends Model implements HasMedia
     protected static function booted()
     {
         static::saved(function (Project $entity) {
-            $tag = Tag::firstOrCreate([
-                'name' => class_basename($entity) . ': ' . $entity->name
-            ]);
             try {
-                $tag->taggable()->saveQuietly($entity);
-                $entity->tags()->saveQuietly($entity);
+                $tag = Tag::firstOrCreate([
+                    'name' => class_basename($entity) . ': ' . $entity->name
+                ]);
+
+                if ($tag && $entity) {
+                    $tag->taggable()->saveQuietly($entity);
+                    $entity->tags()->saveQuietly($tag);
+                }
             } catch (Exception $e) {
+                // Logga l'errore con maggiori dettagli
+                Log::error('Error saving tags: ' . $e->getMessage(), [
+                    'entity' => $entity,
+                    'tag' => isset($tag) ? $tag : null,
+                ]);
             }
         });
     }

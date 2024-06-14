@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Arr;
 use App\Traits\ConfTrait;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class App extends Model
@@ -276,13 +277,21 @@ class App extends Model
     {
         parent::boot();
         static::saved(function (App $entity) {
-            $tag = Tag::firstOrCreate([
-                'name' => class_basename($entity) . ': ' . $entity->name
-            ]);
             try {
-                $tag->taggable()->saveQuietly($entity);
-                $entity->tags()->saveQuietly($entity);
+                $tag = Tag::firstOrCreate([
+                    'name' => class_basename($entity) . ': ' . $entity->name
+                ]);
+
+                if ($tag && $entity) {
+                    $tag->taggable()->saveQuietly($entity);
+                    $entity->tags()->saveQuietly($tag);
+                }
             } catch (Exception $e) {
+                // Logga l'errore con maggiori dettagli
+                Log::error('Error saving tags: ' . $e->getMessage(), [
+                    'entity' => $entity,
+                    'tag' => isset($tag) ? $tag : null,
+                ]);
             }
         });
         App::observe(AppObserver::class);

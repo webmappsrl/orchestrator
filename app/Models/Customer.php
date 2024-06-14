@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 
 class Customer extends Model
 {
@@ -64,13 +65,21 @@ class Customer extends Model
     protected static function booted()
     {
         static::saved(function (Customer $entity) {
-            $tag = Tag::firstOrCreate([
-                'name' => class_basename($entity) . ': ' . $entity->name
-            ]);
             try {
-                $tag->taggable()->saveQuietly($entity);
-                $entity->tags()->saveQuietly($entity);
+                $tag = Tag::firstOrCreate([
+                    'name' => class_basename($entity) . ': ' . $entity->name
+                ]);
+
+                if ($tag && $entity) {
+                    $tag->taggable()->saveQuietly($entity);
+                    $entity->tags()->saveQuietly($tag);
+                }
             } catch (Exception $e) {
+                // Logga l'errore con maggiori dettagli
+                Log::error('Error saving tags: ' . $e->getMessage(), [
+                    'entity' => $entity,
+                    'tag' => isset($tag) ? $tag : null,
+                ]);
             }
         });
     }
