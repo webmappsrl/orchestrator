@@ -3,7 +3,8 @@
 
 Ciao {{ $user->name }},
 
-Lo stato della storia {{$story->id}} è stato aggiornato a <span style="background-color:{{ $colorMapping[$status] ?? 'black' }}; color: white; padding: 2px 4px;">{{ $status }}</span>.
+({{$story->id}})[<span style="background-color:{{ $colorMapping[$status] ?? 'black' }}; color: white; padding: 2px 4px;">{{ $status }}</span>]<br>
+{{$story->title}}
 
 @if (count($story->deadlines) > 0)
 La storia è inserita nella deadline : [{{ $story->deadlines->first()->title }}]( {{ url('resources/deadlines/' . $story->deadlines->first()->id) }} ) con scadenza: {{$story->deadlines->first()->due_date->format('d-m-Y')}}.
