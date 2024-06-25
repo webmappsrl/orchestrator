@@ -44,4 +44,16 @@ class CustomerStoryWithDeadlineFilter extends BooleanFilter
             'Without Deadline' => 'without-deadline',
         ];
     }
+    /**
+     * Set the default value of the filter.
+     *
+     * @return array
+     */
+    public function default()
+    {
+        return [
+            'with-deadline' => false,
+            'without-deadline' => true
+        ];
+    }
 }

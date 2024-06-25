@@ -15,7 +15,7 @@ class CustomerFeatureStory extends Story
 
     public static function label()
     {
-        return __('Customer Feature stories');
+        return __('Feature stories');
     }
 
 
@@ -29,9 +29,6 @@ class CustomerFeatureStory extends Story
     public static function indexQuery(NovaRequest $request, $query)
     {
         return $query->whereNotNull('creator_id')
-            ->whereHas('creator', function ($query) {
-                $query->whereJsonContains('roles', UserRole::Customer);
-            })
             ->where('status', '!=', StoryStatus::Done->value)
             ->where('type', '=', StoryType::Feature->value);
     }
@@ -41,7 +38,7 @@ class CustomerFeatureStory extends Story
         $query = $this->indexQuery($request,  Story::query());
         return [
             (new Metrics\StoriesByField('status', 'Status', $query))->width('1/3'),
-            (new Metrics\StoriesByUser('creator_id', 'Customer', $query))->width('1/3'),
+            (new Metrics\StoriesByUser('creator_id', 'Creator', $query))->width('1/3'),
             (new Metrics\StoriesByUser('user_id', 'Assigned',  $query))->width('1/3'),
         ];
     }

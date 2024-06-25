@@ -2,9 +2,13 @@
 
 namespace App\Nova\Filters;
 
+use App\Models\Story;
 use App\Models\User;
+use App\Nova\CustomerStory;
+use App\Nova\Story as NovaStory;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Illuminate\Support\Facades\DB;
 
 class CreatorStoryFilter extends Filter
 {
@@ -36,9 +40,24 @@ class CreatorStoryFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return
-            User::whereJsonContains('roles', ['customer'])->orderBy('name')
-            ->pluck('id', 'name')->toArray();
+        $resourceClass = $request->resource();
+        if (class_exists($resourceClass)) {
+            $novaResource = new $resourceClass($request);
+            if (method_exists($novaResource, 'indexQuery')) {
+                $query = $novaResource::indexQuery($request,  Story::query());
+            }
+        } else {
+            $query = CustomerStory::indexQuery($request,  Story::query());
+        }
+
+        // Get distinct creator_ids from the filtered index query
+        $creatorIds = $query->distinct()->pluck('creator_id');
+
+        // Filter users to only those who are creators in the current index view
+        return User::whereIn('id', $creatorIds)
+            ->orderBy('name')
+            ->pluck('id', 'name')
+            ->toArray();
     }
 
     public function name()

@@ -19,7 +19,6 @@ use App\Nova\StoryShowedByCustomer;
 use App\Nova\AssignedToMeStory;
 use App\Nova\CustomerStory;
 use App\Nova\CustomerFeatureStory;
-use App\Nova\DeveloperStory;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
 use App\Nova\ToBeTestedStory;
@@ -90,7 +89,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Deadline::class),
                     MenuItem::resource(CustomerFeatureStory::class),
                     MenuItem::resource(CustomerStory::class),
-                    MenuItem::resource(DeveloperStory::class),
                 ])->icon('code')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null)
                         return false;
