@@ -30,11 +30,9 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Nuova Storia Creata</h1>
+            <h1>{{ $story->name }}</h1>
         </div>
         <div class="content">
-            <p>Una nuova storia é stata creata da {{ $creator->name }}.</p>
-            <p>Titolo della storia: {{ $story->name }}</p>
             <div class="content">
                 <p>Contenuto:</p>
                 {!! $story->customer_request !!}
