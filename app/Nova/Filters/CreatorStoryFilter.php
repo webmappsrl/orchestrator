@@ -49,15 +49,20 @@ class CreatorStoryFilter extends Filter
         } else {
             $query = CustomerStory::indexQuery($request,  Story::query());
         }
+        if ($query != null) {
 
-        // Get distinct creator_ids from the filtered index query
-        $creatorIds = $query->distinct()->pluck('creator_id');
 
-        // Filter users to only those who are creators in the current index view
-        return User::whereIn('id', $creatorIds)
-            ->orderBy('name')
-            ->pluck('id', 'name')
-            ->toArray();
+            // Get distinct creator_ids from the filtered index query
+            $creatorIds = $query->distinct()->pluck('creator_id');
+
+            // Filter users to only those who are creators in the current index view
+            return User::whereIn('id', $creatorIds)
+                ->orderBy('name')
+                ->pluck('id', 'name')
+                ->toArray();
+        } else {
+            return User::pluck('id', 'name')->toArray();
+        }
     }
 
     public function name()
