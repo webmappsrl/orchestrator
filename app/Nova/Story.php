@@ -983,7 +983,6 @@ class Story extends Resource
             new filters\StoryStatusFilter(),
             new Filters\TaggableTypeFilter(),
             new filters\StoryTypeFilter(),
-            new filters\CustomerStoryWithDeadlineFilter(),
         ];
     }
 }

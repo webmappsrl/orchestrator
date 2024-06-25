@@ -11,7 +11,7 @@ use Laravel\Nova\Query\Search\SearchableRelation;
 class CustomerStory extends Story
 {
 
-    public $hideFields = ['updated_at'];
+    public $hideFields = ['updated_at', 'deadlines'];
 
     public static function label()
     {
@@ -29,6 +29,7 @@ class CustomerStory extends Story
     public static function indexQuery(NovaRequest $request, $query)
     {
         return $query->whereNotNull('creator_id')
+            ->doesntHave('deadlines')
             ->where('status', '!=', StoryStatus::Done->value)
             ->where('type', '!=', StoryType::Feature->value);
     }
