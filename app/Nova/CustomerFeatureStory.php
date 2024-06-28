@@ -29,6 +29,7 @@ class CustomerFeatureStory extends Story
     public static function indexQuery(NovaRequest $request, $query)
     {
         return $query->whereNotNull('creator_id')
+            ->doesntHave('deadlines')
             ->where('status', '!=', StoryStatus::Done->value)
             ->where('type', '=', StoryType::Feature->value);
     }
