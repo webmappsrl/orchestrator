@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use App\Nova\Lenses\StoriesByQuarter;
 use Formfeed\Breadcrumbs\Breadcrumb;
 use Formfeed\Breadcrumbs\Breadcrumbs;
 use Illuminate\Support\Facades\Session;
@@ -759,7 +760,12 @@ class Story extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [];
+        return [
+            new StoriesByQuarter('1'),
+            new StoriesByQuarter('2'),
+            new StoriesByQuarter('3'),
+            new StoriesByQuarter('4'),
+        ];
     }
 
     /**
