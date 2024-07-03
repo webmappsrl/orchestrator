@@ -335,4 +335,9 @@ class Story extends Model implements HasMedia
                 }
         }
     }
+
+    public function views()
+    {
+        return $this->hasMany(StoryLog::class);
+    }
 }

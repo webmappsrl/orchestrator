@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Story;
+use App\Models\StoryLog;
 use Illuminate\Support\Facades\Auth;
 
 class StoryObserver
@@ -21,27 +22,30 @@ class StoryObserver
     public function updated(Story $story): void
     {
         $changes = [];
-        $user = Auth::user(); // Ottiene l'utente corrente
-        $userName = $user ? $user->name : 'Unknown User'; // Controlla se l'utente è loggato
+        $jsonChanges = [];
+        $user = Auth::user();
+        $userName = $user ? $user->name : 'Unknown User';
 
-        if ($story->isDirty('status')) {
-            $changes[] = "Status changed to <strong>{$story->status}</strong>";
+        $dirtyFields = $story->getDirty();
+        foreach ($dirtyFields as $field => $newValue) {
+            $originalValue = $story->getOriginal($field);
+            if ($field === 'description') {
+                $newValue = 'change description';
+            }
+            $changes[] = ucfirst($field) . " changed from <strong>{$originalValue}</strong> to <strong>{$newValue}</strong>";
+            $jsonChanges[$field] = $newValue;
         }
-
-        if ($story->isDirty('assigned_to')) {
-            $assignedUserName = $story->assignedTo->name ?? 'None';
-            $changes[] = "Assigned to <strong>{$assignedUserName}</strong>";
-        }
-
-        if ($story->isDirty('type')) {
-            $changes[] = "Type changed to <strong>{$story->type}</strong>";
-        }
-
 
         if (!empty($changes)) {
             $timestamp = now()->format('Y-m-d H:i');
             $newLogEntry = "{$timestamp}: {$userName} - " . implode(', ', $changes) . "<br>";
             $story->history_log = $story->history_log . $newLogEntry;
+            StoryLog::create([
+                'story_id' => $story->id,
+                'user_id' => $user ? $user->id : null,
+                'viewed_at' => $timestamp,
+                'changes' => $jsonChanges,
+            ]);
             $story->saveQuietly();
         }
     }

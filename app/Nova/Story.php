@@ -31,6 +31,7 @@ use Formfeed\Breadcrumbs\Breadcrumb;
 use Formfeed\Breadcrumbs\Breadcrumbs;
 use Illuminate\Support\Facades\Session;
 use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Tag;
 use Laravel\Nova\Fields\Stack;
 
@@ -207,7 +208,10 @@ class Story extends Resource
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
             MorphToMany::make('Deadlines')
-                ->showCreateRelationButton()
+                ->showCreateRelationButton(),
+            HasMany::make('Views', 'views', StoryLog::class)->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Admin);
+            }),
         ];
         return array_map(function ($field) {
             return $field->onlyOnDetail();
