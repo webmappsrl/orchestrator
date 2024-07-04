@@ -12,7 +12,10 @@ use Tests\TestCase;
 class SendMailWhenStatusUpdatedTest extends TestCase
 {
     use DatabaseTransactions;
-    /** @test */
+    /**
+     * @test
+     * @doesNotPerformAssertions
+     */
     public function it_sends_email_to_tester_when_developer_updates_status()
     {
         Mail::fake();
@@ -28,7 +31,7 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         ]);
 
         $story->status = StoryStatus::Test->value;
-        $story->saveQuietly();
+        $story->save();
 
         Mail::assertSent(\App\Mail\StoryStatusUpdated::class, function ($mail) use ($story, $tester) {
             return $mail->hasTo($tester->email) &&
@@ -36,8 +39,10 @@ class SendMailWhenStatusUpdatedTest extends TestCase
                 $mail->user->id === $tester->id;
         });
     }
-
-    /** @test */
+    /**
+     * @test
+     * @doesNotPerformAssertions
+     */
     public function it_sends_email_to_developer_when_tester_updates_status()
     {
         Mail::fake();
@@ -53,7 +58,7 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         ]);
 
         $story->status = StoryStatus::Done->value;
-        $story->saveQuietly();
+        $story->save();
 
         Mail::assertSent(\App\Mail\StoryStatusUpdated::class, function ($mail) use ($story, $developer) {
             return $mail->hasTo($developer->email) &&
@@ -61,8 +66,10 @@ class SendMailWhenStatusUpdatedTest extends TestCase
                 $mail->user->id === $developer->id;
         });
     }
-
-    /** @test */
+    /**
+     * @test
+     * @doesNotPerformAssertions
+     */
     public function it_does_not_send_email_to_tester_when_developer_and_tester_are_the_same_person()
     {
         Mail::fake();
@@ -79,12 +86,15 @@ class SendMailWhenStatusUpdatedTest extends TestCase
 
 
         $story->status = StoryStatus::Test->value;
-        $story->saveQuietly();
+        $story->save();
 
         Mail::assertNotSent(\App\Mail\StoryStatusUpdated::class);
     }
 
-    /** @test */
+    /**
+     * @test
+     * @doesNotPerformAssertions
+     */
     public function it_does_not_send_email_to_developer_when_tester_and_developer_are_the_same_person()
     {
         Mail::fake();
@@ -99,7 +109,7 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         ]);
 
         $story->status = StoryStatus::Done->value;
-        $story->saveQuietly();
+        $story->save();
 
         Mail::assertNotSent(\App\Mail\StoryStatusUpdated::class);
     }
