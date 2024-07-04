@@ -53,7 +53,7 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         ]);
 
         $story->status = StoryStatus::Done->value;
-        $story->save();
+        $story->saveQuietly();
 
         Mail::assertSent(\App\Mail\StoryStatusUpdated::class, function ($mail) use ($story, $developer) {
             return $mail->hasTo($developer->email) &&
@@ -79,7 +79,7 @@ class SendMailWhenStatusUpdatedTest extends TestCase
 
 
         $story->status = StoryStatus::Test->value;
-        $story->save();
+        $story->saveQuietly();
 
         Mail::assertNotSent(\App\Mail\StoryStatusUpdated::class);
     }
@@ -99,7 +99,7 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         ]);
 
         $story->status = StoryStatus::Done->value;
-        $story->save();
+        $story->saveQuietly();
 
         Mail::assertNotSent(\App\Mail\StoryStatusUpdated::class);
     }
