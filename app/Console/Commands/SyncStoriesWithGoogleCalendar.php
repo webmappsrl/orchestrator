@@ -25,7 +25,7 @@ class SyncStoriesWithGoogleCalendar extends Command
     {
         $developerEmail = $this->argument('developerEmail');
 
-        // Se è fornita l'email, trova l'ID del developer usando l'email
+        // Trova l'ID del developer usando l'email
         if ($developerEmail) {
             $developer = DB::table('users')->where('email', $developerEmail)->first();
             if (!$developer) {
@@ -56,9 +56,9 @@ class SyncStoriesWithGoogleCalendar extends Command
             // Ottieni il developer
             $developer = DB::table('users')->where('id', $developerId)->first();
 
-            if ($developer) {
-                // Usa l'email del developer come calendar ID se esiste
-                $calendarId = $developer->email ?? $developerId;
+            if ($developer && $developer->email) {
+                // Usa l'email del developer come calendar ID
+                $calendarId = $developer->email;
 
                 // Cancella i precedenti eventi creati con questo script
                 $this->deletePreviousEvents($calendarId);
@@ -100,6 +100,8 @@ class SyncStoriesWithGoogleCalendar extends Command
                     // Aggiorna l'orario di inizio per il prossimo evento
                     $startTime = $endTime;
                 }
+            } else {
+                $this->warn("Developer ID: {$developerId} does not have a valid email.");
             }
         }
 
