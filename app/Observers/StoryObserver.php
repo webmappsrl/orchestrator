@@ -2,9 +2,12 @@
 
 namespace App\Observers;
 
+use App\Enums\StoryStatus;
 use App\Models\Story;
 use App\Models\StoryLog;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class StoryObserver
 {
@@ -26,6 +29,17 @@ class StoryObserver
         $user = Auth::user();
         $userName = $user ? $user->name : 'Unknown User';
 
+
+        // Se lo status è cambiato in progress, lancia il comando
+        if ($story->isDirty('status') && $story->status === StoryStatus::Progress->value) {
+            $developerId = $story->user_id;
+            if ($developerId) {
+                $developer = DB::table('users')->where('id', $developerId)->first();
+                if ($developer && $developer->email) {
+                    Artisan::call('sync:stories-calendar', ['developerEmail' => $developer->email]);
+                }
+            }
+        }
         $dirtyFields = $story->getDirty();
         foreach ($dirtyFields as $field => $newValue) {
             $originalValue = $story->getOriginal($field);

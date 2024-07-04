@@ -21,3 +21,4 @@ docker-compose.yml
 /storage/json
 /storage/json/conf
 settings.json
+app/google-calendar/service-account-credentials.json
