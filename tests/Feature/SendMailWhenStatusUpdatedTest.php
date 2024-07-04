@@ -28,7 +28,7 @@ class SendMailWhenStatusUpdatedTest extends TestCase
         ]);
 
         $story->status = StoryStatus::Test->value;
-        $story->save();
+        $story->saveQuietly();
 
         Mail::assertSent(\App\Mail\StoryStatusUpdated::class, function ($mail) use ($story, $tester) {
             return $mail->hasTo($tester->email) &&
