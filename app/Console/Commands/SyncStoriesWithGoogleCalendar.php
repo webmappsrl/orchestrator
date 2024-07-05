@@ -34,9 +34,15 @@ class SyncStoriesWithGoogleCalendar extends Command
             }
             $developerId = $developer->id;
         }
-
+        $today = Carbon::today('Europe/Rome');
         // Ottieni tutte le storie assegnate che non sono chiuse (stato diverso da 'Done', 'Released', 'Rejected' e 'Waiting')
-        $query = Story::whereIn('status', [StoryStatus::Progress->value])
+        $query = Story::where(function ($query) use ($today) {
+            $query->whereIn('status', [StoryStatus::Progress->value])
+                ->orWhereHas('logs', function ($query) use ($today) {
+                    $query->where('changes->status', StoryStatus::Progress->value)
+                        ->whereDate('viewed_at', $today);
+                });
+        })
             ->whereNotNull('user_id')
             ->whereNotNull('type');
 
