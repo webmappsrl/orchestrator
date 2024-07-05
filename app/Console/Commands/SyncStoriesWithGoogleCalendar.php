@@ -110,8 +110,14 @@ class SyncStoriesWithGoogleCalendar extends Command
 
     private function deletePreviousEvents($calendarId)
     {
-        // Ottieni tutti gli eventi nel calendario per oggi
-        $events = Event::get(Carbon::today(), Carbon::today()->endOfDay(), ['calendarId' => $calendarId]);
+        try {
+
+            // Ottieni tutti gli eventi nel calendario per oggi
+            $events = Event::get(Carbon::today(), Carbon::today()->endOfDay(), ['calendarId' => $calendarId]);
+        } catch (\Exception $e) {
+            $this->error("Failed to fetch events from Google Calendar. Error: " . $e->getMessage());
+            $events = [];
+        }
 
         foreach ($events as $event) {
             // Se il nome dell'evento inizia con "Story ID: ", cancellalo
