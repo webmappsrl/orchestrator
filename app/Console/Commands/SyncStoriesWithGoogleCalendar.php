@@ -46,8 +46,7 @@ class SyncStoriesWithGoogleCalendar extends Command
 
         $stories = $query->get();
 
-        // Inizializza l'orario di inizio per il primo evento
-        $startTime = Carbon::today()->setTime(0, 1);
+
 
         // Raggruppa le storie per developer
         $storiesByDeveloper = $stories->groupBy('user_id');
@@ -62,7 +61,8 @@ class SyncStoriesWithGoogleCalendar extends Command
 
                 // Cancella i precedenti eventi creati con questo script
                 $this->deletePreviousEvents($calendarId);
-
+                // Inizializza l'orario di inizio per il primo evento
+                $startTime = Carbon::today('Europe/Rome')->setTime(0, 1);
                 foreach ($stories as $story) {
                     // Definisci l'orario di fine per l'evento
                     $endTime = $startTime->copy()->addHour();
