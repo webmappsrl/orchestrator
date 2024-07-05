@@ -38,7 +38,7 @@ class SyncStoriesWithGoogleCalendar extends Command
         // Ottieni tutte le storie assegnate che non sono chiuse (stato diverso da 'Done', 'Released', 'Rejected' e 'Waiting')
         $query = Story::where(function ($query) use ($today) {
             $query->whereIn('status', [StoryStatus::Progress->value])
-                ->orWhereHas('logs', function ($query) use ($today) {
+                ->orWhereHas('views', function ($query) use ($today) {
                     $query->where('changes->status', StoryStatus::Progress->value)
                         ->whereDate('viewed_at', $today);
                 });
