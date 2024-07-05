@@ -39,7 +39,7 @@ class SyncStoriesWithGoogleCalendar extends Command
         $query = Story::where(function ($query) use ($today) {
             $query->whereIn('status', [StoryStatus::Progress->value])
                 ->orWhereHas('views', function ($query) use ($today) {
-                    $query->where('changes->status', StoryStatus::Progress->value)
+                    $query->whereJsonContains('changes->status', StoryStatus::Progress->value)
                         ->whereDate('viewed_at', $today);
                 });
         })
