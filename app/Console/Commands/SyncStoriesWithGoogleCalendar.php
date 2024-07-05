@@ -113,7 +113,7 @@ class SyncStoriesWithGoogleCalendar extends Command
         try {
 
             // Ottieni tutti gli eventi nel calendario per oggi
-            $events = Event::get(Carbon::today(), Carbon::today()->endOfDay(), ['calendarId' => $calendarId]);
+            $events = Event::get(Carbon::today('Europe/Rome'), Carbon::today('Europe/Rome')->endOfDay(), ['calendarId' => $calendarId]);
         } catch (\Exception $e) {
             $this->error("Failed to fetch events from Google Calendar. Error: " . $e->getMessage());
             $events = [];
