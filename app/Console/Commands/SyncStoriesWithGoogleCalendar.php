@@ -65,7 +65,7 @@ class SyncStoriesWithGoogleCalendar extends Command
                 $startTime = Carbon::today('Europe/Rome')->setTime(0, 1);
                 foreach ($stories as $story) {
                     // Definisci l'orario di fine per l'evento
-                    $endTime = $startTime->copy()->addHour();
+                    $endTime = $startTime->copy()->addMinutes(30);
 
                     // Imposta il colore dell'evento in base al tipo di storia
                     $colorId = '5'; // Default color (Yellow)
