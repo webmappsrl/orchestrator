@@ -24,13 +24,12 @@ class StoryObserver
      */
     public function updated(Story $story): void
     {
-        $changes = [];
-        $jsonChanges = [];
-        $user = Auth::user();
-        $userName = $user ? $user->name : 'Unknown User';
+        $this->syncStoryCalendarIfStatusChanged($story);
+        $this->createStoryLog($story);
+    }
 
-
-        // Se lo status è cambiato in progress, lancia il comando
+    private function syncStoryCalendarIfStatusChanged(Story $story): void
+    {
         if ($story->isDirty('status') && $story->status === StoryStatus::Progress->value) {
             $developerId = $story->user_id;
             if ($developerId) {
@@ -40,20 +39,23 @@ class StoryObserver
                 }
             }
         }
+    }
+
+    private function createStoryLog(Story $story): void
+    {
         $dirtyFields = $story->getDirty();
+        $user = Auth::user();
+        $jsonChanges = [];
+
         foreach ($dirtyFields as $field => $newValue) {
-            $originalValue = $story->getOriginal($field);
             if ($field === 'description') {
                 $newValue = 'change description';
             }
-            $changes[] = ucfirst($field) . " changed from <strong>{$originalValue}</strong> to <strong>{$newValue}</strong>";
             $jsonChanges[$field] = $newValue;
         }
 
-        if (!empty($changes)) {
+        if (count($jsonChanges) > 0) {
             $timestamp = now()->format('Y-m-d H:i');
-            $newLogEntry = "{$timestamp}: {$userName} - " . implode(', ', $changes) . "<br>";
-            $story->history_log = $story->history_log . $newLogEntry;
             StoryLog::create([
                 'story_id' => $story->id,
                 'user_id' => $user ? $user->id : null,
@@ -63,6 +65,7 @@ class StoryObserver
             $story->saveQuietly();
         }
     }
+
     /**
      * Handle the Story "deleted" event.
      */

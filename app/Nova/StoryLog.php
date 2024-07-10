@@ -10,6 +10,9 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Resource;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+use function PHPUnit\Framework\isEmpty;
 
 class StoryLog extends Resource
 {
@@ -28,9 +31,13 @@ class StoryLog extends Resource
             Date::make('Viewed At', 'viewed_at')->sortable(),
             Text::make('Changes', function () {
                 $changes = $this->changes;
+                if ((isset($changes['status']) && $changes['status'] === 'new')) {
+                    return  '<strong>status:</strong> new';
+                }
                 if (is_array($changes)) {
                     return collect($changes)->map(function ($value, $key) {
-                        return "<strong>{$key}:</strong> {$value}";
+                        $truncatedValue = Str::limit($value, 100, '...');
+                        return "<strong>{$key}:</strong> {$truncatedValue}";
                     })->implode('<br>');
                 }
                 return '';

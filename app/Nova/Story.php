@@ -127,7 +127,6 @@ class Story extends Resource
             ID::make()->sortable(),
             $this->createdAtField(),
             $this->typeField($request),
-            $this->historyLogField($request),
             $this->statusField($request),
             $this->creatorField(),
             $this->assignedToField(),
@@ -144,6 +143,9 @@ class Story extends Resource
             $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
+            HasMany::make('Logs', 'views', StoryLog::class)->canSee(function ($request) {
+                return !$request->user()->hasRole(UserRole::Customer);
+            }),
             BelongsToMany::make('Child Stories', 'childStories', Story::class)
                 ->nullable()
                 ->searchable()
@@ -158,9 +160,7 @@ class Story extends Resource
                 }),
             MorphToMany::make('Deadlines')
                 ->showCreateRelationButton(),
-            HasMany::make('Views', 'views', StoryLog::class)->canSee(function ($request) {
-                return $request->user()->hasRole(UserRole::Admin);
-            }),
+
         ];
         return array_map(function ($field) {
             return $field->onlyOnDetail();
