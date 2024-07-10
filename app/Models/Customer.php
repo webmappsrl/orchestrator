@@ -64,7 +64,7 @@ class Customer extends Model
 
     protected static function booted()
     {
-        static::created(function (Project $entity) {
+        static::created(function (Customer $entity) {
             try {
                 $tag = Tag::firstOrCreate([
                     'name' => class_basename($entity) . ': ' . $entity->name,

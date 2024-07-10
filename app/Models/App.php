@@ -276,7 +276,7 @@ class App extends Model
     protected static function boot()
     {
         parent::boot();
-        static::created(function (Project $entity) {
+        static::created(function (App $entity) {
             try {
                 $tag = Tag::firstOrCreate([
                     'name' => class_basename($entity) . ': ' . $entity->name,
