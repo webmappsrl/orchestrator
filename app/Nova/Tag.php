@@ -5,7 +5,6 @@ namespace App\Nova;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\MorphedByMany;
 use Laravel\Nova\Fields\MorphTo;
 
 class Tag extends Resource
@@ -48,7 +47,9 @@ class Tag extends Resource
                 ->rules('required', 'max:255'),
             MorphTo::make('Taggable')->types([
                 \App\Nova\Project::class,
-                \App\Nova\Story::class
+                \App\Nova\Customer::class,
+                \App\Nova\App::class,
+                \App\Nova\Documentation::class
             ])
         ];
     }

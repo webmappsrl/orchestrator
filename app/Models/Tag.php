@@ -3,12 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class Tag extends Model
 {
-    protected $fillable = ['name', 'taggable_type'];
+    protected $fillable = ['name', 'taggable_type', 'taggable_id'];
 
     public function taggable()
     {
@@ -17,8 +16,11 @@ class Tag extends Model
 
     public function getTaggableTypeAttribute()
     {
-        return class_basename($this->attributes['taggable_type']);
+        return isset($this->attributes['taggable_type'])
+            ? class_basename($this->attributes['taggable_type'])
+            : null;
     }
+
     public function getResourceUrlAttribute()
     {
         if (!$this->taggable_type || !$this->taggable_id) {

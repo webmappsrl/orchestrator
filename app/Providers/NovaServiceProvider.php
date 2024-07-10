@@ -10,8 +10,6 @@ use App\Nova\Product;
 use App\Nova\Project;
 use App\Nova\Customer;
 use App\Nova\Deadline;
-use Laravel\Nova\Nova;
-use App\Enums\UserRole;
 use App\Nova\ArchivedDeadlines;
 use App\Nova\ArchivedStoryShowedByCustomer;
 use App\Nova\ArchivedStories;
@@ -19,6 +17,9 @@ use App\Nova\StoryShowedByCustomer;
 use App\Nova\AssignedToMeStory;
 use App\Nova\CustomerStory;
 use App\Nova\CustomerFeatureStory;
+use App\Nova\Documentation;
+use App\Enums\UserRole;
+use Laravel\Nova\Nova;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
 use App\Nova\ToBeTestedStory;
@@ -27,7 +28,6 @@ use Laravel\Nova\Dashboards\Main;
 use Laravel\Nova\Menu\MenuSection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Menu\MenuGroup;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
@@ -75,6 +75,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
                     MenuItem::resource(Quote::class),
+                    MenuItem::resource(Documentation::class),
                 ])->icon('users')->collapsable(),
 
                 MenuSection::make('DEV', [

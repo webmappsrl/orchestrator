@@ -10,7 +10,7 @@ use Laravel\Nova\Fields\ID;
 class StoryShowedByCustomer extends Story
 {
 
-    public $hideFields = ['description', 'deadlines', 'info', 'updated_at', 'project', 'creator', 'developer', 'relationship', 'tags'];
+    public $hideFields = ['description', 'deadlines', 'updated_at', 'project', 'creator', 'developer', 'relationship', 'tags'];
     public static function label()
     {
         return __('my stories');

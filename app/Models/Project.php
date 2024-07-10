@@ -85,14 +85,14 @@ class Project extends Model implements HasMedia
 
     protected static function booted()
     {
-        static::saved(function (Project $entity) {
+        static::created(function (Project $entity) {
             try {
                 $tag = Tag::firstOrCreate([
-                    'name' => class_basename($entity) . ': ' . $entity->name
+                    'name' => class_basename($entity) . ': ' . $entity->name,
+                    'taggable_id' => $entity->id,
+                    'taggable_type' => get_class($entity)
                 ]);
-
                 if ($tag && $entity) {
-                    $tag->taggable()->saveQuietly($entity);
                     $entity->tags()->saveQuietly($tag);
                 }
             } catch (Exception $e) {
