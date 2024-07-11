@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 class AutoUpdateStoryStatus extends Command
 {
     protected $signature = 'story:auto-update-status';
-    protected $description = 'Automatically updates story statuses from Released to Done after 7 days';
+    protected $description = 'Automatically updates story statuses from Released to Done after 3 working days';
 
     public function __construct()
     {
@@ -23,9 +23,16 @@ class AutoUpdateStoryStatus extends Command
      */
     public function handle()
     {
-        $sevenDaysAgo = Carbon::now()->subDays(7);
+        $daysAgo = Carbon::now();
+        for ($i = 0; $i < 3; $i++) {
+            $daysAgo->subDay();
+            // If the current day is Saturday or Sunday, we need to subtract more days
+            if ($daysAgo->isWeekend()) {
+                $i--;
+            }
+        }
         $stories = Story::where('status', StoryStatus::Released->value)
-            ->whereDate('updated_at', '<=', $sevenDaysAgo)
+            ->whereDate('updated_at', '<=', $daysAgo)
             ->get();
         $this->info('story:auto-update-status start');
         Log::info('story:auto-update-status start');
