@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-
+use App\Enums\DocumentationCategory;
 use Carbon\Carbon;
 use App\Models\Epic;
 use App\Enums\UserRole;
@@ -465,7 +465,7 @@ trait fieldTrait
     private function getCustomerInfo()
     {
 
-        $tagLinks = $this->getTagLinks('Documentation');
+        $tagLinks = $this->getTagLinks(DocumentationCategory::Customer);
         return <<<HTML
             {$tagLinks}
             HTML;
@@ -501,14 +501,12 @@ trait fieldTrait
         return '';
     }
 
-    private function getTagLinks($filter = null)
+    private function getTagLinks(DocumentationCategory $category = DocumentationCategory::Internal)
     {
         $tags = $this->resource->tags;
-        if ($filter) {
-            $tags = $tags->filter(function ($tag) use ($filter) {
-                return $tag->taggable_type == $filter;
-            });
-        }
+        $tags = $tags->filter(function ($tag) use ($category) {
+            return $tag->category == $category->value;
+        });
         $HTML = '';
         if ($tags) {
             foreach ($tags as $tag) {

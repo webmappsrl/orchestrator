@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DocumentationCategory;
 use App\Models\Tag;
 use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,11 @@ class Documentation extends Model
     protected $fillable = [
         'name',
         'creator_id',
+        'category'
+    ];
+
+    protected $casts = [
+        'category' => DocumentationCategory::class,
     ];
 
     public function tags()
@@ -58,6 +64,25 @@ class Documentation extends Model
                 Log::error('Error saving tags: ' . $e->getMessage(), [
                     'entity' => $entity,
                     'tag' => isset($tag) ? $tag : null,
+                ]);
+            }
+        });
+
+        static::updating(function (Documentation $entity) {
+            try {
+                $oldName = $entity->getOriginal('name');
+                $newName = $entity->name;
+
+                $entity->tags->each(function ($tag) use ($oldName, $newName, $entity) {
+                    if ($tag->name === class_basename($entity) . ': ' . $oldName) {
+                        $tag->update(['name' => class_basename($entity) . ': ' . $newName]);
+                    }
+                });
+            } catch (Exception $e) {
+                // Logga l'errore con maggiori dettagli
+                Log::error('Errore nell\'aggiornamento dei tag: ' . $e->getMessage(), [
+                    'entity' => $entity,
+                    'tags' => $entity->tags,
                 ]);
             }
         });

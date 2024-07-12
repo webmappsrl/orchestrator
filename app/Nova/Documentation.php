@@ -3,7 +3,9 @@
 namespace App\Nova;
 
 use App\Traits\fieldTrait;
+use App\Enums\DocumentationCategory;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
 
@@ -44,8 +46,13 @@ class Documentation extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            $this->titleField('name'),
+            $this->titleField('name')->readonly(false),
             $this->tagsField()->hideWhenCreating(),
+            Select::make('Category', 'category')
+                ->options(DocumentationCategory::labels())
+                ->default(DocumentationCategory::Customer->value)
+                ->sortable()
+                ->rules('required'),
             $this->descriptionField(),
         ];
     }
