@@ -89,7 +89,8 @@ class SyncStoriesWithGoogleCalendar extends Command
 
                     // Crea un singolo evento per la storia
                     $event = new Event;
-                    $event->name = "Story ID: {$story->id} - {$story->name}"; // Nome della storia come titolo dell'evento
+                    $creator = DB::table('users')->where('id', $story->creator_id)->first();
+                    $event->name = "OC: {$story->id} [{$creator->name}] - {$story->name}"; // Nome della storia come titolo dell'evento
                     $event->description = "{$story->description}\n\nType: {$story->type}, Status: {$story->status}\nLink: https://orchestrator.maphub.it/resources/developer-stories/{$story->id}";
                     $event->startDateTime = $startTime;
                     $event->endDateTime = $endTime;
@@ -98,9 +99,9 @@ class SyncStoriesWithGoogleCalendar extends Command
                     // Salva l'evento nel calendario specifico del developer
                     try {
                         $event->save(null, ['calendarId' => $calendarId]);
-                        $this->info("Event for story ID: {$story->id} synced to Google Calendar for developer: {$developer->name}");
+                        $this->info("Event for OC: {$story->id} synced to Google Calendar for developer: {$developer->name}");
                     } catch (\Exception $e) {
-                        $this->error("Failed to create event for story ID: {$story->id}. Error: " . $e->getMessage());
+                        $this->error("Failed to create event for OC: {$story->id}. Error: " . $e->getMessage());
                     }
 
                     // Aggiorna l'orario di inizio per il prossimo evento
@@ -126,8 +127,8 @@ class SyncStoriesWithGoogleCalendar extends Command
         }
 
         foreach ($events as $event) {
-            // Se il nome dell'evento inizia con "Story ID: ", cancellalo
-            if (strpos($event->name, 'Story ID:') === 0) {
+            // Se il nome dell'evento inizia con "OC: ", cancellalo
+            if (strpos($event->name, 'OC:') === 0) {
                 try {
                     // Utilizza l'ID dell'evento per cancellarlo
                     $calendar = GoogleCalendarFactory::createForCalendarId($calendarId);
