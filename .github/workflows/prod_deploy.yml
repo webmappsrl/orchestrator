@@ -17,7 +17,6 @@ jobs:
           POSTGRES_USER: orchestrator
         ports:
           - 5432:5432
-        # needed because the postgres container does not provide a healthcheck
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
     - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
@@ -38,6 +37,11 @@ jobs:
           PGPASSWORD: orchestrator
     - name: Laravel Tests
       run: php artisan test
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: laravel-tests
+    steps:
     - name: Deploy to server
       uses: appleboy/ssh-action@master
       with:
@@ -46,3 +50,16 @@ jobs:
         port: ${{ secrets.PORTPROD}}
         key: ${{ secrets.SSHKEYPROD }}
         script: "cd /root/html/orchestrator && git pull && docker exec php81_orchestrator bash scripts/deploy_prod.sh"
+
+  launch-horizon:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+    - name: Launch Horizon
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOSTPROD }}
+        username: ${{ secrets.USERNAMEPROD }}
+        port: ${{ secrets.PORTPROD}}
+        key: ${{ secrets.SSHKEYPROD }}
+        script: "cd /root/html/orchestrator && bash scripts/launch_horizon.sh"

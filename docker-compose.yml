@@ -2,8 +2,7 @@ version: "3.7"
 services:
   phpfpm:
     extra_hosts:
-        - host.docker.internal:host-gateway
-    # user: root
+      - host.docker.internal:host-gateway
     build: ./docker/configs/phpfpm
     restart: always
     container_name: "php81_${APP_NAME}"
@@ -14,6 +13,11 @@ services:
     volumes:
       - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
     working_dir: '/var/www/html/${DOCKER_PROJECT_DIR_NAME}'
+    depends_on:
+      - db
+      - redis
+    networks:
+      - laravel
   db:
     image: postgis/postgis:14-3.3
     container_name: "postgres_${APP_NAME}"
@@ -27,3 +31,28 @@ services:
       - "./docker/volumes/postgresql/data:/var/lib/postgresql/data"
     ports: 
       - ${DOCKER_PSQL_PORT}:5432
+    networks:
+      - laravel
+  redis:
+    image: redis:latest
+    container_name: "redis_${APP_NAME}"
+    ports:
+      - "6379:6379"
+    networks:
+      - laravel
+
+  horizon:
+    image: wm-phpfpm:8.1
+    container_name: "horizon_${APP_NAME}"
+    working_dir: /var/www/html/${DOCKER_PROJECT_DIR_NAME}
+    volumes:
+      - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
+    entrypoint: ["php", "/var/www/html/${DOCKER_PROJECT_DIR_NAME}/artisan", "horizon"]
+    depends_on:
+      - redis
+      - phpfpm
+    networks:
+      - laravel
+networks:
+  laravel:
+    driver: bridge

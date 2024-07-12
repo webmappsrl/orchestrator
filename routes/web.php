@@ -4,7 +4,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\DeadlineController;
-
+use App\Jobs\TestJob;
+use Illuminate\Support\Facades\Redis;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -24,4 +25,8 @@ Route::get('/mailable', function () {
     //get the first user where roles contains customer
     $user = User::whereJsonContains('roles', 'customer')->firstOrFail();
     return new App\Mail\CustomerStoriesDigest($user);
+});
+Route::get('/test-horizon', function () {
+    TestJob::dispatch();
+    return 'Test job dispatched';
 });
