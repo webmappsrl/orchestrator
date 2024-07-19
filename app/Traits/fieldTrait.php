@@ -505,7 +505,7 @@ trait fieldTrait
     {
         $tags = $this->resource->tags;
         $tags = $tags->filter(function ($tag) use ($category) {
-            return $tag->category == $category->value;
+            return $tag->taggable_type == "Documentation";
         });
         $HTML = '';
         if ($tags) {

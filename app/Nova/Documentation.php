@@ -4,6 +4,9 @@ namespace App\Nova;
 
 use App\Traits\fieldTrait;
 use App\Enums\DocumentationCategory;
+use App\Enums\UserRole;
+use App\Models\Story;
+use App\Models\Tag;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -55,5 +58,23 @@ class Documentation extends Resource
                 ->rules('required'),
             $this->descriptionField(),
         ];
+    }
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        if ($request->user()->hasRole(UserRole::Customer)) {
+            $customerStories = Story::where('creator_id', $request->user()->id)->get();
+            // Ottieni tutti i tag delle storie del cliente
+            $customerStoryTags = $customerStories->flatMap(function ($story) {
+                return $story->tags;
+            });
+            // Filtra i tag che hanno il tipo "documentation"
+            $documentationIds = $customerStoryTags->filter(function ($tag) {
+                return $tag->getTaggableTypeAttribute() === 'Documentation';
+            })->pluck('taggable_id');
+
+            return $query->whereIn('id', $documentationIds);
+        }
+        return $query;
     }
 }

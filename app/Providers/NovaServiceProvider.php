@@ -62,12 +62,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('ADMIN', [
                     MenuItem::resource(User::class),
-                ])->icon('user')->collapsable(),
+                ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
 
                 MenuSection::make('APP', [
                     MenuItem::resource(App::class),
                     MenuItem::resource(Layer::class),
-                ])->icon('document-text')->collapsable(),
+                ])->icon('document-text')->collapsedByDefault()->collapsedByDefault(),
 
                 MenuSection::make('CRM', [
                     MenuItem::resource(Customer::class),
@@ -75,20 +75,18 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
                     MenuItem::resource(Quote::class),
-                    MenuItem::resource(Documentation::class)->canSee(function ($request) {
-                        return !$request->user()->hasRole(UserRole::Customer);
-                    }),
-                ])->icon('users')->collapsable(),
+                ])->icon('users')->collapsedByDefault(),
 
                 MenuSection::make('DEV', [
                     MenuGroup::make('Archived', [
                         MenuItem::resource(ArchivedDeadlines::class),
                         MenuItem::resource(ArchivedStories::class),
-                    ])->collapsable(),
+                    ])->collapsedByDefault(),
                     MenuGroup::make('my work', [
                         MenuItem::resource(AssignedToMeStory::class),
                         MenuItem::resource(ToBeTestedStory::class),
-                    ])->collapsable(),
+                    ])->collapsedByDefault(),
+                    MenuItem::resource(Documentation::class),
                     MenuItem::resource(Deadline::class),
                     MenuItem::resource(CustomerFeatureStory::class),
                     MenuItem::resource(CustomerStory::class),
@@ -99,8 +97,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 }),
 
                 MenuSection::make('CUSTOMER', [
-                    MenuItem::resource(StoryShowedByCustomer::class),
-                    MenuItem::resource(ArchivedStoryShowedByCustomer::class)
+                    MenuItem::resource(Documentation::class),
+                    MenuItem::resource(ArchivedStoryShowedByCustomer::class),
+                    MenuItem::resource(StoryShowedByCustomer::class)
                 ])->canSee(function ($request) {
                     if ($request->user() == null)
                         return false;
@@ -109,7 +108,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('ACTIONS', [
                     MenuItem::link('Create a new story', $newStoryUrl),
-                ])->icon('pencil')->collapsable(),
+                ])->icon('pencil')->collapsedByDefault()
             ];
         });
 
