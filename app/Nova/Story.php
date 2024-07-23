@@ -138,8 +138,8 @@ class Story extends Resource
             $this->tagsField(),
             $this->projectField(),
             Files::make('Documents', 'documents')
-                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain')
-                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT).'),
+                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
+                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).'),
             $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
@@ -178,8 +178,8 @@ class Story extends Resource
             $this->typeField($request),
             $this->projectField(),
             Files::make('Documents', 'documents')
-                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain')
-                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT).'),
+                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
+                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).'),
             $this->estimatedHoursField($request),
             $this->titleField(),
             $this->descriptionField(),
