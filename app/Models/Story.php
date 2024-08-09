@@ -34,13 +34,21 @@ class Story extends Model implements HasMedia
     {
         parent::boot();
 
-        static::saving(function ($model) {
+        static::saving(function ($story) {
             // Controlla se lo stato è 'New' e se è stato assegnato un developer.
-            if ($model->status == StoryStatus::New->value && $model->user_id && $model->isDirty('user_id')) {
-                $model->status = StoryStatus::Assigned->value;
+            if ($story->status == StoryStatus::New->value && $story->user_id && $story->isDirty('user_id')) {
+                $story->status = StoryStatus::Assigned->value;
             }
-            if ($model->status == StoryStatus::New->value && $model->isDirty('status')) {
-                $model->user_id = null;
+            if ($story->status == StoryStatus::New->value && $story->isDirty('status')) {
+                $story->user_id = null;
+            }
+            if ($story->user_id != $story->tester_id) {
+                if ($story->isDirty('user_id')) {
+                    $story->sendStatusUpdatedEmail($story, $story->user_id);
+                }
+                if ($story->isDirty('tester_id')) {
+                    $story->sendStatusUpdatedEmail($story, $story->tester_id);
+                }
             }
         });
     }
@@ -59,14 +67,6 @@ class Story extends Model implements HasMedia
                 $epic = $story->epic;
                 $epic->status = $epic->getStatusFromStories()->value;
                 $epic->save();
-            }
-            if ($story->user_id != $story->tester_id) {
-                if ($story->isDirty('user_id')) {
-                    $story->sendStatusUpdatedEmail($story, $story->user_id);
-                }
-                if ($story->isDirty('tester_id')) {
-                    $story->sendStatusUpdatedEmail($story, $story->tester_id);
-                }
             }
         });
 
