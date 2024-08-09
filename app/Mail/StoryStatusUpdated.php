@@ -11,6 +11,7 @@ use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Auth;
 
 class StoryStatusUpdated extends Mailable
 {
@@ -36,9 +37,11 @@ class StoryStatusUpdated extends Mailable
         $from = config('mail.from.address');
         $name = config('mail.from.name');
         $storyStatus = is_object($this->story->status) ? $this->story->status->value : $this->story->status;
+        $creator = $this->story->creator ?? Auth::user();
+
         return new Envelope(
             from: new Address($from, $name),
-            subject: '[' . $storyStatus . '][' . $this->story->creator->name . ']: ' . $this->story->name,
+            subject: '[' . $storyStatus . '][' .  $creator->name . ']: ' . $this->story->name,
         );
     }
 
