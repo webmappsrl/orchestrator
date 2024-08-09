@@ -60,7 +60,7 @@ class Story extends Model implements HasMedia
                 $epic->status = $epic->getStatusFromStories()->value;
                 $epic->save();
             }
-            if ($story->user_id != $story->tester_id) {
+            if ($story->user_id != $story->tester_id || is_null($story->tester_id)) {
                 if ($story->isDirty('user_id')) {
                     $story->sendStatusUpdatedEmail($story, $story->user_id);
                 }
