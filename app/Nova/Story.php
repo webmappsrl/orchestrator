@@ -18,6 +18,7 @@ use App\Traits\fieldTrait;
 use Formfeed\Breadcrumbs\Breadcrumb;
 use Formfeed\Breadcrumbs\Breadcrumbs;
 use Illuminate\Support\Facades\Session;
+use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Stack;
@@ -42,6 +43,24 @@ class Story extends Resource
     }
     public static $linkToParent = false;
     public static $resolveParentBreadcrumbs = false;
+    public $holidayAlert = <<<HTML
+    <div style="padding: 20px; border-radius: 8px; background-color: #f8f9fa; text-align: center; font-family: Arial, sans-serif; color: #333;">
+        <h2 style="color: #dc3545; font-size: 24px; margin-bottom: 15px;">Avviso Importante</h2>
+        <p style="font-size: 18px; line-height: 1.6;">
+            Gentile Clientela,
+        </p>
+        <p style="font-size: 18px; line-height: 1.6;">
+            Vi informiamo che il nostro servizio di ticketing sarà <strong>ridotto solo alle situazioni urgenti</strong> da 
+            <strong>lunedì 12</strong> fino a <strong>venerdì 16</strong>. 
+        </p>
+        <p style="font-size: 18px; line-height: 1.6;">
+            Il servizio riprenderà regolarmente da <strong>lunedì 19</strong>.
+        </p>
+        <p style="font-size: 18px; line-height: 1.6;">
+            Vi ringraziamo per la vostra comprensione.
+        </p>
+    </div>
+    HTML;
 
     public function indexBreadcrumb(NovaRequest $resourceClass, Breadcrumbs $breadcrumbs, Breadcrumb $indexBreadcrumb)
     {
@@ -86,7 +105,9 @@ class Story extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description'
+        'id',
+        'name',
+        'description'
     ];
 
 
@@ -225,7 +246,9 @@ class Story extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        return [];
+        return [(new HtmlCard())->width('full')->withMeta([
+            'content' => $this->holidayAlert
+        ])->center(true)];
     }
 
 
