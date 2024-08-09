@@ -37,7 +37,7 @@ class StoryResponse extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '[' . $this->sender->name . '] responded to story: ' . $this->story->title,
+            subject: '[' . $this->sender->name . '] responded to story: ' . $this->story->name,
         );
     }
 

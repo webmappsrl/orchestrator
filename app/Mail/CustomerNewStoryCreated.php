@@ -36,7 +36,7 @@ class CustomerNewStoryCreated extends Mailable
         $fromAddress = config('mail.from.address');
         return new Envelope(
             from: new Address($fromAddress, $fromName),
-            subject: '[new][' . $this->story->creator->name . ']: ' . $this->story->title,
+            subject: '[new][' . $this->story->creator->name . ']: ' . $this->story->name,
         );
     }
 
