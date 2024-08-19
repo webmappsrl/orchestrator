@@ -2,79 +2,134 @@
 
 namespace App\Jobs;
 
-use App\Enums\StoryStatus;
-use App\Models\Story;
 use App\Models\User;
+use App\Models\Story;
+use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Storage;
 use Webklex\IMAP\Facades\Client;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Mail\CustomerStoryFromMail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrchestratorUserNotFound;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
 class ProcessInboundEmails implements ShouldQueue
 {
     use Queueable;
 
+    public function __construct()
+    {
+        $this->logger = Log::channel('process_inbound_emails');
+    }
+
     public function handle()
     {
-        // Ottieni l'account IMAP configurato
         $client = Client::account('default');
 
-        // Connetti al server
         $client->connect();
 
-        // Ottieni la cartella INBOX
         $folder = $client->getFolder('INBOX');
 
         // Recupera tutte le email non lette (senza il flag "Seen")
-        $messages = $folder->query()->unseen()->limit(20)->get();
+        $messages = $folder->query()->unseen()->get();
+        $this->logger->info('Numero di email da elaborare: ' . $messages->count());
 
         if ($messages->count() == 0) {
-            Log::info('Nessun nuovo messaggio da elaborare');
+            $this->logger->info('Nessun nuovo messaggio da elaborare');
             return;
         }
 
         foreach ($messages as $message) {
-            try {
-                // Estrai le informazioni principali dell'email
-                $userEmail = $message->getFrom()[0]->mail;
-                $subject = $message->getSubject();
-                $body = $message->hasTextBody() ? $message->getTextBody() : $message->getBodies();
-                $attachments = $message->hasAttachments() ? $message->getAttachments() : [];
+            $story = $this->createOrchestratorStoryFromMail($message);
+            $attachments = $message->hasAttachments() ? $message->getAttachments() : [];
 
-                // Cerca l'utente corrispondente
-                $user = User::where('email', $userEmail)->first();
-
-                if ($user) {
-                    // Creazione della nuova story
-                    $story = new Story();
-                    $story->user_id = $user->id;
-                    $story->name = $subject;
-                    $story->description = $body;
-                    $story->status = StoryStatus::New;
-                    $story->creator_id = $user->id;
-                    $story->save();
-                    Log::info('Story ID ' . $story->id . ' creata.');
-
-                    // Gestione degli allegati
-                    if (count($attachments) > 0) {
-                        foreach ($attachments as $attachment) {
-                            $attachmentName = $attachment->getName();
-                            Storage::put('media/Story/' . $story->id . '/' . $attachmentName, $attachment->getContent());
-                        }
+            if ($story) {
+                if (count($attachments) > 0) {
+                    foreach ($attachments as $attachment) {
+                        $this->associateAttachment($attachment, $story);
                     }
-
-                    // Segna l'email come letta
-                    $message->setFlag('Seen');
-                } else {
-                    Log::warning("Nessun utente trovato per l'email: $userEmail");
                 }
-            } catch (\Exception $e) {
-                Log::error("Errore nell'elaborazione dell'email: " . $e->getMessage());
+                // Segna la email come letta soltanto se viene creata la story
+                $message->setFlag('Seen');
             }
         }
-
-        // Disconnetti dal server IMAP
         $client->disconnect();
+    }
+
+    private function createOrchestratorStoryFromMail($message)
+    {
+        try {
+            $userEmail = $message->getFrom()[0]->mail;
+            $subject = $message->getSubject();
+            $body = $message->hasTextBody() ? $message->getTextBody() : $message->getBodies();
+
+            $user = User::where('email', $userEmail)->first();
+
+            if ($user) {
+                // Creazione della nuova story
+                $story = new Story();
+                $story->user_id = $user->id;
+                $story->name = $subject;
+                $story->description = $body;
+                $story->status = StoryStatus::New;
+                $story->creator_id = $user->id;
+                $story->save();
+                $this->logger->info('Story ID ' . $story->id . ' creata.');
+                Mail::to($userEmail)->send(new CustomerStoryFromMail($story));
+                return $story;
+            } else {
+                $this->logger->warning("Nessun utente trovato per l'email: $userEmail");
+                //send email to the user email to notify that the user was not registered on orchestrator and that he must contact info@webmapp.it
+                Mail::to($userEmail)->send(new OrchestratorUserNotFound($subject));
+                return null;
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Error creating story: ' . $e->getMessage());
+        }
+    }
+
+    private function associateAttachment($attachment, $story)
+    {
+        $attachmentName = $attachment->getName();
+        $mimeType = $attachment->getMimeType();
+
+
+        // Salva l'allegato in una directory temporanea
+        try {
+            Storage::put('public/' . $attachmentName, $attachment->getContent());
+
+            $temporaryPath = Storage::path('public/' . $attachmentName);
+            $this->logger->info("Percorso temporaneo: " . $temporaryPath);
+
+            // Controlla se il file esiste
+            if (Storage::exists('public/' . $attachmentName)) {
+                $this->logger->info("File temporaneo trovato: " . $temporaryPath);
+            } else {
+                $this->logger->error("File temporaneo non trovato: " . $temporaryPath);
+            }
+
+
+            // Verifica il MIME type per decidere la collezione corretta
+            if (in_array($mimeType, config('services.media-library.allowed_document_formats'))) {
+                $this->logger->info("File documento: " . $temporaryPath . " MIME type: $mimeType");
+                // Se è un documento, aggiungilo alla collezione documents
+                $story->addMedia($temporaryPath)
+                    ->toMediaCollection('documents');
+            } elseif (in_array($mimeType, config('services.media-library.allowed_image_formats'))) {
+                $this->logger->info("File immagine: " . $temporaryPath . " MIME type: $mimeType, potrebbero esserci problemi nella visualizzazione Nova");
+                // Se è un'immagine, aggiungilo alla collezione images
+                $story->addMedia($temporaryPath)
+                    ->toMediaCollection('images');
+            } else {
+                // MIME type non supportato, logga un avviso
+                $this->logger->warning("Allegato non supportato: $attachmentName con MIME type $mimeType");
+            }
+
+            // Rimuovi il file temporaneo
+            Storage::delete('public/' . $attachmentName);
+        } catch (\Exception $e) {
+            $this->logger->error('Error associating attachment: ' . $e->getMessage());
+        }
     }
 }
