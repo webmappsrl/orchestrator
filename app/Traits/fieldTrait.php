@@ -12,6 +12,7 @@ use App\Enums\StoryType;
 use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use App\Enums\StoryPriority;
+use App\Models\Documentation;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -505,7 +506,22 @@ trait fieldTrait
     {
         $tags = $this->resource->tags;
         $tags = $tags->filter(function ($tag) use ($category) {
-            return $tag->taggable_type == "Documentation";
+            if ($tag->taggable_type == "Documentation") {
+                // Recupera la documentation associata
+                $documentation = Documentation::find($tag->taggable_id);
+                if ($documentation) {
+                    // Se la categoria è Customer, filtra solo per Customer
+                    if ($category == DocumentationCategory::Customer) {
+                        return $documentation->category == DocumentationCategory::Customer;
+                    }
+
+                    // Se la categoria è Internal, mostra sia Internal che Customer
+                    if ($category == DocumentationCategory::Internal) {
+                        return in_array($documentation->category, [DocumentationCategory::Internal, DocumentationCategory::Customer]);
+                    }
+                }
+            }
+            return false;
         });
         $HTML = '';
         if ($tags) {
