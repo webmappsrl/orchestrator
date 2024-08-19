@@ -18,7 +18,6 @@ use App\Traits\fieldTrait;
 use Formfeed\Breadcrumbs\Breadcrumb;
 use Formfeed\Breadcrumbs\Breadcrumbs;
 use Illuminate\Support\Facades\Session;
-use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Stack;
@@ -246,9 +245,7 @@ class Story extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        return [(new HtmlCard())->width('full')->withMeta([
-            'content' => $this->holidayAlert
-        ])->center(true)];
+        return [];
     }
 
 
