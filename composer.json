@@ -36,6 +36,7 @@
         "spatie/laravel-medialibrary": "^10.0.0",
         "spatie/laravel-translatable": "^6.3",
         "suenerds/nova-searchable-belongs-to-filter": "^1.0",
+        "webklex/laravel-imap": "^5.3",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
     },
