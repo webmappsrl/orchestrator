@@ -18,13 +18,11 @@ class ProcessInboundEmails implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct()
-    {
-        $this->logger = Log::channel('process_inbound_emails');
-    }
+
 
     public function handle()
     {
+        $logger = Log::channel('process_inbound_emails');
         $client = Client::account('default');
 
         $client->connect();
@@ -33,10 +31,10 @@ class ProcessInboundEmails implements ShouldQueue
 
         // Recupera tutte le email non lette (senza il flag "Seen")
         $messages = $folder->query()->unseen()->get();
-        $this->logger->info('Numero di email da elaborare: ' . $messages->count());
+        $logger->info('Numero di email da elaborare: ' . $messages->count());
 
         if ($messages->count() == 0) {
-            $this->logger->info('Nessun nuovo messaggio da elaborare');
+            $logger->info('Nessun nuovo messaggio da elaborare');
             return;
         }
 
@@ -75,17 +73,17 @@ class ProcessInboundEmails implements ShouldQueue
                 $story->status = StoryStatus::New;
                 $story->creator_id = $user->id;
                 $story->save();
-                $this->logger->info('Story ID ' . $story->id . ' creata.');
+                $logger->info('Story ID ' . $story->id . ' creata.');
                 Mail::to($userEmail)->send(new CustomerStoryFromMail($story));
                 return $story;
             } else {
-                $this->logger->warning("Nessun utente trovato per l'email: $userEmail");
+                $logger->warning("Nessun utente trovato per l'email: $userEmail");
                 //send email to the user email to notify that the user was not registered on orchestrator and that he must contact info@webmapp.it
                 Mail::to($userEmail)->send(new OrchestratorUserNotFound($subject));
                 return null;
             }
         } catch (\Exception $e) {
-            $this->logger->error('Error creating story: ' . $e->getMessage());
+            $logger->error('Error creating story: ' . $e->getMessage());
         }
     }
 
@@ -100,19 +98,19 @@ class ProcessInboundEmails implements ShouldQueue
             Storage::put('public/' . $attachmentName, $attachment->getContent());
 
             $temporaryPath = Storage::path('public/' . $attachmentName);
-            $this->logger->info("Percorso temporaneo: " . $temporaryPath);
+            $logger->info("Percorso temporaneo: " . $temporaryPath);
 
             // Controlla se il file esiste
             if (Storage::exists('public/' . $attachmentName)) {
-                $this->logger->info("File temporaneo trovato: " . $temporaryPath);
+                $logger->info("File temporaneo trovato: " . $temporaryPath);
             } else {
-                $this->logger->error("File temporaneo non trovato: " . $temporaryPath);
+                $logger->error("File temporaneo non trovato: " . $temporaryPath);
             }
 
 
             // Verifica il MIME type per decidere la collezione corretta
             if (in_array($mimeType, config('services.media-library.allowed_document_formats'))) {
-                $this->logger->info("File documento: " . $temporaryPath . " MIME type: $mimeType");
+                $logger->info("File documento: " . $temporaryPath . " MIME type: $mimeType");
                 // Se è un documento, aggiungilo alla collezione documents
                 $story->addMedia($temporaryPath)
                     ->toMediaCollection('documents');
