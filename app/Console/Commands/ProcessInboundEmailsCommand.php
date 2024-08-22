@@ -26,7 +26,7 @@ class ProcessInboundEmailsCommand extends Command
      */
     public function handle()
     {
-        ProcessInboundEmails::dispatch();
+        dispatch(new ProcessInboundEmails());
         $this->info('Job dispatched.');
     }
 }
