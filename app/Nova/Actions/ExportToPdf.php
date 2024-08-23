@@ -37,7 +37,7 @@ class ExportToPdf extends Action
             $header = '
             <header style="padding-bottom: 20px;text-align: right;width: 100%;top: 0;display: flex;flex-direction: column;justify-content: space-between;">
                 <div style="width: 80px;height: 80px;margin-right: 20px;align-self: flex-end;">
-                    <img src="/images/logo.svg" alt="webmapp logo">
+                    <img src="https://orchestrator.maphub.it/images/logo.svg" alt="webmapp logo">
                 </div>
                 <div style="font-size: 10px;line-height: 0.9rem;">
                     <p>Webmapp S.r.l. - Via Antonio Cei - 56123 Pisa <br>
