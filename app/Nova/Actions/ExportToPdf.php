@@ -36,13 +36,11 @@ class ExportToPdf extends Action
             $filePath = storage_path("app/public/{$fileName}");
             $header = '
             <header style="padding-bottom: 20px;text-align: right;width: 100%;top: 0;display: flex;flex-direction: column;justify-content: space-between;">
-                <div style="width: 80px;height: 80px;margin-right: 20px;align-self: flex-end;">
-                    <img src="https://orchestrator.maphub.it/images/logo.svg" alt="webmapp logo">
-                </div>
+                    <img  style="width: 80px;height: 80px;margin-right: 20px;align-self: flex-end;" src="https://orchestrator.maphub.it/images/logo.svg" alt="webmapp logo">
                 <div style="font-size: 10px;line-height: 0.9rem;">
                     <p>Webmapp S.r.l. - Via Antonio Cei - 56123 Pisa <br>
                         CF/P.iva 02266770508 - Tel +39 3285360803 <br>
-                        ww.webmapp.it | info@webmapp.it</p>
+                        www.webmapp.it | info@webmapp.it</p>
                 </div>
             </header>';
 
