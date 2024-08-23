@@ -27,7 +27,7 @@ class ExportDescriptionToPdf extends Action
         foreach ($models as $model) {
             $description = $model->description;
             $description = mb_convert_encoding($description, 'UTF-8', 'UTF-8');
-            $description = str_replace('<img', '<img style="max-width: 100%; height: auto;"', $description);
+            $description = str_replace('<img', '<img style="max-width: 100%; height: auto;max-height:300px"', $description);
             // Aggiungi uno stile inline per i blocchi <pre> per gestire la lunghezza delle righe
             $description = str_replace('<pre><code>', '<pre style="white-space: pre-wrap; word-wrap: break-word;"><code>', $description);
 
