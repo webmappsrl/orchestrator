@@ -14,6 +14,11 @@ services:
     volumes:
       - ".:/var/www/html/${DOCKER_PROJECT_DIR_NAME}"
     working_dir: '/var/www/html/${DOCKER_PROJECT_DIR_NAME}'
+    depends_on:
+      - db
+      - redis
+    networks:
+      - laravel
   db:
     image: postgis/postgis:14-3.3
     container_name: "postgres_${APP_NAME}"
@@ -25,5 +30,18 @@ services:
       POSTGRES_DB: ${DB_DATABASE:?err}
     volumes:
       - "./docker/volumes/postgresql/data:/var/lib/postgresql/data"
-    ports: 
+    ports:
       - ${DOCKER_PSQL_PORT}:5432
+    networks:
+      - laravel
+  redis:
+    image: redis:latest
+    container_name: "redis_${APP_NAME}"
+    restart: always
+    ports:
+      - 6379:6379
+    networks:
+      - laravel
+networks:
+  laravel:
+    driver: bridge
