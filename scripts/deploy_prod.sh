@@ -24,6 +24,10 @@ php artisan optimize
 #initializes null scores for the customers (one time needed for score sorting)
 php artisan orchestrator:initialize-scores
 
+# gracefully terminate laravel horizon.
+php artisan horizon:terminate
+
 php artisan up
 
 echo "Deployment finished!"
+
