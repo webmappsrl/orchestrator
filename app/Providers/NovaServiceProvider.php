@@ -108,7 +108,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('ACTIONS', [
                     MenuItem::link('Create a new story', $newStoryUrl),
-                ])->icon('pencil')->collapsedByDefault()
+                    MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab()->canSee(function ($request) {
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                    }),
+                ])->icon('pencil')->collapsedByDefault(),
+
+
             ];
         });
 
