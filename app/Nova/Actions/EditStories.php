@@ -76,16 +76,8 @@ class EditStories extends Action
      */
     public function fields(NovaRequest $request)
     {
-        $storyStatusOptions = [
-            StoryStatus::New->value => StoryStatus::New,
-            StoryStatus::Assigned->value => StoryStatus::Assigned,
-            StoryStatus::Progress->value => StoryStatus::Progress,
-            StoryStatus::Test->value => StoryStatus::Test,
-            StoryStatus::Tested->value => StoryStatus::Tested,
-            StoryStatus::Released->value => StoryStatus::Released,
-            StoryStatus::Rejected->value => StoryStatus::Rejected,
-            StoryStatus::Done->value => StoryStatus::Done,
-        ];
+        $storyStatusOptions =
+            collect(StoryStatus::cases())->mapWithKeys(fn($status) => [$status->value => $status]);
         return [
             Select::make('Status')->options($storyStatusOptions),
             Select::make('Assigned To')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
