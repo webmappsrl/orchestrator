@@ -6,7 +6,7 @@ use App\Traits\fieldTrait;
 use App\Enums\DocumentationCategory;
 use App\Enums\UserRole;
 use App\Models\Story;
-use App\Nova\Actions\ExportDescriptionToPdf;
+use App\Nova\Actions\ExportToPdf;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -88,7 +88,7 @@ class Documentation extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            new ExportDescriptionToPdf,
+            new ExportToPdf,
         ];
     }
 }

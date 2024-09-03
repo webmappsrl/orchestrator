@@ -11,7 +11,7 @@ use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class ExportDescriptionToPdf extends Action
+class ExportToPdf extends Action
 {
     use InteractsWithQueue, Queueable;
 
@@ -34,10 +34,19 @@ class ExportDescriptionToPdf extends Action
             $title = str_replace(' ', '', $model->name);
             $fileName = "{$title}.pdf";
             $filePath = storage_path("app/public/{$fileName}");
-
+            $header = '
+            <header style="padding-bottom: 20px;text-align: right;width: 100%;top: 0;display: flex;flex-direction: column;justify-content: space-between;">
+                    <img  style="width: 80px;height: 80px;margin-right: 20px;align-self: flex-end;" src="https://orchestrator.maphub.it/images/logo.svg" alt="webmapp logo">
+                <div style="font-size: 10px;line-height: 0.9rem;">
+                    <p>Webmapp S.r.l. - Via Antonio Cei - 56123 Pisa <br>
+                        CF/P.iva 02266770508 - Tel +39 3285360803 <br>
+                        www.webmapp.it | info@webmapp.it</p>
+                </div>
+            </header>';
 
             $html =
                 '<div style="margin: 20px; padding: 20px;">'
+                . $header
                 . $description .
                 '</div>';
             $pdf = Pdf::loadHTML($html);
