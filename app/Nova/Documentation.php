@@ -6,7 +6,7 @@ use App\Traits\fieldTrait;
 use App\Enums\DocumentationCategory;
 use App\Enums\UserRole;
 use App\Models\Story;
-use App\Models\Tag;
+use App\Nova\Actions\ExportDescriptionToPdf;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -36,7 +36,8 @@ class Documentation extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name'
+        'id',
+        'name'
     ];
 
     /**
@@ -70,11 +71,24 @@ class Documentation extends Resource
             });
             // Filtra i tag che hanno il tipo "documentation"
             $documentationIds = $customerStoryTags->filter(function ($tag) {
-                return $tag->getTaggableTypeAttribute() === 'Documentation';
+                if ($tag->getTaggableTypeAttribute() === 'Documentation') {
+                    $documentation = \App\Models\Documentation::find($tag->taggable_id);
+                    return $documentation->category == DocumentationCategory::Customer;
+                } else {
+                    return false;
+                }
             })->pluck('taggable_id');
 
             return $query->whereIn('id', $documentationIds);
         }
         return $query;
+    }
+
+
+    public function actions(NovaRequest $request)
+    {
+        return [
+            new ExportDescriptionToPdf,
+        ];
     }
 }
