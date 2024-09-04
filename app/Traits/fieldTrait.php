@@ -146,7 +146,7 @@ trait fieldTrait
 
     public function priorityField()
     {
-        return  Select::make('Priority', 'priority')->options([
+        return  Select::make(__('Priority'), 'priority')->options([
             StoryPriority::Low->value => 'Low',
             StoryPriority::Medium->value => 'Medium',
             StoryPriority::High->value => 'High',
@@ -297,7 +297,7 @@ trait fieldTrait
                     return $request->user()->hasRole(UserRole::Customer) && $this->resource->status !== StoryStatus::Released->value;
                 });
         } else {
-            return Status::make('Status', 'status')
+            return Status::make(__('Status'), 'status')
                 ->loadingWhen([
                     StoryStatus::Assigned->value,
                     StoryStatus::Progress->value,
@@ -575,7 +575,7 @@ trait fieldTrait
     public function creatorField()
     {
         $fieldName = 'creator';
-        return BelongsTo::make('Creator', $fieldName, 'App\Nova\User')
+        return BelongsTo::make(__('Creator'), $fieldName, 'App\Nova\User')
             ->nullable()
             ->default(function ($request) {
                 return auth()->user()->id;

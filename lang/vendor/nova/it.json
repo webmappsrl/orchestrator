@@ -21,5 +21,21 @@
   "Click on the \"Confirm\" button to save the status in Rejected or \"Cancel\" to cancel.": "Fai clic sul pulsante \"Conferma\" per salvare lo stato rifiutato o \"Annulla\" per annullare.",
   "Click on the \"Confirm\" button to create a new documentation from the selected story or \"Cancel\" to cancel.": "Fai clic sul pulsante \"Conferma\" per creare una nuova documentazione dalla storia selezionata o \"Annulla\" per annullare.",
   "Click on the \"Confirm\" button to move the selected stories to Backlog or \"Cancel\" to cancel.": "Fai clic sul pulsante \"Conferma\" per spostare le storie selezionate nel Backlog o \"Annulla\" per annullare.",
-  "Select the epic where you want to move the story. Click on \"Confirm\" to perform the action or \"Cancel\" to delete.": "Seleziona l'epico in cui desideri spostare la storia. Fai clic su \"Conferma\" per eseguire l'azione o \"Annulla\" per eliminare."
+  "Select the epic where you want to move the story. Click on \"Confirm\" to perform the action or \"Cancel\" to delete.": "Seleziona l'epico in cui desideri spostare la storia. Fai clic su \"Conferma\" per eseguire l'azione o \"Annulla\" per eliminare.",
+  "Created At": "Creato il",
+  "Updated At": "Aggiornato il",
+  "Type": "Tipo",
+  "Childs": "Sotto-storie",
+  "Parent": "Storia principale",
+  "Relationship": "Relazione",
+  "Status": "Stato",
+  "assigned to": "Assegnato a",
+  "tested by": "Testato da",
+  "Project": "Project",
+  "Customer Request": "Richiesta del cliente",
+  "Description": "Descrizione",
+  "Info": "Informazioni",
+  "Estimated Hours": "Ore stimate",
+  "Creator": "Creatore",
+  "Create": "Crea"
 }
