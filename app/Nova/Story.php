@@ -117,17 +117,17 @@ class Story extends Resource
         }
     }
 
-    public  function fieldsInIndex(NovaRequest $request)
+    public function fieldsInIndex(NovaRequest $request)
     {
         $fields = [
             ID::make()->sortable(),
             $this->statusField($request),
-            Stack::make('Title', [
+            Stack::make(__('Title'), [
                 $this->typeField($request),
                 $this->titleField(),
                 $this->relationshipField($request),
             ]),
-            Stack::make('Assigned/estimated hours', [
+            Stack::make(__('Assigned/estimated hours'), [
                 $this->assignedToField(),
                 $this->estimatedHoursField($request),
             ]),
@@ -141,7 +141,7 @@ class Story extends Resource
         }, $fields);
     }
 
-    public  function fieldsInDetails(NovaRequest $request)
+    public function fieldsInDetails(NovaRequest $request)
     {
         $fields = [
             ID::make()->sortable(),
@@ -156,28 +156,28 @@ class Story extends Resource
             $this->updatedAtField(),
             $this->deadlineField($request),
             $this->tagsField(),
-            Files::make('Documents', 'documents')
+            Files::make(__('Documents'), 'documents')
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
-                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).'),
+                ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).'))->onlyOnDetail(),
             $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
-            HasMany::make('Logs', 'views', StoryLog::class)->canSee(function ($request) {
+            HasMany::make(__('Logs'), 'views', StoryLog::class)->canSee(function ($request) {
                 return !$request->user()->hasRole(UserRole::Customer);
             }),
-            BelongsToMany::make('Child Stories', 'childStories', Story::class)
+            BelongsToMany::make(__('Child Stories'), 'childStories', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
                     return empty($this->parent_id) &&  !$request->user()->hasRole(UserRole::Customer);
                 })->filterable(),
-            BelongsTo::make('Parent Story', 'parentStory', Story::class)
+            BelongsTo::make(__('Parent Story'), 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            MorphToMany::make('Deadlines')
+            MorphToMany::make(__('Deadlines'))
                 ->showCreateRelationButton(),
 
         ];
@@ -185,7 +185,8 @@ class Story extends Resource
             return $field->onlyOnDetail();
         }, $fields);
     }
-    public  function fieldsInEdit(NovaRequest $request)
+
+    public function fieldsInEdit(NovaRequest $request)
     {
         $fields = [
             ID::make()->sortable(),
@@ -195,21 +196,22 @@ class Story extends Resource
             $this->testedByField(),
             $this->tagsField(),
             $this->typeField($request),
+            $this->projectField(),
             Files::make('Documents', 'documents')
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
-                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).'),
+                ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).')),
             $this->estimatedHoursField($request),
             $this->titleField(),
             $this->descriptionField(),
             $this->customerRequestField($request),
             $this->answerToTicketField(),
-            BelongsTo::make('Parent Story', 'parentStory', CustomerStory::class)
+            BelongsTo::make(__('Parent Story'), 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            MorphToMany::make('Deadlines')
+            MorphToMany::make(__('Deadlines'))
                 ->showCreateRelationButton()
         ];
         return array_map(function ($field) {
@@ -277,9 +279,9 @@ class Story extends Resource
                 (new actions\RespondToStoryRequest())
                     ->showInline()
                     ->sole()
-                    ->confirmText('Click on the "Confirm" button to send the response or "Cancel" to cancel.')
-                    ->confirmButtonText('Confirm')
-                    ->cancelButtonText('Cancel')
+                    ->confirmText(__('Click on the "Confirm" button to send the response or "Cancel" to cancel.'))
+                    ->confirmButtonText(__('Confirm'))
+                    ->cancelButtonText(__('Cancel'))
                     ->canSee(
                         function ($request) {
                             return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
@@ -291,78 +293,78 @@ class Story extends Resource
             (new actions\RespondToStoryRequest())
                 ->showInline()
                 ->sole()
-                ->confirmText('Click on the "Confirm" button to send the response or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to send the response or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(
                     function ($request) {
                         return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                     }
                 ),
             (new EditStories)
-                ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
+                ->confirmText(__('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')),
 
             (new actions\StoryToProgressStatusAction)
                 ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Progress or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to save the status in Progress or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Progress->value;
                 }),
 
             (new actions\StoryToDoneStatusAction)
                 ->showInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Done->value;
                 }),
 
             (new actions\StoryToTestStatusAction)
                 ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Test or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to save the status in Test or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Test->value;
                 }),
 
             (new actions\StoryToRejectedStatusAction)
                 ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Rejected->value;
                 }),
         ];
         if ($request->user()->hasRole(UserRole::Developer)) {
             array_push($actions, (new actions\CreateDocumentationFromStory())
-                ->confirmText('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'));
+                ->confirmText(__('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')));
         }
         if ($request->viaResource == 'projects') {
             array_push($actions, (new moveStoriesFromProjectToEpicAction)
-                ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'));
+                ->confirmText(__('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')));
             array_push($actions, (new actions\createNewEpicFromStoriesAction)
                 ->confirmText('Click on the "Confirm" button to create a new epic with selected stories or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'));
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')));
         }
 
         if ($request->viaResource != 'projects') {
 
             array_push($actions, (new actions\moveToBacklogAction)
-                ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->showInline());
         }
 
@@ -376,7 +378,7 @@ class Story extends Resource
     public function navigationLinks()
     {
         return [
-            Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
+            Text::make(__('Navigate'))->onlyOnDetail()->asHtml()->displayUsing(function () {
                 $deadline = $this->resource->deadlines->first();
                 if ($deadline) {
                     $stories = $deadline->stories;
