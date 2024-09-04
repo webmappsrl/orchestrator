@@ -323,6 +323,11 @@ class Story extends Model implements HasMedia
                 if ($this->user_id) {
                     Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
                 }
+                //if the customer reply to a released ticket, change the ticket status to assigned
+                if ($this->status == StoryStatus::Released->value) {
+                    $this->status = StoryStatus::Assigned->value;
+                    $this->save();
+                }
                 if ($this->tester_id) {
                     Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
                 }

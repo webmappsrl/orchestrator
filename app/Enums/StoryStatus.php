@@ -4,6 +4,7 @@ namespace App\Enums;
 
 enum StoryStatus: string
 {
+    case Backlog = 'backlog';
     case New = 'new';
     case Assigned = 'assigned';
     case Progress = 'progress';
