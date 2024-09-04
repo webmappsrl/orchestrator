@@ -32,7 +32,7 @@ class CustomerStory extends Story
     {
         return $query->whereNotNull('creator_id')
             ->where('status', '!=', StoryStatus::Done->value)
-            ->where('type', '!=', StoryType::Feature->value);
+            ->where('status', '!=', StoryStatus::Backlog->value);
     }
 
     public function cards(NovaRequest $request)

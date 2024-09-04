@@ -584,42 +584,36 @@ trait fieldTrait
     public function getOptions(): array
     {
         $loggedUser = auth()->user();
-        $loggedUserIsDeveloperAssigned = false;
-        $loggedUserIsTesterAssigned = false;
-        $statusOptions = [
-            StoryStatus::New->value => StoryStatus::New,
-            StoryStatus::Assigned->value => StoryStatus::Assigned,
-            StoryStatus::Progress->value => StoryStatus::Progress,
-            StoryStatus::Test->value => StoryStatus::Test,
-            StoryStatus::Tested->value => StoryStatus::Tested,
-            StoryStatus::Waiting->value => StoryStatus::Waiting,
-            StoryStatus::Released->value => StoryStatus::Released,
-            StoryStatus::Rejected->value => StoryStatus::Rejected,
-            StoryStatus::Done->value => StoryStatus::Done,
-        ];
+        $allStatuses = collect(StoryStatus::cases())->mapWithKeys(fn($status) => [$status->value => $status]);
 
-        if ($this->resource->exists) {
-            $loggedUserIsDeveloperAssigned = $this->resource->developer && $loggedUser->id == $this->resource->developer->id;
-            $loggedUserIsTesterAssigned = $this->resource->tester && $loggedUser->id == $this->resource->tester->id;
-
-            if ($loggedUserIsDeveloperAssigned && ($loggedUserIsTesterAssigned || is_null($this->resource->tester))) {
-                return $statusOptions;
-            }
-            if ($loggedUserIsDeveloperAssigned) {
-                unset($statusOptions[StoryStatus::New->value]);
-                unset($statusOptions[StoryStatus::Tested->value]);
-                unset($statusOptions[StoryStatus::Done->value]);
-                unset($statusOptions[StoryStatus::Released->value]);
-                return $statusOptions;
-            }
-            if ($loggedUserIsTesterAssigned) {
-                unset($statusOptions[StoryStatus::New->value]);
-                unset($statusOptions[StoryStatus::Test->value]);
-                return $statusOptions;
-            }
+        if (!$this->resource->exists) {
+            return $allStatuses->toArray();
         }
 
-        return $statusOptions;
+        $loggedUserIsDeveloperAssigned = $this->resource->developer && $loggedUser->id == $this->resource->developer->id;
+        $loggedUserIsTesterAssigned = $this->resource->tester && $loggedUser->id == $this->resource->tester->id;
+
+        if ($loggedUserIsDeveloperAssigned && ($loggedUserIsTesterAssigned || is_null($this->resource->tester))) {
+            return $allStatuses->toArray();
+        }
+
+        if ($loggedUserIsDeveloperAssigned) {
+            return $allStatuses->except([
+                StoryStatus::New->value,
+                StoryStatus::Tested->value,
+                StoryStatus::Done->value,
+                StoryStatus::Released->value
+            ])->toArray();
+        }
+
+        if ($loggedUserIsTesterAssigned) {
+            return $allStatuses->except([
+                StoryStatus::New->value,
+                StoryStatus::Test->value
+            ])->toArray();
+        }
+
+        return $allStatuses->toArray();
     }
 
 
