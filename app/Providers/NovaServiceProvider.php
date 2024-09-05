@@ -19,6 +19,7 @@ use App\Nova\CustomerStory;
 use App\Nova\CustomerFeatureStory;
 use App\Nova\Documentation;
 use App\Enums\UserRole;
+use App\Nova\BacklogStory;
 use Laravel\Nova\Nova;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
@@ -88,7 +89,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     ])->collapsedByDefault(),
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(Deadline::class),
-                    MenuItem::resource(CustomerFeatureStory::class),
+                    MenuItem::resource(BacklogStory::class),
                     MenuItem::resource(CustomerStory::class),
                 ])->icon('code')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null)
@@ -108,7 +109,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('ACTIONS', [
                     MenuItem::link('Create a new story', $newStoryUrl),
-                ])->icon('pencil')->collapsedByDefault()
+                    MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab()->canSee(function ($request) {
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                    }),
+                ])->icon('pencil')->collapsedByDefault(),
+
+
             ];
         });
 
