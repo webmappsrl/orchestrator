@@ -412,7 +412,7 @@ trait fieldTrait
         return  Tiptap::make('Answer to ticket', $fieldName)
             ->canSee(
                 function ($request) use ($fieldName) {
-                    return  $this->canSee($fieldName) && $request->resourceId !== null;
+                    return  $this->canSee($fieldName) && $request->resourceId !== null && $this->status != StoryStatus::Done->value;
                 }
             )
             ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
