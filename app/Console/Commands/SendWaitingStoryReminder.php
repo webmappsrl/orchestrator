@@ -23,13 +23,15 @@ class SendWaitingStoryReminder extends Command
         try {
             $this->info('story:send-waiting-reminder start');
             Log::info('story:send-waiting-reminder start');
-
-            $stories = Story::where('status', StoryStatus::Waiting->value)->get();
+            $daysAgo = $this->daysAgo();
+            $stories = Story::where('status', StoryStatus::Waiting->value)
+                ->whereDate('created_at', '<=', $daysAgo)
+                ->get();
 
             foreach ($stories as $story) {
                 try {
-                    $lastStatusChangeDate = $this->getLastStatusChangeDate($story);
-                    if ($this->shouldSendReminder($lastStatusChangeDate)) {
+
+                    if ($this->shouldSendReminder($story)) {
                         $this->sendReminderEmail($story);
                         $this->info('Sent reminder for story ID: ' . $story->id);
                         Log::info('Sent reminder for story ID: ' . $story->id);
@@ -52,9 +54,9 @@ class SendWaitingStoryReminder extends Command
     {
         try {
             $logs = StoryLog::where('story_id', $story->id)
+                ->where('changes->status', StoryStatus::Waiting->value)
                 ->orderBy('viewed_at', 'desc')
                 ->get();
-
             $lastWaitingStatus = null;
             $lastRelevantChange = null;
 
@@ -90,20 +92,13 @@ class SendWaitingStoryReminder extends Command
         }
     }
 
-    private function shouldSendReminder($lastStatusChangeDate)
+    private function shouldSendReminder($story)
     {
         try {
-            $workingDays = 0;
-            $currentDate = Carbon::now();
+            $lastStatusChangeDate = $this->getLastStatusChangeDate($story);
+            $ThreeWorkingDaysAgo = $this->daysAgo();
 
-            while ($workingDays < 3) {
-                if (!$currentDate->isWeekend()) {
-                    $workingDays++;
-                }
-                $currentDate->subDay();
-            }
-
-            return $lastStatusChangeDate->lessThanOrEqualTo($currentDate);
+            return $lastStatusChangeDate->lessThanOrEqualTo($ThreeWorkingDaysAgo);
         } catch (\Exception $e) {
             Log::error('Error in shouldSendReminder. Error: ' . $e->getMessage());
             throw $e;
@@ -113,15 +108,46 @@ class SendWaitingStoryReminder extends Command
     private function sendReminderEmail($story)
     {
         try {
-            $customer = User::find($story->creator_id);
-            if ($customer) {
-                Mail::to($customer->email)->send(new WaitingStoryReminder($story));
+            $mailToUser = User::find($story->creator_id);
+            if ($mailToUser) {
+                //  Mail::to($mailToUser->email)->send(new WaitingStoryReminder($story));
+                $this->updteWaintingInStoryLog($story);
             } else {
-                Log::warning('Customer not found for story ID: ' . $story->id);
+                Log::warning('mailToUser not found for story ID: ' . $story->id);
             }
         } catch (\Exception $e) {
             Log::error('Error sending reminder email for story ID: ' . $story->id . '. Error: ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    private function updteWaintingInStoryLog($story)
+    {
+        try {
+            $timestamp = now()->format('Y-m-d H:i');
+            $jsonChanges = ['status' => StoryStatus::Waiting->value];
+            StoryLog::create([
+                'story_id' => $story->id,
+                'user_id' => 1,
+                'viewed_at' => $timestamp,
+                'changes' => $jsonChanges,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating story status for story ID: ' . $story->id . '. Error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function daysAgo()
+    {
+        $daysAgo = Carbon::now();
+        for ($i = 0; $i < 3; $i++) {
+            $daysAgo->subDay();
+            // If the current day is Saturday or Sunday, we need to subtract more days
+            if ($daysAgo->isWeekend()) {
+                $i--;
+            }
+        }
+        return $daysAgo;
     }
 }

@@ -15,8 +15,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $weeklyDays = [Schedule::MONDAY, Schedule::TUESDAY, Schedule::WEDNESDAY, Schedule::THURSDAY, Schedule::FRIDAY];
-
         // call the checkIfExpired() method on all deadlines everyday at 5 past midnight
         $schedule->call(function () {
             \App\Models\Deadline::all()->each(function ($deadline) {
@@ -28,7 +26,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('queue:work --stop-when-empty')->timezone('Europe/Rome')->hourly()->withoutOverlapping();
         $schedule->command('sync:stories-calendar')->timezone('Europe/Rome')->dailyAt('07:55');
         $schedule->command('story:auto-update-status')->daily();
-        // $schedule->command('story:send-waiting-reminder')->days($weeklyDays);
+        $schedule->command('story:send-waiting-reminder')->timezone('Europe/Rome')->dailyAt('18:00');
         $schedule->job(new \App\Jobs\SendDigestEmail)->timezone('Europe/Rome')->dailyAt('19:00');
     }
 

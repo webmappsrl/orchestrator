@@ -23,14 +23,7 @@ class AutoUpdateStoryStatus extends Command
      */
     public function handle()
     {
-        $daysAgo = Carbon::now();
-        for ($i = 0; $i < 3; $i++) {
-            $daysAgo->subDay();
-            // If the current day is Saturday or Sunday, we need to subtract more days
-            if ($daysAgo->isWeekend()) {
-                $i--;
-            }
-        }
+        $daysAgo = $this->daysAgo();
         $stories = Story::where('status', StoryStatus::Released->value)
             ->whereDate('updated_at', '<=', $daysAgo)
             ->get();
@@ -45,5 +38,17 @@ class AutoUpdateStoryStatus extends Command
 
         $this->info('All applicable stories have been updated.');
         Log::info('All applicable stories have been updated.');
+    }
+
+    private function daysAgo()
+    {
+        $daysAgo = Carbon::now();
+        for ($i = 0; $i < 3; $i++) {
+            $daysAgo->subDay();
+            // If the current day is Saturday or Sunday, we need to subtract more days
+            if ($daysAgo->isWeekend()) {
+                $i--;
+            }
+        }
     }
 }
