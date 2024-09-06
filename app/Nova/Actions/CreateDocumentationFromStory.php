@@ -44,6 +44,10 @@ class CreateDocumentationFromStory extends Action
     {
         try {
             $model = $request->findModelOrFail();
+        } catch (\Exception $e) {
+            $model = null;
+        }
+        try {
             if (!$model) {
                 throw new \Exception('Model not found');
             }
