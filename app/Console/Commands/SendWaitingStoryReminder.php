@@ -110,7 +110,7 @@ class SendWaitingStoryReminder extends Command
         try {
             $mailToUser = User::find($story->creator_id);
             if ($mailToUser) {
-                //  Mail::to($mailToUser->email)->send(new WaitingStoryReminder($story));
+                Mail::to($mailToUser->email)->send(new WaitingStoryReminder($story));
                 $this->updteWaintingInStoryLog($story);
             } else {
                 Log::warning('mailToUser not found for story ID: ' . $story->id);
