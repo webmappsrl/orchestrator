@@ -32,6 +32,7 @@
         "outl1ne/nova-multiselect-field": "^4.2",
         "overtrue/laravel-favorite": "^5.1",
         "predis/predis": "^2.2",
+        "rap2hpoutre/laravel-log-viewer": "^2.4",
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-google-calendar": "^3.8",
         "spatie/laravel-medialibrary": "^10.0.0",

@@ -11,6 +11,7 @@ use App\Mail\OrchestratorUserNotFound;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\DeadlineController;
 use App\Http\Middleware\TestRouteAccess;
+use Laravel\Nova\Http\Controllers\LoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,7 +33,7 @@ Route::get('/mailable', function () {
     $user = User::whereJsonContains('roles', 'customer')->firstOrFail();
     return new App\Mail\CustomerStoriesDigest($user);
 });
-
+Route::get('/logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
 
 //testing routes
 Route::middleware(TestRouteAccess::class)->group(function () {

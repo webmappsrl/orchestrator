@@ -112,6 +112,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab()->canSee(function ($request) {
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
                     }),
+                    MenuItem::externalLink('logs', url('logs'))->openInNewTab()->canSee(function ($request) {
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                    }),
                     MenuItem::externalLink('Google Calendar', 'https://calendar.google.com/calendar/u/0/r')->openInNewTab()->canSee(function ($request) {
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
