@@ -23,9 +23,10 @@ class ArchivedStoryShowedByCustomer extends Story
 
     public static function indexQuery(NovaRequest $request, $query)
     {
+        $whereIn = [StoryStatus::Done->value,  StoryStatus::Rejected->value];
         return $query
             ->where('creator_id', Auth()->user()->id)
-            ->where('status', StoryStatus::Done);
+            ->whereIn('status', $whereIn);
     }
 
     public  function fieldsInIndex(NovaRequest $request)

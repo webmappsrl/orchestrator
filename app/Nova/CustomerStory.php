@@ -30,9 +30,9 @@ class CustomerStory extends Story
 
     public static function indexQuery(NovaRequest $request, $query)
     {
+        $whereNotIn = [StoryStatus::Done->value, StoryStatus::Backlog->value, StoryStatus::Rejected->value];
         return $query->whereNotNull('creator_id')
-            ->where('status', '!=', StoryStatus::Done->value)
-            ->where('status', '!=', StoryStatus::Backlog->value);
+            ->whereNotIn('status', $whereNotIn);
     }
 
     public function cards(NovaRequest $request)

@@ -415,6 +415,9 @@ trait fieldTrait
                     return  $this->canSee($fieldName) && $request->resourceId !== null && $this->status != StoryStatus::Done->value;
                 }
             )
+            ->readonly(function ($request) {
+                return $request->resourceId !== null && ($this->status == StoryStatus::Done->value);
+            })
             ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
                 if (empty($request[$requestAttribute])) {
                     return;

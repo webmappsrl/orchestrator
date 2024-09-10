@@ -15,8 +15,9 @@ class ArchivedStories extends Story
 
     public static function indexQuery(NovaRequest $request, $query)
     {
+        $whereIn = [StoryStatus::Done->value,  StoryStatus::Rejected->value];
         return $query
-            ->where('status', StoryStatus::Done);
+            ->whereIn('status', $whereIn);
     }
     public static function uriKey()
     {

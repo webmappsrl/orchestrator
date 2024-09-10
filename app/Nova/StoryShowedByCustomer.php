@@ -39,8 +39,12 @@ class StoryShowedByCustomer extends Story
     }
     public static function indexQuery(NovaRequest $request, $query)
     {
+        $whereNotIn = [StoryStatus::Done->value, StoryStatus::Rejected->value];
+
         if ($request->user()->hasRole(UserRole::Customer)) {
-            return $query->where('creator_id', $request->user()->id)->where('status', '!=', StoryStatus::Done);
+            return $query
+                ->where('creator_id', $request->user()->id)
+                ->whereNotIn('status', $whereNotIn);
         }
     }
     public  function fieldsInIndex(NovaRequest $request)
