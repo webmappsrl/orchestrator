@@ -40,6 +40,7 @@ class ArchivedStories extends Story
         return [
             new filters\CreatorStoryFilter(),
             new filters\UserFilter(),
+            new filters\StoryStatusFilter(),
             new filters\StoryTypeFilter(),
             new filters\CustomerStoryWithDeadlineFilter(),
         ];
