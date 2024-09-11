@@ -25,6 +25,9 @@ class StoryShowedByCustomer extends Story
             Inoltre, desideriamo ricordarvi di <strong>non inviare email direttamente agli sviluppatori</strong>. Le email inviate al di fuori del sistema di ticketing saranno visualizzate con una cadenza bisettimanale e avranno priorità inferiore rispetto ai ticket ufficiali.
         </p>
         <p style="font-size: 12px; line-height: 1.6;">
+        Per inviare un video durante la creazione di un ticket o in una risposta, consigliamo di utilizzare servizi di condivisione come Google Drive e attivare il link con l'opzione di condivisione <strong>"Chiunque abbia il link"</strong>. Per maggiori informazioni, visualizza la <a href="https://support.google.com/a/users/answer/9310248?hl=it" target="_blank" style="color: #007bff; text-decoration: underline;">guida completa</a>.
+        </p>
+        <p style="font-size: 12px; line-height: 1.6;">
             Potete visionare la guida all'utilizzo del nostro servizio di ticketing <a href="https://docs.google.com/document/d/13y-FWVPt9jdoNnROdaZ-izNQ_cdrC79q6DQ8vlJex6w/edit?usp=drive_link" target="_blank" style="color: #007bff; text-decoration: underline;">da qui</a>.
         </p>
         <p style="font-size: 12px; line-height: 1.6;">

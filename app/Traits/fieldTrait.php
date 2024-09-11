@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\Epic;
 use App\Enums\UserRole;
 use App\Models\Project;
+use App\Nova\Project as novaProject;
 use App\Nova\Tag as novaTag;
 use App\Enums\StoryType;
 use Manogi\Tiptap\Tiptap;
@@ -309,7 +310,8 @@ trait fieldTrait
                     StoryStatus::Rejected->value,
                     storyStatus::Test->value,
                     StoryStatus::Waiting->value
-                ]);
+                ])
+                ->displayUsing(fn($status) => __(ucfirst($status)));  // Visualizza lo stato tradotto;
         }
     }
 
@@ -354,7 +356,7 @@ trait fieldTrait
     public function projectField($fieldName = 'project')
     {
 
-        return BelongsTo::make(__('Project'), $fieldName)
+        return BelongsTo::make(__('Project'), $fieldName, novaProject::class)
             ->default(function ($request) {
                 $fromEpic =
                     $request->input('viaResource') === 'epics' ||
@@ -409,7 +411,7 @@ trait fieldTrait
     public function answerToTicketField($fieldName = 'answer_to_ticket')
     {
         //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
-        return  Tiptap::make('Answer to ticket', $fieldName)
+        return  Tiptap::make(__('Answer to ticket'), $fieldName)
             ->canSee(
                 function ($request) use ($fieldName) {
                     return  $this->canSee($fieldName) && $request->resourceId !== null && $this->status != StoryStatus::Done->value;
@@ -587,8 +589,10 @@ trait fieldTrait
     public function getOptions(): array
     {
         $loggedUser = auth()->user();
-        $allStatuses = collect(StoryStatus::cases())->mapWithKeys(fn($status) => [$status->value => $status]);
-
+        // $allStatuses = collect(StoryStatus::cases())->mapWithKeys(fn($status) => [$status->value => $status]);
+        $allStatuses = collect(StoryStatus::cases())->mapWithKeys(fn($status) => [
+            $status->value => __(ucfirst($status->value)) // Traduzione degli stati
+        ]);
         if (!$this->resource->exists) {
             return $allStatuses->toArray();
         }

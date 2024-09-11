@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Session;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Stack;
+use App\Nova\Deadline as novaDeadline;
+
 
 class Story extends Resource
 {
@@ -40,6 +42,37 @@ class Story extends Resource
     {
         return __('Story'); // Il nome plurale personalizzato
     }
+
+    /**
+     * Get the text for the create resource button.
+     *
+     * @return string|null
+     */
+    public static function createButtonLabel()
+    {
+        return __('Create Story');
+    }
+
+    /**
+     * Get the text for the update resource button.
+     *
+     * @return string|null
+     */
+    public static function updateButtonLabel()
+    {
+        return __('Save Changes');
+    }
+
+    /**
+     * Get the text for the attach resource button.
+     *
+     * @return string|null
+     */
+    public static function attachButtonLabel()
+    {
+        return __('Attach Story');
+    }
+
     public static $linkToParent = false;
     public static $resolveParentBreadcrumbs = false;
     public $holidayAlert = <<<HTML
@@ -177,7 +210,7 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            MorphToMany::make(__('Deadlines'))
+            MorphToMany::make(__('Deadlines'), 'deadlines', novaDeadline::class)
                 ->showCreateRelationButton(),
 
         ];
@@ -211,7 +244,7 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            MorphToMany::make(__('Deadlines'))
+            MorphToMany::make(__('Deadlines'), 'deadlines', novaDeadline::class)
                 ->showCreateRelationButton()
         ];
         return array_map(function ($field) {

@@ -40,4 +40,14 @@ class StoryTypeFilter extends Filter
     {
         return collect(StoryType::cases());
     }
+
+    /**
+     * Get the displayable name of the filter.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return __('Type');
+    }
 }

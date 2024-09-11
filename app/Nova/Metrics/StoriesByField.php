@@ -77,8 +77,13 @@ class StoriesByField extends Partition
         return 'by-' . $this->label;
     }
 
+    /**
+     * Get the displayable name of the metric.
+     *
+     * @return string
+     */
     public function name()
     {
-        return  'by ' . ucfirst($this->label);
+        return __('by') . ' ' . ucfirst(__($this->label));
     }
 }

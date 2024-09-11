@@ -71,7 +71,7 @@ class StoriesByQuarter extends Lens
      */
     public function name()
     {
-        return 'Stories Q' . $this->quarter;
+        return __('Stories Q') . $this->quarter;
     }
 
     /**

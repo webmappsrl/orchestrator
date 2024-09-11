@@ -27,9 +27,9 @@ class StoryLog extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            BelongsTo::make('User', 'user', User::class)->sortable(),
-            Date::make('Viewed At', 'viewed_at')->sortable(),
-            Text::make('Changes', function () {
+            BelongsTo::make(__('User'), 'user', User::class)->sortable(),
+            Date::make(__('Viewed At'), 'viewed_at')->sortable(),
+            Text::make(__('Changes'), function () {
                 $changes = $this->changes;
                 if ((isset($changes['status']) && $changes['status'] === 'new')) {
                     return  '<strong>status:</strong> new';

@@ -44,9 +44,25 @@ class Project extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'description', 'customer.name'
+        'id',
+        'name',
+        'description',
+        'customer.name'
     ];
+    public static function label()
+    {
+        return __('Projects');
+    }
 
+    /**
+     * Get the plural label of the resource.
+     *
+     * @return string
+     */
+    public static function singularLabel()
+    {
+        return __('Project');
+    }
     /**
      * Get the fields displayed by the resource.
      *

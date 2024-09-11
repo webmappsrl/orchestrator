@@ -38,10 +38,20 @@ class DeadlineStatusFilter extends Filter
     public function options(NovaRequest $request)
     {
         return [
-            'new' => DeadlineStatus::New,
-            'progress' => DeadlineStatus::Progress,
-            'done' => DeadlineStatus::Done,
-            'expired' => DeadlineStatus::Expired,
+            __('New') => DeadlineStatus::New->value,
+            __('In Progress') => DeadlineStatus::Progress->value,
+            __('Completed') => DeadlineStatus::Done->value,
+            __('Expired') => DeadlineStatus::Expired->value,
         ];
+    }
+
+    /**
+     * Get the displayable name of the filter.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return __('Deadline Status Filter');
     }
 }

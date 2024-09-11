@@ -85,4 +85,14 @@ class RespondToStoryRequest extends Action
             Tiptap::make('Response')->rules('required')->buttons($tiptapAllButtons)
         ];
     }
+
+    /**
+     * Get the displayable name of the action.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return __('Respond to Customer Request');
+    }
 }

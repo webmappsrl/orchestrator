@@ -44,7 +44,11 @@ class Customer extends Resource
      * @var array
      */
     public static $search = [
-        'name', 'domain_name', 'full_name', 'acronym', 'email'
+        'name',
+        'domain_name',
+        'full_name',
+        'acronym',
+        'email'
     ];
 
     /**
