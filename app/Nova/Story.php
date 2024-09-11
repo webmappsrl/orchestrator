@@ -341,14 +341,13 @@ class Story extends Resource
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Rejected->value;
                 }),
-
-            (new actions\CreateDocumentationFromStory())
+        ];
+        if ($request->user()->hasRole(UserRole::Developer)) {
+            array_push($actions, (new actions\CreateDocumentationFromStory())
                 ->confirmText('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
-        ];
-
+                ->cancelButtonText('Cancel'));
+        }
         if ($request->viaResource == 'projects') {
             array_push($actions, (new moveStoriesFromProjectToEpicAction)
                 ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
