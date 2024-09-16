@@ -39,13 +39,13 @@ class ProcessInboundEmails implements ShouldQueue
         }
 
         foreach ($messages as $message) {
-            $story = $this->createOrchestratorStoryFromMail($message);
+            $story = $this->createOrchestratorStoryFromMail($message, $logger);
             $attachments = $message->hasAttachments() ? $message->getAttachments() : [];
 
             if ($story) {
                 if (count($attachments) > 0) {
                     foreach ($attachments as $attachment) {
-                        $this->associateAttachment($attachment, $story);
+                        $this->associateAttachment($attachment, $story, $logger);
                     }
                 }
                 // Segna la email come letta soltanto se viene creata la story
@@ -55,7 +55,7 @@ class ProcessInboundEmails implements ShouldQueue
         $client->disconnect();
     }
 
-    private function createOrchestratorStoryFromMail($message)
+    private function createOrchestratorStoryFromMail($message, $logger)
     {
         try {
             $userEmail = $message->getFrom()[0]->mail;
@@ -87,7 +87,7 @@ class ProcessInboundEmails implements ShouldQueue
         }
     }
 
-    private function associateAttachment($attachment, $story)
+    private function associateAttachment($attachment, $story, $logger)
     {
         $attachmentName = $attachment->getName();
         $mimeType = $attachment->getMimeType();
@@ -115,19 +115,19 @@ class ProcessInboundEmails implements ShouldQueue
                 $story->addMedia($temporaryPath)
                     ->toMediaCollection('documents');
             } elseif (in_array($mimeType, config('services.media-library.allowed_image_formats'))) {
-                $this->logger->info("File immagine: " . $temporaryPath . " MIME type: $mimeType, potrebbero esserci problemi nella visualizzazione Nova");
+                $logger->info("File immagine: " . $temporaryPath . " MIME type: $mimeType, potrebbero esserci problemi nella visualizzazione Nova");
                 // Se è un'immagine, aggiungilo alla collezione images
                 $story->addMedia($temporaryPath)
                     ->toMediaCollection('images');
             } else {
                 // MIME type non supportato, logga un avviso
-                $this->logger->warning("Allegato non supportato: $attachmentName con MIME type $mimeType");
+                $logger->warning("Allegato non supportato: $attachmentName con MIME type $mimeType");
             }
 
             // Rimuovi il file temporaneo
             Storage::delete('public/' . $attachmentName);
         } catch (\Exception $e) {
-            $this->logger->error('Error associating attachment: ' . $e->getMessage());
+            $logger->error('Error associating attachment: ' . $e->getMessage());
         }
     }
 }
