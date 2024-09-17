@@ -15,22 +15,34 @@ class StoryShowedByCustomer extends Story
     public $infoAlert = <<<HTML
     <div style="padding: 20px; border-radius: 8px; background-color: #f8f9fa; text-align: center; font-family: Arial, sans-serif; color: #333;">
         <h2 style="color: #007bff; font-size: 24px; margin-bottom: 15px;">Informazioni sul Servizio di Ticketing</h2>
-        <p style="font-size: 12px; line-height: 1.6;">
-            Gentile Clientela,
+        <p style="font-size: 14px; line-height: 1.6;">
+        Gentile Clientela,
         </p>
-        <p style="font-size: 12px; line-height: 1.6;">
+        <p style="font-size: 14px; line-height: 1.6;">
             Vi informiamo che il nostro servizio di ticketing è attivo dal <strong>lunedì al venerdì</strong>, dalle <strong>9:00 alle 15:00</strong>. I ticket inviati al di fuori di questa fascia oraria saranno presi in carico il giorno lavorativo successivo.
         </p>
-        <p style="font-size: 12px; line-height: 1.6;">
-            Inoltre, desideriamo ricordarvi di <strong>non inviare email direttamente agli sviluppatori</strong>. Le email inviate al di fuori del sistema di ticketing saranno visualizzate con una cadenza bisettimanale e avranno priorità inferiore rispetto ai ticket ufficiali.
+        <p style="font-size: 14px; line-height: 1.6;">
+            Inoltre, desideriamo ricordarvi di <strong style="color: red;">non inviare email direttamente agli sviluppatori</strong>. Le email inviate al di fuori del sistema di ticketing saranno visualizzate con una cadenza bisettimanale e avranno priorità inferiore rispetto ai ticket ufficiali.
         </p>
-        <p style="font-size: 12px; line-height: 1.6;">
-        Per inviare un video durante la creazione di un ticket o in una risposta, consigliamo di utilizzare servizi di condivisione come Google Drive e attivare il link con l'opzione di condivisione <strong>"Chiunque abbia il link"</strong>. Per maggiori informazioni, visualizza la <a href="https://support.google.com/a/users/answer/9310248?hl=it" target="_blank" style="color: #007bff; text-decoration: underline;">guida completa</a>.
+        <p style="font-size: 14px; line-height: 1.6;">
+            Per inviare un video durante la creazione di un ticket o in una risposta, consigliamo di utilizzare servizi di condivisione come Google Drive e attivare il link con l'opzione di condivisione <strong>"Chiunque abbia il link"</strong>. Per maggiori informazioni, visualizza la <a href="https://support.google.com/a/users/answer/9310248?hl=it" target="_blank" style="color: #007bff; text-decoration: underline;">guida completa</a>.
         </p>
-        <p style="font-size: 12px; line-height: 1.6;">
+        <p style="font-size: 14px; line-height: 1.6;">
+            Durante l'invio di un ticket, vi invitiamo a fornire il maggior numero di dettagli possibile, inclusi, ove applicabili, gli ID dei contenuti o altri riferimenti utili per agevolare la verifica e risoluzione del problema.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6;">
+            Ogni ticket ricevuto viene attentamente esaminato dall'intero team di sviluppatori per garantire una gestione accurata e tempestiva delle problematiche.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6;">
+            Ci impegniamo a risolvere le problematiche segnalate nel minor tempo possibile, cercando di minimizzare qualsiasi impatto sui vostri processi.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6;">
+            Vi chiediamo gentilmente di evitare l'invio di ticket duplicati per la stessa richiesta o problematica. Vi invitiamo invece a monitorare lo stato di avanzamento di ogni ticket per assicurarvi che sia in lavorazione o già completato.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6;">
             Potete visionare la guida all'utilizzo del nostro servizio di ticketing <a href="https://docs.google.com/document/d/13y-FWVPt9jdoNnROdaZ-izNQ_cdrC79q6DQ8vlJex6w/edit?usp=drive_link" target="_blank" style="color: #007bff; text-decoration: underline;">da qui</a>.
         </p>
-        <p style="font-size: 12px; line-height: 1.6;">
+        <p style="font-size: 14px; line-height: 1.6;">
             Vi ringraziamo per la vostra collaborazione e comprensione.
         </p>
     </div>

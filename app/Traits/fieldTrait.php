@@ -464,7 +464,7 @@ trait fieldTrait
         return Number::make(__('Estimated Hours'), $fieldName)
             ->sortable()
             ->rules('nullable', 'numeric', 'min:0')
-            ->help('Inserisci il tempo stimato per la risoluzione della storia in ore.')
+            ->help(__('Enter the estimated time to resolve the ticket in hours.'))
             ->canSee($this->estimatedHoursFieldCanSee($fieldName));
     }
 

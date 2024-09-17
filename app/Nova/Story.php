@@ -223,27 +223,42 @@ class Story extends Resource
     {
         $fields = [
             ID::make()->sortable(),
-            $this->statusField($request),
+            $this->statusField($request)
+                ->help(__('Ticket progress status.')),
             $this->creatorField(),
             $this->assignedToField(),
             $this->testedByField(),
-            $this->tagsField(),
-            $this->typeField($request),
+            $this->tagsField()
+                ->help(__('Tags are used both to categorize a ticket and to display documentation in the "Info" section of the customer ticket view.')),
+            $this->typeField($request)
+                ->help(__('Assign the type of the ticket.')),
             $this->projectField(),
             Files::make('Documents', 'documents')
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
                 ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).')),
             $this->estimatedHoursField($request),
-            $this->titleField(),
-            $this->descriptionField(),
-            $this->customerRequestField($request),
-            $this->answerToTicketField(),
+            $this->titleField()->help(__('Enter a title for the ticket.')),
+            $this->descriptionField()
+                ->help(__('Provide all the necessary information. You can add images using the "Add Image" option. If you\'d like to include a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and pasting the link here. The more details you provide, the easier it will be for us to resolve the issue.')),
+            $this->customerRequestField($request)
+                ->help(
+                    $request->resourceId
+                        ? null
+                        : __('Enter all the necessary information, such as the ID of the content you want to verify. You can insert images via `Add Image`. If you also want to send us a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and inserting the link here. The more details you provide, the easier it will be for us to resolve the issue.')
+                ),
+            $this->answerToTicketField()
+                ->help(
+                    $request->resourceId
+                        ? __('Enter all the necessary information, such as the ID of the content you want to verify. You can insert images via `Add Image`. If you also want to send us a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and inserting the link here. The more details you provide, the easier it will be for us to resolve the issue.')
+                        : null
+                ),
             BelongsTo::make(__('Parent Story'), 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
-                }),
+                })
+                ->help(__('Here you can attach the ticket that has the same issue. If multiple tickets share the same issue, attach the main ticket to all related tickets. You can find the main ticket by searching for its title. It is important to note that when the main ticket status changes, the status of all related tickets will also be updated.')),
             MorphToMany::make(__('Deadlines'), 'deadlines', novaDeadline::class)
                 ->showCreateRelationButton()
         ];

@@ -79,11 +79,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('users')->collapsedByDefault(),
 
                 MenuSection::make('DEV', [
-                    MenuGroup::make('Archived', [
+                    MenuGroup::make(__('Archived'), [
                         MenuItem::resource(ArchivedDeadlines::class),
                         MenuItem::resource(ArchivedStories::class),
                     ])->collapsedByDefault(),
-                    MenuGroup::make('my work', [
+                    MenuGroup::make(__('my work'), [
                         MenuItem::resource(AssignedToMeStory::class),
                         MenuItem::resource(ToBeTestedStory::class),
                     ])->collapsedByDefault(),
@@ -97,7 +97,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
 
-                MenuSection::make('CUSTOMER', [
+                MenuSection::make(__('CUSTOMER'), [
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(ArchivedStoryShowedByCustomer::class),
                     MenuItem::resource(StoryShowedByCustomer::class)
@@ -107,7 +107,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     return $request->user()->hasRole(UserRole::Customer);
                 })->icon('at-symbol')->collapsable(),
 
-                MenuSection::make('ACTIONS', [
+                MenuSection::make(__('ACTIONS'), [
                     MenuItem::link('Create a new story', $newStoryUrl),
                     MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab()->canSee(function ($request) {
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
