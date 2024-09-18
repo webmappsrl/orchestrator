@@ -92,3 +92,7 @@ Route::middleware(TestRouteAccess::class)->group(function () {
         return $view->render();
     });
 });
+
+Route::get('/download-products-pdf', [\App\Http\Controllers\ProductPdfController::class, 'download'])
+    ->name('products.pdf.download')
+    ->middleware(['nova']);
