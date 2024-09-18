@@ -39,6 +39,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\LogStory::class,
             'redirectIfCustomer' => \App\Http\Middleware\RedirectIfCustomer::class,
             \App\Http\Middleware\TestRouteAccess::class,
+            \Badinansoft\LanguageSwitch\Http\Middleware\LanguageSwitch::class
         ],
 
         'api' => [
