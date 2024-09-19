@@ -49,6 +49,6 @@ class TotCustomers extends Value
 
     public function name()
     {
-        return 'Customers';
+        return __('Customers');
     }
 }

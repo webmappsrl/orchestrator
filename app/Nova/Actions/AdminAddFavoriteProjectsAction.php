@@ -70,7 +70,7 @@ class AdminAddFavoriteProjectsAction extends Action
 
             if ($user) {
                 return [
-                    MultiSelect::make('Projects')
+                    MultiSelect::make(__('Projects'))
                         ->options($projectsOptions)
                         ->rules('required')
                         ->displayUsingLabels(),
@@ -78,7 +78,7 @@ class AdminAddFavoriteProjectsAction extends Action
             }
         }
         return [
-            MultiSelect::make('Projects')
+            MultiSelect::make(__('Projects'))
                 ->options(Project::all()->pluck('name', 'id')->toArray())
                 ->rules('required')
                 ->displayUsingLabels(),

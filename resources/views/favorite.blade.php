@@ -1,9 +1,9 @@
 @php
-    use App\Models\Project;
-    
-    $user = auth()->user();
-    $favoriteProjects = $user->getFavoriteItems(Project::class)->get();
-    $urlNova = url('/resources/projects');
+use App\Models\Project;
+
+$user = auth()->user();
+$favoriteProjects = $user->getFavoriteItems(Project::class)->get();
+$urlNova = url('/resources/projects');
 @endphp
 
 <!DOCTYPE html>
@@ -61,23 +61,23 @@
 
 <body>
     <div style="padding:10px;">
-        <h1>Favorite Projects</h1>
+        <h1>{{__('Favorite Projects')}}</h1>
 
         <table>
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Name</th>
+                    <th>{{__('Name')}}</th>
                     <th>SAL</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($favoriteProjects as $project)
-                    <tr onclick="window.location='{{ $urlNova . '/' . $project->id }}';" style="cursor: pointer;">
-                        <td>{{ $project->id }}</td>
-                        <td>{{ $project->name }}</td>
-                        <td>{{ $project->wip() }}</td>
-                    </tr>
+                <tr onclick="window.location='{{ $urlNova . '/' . $project->id }}';" style="cursor: pointer;">
+                    <td>{{ $project->id }}</td>
+                    <td>{{ $project->name }}</td>
+                    <td>{{ $project->wip() }}</td>
+                </tr>
                 @endforeach
             </tbody>
         </table>

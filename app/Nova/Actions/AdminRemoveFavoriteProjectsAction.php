@@ -61,7 +61,7 @@ class AdminRemoveFavoriteProjectsAction extends Action
             if ($user) {
 
                 return [
-                    MultiSelect::make('Projects')
+                    MultiSelect::make(__('Projects'))
                         ->options($favoriteProjectsOptions)
                         ->rules('required')
                         ->displayUsingLabels()
@@ -69,7 +69,7 @@ class AdminRemoveFavoriteProjectsAction extends Action
             }
         }
         return [
-            Multiselect::make('Projects')
+            Multiselect::make(__('Projects'))
                 ->options(Project::all()->pluck('name', 'id')->toArray())
                 ->rules('required')
                 ->displayUsingLabels()

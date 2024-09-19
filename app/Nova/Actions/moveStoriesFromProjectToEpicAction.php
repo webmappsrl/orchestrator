@@ -53,7 +53,7 @@ class moveStoriesFromProjectToEpicAction extends Action
 
         return [
             //create a select showing as options only epic that belongs to the current project instance
-            Select::make('Epic', 'epic_id')
+            Select::make(__('Epic'), 'epic_id')
                 ->options(Epic::where('project_id', $resourceId)->pluck('name', 'id'))
                 ->displayUsingLabels()
                 ->rules('required')

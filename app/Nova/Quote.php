@@ -50,7 +50,8 @@ class Quote extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'title'
+        'id',
+        'title'
     ];
 
     /**
@@ -125,7 +126,7 @@ class Quote extends Resource
             BelongsTo::make('Customer')
                 ->filterable()
                 ->searchable(),
-            BelongsToMany::make('Products')->fields(function () {
+            BelongsToMany::make(__('Products'), 'products', 'App\nova\Product')->fields(function () {
                 return [
                     Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1')
                         ->default(1)
@@ -143,7 +144,7 @@ class Quote extends Resource
                 ->searchable()
                 ->filterable()
                 ->nullable(),
-            Currency::make('Products')
+            Currency::make(__('Products'))
                 ->currency('EUR')
                 ->locale('it')
                 ->exceptOnForms()

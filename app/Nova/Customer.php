@@ -50,7 +50,20 @@ class Customer extends Resource
         'acronym',
         'email'
     ];
+    public static function label()
+    {
+        return __('Customers');
+    }
 
+    /**
+     * Get the plural label of the resource.
+     *
+     * @return string
+     */
+    public static function singularLabel()
+    {
+        return __('Customer');
+    }
     /**
      * Get the fields displayed by the resource.
      *
@@ -177,8 +190,8 @@ class Customer extends Resource
                 ->initialEditType(EditorType::MARKDOWN)
                 ->hideFromIndex(),
             new Tabs('Relationships', [
-                Tab::make('Projects', [
-                    HasMany::make('Projects', 'projects', Project::class),
+                Tab::make(__('Projects'), [
+                    HasMany::make(__('Projects'), 'projects', Project::class),
                 ]),
                 Tab::make('Quotes', [
                     HasMany::make('Quotes', 'quotes', Quote::class),

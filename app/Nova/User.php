@@ -46,7 +46,9 @@ class User extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name', 'email',
+        'id',
+        'name',
+        'email',
     ];
 
     /**
@@ -84,7 +86,7 @@ class User extends Resource
             HasMany::make('Stories'),
             HasMany::make('Quotes'),
 
-            Text::make('Favorite Projects', function () {
+            Text::make(__('Favorite Projects'), function () {
                 $projects = [];
                 $userFavorites = $this->getFavoriteItems(Project::class)->get();
                 foreach ($userFavorites as $project) {

@@ -24,9 +24,7 @@ class TotMilestones extends Value
      *
      * @return array
      */
-    public function ranges()
-    {
-    }
+    public function ranges() {}
 
     /**
      * Determine the amount of time the results of the metric should be cached.
@@ -40,6 +38,6 @@ class TotMilestones extends Value
 
     public function name()
     {
-        return 'Milestones';
+        return __('Milestones');
     }
 }

@@ -79,7 +79,7 @@ class MoveStoriesFromEpic extends Action
                 ->searchable(),
 
 
-            Select::make('Epic', 'epic_id')
+            Select::make(__('Epic'), 'epic_id')
                 ->dependsOn(['milestone_id', 'project_id'], function (Select $field, NovaRequest $request, FormData $formData) {
                     $field->options(Epic::where('project_id', $formData->project_id)->where('milestone_id', $formData->milestone_id)->pluck('name', 'id'));
                 })
