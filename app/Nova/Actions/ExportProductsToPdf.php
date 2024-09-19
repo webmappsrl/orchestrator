@@ -23,13 +23,13 @@ class ExportProductsToPdf extends Action
         if ($includeAllProducts) {
             $productIds = Product::pluck('id')->toArray();
         } else {
-            $productIds = $fields->products ?? [];
+            $productIds = json_decode($fields->products, true) ?? [];
         }
 
         if ($includeAllRecurringProducts) {
             $recurringProductIds = RecurringProduct::pluck('id')->toArray();
         } else {
-            $recurringProductIds = $fields->recurring_products ?? [];
+            $recurringProductIds = json_decode($fields->recurring_products, true) ?? [];
         }
 
         if (empty($productIds) && empty($recurringProductIds)) {

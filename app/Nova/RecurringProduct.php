@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Textarea;
+use App\Nova\Actions\ExportProductsToPdf;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class RecurringProduct extends Resource
@@ -101,6 +102,8 @@ class RecurringProduct extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new ExportProductsToPdf())->standalone()->onlyOnIndex(),
+        ];
     }
 }
