@@ -39,7 +39,9 @@ class Product extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name',
+        'id',
+        'name',
+        'sku'
     ];
 
     /**
@@ -54,7 +56,7 @@ class Product extends Resource
             ID::make()->sortable(),
             Text::make('name')->sortable(),
             Textarea::make('description')->hideFromIndex()->nullable(),
-            Text::make('sku'),
+            Text::make('sku')->sortable(),
             Currency::make('price')->currency('EUR')->nullable(),
         ];
     }
