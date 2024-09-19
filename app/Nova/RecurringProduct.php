@@ -37,7 +37,9 @@ class RecurringProduct extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name'
+        'id',
+        'name',
+        'sku'
     ];
 
     /**
@@ -52,7 +54,7 @@ class RecurringProduct extends Resource
             ID::make()->sortable(),
             Text::make('name')->sortable(),
             Textarea::make('description')->hideFromIndex()->nullable(),
-            Text::make('sku')->hideFromIndex(),
+            Text::make('sku')->sortable(),
             Currency::make('price')->currency('EUR')->nullable(),
 
         ];
