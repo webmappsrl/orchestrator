@@ -35,6 +35,26 @@ class Product extends Resource
     }
 
     /**
+     * Get the plural label of the resource.
+     *
+     * @return string
+     */
+    public static function label()
+    {
+        return __('Products');
+    }
+
+    /**
+     * Get the singular label of the resource.
+     *
+     * @return string
+     */
+    public static function singularLabel()
+    {
+        return __('Product');
+    }
+
+    /**
      * The columns that should be searched.
      *
      * @var array

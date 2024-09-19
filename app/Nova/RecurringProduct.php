@@ -33,6 +33,26 @@ class RecurringProduct extends Resource
     }
 
     /**
+     * Get the plural label of the resource.
+     *
+     * @return string
+     */
+    public static function label()
+    {
+        return __('Recurring Products');
+    }
+
+    /**
+     * Get the singular label of the resource.
+     *
+     * @return string
+     */
+    public static function singularLabel()
+    {
+        return __('Recurring Product');
+    }
+
+    /**
      * The columns that should be searched.
      *
      * @var array

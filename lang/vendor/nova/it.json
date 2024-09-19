@@ -305,6 +305,16 @@
   "Epics":"Epiche",
   "Epic":"Epica",
   "Products":"Prodotti",
-  "Product":"Prodotto"
+  "Product":"Prodotto",
+  "Recurring Products":"Prodotti ricorrenti",
+  "Generate PDF": "Genera PDF",
+  "Include all products": "Includi tutti i prodotti",
+  "Include all recurring products": "Includi tutti i prodotti ricorrenti",
+  "Select the products to include": "Seleziona i prodotti da includere",
+  "Select the recurring products to include": "Seleziona i prodotti ricorrenti da includere",
+  "No products selected": "Nessun prodotto selezionato",
+  "Products/Activation Prices": "Prodotti/Costi di attivazione",
+  "Annual subscription prices": "Costi di abbonamento annuo",
+  "Price" : "Prezzo"
 }
 

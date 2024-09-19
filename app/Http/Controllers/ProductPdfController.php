@@ -25,7 +25,7 @@ class ProductPdfController extends Controller
 
         // Verifica se ci sono prodotti da includere
         if ($products->isEmpty() && $recurringProducts->isEmpty()) {
-            return redirect()->back()->with('error', 'Nessun prodotto selezionato.');
+            return redirect()->back()->with('error', __('No products selected.'));
         }
 
         // Genera il PDF

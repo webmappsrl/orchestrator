@@ -13,7 +13,10 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 class ExportProductsToPdf extends Action
 {
-    public $name = 'Genera PDF Prodotti';
+    public function __construct()
+    {
+        $this->name = __('Generate PDF');
+    }
 
     public function handle(ActionFields $fields, Collection $models)
     {
@@ -33,7 +36,7 @@ class ExportProductsToPdf extends Action
         }
 
         if (empty($productIds) && empty($recurringProductIds)) {
-            return Action::danger('Nessun prodotto selezionato.');
+            return Action::danger(__('No products selected.'));
         }
 
         // Crea l'URL per il download, passando gli ID come parametri della query
@@ -48,13 +51,13 @@ class ExportProductsToPdf extends Action
     public function fields(NovaRequest $request)
     {
         return [
-            Boolean::make('Includi tutti i Prodotti', 'include_all_products')
+            Boolean::make(__('Include all products'), 'include_all_products')
                 ->trueValue(1)
                 ->falseValue(0),
 
-            Multiselect::make('Prodotti', 'products')
-                ->options(\App\Models\Product::all()->pluck('name', 'id'))
-                ->placeholder('Seleziona i prodotti da includere')
+            Multiselect::make(__('Products'), 'products')
+                ->options(\App\Models\Product::all()->pluck(__('name'), 'id'))
+                ->placeholder(__('Select the products to include'))
                 ->max(0)
                 ->dependsOn(['include_all_products'], function (Multiselect $field, NovaRequest $request, $formData) {
                     if ($formData->include_all_products) {
@@ -62,13 +65,13 @@ class ExportProductsToPdf extends Action
                     }
                 }),
 
-            Boolean::make('Includi tutti i Prodotti Ricorrenti', 'include_all_recurring_products')
+            Boolean::make(__('Include all recurring products'), 'include_all_recurring_products')
                 ->trueValue(1)
                 ->falseValue(0),
 
-            Multiselect::make('Prodotti Ricorrenti', 'recurring_products')
-                ->options(\App\Models\RecurringProduct::all()->pluck('name', 'id'))
-                ->placeholder('Seleziona i prodotti ricorrenti da includere')
+            Multiselect::make(__('Recurring Products'), 'recurring_products')
+                ->options(\App\Models\RecurringProduct::all()->pluck(__('name'), 'id'))
+                ->placeholder(__('Select the recurring products to include'))
                 ->max(0)
                 ->dependsOn(['include_all_recurring_products'], function (Multiselect $field, NovaRequest $request, $formData) {
                     if ($formData->include_all_recurring_products) {

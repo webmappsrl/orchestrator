@@ -29,19 +29,22 @@
         @if ($products->count() > 0)
             <h2
                 style="font-size: 18px; color: #005485; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px;">
-                Prodotti/Costi di attivazione
+                {{ __('Products/Activation Prices') }}
             </h2>
             <table
                 style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-family: Arial, sans-serif; page-break-inside: auto; page-break-after: always;">
                 <thead>
                     <tr style="background-color: #f4f4f4; border-bottom: 2px solid #ccc;">
-                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">Nome
+                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
+                            {{ __('Name') }}
                         </th>
-                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">SKU
+                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
+                            {{ __('SKU') }}
                         </th>
                         <th style="width: 40%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
-                            Descrizione</th>
-                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">Prezzo
+                            {{ __('Description') }}</th>
+                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
+                            {{ __('Price') }}
                             (€)</th>
                     </tr>
                 </thead>
@@ -65,7 +68,7 @@
         @if ($recurringProducts->count() > 0)
             <h2
                 style="font-size: 18px; color: #005485; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; margin-top: 30px;">
-                Costi di abbonamento annuo
+                {{ __('Annual subscription prices') }}
             </h2>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-family: Arial, sans-serif;">
                 <thead>

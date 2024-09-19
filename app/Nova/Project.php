@@ -49,13 +49,19 @@ class Project extends Resource
         'description',
         'customer.name'
     ];
+
+    /**
+     * Get the plural label of the resource.
+     *
+     * @return string
+     */
     public static function label()
     {
         return __('Projects');
     }
 
     /**
-     * Get the plural label of the resource.
+     * Get the singular label of the resource.
      *
      * @return string
      */
