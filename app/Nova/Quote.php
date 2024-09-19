@@ -6,9 +6,7 @@ use Laravel\Nova\Panel;
 use Manogi\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
 use Laravel\Nova\Fields\ID;
-use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Trix;
 use App\Nova\Metrics\NewQuotes;
 use App\Nova\Metrics\WonQuotes;
 use Laravel\Nova\Fields\Number;
@@ -17,7 +15,6 @@ use Laravel\Nova\Fields\Status;
 use App\Nova\Metrics\SentQuotes;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
-use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\DuplicateQuote;
 use Laravel\Nova\Fields\BelongsToMany;
@@ -301,5 +298,12 @@ class Quote extends Resource
             (new DuplicateQuote)
                 ->showInline()
         ];
+    }
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        $whereNotIn =  [QuoteStatus::Closed_Won->value,  QuoteStatus::Closed_Lost->value];
+        return $query
+            ->whereNotIn('status', $whereNotIn);
     }
 }

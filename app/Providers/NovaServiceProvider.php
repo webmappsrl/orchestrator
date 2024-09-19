@@ -16,9 +16,9 @@ use App\Nova\ArchivedStories;
 use App\Nova\StoryShowedByCustomer;
 use App\Nova\AssignedToMeStory;
 use App\Nova\CustomerStory;
-use App\Nova\CustomerFeatureStory;
 use App\Nova\Documentation;
 use App\Enums\UserRole;
+use App\Nova\ArchivedQuotes;
 use App\Nova\BacklogStory;
 use Laravel\Nova\Nova;
 use Illuminate\Http\Request;
@@ -71,6 +71,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('document-text')->collapsedByDefault()->collapsedByDefault(),
 
                 MenuSection::make('CRM', [
+                    MenuGroup::make(__('Archived'), [
+                        MenuItem::resource(ArchivedQuotes::class),
+                    ])->collapsedByDefault(),
                     MenuItem::resource(Customer::class),
                     MenuItem::resource(Project::class),
                     MenuItem::resource(Product::class),
