@@ -23,6 +23,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
+use Illuminate\Http\Request;
 
 class Quote extends Resource
 {
@@ -305,5 +306,10 @@ class Quote extends Resource
         $whereNotIn =  [QuoteStatus::Closed_Won->value,  QuoteStatus::Closed_Lost->value];
         return $query
             ->whereNotIn('status', $whereNotIn);
+    }
+
+    public function authorizedToReplicate(Request $request)
+    {
+        return false;
     }
 }

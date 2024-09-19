@@ -31,13 +31,31 @@ class DuplicateQuote extends Action
             $newQuote = Quote::create($quote->toArray());
             //add the new quote to the same client
             $newQuote->customer()->associate($quote->customer);
-            //add products to the new quote
-            $newQuote->products()->attach($quote->products);
-            //add recurring products to the new quote
-            $newQuote->recurringProducts()->attach($quote->recurringProducts);
+            // Aggiungi i prodotti alla nuova quote, includendo i dati del pivot (quantità)
+            $products = $quote->products->mapWithKeys(function ($product) {
+                return [$product->id => ['quantity' => $product->pivot->quantity]];
+            });
+            $newQuote->products()->sync($products);
+
+            // Aggiungi i prodotti ricorrenti alla nuova quote, includendo i dati del pivot (quantità)
+            $recurringProducts = $quote->recurringProducts->mapWithKeys(function ($recurringProduct) {
+                return [$recurringProduct->id => ['quantity' => $recurringProduct->pivot->quantity]];
+            });
+            $newQuote->recurringProducts()->sync($recurringProducts);
             $newQuote->user()->associate($quote->user);
             //save the new quote
             $newQuote->save();
+        }
+        // Controlla se è stato duplicato solo un modello e fai il redirect
+        if ($models->count() === 1 && $newQuote) {
+            // Reindirizza alla pagina di modifica della nuova quote
+            $resourceName = 'quotes'; // Sostituisci con il nome corretto della risorsa
+            $newModelId = $newQuote->id;
+            $editUrl = url("/resources/{$resourceName}/{$newModelId}/edit");
+
+
+            // Usa il metodo Nova per aprire in una nuova scheda
+            return Action::openInNewTab($editUrl);
         }
     }
 
