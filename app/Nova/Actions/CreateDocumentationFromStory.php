@@ -49,7 +49,7 @@ class CreateDocumentationFromStory extends Action
         }
         try {
             if (!$model) {
-                throw new \Exception('Model not found');
+                return [];
             }
             return [
                 Text::make('Title', 'name')
