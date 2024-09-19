@@ -81,6 +81,7 @@ trait fieldTrait
                 return $request->resourceId !== null;
             })
             ->required()
+            ->help(__('Enter a title for the ticket.'))
             ->asHtml();
     }
 
@@ -124,6 +125,7 @@ trait fieldTrait
                     ];
                 })
                 ->default(StoryType::Helpdesk->value)
+                ->help(__('Assign the type of the ticket.'))
                 ->canSee(function ($request) {
                     return  !$request->user()->hasRole(UserRole::Customer);
                 });
@@ -294,6 +296,7 @@ trait fieldTrait
             return   Select::make(__('Status'), $fieldName)
                 ->options($this->getOptions())
                 ->default(StoryStatus::New)
+                ->help(__('Ticket progress status.'))
                 ->readonly(function ($request) {
                     return $request->user()->hasRole(UserRole::Customer) && $this->resource->status !== StoryStatus::Released->value;
                 });
@@ -318,9 +321,6 @@ trait fieldTrait
     public function assignedToField()
     {
         return BelongsTo::make(__('assigned to'), 'developer', 'App\Nova\User')
-            ->default(function ($request) {
-                return auth()->user()->id;
-            })
             ->canSee(function ($request) {
                 return !$request->user()->hasRole(UserRole::Customer);
             })
@@ -339,9 +339,6 @@ trait fieldTrait
             ->nullable()
             ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
                 !$query->whereJsonDoesntContain('roles', UserRole::Customer);
-            })
-            ->default(function ($request) {
-                return auth()->user()->id;
             });
     }
 
@@ -350,6 +347,7 @@ trait fieldTrait
         return
             Tag::make($fieldLabel, $fieldName, novaTag::class)
             ->withPreview()
+            ->help(__('Tags are used both to categorize a ticket and to display documentation in the "Info" section of the customer ticket view.'))
             ->canSee($this->canSee($fieldName));
     }
 
@@ -435,6 +433,7 @@ trait fieldTrait
             ->hideFromIndex()
             ->buttons($this->tiptapAllButtons)
             ->canSee($this->canSee('description'))
+            ->help(__('Provide all the necessary information. You can add images using the "Add Image" option. If you\'d like to include a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and pasting the link here. The more details you provide, the easier it will be for us to resolve the issue.'))
             ->alwaysShow();
     }
 
@@ -588,38 +587,12 @@ trait fieldTrait
 
     public function getOptions(): array
     {
-        $loggedUser = auth()->user();
-        // $allStatuses = collect(StoryStatus::cases())->mapWithKeys(fn($status) => [$status->value => $status]);
         $allStatuses = collect(StoryStatus::cases())->mapWithKeys(fn($status) => [
             $status->value => __(ucfirst($status->value)) // Traduzione degli stati
         ]);
         if (!$this->resource->exists) {
             return $allStatuses->toArray();
         }
-
-        $loggedUserIsDeveloperAssigned = $this->resource->developer && $loggedUser->id == $this->resource->developer->id;
-        $loggedUserIsTesterAssigned = $this->resource->tester && $loggedUser->id == $this->resource->tester->id;
-
-        if ($loggedUserIsDeveloperAssigned && ($loggedUserIsTesterAssigned || is_null($this->resource->tester))) {
-            return $allStatuses->toArray();
-        }
-
-        if ($loggedUserIsDeveloperAssigned) {
-            return $allStatuses->except([
-                StoryStatus::New->value,
-                StoryStatus::Tested->value,
-                StoryStatus::Done->value,
-                StoryStatus::Released->value
-            ])->toArray();
-        }
-
-        if ($loggedUserIsTesterAssigned) {
-            return $allStatuses->except([
-                StoryStatus::New->value,
-                StoryStatus::Test->value
-            ])->toArray();
-        }
-
         return $allStatuses->toArray();
     }
 
