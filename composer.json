@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
+        "badinansoft/nova-language-switch": "^2.0",
         "barryvdh/laravel-dompdf": "^3.0",
         "datomatic/nova-markdown-tui": "^1.2",
         "davidpiesse/nova-toggle": "v4.x-dev",

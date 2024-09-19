@@ -21,9 +21,14 @@ class StoriesByCustomer extends Partition
         $this->query = $query;
     }
 
+    /**
+     * Get the displayable name of the metric.
+     *
+     * @return string
+     */
     public function name()
     {
-        return 'by ' . ucfirst($this->label);
+        return __('by') . ' ' . ucfirst(__($this->label));
     }
 
     /**

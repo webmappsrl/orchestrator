@@ -17,6 +17,10 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
+use App\Nova\Customer as novaCustomer;
+use App\Nova\Story as novaStory;
+
+
 
 class Deadline extends Resource
 {
@@ -56,7 +60,9 @@ class Deadline extends Resource
      * @var array
      */
     public static $search = [
-        'due_date', 'status', 'title'
+        'due_date',
+        'status',
+        'title'
     ];
 
     public static function indexQuery(NovaRequest $request, $query)
@@ -74,18 +80,18 @@ class Deadline extends Resource
     {
         return [
             ID::make()->sortable(),
-            Date::make('Due Date', 'due_date')
+            Date::make(__('Due Date'), 'due_date')
                 ->displayUsing(function ($value) {
                     return $value->format('Y-m-d');
                 })
                 ->sortable()
                 ->rules('required', 'date'),
-            Text::make('Title')->sortable(),
+            Text::make(__('Title'))->sortable(),
             MarkdownTui::make(__('Description'))
                 ->initialEditType(EditorType::MARKDOWN)
                 ->hideFromIndex(),
             //create a text field to show the link to the deadline-email view and render it as html
-            Text::make('Email Template', function () {
+            Text::make(__('Email Template'), function () {
                 return '<a style="color:blue;" href="' . route('deadline.email', ['id' => $this->id]) . '" target="_blank">Template</a>';
             })->asHtml()->onlyOnDetail(),
             Select::make('Status')->options([
@@ -96,17 +102,17 @@ class Deadline extends Resource
             ])->default('new')
                 ->hideFromDetail()
                 ->hideFromIndex(),
-            Status::make('Status')
+            Status::make(__('Status'), 'status')
                 ->loadingWhen(['status' => 'new'])
                 ->failedWhen(['status' => 'expired']),
-            BelongsTo::make('Customer')->sortable()->searchable(),
-            Text::make('Stories Count', function () {
+            BelongsTo::make(__('Customer'), "customer", novaCustomer::class)->sortable()->searchable(),
+            Text::make(__('Stories Count'), function () {
                 return $this->stories()->count();
             })->hideWhenCreating()->hideWhenUpdating(),
-            Text::make('SAL', function () {
+            Text::make(__('SAL'), function () {
                 return $this->wip();
             })->asHtml()->hideWhenCreating()->hideWhenUpdating(),
-            MorphToMany::make('Stories')->searchable()->showCreateRelationButton(),
+            MorphToMany::make(__('Stories'), 'stories', novaStory::class)->searchable()->showCreateRelationButton(),
         ];
     }
 

@@ -67,6 +67,6 @@ class CreatorStoryFilter extends Filter
 
     public function name()
     {
-        return 'Creator';
+        return __('Creator');
     }
 }

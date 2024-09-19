@@ -46,6 +46,6 @@ class StoryToDoneStatusAction extends Action
 
     public function name()
     {
-        return 'Change status to Done';
+        return __('Change status to Done');
     }
 }

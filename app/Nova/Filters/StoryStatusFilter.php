@@ -40,8 +40,18 @@ class StoryStatusFilter extends Filter
     {
         $options = [];
         foreach (StoryStatus::cases() as $value) {
-            $options[$value->name] = $value->value;
+            $options[__($value->name)] = $value->value;
         }
         return $options;
+    }
+
+    /**
+     * Get the displayable name of the filter.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return __('Status');
     }
 }

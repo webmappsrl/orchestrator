@@ -62,4 +62,14 @@ class TaggableTypeFilter extends Filter
             return $tags;
         }
     }
+
+    /**
+     * Get the displayable name of the filter.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return __('Taggable Type Filter');
+    }
 }

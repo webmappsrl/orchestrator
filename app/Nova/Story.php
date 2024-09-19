@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Session;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Stack;
+use App\Nova\Deadline as novaDeadline;
+
 
 class Story extends Resource
 {
@@ -40,6 +42,37 @@ class Story extends Resource
     {
         return __('Story'); // Il nome plurale personalizzato
     }
+
+    /**
+     * Get the text for the create resource button.
+     *
+     * @return string|null
+     */
+    public static function createButtonLabel()
+    {
+        return __('Create Story');
+    }
+
+    /**
+     * Get the text for the update resource button.
+     *
+     * @return string|null
+     */
+    public static function updateButtonLabel()
+    {
+        return __('Save Changes');
+    }
+
+    /**
+     * Get the text for the attach resource button.
+     *
+     * @return string|null
+     */
+    public static function attachButtonLabel()
+    {
+        return __('Attach Story');
+    }
+
     public static $linkToParent = false;
     public static $resolveParentBreadcrumbs = false;
     public $holidayAlert = <<<HTML
@@ -117,17 +150,17 @@ class Story extends Resource
         }
     }
 
-    public  function fieldsInIndex(NovaRequest $request)
+    public function fieldsInIndex(NovaRequest $request)
     {
         $fields = [
             ID::make()->sortable(),
             $this->statusField($request),
-            Stack::make('Title', [
+            Stack::make(__('Title'), [
                 $this->typeField($request),
                 $this->titleField(),
                 $this->relationshipField($request),
             ]),
-            Stack::make('Assigned/estimated hours', [
+            Stack::make(__('Assigned/estimated hours'), [
                 $this->assignedToField(),
                 $this->estimatedHoursField($request),
             ]),
@@ -141,7 +174,7 @@ class Story extends Resource
         }, $fields);
     }
 
-    public  function fieldsInDetails(NovaRequest $request)
+    public function fieldsInDetails(NovaRequest $request)
     {
         $fields = [
             ID::make()->sortable(),
@@ -156,28 +189,28 @@ class Story extends Resource
             $this->updatedAtField(),
             $this->deadlineField($request),
             $this->tagsField(),
-            Files::make('Documents', 'documents')
+            Files::make(__('Documents'), 'documents')
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
-                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).'),
+                ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).'))->onlyOnDetail(),
             $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
-            HasMany::make('Logs', 'views', StoryLog::class)->canSee(function ($request) {
+            HasMany::make(__('Logs'), 'views', StoryLog::class)->canSee(function ($request) {
                 return !$request->user()->hasRole(UserRole::Customer);
             }),
-            BelongsToMany::make('Child Stories', 'childStories', Story::class)
+            BelongsToMany::make(__('Child Stories'), 'childStories', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
                     return empty($this->parent_id) &&  !$request->user()->hasRole(UserRole::Customer);
                 })->filterable(),
-            BelongsTo::make('Parent Story', 'parentStory', Story::class)
+            BelongsTo::make(__('Parent Story'), 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
                 }),
-            MorphToMany::make('Deadlines')
+            MorphToMany::make(__('Deadlines'), 'deadlines', novaDeadline::class)
                 ->showCreateRelationButton(),
 
         ];
@@ -185,31 +218,48 @@ class Story extends Resource
             return $field->onlyOnDetail();
         }, $fields);
     }
-    public  function fieldsInEdit(NovaRequest $request)
+
+    public function fieldsInEdit(NovaRequest $request)
     {
         $fields = [
             ID::make()->sortable(),
-            $this->statusField($request),
+            $this->statusField($request)
+                ->help(__('Ticket progress status.')),
             $this->creatorField(),
             $this->assignedToField(),
             $this->testedByField(),
-            $this->tagsField(),
-            $this->typeField($request),
+            $this->tagsField()
+                ->help(__('Tags are used both to categorize a ticket and to display documentation in the "Info" section of the customer ticket view.')),
+            $this->typeField($request)
+                ->help(__('Assign the type of the ticket.')),
+            $this->projectField(),
             Files::make('Documents', 'documents')
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
-                ->help('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).'),
+                ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).')),
             $this->estimatedHoursField($request),
-            $this->titleField(),
-            $this->descriptionField(),
-            $this->customerRequestField($request),
-            $this->answerToTicketField(),
-            BelongsTo::make('Parent Story', 'parentStory', CustomerStory::class)
+            $this->titleField()->help(__('Enter a title for the ticket.')),
+            $this->descriptionField()
+                ->help(__('Provide all the necessary information. You can add images using the "Add Image" option. If you\'d like to include a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and pasting the link here. The more details you provide, the easier it will be for us to resolve the issue.')),
+            $this->customerRequestField($request)
+                ->help(
+                    $request->resourceId
+                        ? null
+                        : __('Enter all the necessary information, such as the ID of the content you want to verify. You can insert images via `Add Image`. If you also want to send us a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and inserting the link here. The more details you provide, the easier it will be for us to resolve the issue.')
+                ),
+            $this->answerToTicketField()
+                ->help(
+                    $request->resourceId
+                        ? __('Enter all the necessary information, such as the ID of the content you want to verify. You can insert images via `Add Image`. If you also want to send us a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and inserting the link here. The more details you provide, the easier it will be for us to resolve the issue.')
+                        : null
+                ),
+            BelongsTo::make(__('Parent Story'), 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
                     return !$request->user()->hasRole(UserRole::Customer);
-                }),
-            MorphToMany::make('Deadlines')
+                })
+                ->help(__('Here you can attach the ticket that has the same issue. If multiple tickets share the same issue, attach the main ticket to all related tickets. You can find the main ticket by searching for its title. It is important to note that when the main ticket status changes, the status of all related tickets will also be updated.')),
+            MorphToMany::make(__('Deadlines'), 'deadlines', novaDeadline::class)
                 ->showCreateRelationButton()
         ];
         return array_map(function ($field) {
@@ -277,9 +327,9 @@ class Story extends Resource
                 (new actions\RespondToStoryRequest())
                     ->showInline()
                     ->sole()
-                    ->confirmText('Click on the "Confirm" button to send the response or "Cancel" to cancel.')
-                    ->confirmButtonText('Confirm')
-                    ->cancelButtonText('Cancel')
+                    ->confirmText(__('Click on the "Confirm" button to send the response or "Cancel" to cancel.'))
+                    ->confirmButtonText(__('Confirm'))
+                    ->cancelButtonText(__('Cancel'))
                     ->canSee(
                         function ($request) {
                             return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
@@ -291,78 +341,78 @@ class Story extends Resource
             (new actions\RespondToStoryRequest())
                 ->showInline()
                 ->sole()
-                ->confirmText('Click on the "Confirm" button to send the response or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to send the response or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(
                     function ($request) {
                         return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                     }
                 ),
             (new EditStories)
-                ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
+                ->confirmText(__('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')),
 
             (new actions\StoryToProgressStatusAction)
                 ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Progress or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to save the status in Progress or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Progress->value;
                 }),
 
             (new actions\StoryToDoneStatusAction)
                 ->showInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Done->value;
                 }),
 
             (new actions\StoryToTestStatusAction)
                 ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Test or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to save the status in Test or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Test->value;
                 }),
 
             (new actions\StoryToRejectedStatusAction)
                 ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Rejected->value;
                 }),
         ];
         if ($request->user()->hasRole(UserRole::Developer)) {
             array_push($actions, (new actions\CreateDocumentationFromStory())
-                ->confirmText('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'));
+                ->confirmText(__('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')));
         }
         if ($request->viaResource == 'projects') {
             array_push($actions, (new moveStoriesFromProjectToEpicAction)
-                ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'));
+                ->confirmText(__('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')));
             array_push($actions, (new actions\createNewEpicFromStoriesAction)
                 ->confirmText('Click on the "Confirm" button to create a new epic with selected stories or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'));
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')));
         }
 
         if ($request->viaResource != 'projects') {
 
             array_push($actions, (new actions\moveToBacklogAction)
-                ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
+                ->confirmText(__('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel'))
                 ->showInline());
         }
 
@@ -376,7 +426,7 @@ class Story extends Resource
     public function navigationLinks()
     {
         return [
-            Text::make('Navigate')->onlyOnDetail()->asHtml()->displayUsing(function () {
+            Text::make(__('Navigate'))->onlyOnDetail()->asHtml()->displayUsing(function () {
                 $deadline = $this->resource->deadlines->first();
                 if ($deadline) {
                     $stories = $deadline->stories;

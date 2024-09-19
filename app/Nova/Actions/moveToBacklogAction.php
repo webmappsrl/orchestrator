@@ -61,4 +61,14 @@ class moveToBacklogAction extends Action
     {
         return [];
     }
+
+    /**
+     * Get the displayable name of the action.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return __('Move to Backlog');
+    }
 }

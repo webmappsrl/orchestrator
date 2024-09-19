@@ -119,6 +119,6 @@ class EditStories extends Action
 
     public function name()
     {
-        return 'Edit';
+        return __('Edit');
     }
 }
