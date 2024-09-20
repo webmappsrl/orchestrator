@@ -50,5 +50,6 @@ class AutoUpdateStoryStatus extends Command
                 $i--;
             }
         }
+        return $daysAgo;
     }
 }
