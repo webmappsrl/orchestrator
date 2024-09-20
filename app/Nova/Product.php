@@ -2,12 +2,13 @@
 
 namespace App\Nova;
 
-use Illuminate\Http\Request;
-use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\ID;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\Trix;
+use Laravel\Nova\Fields\Currency;
+use Laravel\Nova\Fields\Textarea;
+use App\Nova\Actions\ExportProductsToPdf;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Product extends Resource
@@ -34,6 +35,26 @@ class Product extends Resource
     }
 
     /**
+     * Get the plural label of the resource.
+     *
+     * @return string
+     */
+    public static function label()
+    {
+        return __('Products');
+    }
+
+    /**
+     * Get the singular label of the resource.
+     *
+     * @return string
+     */
+    public static function singularLabel()
+    {
+        return __('Product');
+    }
+
+    /**
      * The columns that should be searched.
      *
      * @var array
@@ -43,6 +64,10 @@ class Product extends Resource
         'name',
         'sku'
     ];
+
+    public static $perPageOptions = [25, 50, 100];
+
+
 
     /**
      * Get the fields displayed by the resource.
@@ -102,6 +127,8 @@ class Product extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new ExportProductsToPdf())->onlyOnIndex()->standalone()
+        ];
     }
 }

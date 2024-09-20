@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Textarea;
+use App\Nova\Actions\ExportProductsToPdf;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class RecurringProduct extends Resource
@@ -29,6 +30,26 @@ class RecurringProduct extends Resource
     public function title()
     {
         return $this->name . ' - ' . $this->price . '€';
+    }
+
+    /**
+     * Get the plural label of the resource.
+     *
+     * @return string
+     */
+    public static function label()
+    {
+        return __('Recurring Products');
+    }
+
+    /**
+     * Get the singular label of the resource.
+     *
+     * @return string
+     */
+    public static function singularLabel()
+    {
+        return __('Recurring Product');
     }
 
     /**
@@ -101,6 +122,8 @@ class RecurringProduct extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            (new ExportProductsToPdf())->standalone()->onlyOnIndex(),
+        ];
     }
 }
