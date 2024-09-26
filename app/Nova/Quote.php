@@ -256,15 +256,16 @@ class Quote extends Resource
      */
     public function cards(NovaRequest $request)
     {
+        $query = $this->indexQuery($request,  Quote::query());
         return [
-            new NewQuotes,
-            new SentQuotes,
-            new WonQuotes,
+
             (new DynamicPartitionMetric(
-                \App\Models\Quote::class,
+                'Quotes by Status',
+                $query,
                 'status',
-                'Quotes by Status'
             ))->width('full'),
+            (new NewQuotes)->width('1/2'),
+            (new SentQuotes)->width('1/2'),
         ];
     }
 

@@ -306,12 +306,12 @@ trait fieldTrait
                     StoryStatus::Assigned->value,
                     StoryStatus::Progress->value,
                     StoryStatus::Tested->value,
-                    StoryStatus::Backlog->value
+                    StoryStatus::Backlog->value,
+                    storyStatus::Test->value
                 ])
                 ->failedWhen([
                     StoryStatus::New->value,
                     StoryStatus::Rejected->value,
-                    storyStatus::Test->value,
                     StoryStatus::Waiting->value
                 ])
                 ->displayUsing(fn($status) => __(ucfirst($status)));  // Visualizza lo stato tradotto;

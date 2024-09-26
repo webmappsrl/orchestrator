@@ -18,6 +18,7 @@ use App\Nova\AssignedToMeStory;
 use App\Nova\CustomerStory;
 use App\Nova\Documentation;
 use App\Enums\UserRole;
+use App\Nova\CustomerTickets;
 use App\Nova\ArchivedQuotes;
 use App\Nova\BacklogStory;
 use Laravel\Nova\Nova;
@@ -75,6 +76,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(ArchivedQuotes::class),
                     ])->collapsedByDefault(),
                     MenuItem::resource(Customer::class),
+                    MenuItem::resource(CustomerTickets::class),
                     MenuItem::resource(Project::class),
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
@@ -85,13 +87,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuGroup::make(__('Archived'), [
                         MenuItem::resource(ArchivedDeadlines::class),
                         MenuItem::resource(ArchivedStories::class),
+
                     ])->collapsedByDefault(),
                     MenuGroup::make(__('my work'), [
                         MenuItem::resource(AssignedToMeStory::class),
                         MenuItem::resource(ToBeTestedStory::class),
                     ])->collapsedByDefault(),
                     MenuItem::resource(Documentation::class),
-                    MenuItem::resource(Deadline::class),
                     MenuItem::resource(BacklogStory::class),
                     MenuItem::resource(CustomerStory::class),
                 ])->icon('code')->collapsable()->canSee(function ($request) {
