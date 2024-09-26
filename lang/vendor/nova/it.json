@@ -35,6 +35,7 @@
   "Project": "Progetto",
   "Projects": "Progetti",
   "Customer Request": "Richiesta del cliente",
+  "Request": "Richiesta",
   "Description": "Descrizione",
   "Info": "Informazioni",
   "Estimated Hours": "Ore stimate",
@@ -348,5 +349,6 @@
   "Partially Paid": "Parzialmente Pagato",
   "Paid": "Pagato",
   "Sent Quotes": "Preventivi Inviati",
-  "Won Quotes": "Preventivi Vinti"
+  "Won Quotes": "Preventivi Vinti",
+  "Dev notes": "Note di sviluppo"
 }

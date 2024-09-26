@@ -299,46 +299,48 @@ class Story extends Model implements HasMedia
         $formattedResponse = $sender->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <div $style> <p>" . $response . " </p> </div>" . $divider;
         $this->customer_request = $formattedResponse . $this->customer_request;
         $this->save();
-
-        if ($this->creator_id && $senderType != 'customer') {
-            Mail::to($this->creator->email)->send(new \App\Mail\StoryResponse($this, $this->creator, $sender, $response));
-        }
-
-        switch ($senderType) {
-            case 'developer':
-                if ($this->tester_id) {
-                    if ($this->tester_id != $this->user_id) {
-                        Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
+        try {
+            if ($this->creator_id && $senderType != 'customer') {
+                Mail::to($this->creator->email)->send(new \App\Mail\StoryResponse($this, $this->creator, $sender, $response));
+            }
+            switch ($senderType) {
+                case 'developer':
+                    if ($this->tester_id) {
+                        if ($this->tester_id != $this->user_id) {
+                            Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
+                        }
                     }
-                }
-                break;
-            case 'tester':
-                if ($this->user_id) {
-                    if ($this->tester_id != $this->user_id) {
+                    break;
+                case 'tester':
+                    if ($this->user_id) {
+                        if ($this->tester_id != $this->user_id) {
+                            Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
+                        }
+                    }
+                    break;
+                case 'customer':
+                    if ($this->user_id) {
                         Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
                     }
-                }
-                break;
-            case 'customer':
-                if ($this->user_id) {
-                    Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
-                }
-                //if the customer reply to a released ticket, change the ticket status to assigned
-                if ($this->status == StoryStatus::Released->value) {
-                    $this->status = StoryStatus::Assigned->value;
-                    $this->save();
-                }
-                if ($this->tester_id) {
-                    Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
-                }
-                break;
-            default:
-                if ($this->user_id) {
-                    Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
-                }
-                if ($this->tester_id) {
-                    Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
-                }
+                    //if the customer reply to a released ticket, change the ticket status to assigned
+                    if ($this->status == StoryStatus::Released->value) {
+                        $this->status = StoryStatus::Assigned->value;
+                        $this->save();
+                    }
+                    if ($this->tester_id) {
+                        Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
+                    }
+                    break;
+                default:
+                    if ($this->user_id) {
+                        Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
+                    }
+                    if ($this->tester_id) {
+                        Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
+                    }
+            }
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
         }
     }
 

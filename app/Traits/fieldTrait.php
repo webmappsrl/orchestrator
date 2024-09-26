@@ -377,29 +377,26 @@ trait fieldTrait
 
     public function customerRequestField(NovaRequest $request, $fieldName = 'customer_request')
     {
-        $customerRequestFieldEdit = Tiptap::make(__('Customer Request'), $fieldName)
+        $customerRequestFieldEdit = Tiptap::make(__('Request'), $fieldName)
             ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml'])
-            ->required()
-            ->canSee(function ($request) use ($fieldName) {
-                $creator = auth()->user();
-                return  $creator->hasRole(UserRole::Customer);
-            });
+            ->required();
+
 
         if ($request->isCreateOrAttachRequest()) {
             return $customerRequestFieldEdit;
         } else if ($request->isResourceDetailRequest()) {
-            return Text::make(__('Customer Request'), $fieldName)
+            return Text::make(__('Request'), $fieldName)
                 ->asHtml()
                 ->canSee(function ($request) use ($fieldName) {
                     $creator = $this->resource->creator;
-                    return $this->canSee($fieldName) &&  (isset($creator) && $creator->hasRole(UserRole::Customer));
+                    return $this->canSee($fieldName) &&  (isset($creator));
                 });
         } else {
             $creator = auth()->user();
-            if (isset($creator) && $creator->hasRole(UserRole::Customer) && !isset($request->resourceId)) {
+            if (isset($creator) && !isset($request->resourceId)) {
                 return $customerRequestFieldEdit;
             } else {
-                return Trix::make(__('Customer Request'), $fieldName)
+                return Trix::make(__('Request'), $fieldName)
                     ->readOnly()
                     ->canSee($this->canSee($fieldName));
             }
@@ -429,7 +426,7 @@ trait fieldTrait
 
     public function descriptionField()
     {
-        return  Tiptap::make(__('Description'), 'description')
+        return  Tiptap::make(__('Dev notes'), 'description')
             ->hideFromIndex()
             ->buttons($this->tiptapAllButtons)
             ->canSee($this->canSee('description'))
