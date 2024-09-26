@@ -459,7 +459,7 @@
   "Stories": "Tickets",
   "Story": "Ticket",
   "Documents": "Documents",
-  "Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).": "Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).",
+  "Only specific document types are allowed": "Only specific document types are allowed",
   "Logs": "Logs",
   "Child Stories": "Related Tickets",
   "Parent Story": "Main Ticket",

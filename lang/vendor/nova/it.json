@@ -2,7 +2,7 @@
   "Stories": "Ticket",
   "Story": "Ticket",
   "Documents": "Documenti",
-  "Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).": "Sono ammessi solo tipi di documenti specifici (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).",
+  "Only specific document types are allowed": "Sono ammessi solo tipi di documenti specifici",
   "Logs": "Log",
   "Child Stories": "Ticket correlati",
   "Parent Story": "Ticket principale",
