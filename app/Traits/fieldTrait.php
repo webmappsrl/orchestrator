@@ -305,8 +305,8 @@ trait fieldTrait
                 ->loadingWhen([
                     StoryStatus::Assigned->value,
                     StoryStatus::Progress->value,
-                    StoryStatus::Test->value,
-                    StoryStatus::Tested->value
+                    StoryStatus::Tested->value,
+                    StoryStatus::Backlog->value
                 ])
                 ->failedWhen([
                     StoryStatus::New->value,
