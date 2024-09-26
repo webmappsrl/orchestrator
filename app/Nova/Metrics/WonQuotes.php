@@ -9,6 +9,11 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 class WonQuotes extends Value
 {
+
+    public function name()
+    {
+        return __('Won Quotes');
+    }
     /**
      * Calculate the value of the metric.
      *

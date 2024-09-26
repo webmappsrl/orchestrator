@@ -19,6 +19,7 @@ use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\DuplicateQuote;
 use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Filters\QuoteStatusFilter;
+use App\Nova\Metrics\DynamicPartitionMetric;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
@@ -95,50 +96,49 @@ class Quote extends Resource
         ];
         return [
             ID::make()->sortable(),
-            Text::make('Title')
+            Text::make(__('Title'), 'title')
                 ->displayUsing(function ($name, $a, $b) {
                     $wrappedName = wordwrap($name, 50, "\n", true);
                     $htmlName = str_replace("\n", '<br>', $wrappedName);
                     return $htmlName;
                 })
                 ->asHtml(),
-            Status::make('Status')->loadingWhen(['new', 'sent'])->failedWhen(['closed lost']),
-            Select::make('Status')->options([
-                'new' => QuoteStatus::New,
-                'sent' => QuoteStatus::Sent,
-                'closed lost' => QuoteStatus::Closed_Lost,
-                'closed won' => QuoteStatus::Closed_Won,
-                'partially paid' =>  QuoteStatus::Partially_Paid,
-                'paid' =>  QuoteStatus::Paid,
-            ])->onlyOnForms()
+            Status::make('Status')->loadingWhen(['new', 'sent'])->failedWhen(['closed lost'])->displayUsing(function () {
+                return __($this->status);
+            })->onlyOnIndex(),
+            Select::make('Status')->options(
+                collect(QuoteStatus::cases())->mapWithKeys(function ($status) {
+                    return [$status->value => $status->label()];
+                })->toArray()
+            )->onlyOnForms()
                 ->default(QuoteStatus::New->value),
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
-            new Panel('NOTES', [
-                MarkdownTui::make('Notes')
+            new Panel(__('NOTES'), [
+                MarkdownTui::make(__('Notes'), 'notes')
                     ->hideFromIndex()
                     ->initialEditType(EditorType::MARKDOWN)
                     ->nullable()
             ]),
-            BelongsTo::make('Customer')
+            BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
                 ->filterable()
                 ->searchable(),
             BelongsToMany::make(__('Products'), 'products', 'App\nova\Product')->fields(function () {
                 return [
-                    Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1')
+                    Number::make(__('Quantity'), 'quantity')->rules('required', 'numeric', 'min:1')
                         ->default(1)
                 ];
             })
                 ->searchable(),
             BelongsToMany::make('Recurring Products')->fields(function () {
                 return [
-                    Number::make('Quantity', 'quantity')->rules('required', 'numeric', 'min:1')
+                    Number::make(__('Quantity'), 'quantity')->rules('required', 'numeric', 'min:1')
                         ->default(1)
                 ];
             })
                 ->searchable(),
-            BelongsTo::make('Owner', 'user', User::class)
+            BelongsTo::make(__('Owner'), 'user', 'App\nova\User')
                 ->searchable()
                 ->filterable()
                 ->nullable(),
@@ -150,7 +150,7 @@ class Quote extends Resource
                     $price = empty($this->products) ? 0 : $this->getTotalPrice();
                     return number_format($price, 2, ',', '.') . ' €';
                 })->sortable(),
-            Currency::make('Recurring')
+            Currency::make(__('Recurring'), 'recurring')
                 ->currency('EUR')
                 ->locale('it')
                 ->exceptOnForms()
@@ -158,7 +158,7 @@ class Quote extends Resource
                     $price = empty($this->recurringProducts) ? 0 : $this->getTotalRecurringPrice();
                     return number_format($price, 2, ',', '.') . ' €';
                 })->sortable(),
-            Currency::make('Total')
+            Currency::make(__('Total'), 'total')
                 ->currency('EUR')
                 ->locale('it')
                 ->exceptOnForms()
@@ -166,14 +166,14 @@ class Quote extends Resource
                     $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice();
                     return number_format($quotePrice, 2, ',', '.') . ' €';
                 })->sortable(),
-            Currency::make('Discount')
+            Currency::make(__('Discount'), 'discount')
                 ->currency('EUR')
                 ->locale('it')
                 ->hideFromIndex()
                 ->displayUsing(function () {
                     return number_format($this->discount, 2, ',', '.') . ' €';
                 }),
-            KeyValue::make('Additional Services', 'additional_services')
+            KeyValue::make(__('Additional Services'), 'additional_services')
                 ->hideFromIndex()
                 ->rules(['json', function ($attribute, $value, $fail) {
                     $json = json_decode($value, true);
@@ -184,7 +184,7 @@ class Quote extends Resource
                             $price = str_replace(',', '.', $price);
                         }
                         if (!is_numeric($price)) {
-                            $fail('The ' . $attribute . ' must be a valid JSON.');
+                            $fail(__($attribute) . ': ' . __('must be a valid JSON' . '.'));
                         }
                         if (strpos($price, ',') !== false) {
                             //replace comma with dot
@@ -192,9 +192,9 @@ class Quote extends Resource
                         }
                     }
                 }])
-                ->keyLabel('Description')
-                ->valueLabel('Price (€)')
-                ->help('The price field cannot contain commas. Use "." as decimal separator.'),
+                ->keyLabel(__('Description'))
+                ->valueLabel(__('Price') . '(€)')
+                ->help(__('The price field cannot contain commas. Use `.` as decimal separator.')),
             Currency::make('Additional Services Total Price')
                 ->currency('EUR')
                 ->locale('it')
@@ -225,23 +225,23 @@ class Quote extends Resource
                 ->asHtml()
                 ->exceptOnForms(),
 
-            Tiptap::make('Additional Info', 'additional_info')
+            Tiptap::make(__('Additional Info'), 'additional_info')
                 ->hideFromIndex()
                 ->buttons($allButtons),
 
-            Tiptap::make('Delivery Time', 'delivery_time')
+            Tiptap::make(__('Delivery Time'), 'delivery_time')
                 ->hideFromIndex()
                 ->buttons($allButtons),
 
-            Tiptap::make('Payment Plan', 'payment_plan')
+            Tiptap::make(__('Payment Plan'), 'payment_plan')
                 ->hideFromIndex()
                 ->buttons($allButtons),
 
-            Tiptap::make('Billing Plan', 'billing_plan')
+            Tiptap::make(__('Billing Plan'), 'billing_plan')
                 ->hideFromIndex()
                 ->buttons($allButtons),
 
-            Files::make('Documents', 'documents')
+            Files::make(__('Documents'), 'documents')
                 ->hideFromIndex(),
 
 
@@ -260,6 +260,11 @@ class Quote extends Resource
             new NewQuotes,
             new SentQuotes,
             new WonQuotes,
+            (new DynamicPartitionMetric(
+                \App\Models\Quote::class,
+                'status',
+                'Quotes by Status'
+            ))->width('full'),
         ];
     }
 

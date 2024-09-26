@@ -9,6 +9,10 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 class SentQuotes extends Value
 {
+    public function name()
+    {
+        return __('Sent Quotes');
+    }
     /**
      * Calculate the value of the metric.
      *

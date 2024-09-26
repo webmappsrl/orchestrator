@@ -9,6 +9,11 @@ use Laravel\Nova\Metrics\Value;
 
 class NewQuotes extends Value
 {
+
+    public function name()
+    {
+        return __('New Quotes');
+    }
     /**
      * Calculate the value of the metric.
      *
