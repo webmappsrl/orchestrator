@@ -9,7 +9,6 @@ use App\Nova\Quote;
 use App\Nova\Product;
 use App\Nova\Project;
 use App\Nova\Customer;
-use App\Nova\Deadline;
 use App\Nova\ArchivedDeadlines;
 use App\Nova\ArchivedStoryShowedByCustomer;
 use App\Nova\ArchivedStories;
@@ -24,6 +23,7 @@ use App\Nova\BacklogStory;
 use Laravel\Nova\Nova;
 use Illuminate\Http\Request;
 use App\Nova\RecurringProduct;
+use App\Nova\Tag;
 use App\Nova\ToBeTestedStory;
 use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Dashboards\Main;
@@ -93,6 +93,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(AssignedToMeStory::class),
                         MenuItem::resource(ToBeTestedStory::class),
                     ])->collapsedByDefault(),
+                    MenuItem::resource(Tag::class),
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(BacklogStory::class),
                     MenuItem::resource(CustomerStory::class),

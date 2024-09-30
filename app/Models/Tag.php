@@ -14,6 +14,11 @@ class Tag extends Model
         return $this->morphTo();
     }
 
+    public function tagged()
+    {
+        return $this->morphedByMany(Story::class, 'taggable');
+    }
+
     public function getTaggableTypeAttribute()
     {
         return isset($this->attributes['taggable_type'])
