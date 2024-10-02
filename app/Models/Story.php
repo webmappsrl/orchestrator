@@ -349,4 +349,45 @@ class Story extends Model implements HasMedia
     {
         return $this->hasMany(StoryLog::class);
     }
+
+    // Metodo generico per filtrare per anno e trimestre
+    public static function filterByYearAndQuarter($year, $quarter)
+    {
+        return self::whereRaw('EXTRACT(YEAR FROM created_at) = ?', [$year])
+            ->whereRaw('EXTRACT(QUARTER FROM created_at) = ?', [$quarter]);
+    }
+
+    // Metodo per il totale filtrato per tipo
+    public static function getTotalByType($year, $quarter, $type = null)
+    {
+        $query = self::filterByYearAndQuarter($year, $quarter);
+
+        if ($type) {
+            $query->where('type', $type);
+        }
+
+        return $query->select('type', DB::raw('COUNT(*) as total'))
+            ->groupBy('type')
+            ->get();
+    }
+
+    // Metodo per ottenere dati aggregati con una percentuale rispetto al totale
+    public static function getAggregatedData($year, $quarter)
+    {
+        $totalStoriesSubquery = '(SELECT COUNT(*) FROM stories WHERE EXTRACT(YEAR FROM created_at) = ? AND EXTRACT(QUARTER FROM created_at) = ?)';
+
+        return self::filterByYearAndQuarter($year, $quarter)
+            ->select(
+                'type',
+                DB::raw('COUNT(*) as total'),
+                DB::raw("COUNT(*) / $totalStoriesSubquery * 100 as percentage")
+            )
+            ->setBindings([$year, $quarter, $year, $quarter])
+            ->groupBy('type')
+            ->get();
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

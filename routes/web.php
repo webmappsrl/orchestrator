@@ -10,9 +10,8 @@ use Illuminate\Support\Facades\Route;
 use App\Mail\OrchestratorUserNotFound;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\DeadlineController;
+use App\Http\Controllers\ReportController;
 use App\Http\Middleware\TestRouteAccess;
-use Laravel\Nova\Http\Controllers\LoginController;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -26,6 +25,8 @@ use Laravel\Nova\Http\Controllers\LoginController;
 
 Route::get('/quote/{id}', [QuoteController::class, 'show'])->name('quote');
 Route::get('/deadline/{id}', [DeadlineController::class, 'email'])->name('deadline.email');
+Route::get('report/story/{year?}', [ReportController::class, 'index']);
+
 
 //route to test the mailable
 Route::get('/mailable', function () {
