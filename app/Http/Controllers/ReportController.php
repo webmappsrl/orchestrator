@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Story;
 use Carbon\Carbon;
@@ -154,7 +155,11 @@ class ReportController extends Controller
 
     private function generateReportByUser($year, $availableQuarters)
     {
-        $users = Story::with('user') // Carica la relazione con User
+        // Seleziona solo gli utenti che hanno il ruolo di Developer
+        $users = Story::with('user')
+            ->whereHas('user', function ($query) {
+                $query->whereJsonContains('roles', UserRole::Developer); // Filtra per il ruolo di Developer
+            })
             ->select('user_id')
             ->distinct()
             ->get();
@@ -173,9 +178,18 @@ class ReportController extends Controller
         // Calcolo del totale annuo
         $reportByUser['year'] = $this->calculateUserTotalsByYear($year, $users, $totalOverall);
 
+        // Ordina i dati per il totale in ordine decrescente
+        $reportByUser['year'] = collect($reportByUser['year'])->sortByDesc('total')->toArray();
+
+        // Ordina i dati per ogni quarter
+        foreach ($availableQuarters as $quarter) {
+            $reportByUser['q' . $quarter] = collect($reportByUser['q' . $quarter])->sortByDesc('total')->toArray();
+        }
+
         // Restituisce sia i dettagli per gli utenti che il totale complessivo
         return [$reportByUser, $totalOverall];
     }
+
 
     private function calculateUserTotalsByQuarter($year, $quarter, $users, &$totalOverall)
     {
