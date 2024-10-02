@@ -64,6 +64,18 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('ADMIN', [
                     MenuItem::resource(User::class),
+                    MenuGroup::make(__('Reports'), [
+                        MenuItem::externalLink('all times', url('/report/story'))->openInNewTab()->canSee(function ($request) {
+                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                        }),
+                        MenuItem::externalLink('2024', url('/report/story/2024'))->openInNewTab()->canSee(function ($request) {
+                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                        }),
+                        MenuItem::externalLink('2023', url('/report/story/2023'))->openInNewTab()->canSee(function ($request) {
+                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                        }),
+                    ])->collapsedByDefault(),
+
                 ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
 
                 MenuSection::make('APP', [
