@@ -76,7 +76,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(ArchivedQuotes::class),
                     ])->collapsedByDefault(),
                     MenuItem::resource(Customer::class),
-                    MenuItem::resource(CustomerTickets::class),
+                    MenuItem::resource(CustomerTickets::class)->canSee(function ($request) {
+                        if ($request->user() == null)
+                            return false;
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                    }),
                     MenuItem::resource(Project::class),
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
