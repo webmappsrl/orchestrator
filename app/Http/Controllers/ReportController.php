@@ -32,8 +32,9 @@ class ReportController extends Controller
         $reportByUser = $this->generateReportByUser($year, $availableQuarters, $developers);
         $reportByCustomer = $this->generateReportByCustomer($year, $availableQuarters, $customers);
         $reportByStatusUser = $this->generateReportByStatusUser($year, $availableQuarters, $developers);
+        $reportByStatusCustomer = $this->generateReportByStatusCustomer($year, $availableQuarters, $customers);
 
-        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'developers', 'reportByStatusUser', 'reportByCustomer'));
+        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'developers', 'reportByStatusUser', 'reportByCustomer', 'reportByStatusCustomer'));
     }
     /**
      * Genera il report per Tipo di Storia
@@ -257,6 +258,23 @@ class ReportController extends Controller
         };
         $thead = array_merge([''], StoryStatus::values(), ['totale']);
         $firstColumnCells = $customers;
+
+        return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
+    }
+
+    private function generateReportByStatusCustomer($year, $availableQuarters, $customer)
+    {
+        $thead = array_merge([''], $customer->pluck('name')->toArray(), ['totale']);
+        $queryFn = function ($cell, $column) {
+            return     Story::where('status', $cell)
+                ->whereHas('creator', function ($q) use ($column) {
+                    $q->where('name', $column); // Filtra per il nome dell'utente nel campo 'column'
+                });
+        };
+        $nameFn = function ($cell, $column) {
+            return $cell ?? 'non assegnato';
+        };
+        $firstColumnCells = StoryStatus::values();
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
