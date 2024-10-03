@@ -23,15 +23,17 @@ class ReportController extends Controller
             return view('reports.index')->with('error', $error);
         }
         $developers = $this->getDevelopers();
+        $customers = $this->getCustomers();
 
         // Ottieni i report per Tipo e Stato tramite funzioni separate
         $reportByType = $this->generateReportByType($year, $availableQuarters);
         [$reportByStatus, $totals] = $this->generateReportByStatus($year, $availableQuarters); // Ora include i totali
         // Ottieni i report per Utente e somma totale
         $reportByUser = $this->generateReportByUser($year, $availableQuarters, $developers);
+        $reportByCustomer = $this->generateReportByCustomer($year, $availableQuarters, $customers);
         $reportByStatusUser = $this->generateReportByStatusUser($year, $availableQuarters, $developers);
 
-        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'developers', 'reportByStatusUser'));
+        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'developers', 'reportByStatusUser', 'reportByCustomer'));
     }
     /**
      * Genera il report per Tipo di Storia
@@ -158,6 +160,22 @@ class ReportController extends Controller
             ->get();
         return $developers;
     }
+    private function getCustomers()
+    {
+        return Story::whereNotNull('creator_id')
+            ->whereHas('creator', function ($query) {
+                $query->whereJsonContains('roles', UserRole::Customer); // Filtra utenti con il ruolo 'Customer'
+            })
+            ->selectRaw('creator_id, COUNT(*) as story_count') // Seleziona il creator_id e conta le storie
+            ->groupBy('creator_id') // Raggruppa per creator_id
+            ->orderByDesc('story_count') // Ordina per il numero di storie in modo decrescente
+            ->limit(10) // Limita ai primi 10
+            ->with('creator') // Precarica il creatore
+            ->get()
+            ->pluck('creator') // Ottiene solo i creatori
+            ->unique('id'); // Rimuovi eventuali duplicati, se ce ne sono
+
+    }
 
     private function calculateRowData($year, $firstColumnCells, $thead, $nameFn, $queryFn, $quarter = null)
     {
@@ -225,6 +243,20 @@ class ReportController extends Controller
         };
         $thead = array_merge([''], StoryStatus::values(), ['totale']);
         $firstColumnCells = $developers;
+
+        return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
+    }
+    private function generateReportByCustomer($year, $availableQuarters, $customers)
+    {
+        $queryFn = function ($cell, $column) {
+            return   Story::where('creator_id', $cell->id)
+                ->where('status', $column);
+        };
+        $nameFn = function ($cell) {
+            return $cell->name;
+        };
+        $thead = array_merge([''], StoryStatus::values(), ['totale']);
+        $firstColumnCells = $customers;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }

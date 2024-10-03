@@ -21,6 +21,7 @@
         @include('reports.story-status')
         @include('reports.story-user')
         @include('reports.story-type-user')
+        @include('reports.story-customer')
         @endif
     </div>
 
