@@ -23,6 +23,8 @@
         @include('reports.story-type-user')
         @include('reports.story-customer')
         @include('reports.story-type-customer')
+        @include('reports.story-tag')
+        @include('reports.story-type-tag')
         @endif
     </div>
 
