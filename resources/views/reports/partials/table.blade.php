@@ -1,4 +1,4 @@
-<div id="{{ $id }}" class="tab-content">
+<div class="tab-content">
     <h3 class="text-xl font-bold text-center mb-4">{{ $title }}</h3>
     <!-- Contenitore scrollabile per la tabella -->
     <div class="overflow-x-auto">

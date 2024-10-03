@@ -17,12 +17,10 @@
         @if(isset($error))
         <p class="text-red-500 text-center">{{ $error }}</p>
         @else
-        <!-- Include la tabella per tipo -->
         @include('reports.story-type')
-
-        <!-- Include la tabella per stato -->
         @include('reports.story-status')
-        @include('reports.story-user') <!-- Tabella per Sviluppatori -->
+        @include('reports.story-user')
+        @include('reports.story-type-user')
         @endif
     </div>
 

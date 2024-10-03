@@ -1,7 +1,6 @@
-<!-- resources/views/reports/story-user.blade.php -->
-<div class="bg-white shadow-md rounded-lg overflow-hidden mb-8">
+<div class="bg-white shadow-md rounded-lg overflow-hidden mb-8" id="tab-1">
     <h2 class="text-2xl font-bold text-center mb-4">Analisi delle storie per utente, stato e quarter</h2>
-    @include('reports.partials.tab-header')
+    @include('reports.partials.tab-header',['id'=> 'tab-1'])
     @include('reports.partials.table', [
     'id'=> 'tab-year',
     'title' => 'Totale Annuo -'.$year,
