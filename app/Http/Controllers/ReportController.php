@@ -149,6 +149,7 @@ class ReportController extends Controller
 
         return [$year, $availableQuarters, null]; // Nessun errore
     }
+
     private function getDevelopers()
     {
         $developers = User::whereJsonContains('roles', UserRole::Developer)
@@ -157,32 +158,7 @@ class ReportController extends Controller
             ->get();
         return $developers;
     }
-    private function generateReportByUser($year, $availableQuarters, $developers)
-    {
-        // Variabile per contenere i totali degli utenti e per l'intero anno
-        $reportByUser = [];
-        $reportByUser['thead'] = array_merge([''], StoryStatus::values(), ['totale']);
-        $reportByUser['tbody'] = [];
 
-        $queryFn = function ($cell, $column) {
-            return   Story::where('user_id', $cell->id)
-                ->where('status', $column);
-        };
-        $nameFn = function ($cell) {
-            return $cell->name;
-        };
-        // Calcolo del totale annuo
-        $tbody['year'] = $this->calculateRowData($year, $developers, $reportByUser['thead'], $nameFn, $queryFn);
-        foreach ($availableQuarters as $quarter) {
-            $tbody['q' . $quarter] = $this->calculateRowData($year, $developers,  $reportByUser['thead'], $nameFn, $queryFn, $quarter);
-        }
-
-        $reportByUser['tbody'] =   $tbody;
-
-
-        // Restituisce sia i dettagli per gli utenti che il totale complessivo
-        return $reportByUser;
-    }
     private function calculateRowData($year, $firstColumnCells, $thead, $nameFn, $queryFn, $quarter = null)
     {
         $rows = [];
@@ -220,15 +196,10 @@ class ReportController extends Controller
 
         return $rows; // Restituisce un array di righe che segue l'ordine di thead
     }
+
     private function generateReportByStatusUser($year, $availableQuarters, $developers)
     {
-        // Variabile per contenere i totali degli utenti e per l'intero anno
-        $reportByUser = [];
-        $developerNames = $developers->pluck('name')->toArray();
-
-        $reportByUser['thead'] = array_merge([''], $developerNames, ['totale']);
-        $reportByUser['tbody'] = [];
-
+        $thead = array_merge([''], $developers->pluck('name')->toArray(), ['totale']);
         $queryFn = function ($cell, $column) {
             return     Story::where('status', $cell)
                 ->whereHas('user', function ($q) use ($column) {
@@ -238,17 +209,39 @@ class ReportController extends Controller
         $nameFn = function ($cell, $column) {
             return $cell ?? 'non assegnato';
         };
-        // Calcolo del totale annuo
-        $status = StoryStatus::values();
-        $tbody['year'] = $this->calculateRowData($year, $status, $reportByUser['thead'], $nameFn, $queryFn);
+        $firstColumnCells = StoryStatus::values();
+
+        return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
+    }
+
+    private function generateReportByUser($year, $availableQuarters, $developers)
+    {
+        $queryFn = function ($cell, $column) {
+            return   Story::where('user_id', $cell->id)
+                ->where('status', $column);
+        };
+        $nameFn = function ($cell) {
+            return $cell->name;
+        };
+        $thead = array_merge([''], StoryStatus::values(), ['totale']);
+        $firstColumnCells = $developers;
+
+        return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
+    }
+
+    private function generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn)
+    {
+        // Variabile per contenere i totali degli utenti e per l'intero anno
+        $quarterReport = [];
+        $quarterReport['thead'] = $thead;
+        $quarterReport['tbody'] = [];
+
+        $tbody['year'] = $this->calculateRowData($year, $firstColumnCells, $thead, $nameFn, $queryFn);
         foreach ($availableQuarters as $quarter) {
-            $tbody['q' . $quarter] = $this->calculateRowData($year, $status, $reportByUser['thead'], $nameFn, $queryFn, $quarter);
+            $tbody['q' . $quarter] = $this->calculateRowData($year, $firstColumnCells, $thead, $nameFn, $queryFn, $quarter);
         }
+        $quarterReport['tbody'] =   $tbody;
 
-        $reportByUser['tbody'] =   $tbody;
-
-
-        // Restituisce sia i dettagli per gli utenti che il totale complessivo
-        return $reportByUser;
+        return $quarterReport;
     }
 }
