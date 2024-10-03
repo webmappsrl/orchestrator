@@ -33,8 +33,6 @@ class ReportController extends Controller
 
         return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'totalOverall', 'developers', 'reportByStatusUser'));
     }
-
-
     /**
      * Genera il report per Tipo di Storia
      */
@@ -74,7 +72,6 @@ class ReportController extends Controller
 
         return $reportByType;
     }
-
     /**
      * Genera il report per Stato di Storia
      */
@@ -129,9 +126,6 @@ class ReportController extends Controller
 
         return [$reportByStatus, $totals]; // Restituisci anche i totali
     }
-
-
-
     /**
      * Funzione per determinare l'anno e i quarter disponibili
      */
@@ -155,7 +149,6 @@ class ReportController extends Controller
 
         return [$year, $availableQuarters, null]; // Nessun errore
     }
-
     private function getDevelopers()
     {
         $developers = User::whereJsonContains('roles', UserRole::Developer)
@@ -176,9 +169,9 @@ class ReportController extends Controller
 
 
         // Calcolo del totale annuo
-        $tbody['year'] = $this->calculateUserTotalsByYear($year, $developers,  $reportByUser['thead'], $totalOverall);
+        $tbody['year'] = $this->calculateUserTotals($year, $developers, $reportByUser['thead'], $totalOverall);
         foreach ($availableQuarters as $quarter) {
-            $tbody['q' . $quarter] = $this->calculateUserTotalsByQuarter($year, $quarter, $developers, $reportByUser['thead'], $totalOverall);
+            $tbody['q' . $quarter] = $this->calculateUserTotals($year, $developers,  $reportByUser['thead'], $totalOverall, $quarter);
         }
 
         $reportByUser['tbody'] =   $tbody;
@@ -187,20 +180,6 @@ class ReportController extends Controller
         // Restituisce sia i dettagli per gli utenti che il totale complessivo
         return [$reportByUser, $totalOverall];
     }
-
-
-    private function calculateUserTotalsByQuarter($year, $quarter, $developers, $thead, &$totalOverall)
-    {
-        return $this->calculateUserTotals($year, $developers, $thead, $totalOverall, $quarter);
-    }
-
-
-    private function calculateUserTotalsByYear($year, $developers, $thead, &$totalOverall)
-    {
-        return $this->calculateUserTotals($year, $developers, $thead, $totalOverall);
-    }
-
-
     private function calculateUserTotals($year, $developers, $thead, &$totalOverall, $quarter = null)
     {
         $rows = [];
@@ -242,15 +221,30 @@ class ReportController extends Controller
 
         return $rows; // Restituisce un array di righe che segue l'ordine di thead
     }
-
-    private function calculateStatusUserTotalsByYear($year, $developers, $thead, &$totalOverall)
+    private function generateReportByStatusUser($year, $availableQuarters, $developers)
     {
-        return $this->calculateStatusUserTotals($year, $developers, $thead, $totalOverall);
-    }
+        // Variabile per contenere i totali degli utenti e per l'intero anno
+        $reportByUser = [];
+        $developerNames = $developers->pluck('name')->toArray();
 
-    private function calculateStatusUserTotalsByQuarter($year, $quarter, $developers, $thead, &$totalOverall)
-    {
-        return $this->calculateStatusUserTotals($year, $developers, $thead, $totalOverall, $quarter);
+        $reportByUser['thead'] = array_merge(['status'], $developerNames, ['totale']);
+        $reportByUser['tbody'] = [];
+
+        // Variabile per il totale complessivo (come intero)
+        $totalOverall = 0;
+
+
+        // Calcolo del totale annuo
+        $tbody['year'] = $this->calculateStatusUserTotals($year, $developers, $reportByUser['thead'], $totalOverall);
+        foreach ($availableQuarters as $quarter) {
+            $tbody['q' . $quarter] = $this->calculateStatusUserTotals($year, $developers, $reportByUser['thead'], $totalOverall, $quarter);
+        }
+
+        $reportByUser['tbody'] =   $tbody;
+
+
+        // Restituisce sia i dettagli per gli utenti che il totale complessivo
+        return [$reportByUser, $totalOverall];
     }
     private function calculateStatusUserTotals($year, $developers, $thead, &$totalOverall, $quarter = null)
     {
@@ -296,31 +290,5 @@ class ReportController extends Controller
         });
 
         return $rows; // Restituisce un array di righe che segue l'ordine di thead
-    }
-
-    private function generateReportByStatusUser($year, $availableQuarters, $developers)
-    {
-        // Variabile per contenere i totali degli utenti e per l'intero anno
-        $reportByUser = [];
-        $developerNames = $developers->pluck('name')->toArray();
-
-        $reportByUser['thead'] = array_merge(['status'], $developerNames, ['totale']);
-        $reportByUser['tbody'] = [];
-
-        // Variabile per il totale complessivo (come intero)
-        $totalOverall = 0;
-
-
-        // Calcolo del totale annuo
-        $tbody['year'] = $this->calculateStatusUserTotalsByYear($year, $developers,  $reportByUser['thead'], $totalOverall);
-        foreach ($availableQuarters as $quarter) {
-            $tbody['q' . $quarter] = $this->calculateStatusUserTotalsByQuarter($year, $quarter, $developers, $reportByUser['thead'], $totalOverall);
-        }
-
-        $reportByUser['tbody'] =   $tbody;
-
-
-        // Restituisce sia i dettagli per gli utenti che il totale complessivo
-        return [$reportByUser, $totalOverall];
     }
 }
