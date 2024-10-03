@@ -28,10 +28,10 @@ class ReportController extends Controller
         $reportByType = $this->generateReportByType($year, $availableQuarters);
         [$reportByStatus, $totals] = $this->generateReportByStatus($year, $availableQuarters); // Ora include i totali
         // Ottieni i report per Utente e somma totale
-        [$reportByUser, $totalOverall] = $this->generateReportByUser($year, $availableQuarters, $developers);
-        [$reportByStatusUser, $totalOverall2] = $this->generateReportByStatusUser($year, $availableQuarters, $developers);
+        $reportByUser = $this->generateReportByUser($year, $availableQuarters, $developers);
+        $reportByStatusUser = $this->generateReportByStatusUser($year, $availableQuarters, $developers);
 
-        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'totalOverall', 'developers', 'reportByStatusUser'));
+        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'developers', 'reportByStatusUser'));
     }
     /**
      * Genera il report per Tipo di Storia
@@ -164,23 +164,20 @@ class ReportController extends Controller
         $reportByUser['thead'] = array_merge(['nome'], StoryStatus::values(), ['totale']);
         $reportByUser['tbody'] = [];
 
-        // Variabile per il totale complessivo (come intero)
-        $totalOverall = 0;
-
 
         // Calcolo del totale annuo
-        $tbody['year'] = $this->calculateUserTotals($year, $developers, $reportByUser['thead'], $totalOverall);
+        $tbody['year'] = $this->calculateUserTotals($year, $developers, $reportByUser['thead']);
         foreach ($availableQuarters as $quarter) {
-            $tbody['q' . $quarter] = $this->calculateUserTotals($year, $developers,  $reportByUser['thead'], $totalOverall, $quarter);
+            $tbody['q' . $quarter] = $this->calculateUserTotals($year, $developers,  $reportByUser['thead'], $quarter);
         }
 
         $reportByUser['tbody'] =   $tbody;
 
 
         // Restituisce sia i dettagli per gli utenti che il totale complessivo
-        return [$reportByUser, $totalOverall];
+        return $reportByUser;
     }
-    private function calculateUserTotals($year, $developers, $thead, &$totalOverall, $quarter = null)
+    private function calculateUserTotals($year, $developers, $thead, $quarter = null)
     {
         $rows = [];
         foreach ($developers as $developer) {
@@ -208,9 +205,6 @@ class ReportController extends Controller
 
                     // Aggiungi il totale per lo stato corrente
                     $row[] = $statusTotal;
-
-                    // Aggiungi al totale complessivo
-                    $totalOverall += $statusTotal;
                 }
             }
             $rows[] = $row;
@@ -230,23 +224,19 @@ class ReportController extends Controller
         $reportByUser['thead'] = array_merge(['status'], $developerNames, ['totale']);
         $reportByUser['tbody'] = [];
 
-        // Variabile per il totale complessivo (come intero)
-        $totalOverall = 0;
-
-
         // Calcolo del totale annuo
-        $tbody['year'] = $this->calculateStatusUserTotals($year, $developers, $reportByUser['thead'], $totalOverall);
+        $tbody['year'] = $this->calculateStatusUserTotals($year, $developers, $reportByUser['thead']);
         foreach ($availableQuarters as $quarter) {
-            $tbody['q' . $quarter] = $this->calculateStatusUserTotals($year, $developers, $reportByUser['thead'], $totalOverall, $quarter);
+            $tbody['q' . $quarter] = $this->calculateStatusUserTotals($year, $developers, $reportByUser['thead'], $quarter);
         }
 
         $reportByUser['tbody'] =   $tbody;
 
 
         // Restituisce sia i dettagli per gli utenti che il totale complessivo
-        return [$reportByUser, $totalOverall];
+        return $reportByUser;
     }
-    private function calculateStatusUserTotals($year, $developers, $thead, &$totalOverall, $quarter = null)
+    private function calculateStatusUserTotals($year, $developers, $thead, $quarter = null)
     {
         $rows = [];
         $status = StoryStatus::values();
@@ -278,9 +268,6 @@ class ReportController extends Controller
 
                     // Aggiungi il totale per lo stato corrente
                     $row[] = $statusTotal;
-
-                    // Aggiungi al totale complessivo
-                    $totalOverall += $statusTotal;
                 }
             }
             $rows[] = $row;
