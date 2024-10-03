@@ -14,4 +14,10 @@ enum StoryStatus: string
     case Done = 'done';
     case Rejected = 'rejected';
     case Released = 'released';
+
+    // Metodo per ottenere un array di valori
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
 }

@@ -7,6 +7,7 @@ use App\Enums\StoryType;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Story;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -21,14 +22,15 @@ class ReportController extends Controller
         if ($error) {
             return view('reports.index')->with('error', $error);
         }
+        $developers = $this->getDevelopers();
 
         // Ottieni i report per Tipo e Stato tramite funzioni separate
         $reportByType = $this->generateReportByType($year, $availableQuarters);
         [$reportByStatus, $totals] = $this->generateReportByStatus($year, $availableQuarters); // Ora include i totali
         // Ottieni i report per Utente e somma totale
-        [$reportByUser, $totalOverall] = $this->generateReportByUser($year, $availableQuarters);
+        [$reportByUser, $totalOverall] = $this->generateReportByUser($year, $availableQuarters, $developers);
 
-        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'totalOverall',));
+        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'totalOverall', 'developers'));
     }
 
 
@@ -153,61 +155,58 @@ class ReportController extends Controller
         return [$year, $availableQuarters, null]; // Nessun errore
     }
 
-    private function generateReportByUser($year, $availableQuarters)
+    private function getDevelopers()
     {
-        // Seleziona solo gli utenti che hanno il ruolo di Developer
-        $users = Story::with('user')
-            ->whereHas('user', function ($query) {
-                $query->whereJsonContains('roles', UserRole::Developer); // Filtra per il ruolo di Developer
-            })
-            ->select('user_id')
+        $developers = User::whereJsonContains('roles', UserRole::Developer)
+            ->whereHas('stories')  // Verifica che l'utente abbia storie associate
             ->distinct()
             ->get();
-
+        return $developers;
+    }
+    private function generateReportByUser($year, $availableQuarters, $developers)
+    {
         // Variabile per contenere i totali degli utenti e per l'intero anno
         $reportByUser = [];
+        $reportByUser['thead'] = array_merge(['nome utente'], StoryStatus::values(), ['totale']);
+        $reportByUser['tbody'] = [];
 
         // Variabile per il totale complessivo (come intero)
         $totalOverall = 0;
 
-        // Calcolo dei totali per ogni quarter
-        foreach ($availableQuarters as $quarter) {
-            $reportByUser['q' . $quarter] = $this->calculateUserTotalsByQuarter($year, $quarter, $users, $totalOverall);
-        }
 
         // Calcolo del totale annuo
-        $reportByUser['year'] = $this->calculateUserTotalsByYear($year, $users, $totalOverall);
-
-        // Ordina i dati per il totale in ordine decrescente
-        $reportByUser['year'] = collect($reportByUser['year'])->sortByDesc('total')->toArray();
-
-        // Ordina i dati per ogni quarter
+        $tbody['year'] = $this->calculateUserTotalsByYear($year, $developers, $totalOverall);
+        $tbody['year'] = collect($tbody['year'])->sortByDesc('total')->toArray();
         foreach ($availableQuarters as $quarter) {
-            $reportByUser['q' . $quarter] = collect($reportByUser['q' . $quarter])->sortByDesc('total')->toArray();
+            $tbody['q' . $quarter] = $this->calculateUserTotalsByQuarter($year, $quarter, $developers, $totalOverall);
+            $tbody['q' . $quarter] = collect($tbody['q' . $quarter])->sortByDesc('total')->toArray();
         }
+
+        $reportByUser['tbody'] =   $tbody;
+
 
         // Restituisce sia i dettagli per gli utenti che il totale complessivo
         return [$reportByUser, $totalOverall];
     }
 
 
-    private function calculateUserTotalsByQuarter($year, $quarter, $users, &$totalOverall)
+    private function calculateUserTotalsByQuarter($year, $quarter, $developers, &$totalOverall)
     {
         $reportByUser = [];
 
-        foreach ($users as $user) {
-            $userName = $user->user->name ?? 'non assegnato'; // Recupera il nome utente
+        foreach ($developers as $developer) {
+            $developerName = $developer->name ?? 'non assegnato'; // Recupera il nome utente
 
             // Inizializza i dati dell'utente per il quarter corrente
             $userData = [
-                'user_id' => $userName,
+                'developerName' => $developerName,
                 'total' => 0, // Totale inizializzato a 0
             ];
 
-            foreach (StoryStatus::cases() as $status) {
+            foreach (StoryStatus::values() as $status) {
                 // Calcola il totale delle storie per utente e stato specifico nel quarter corrente
-                $statusTotal = Story::where('user_id', $user->user_id)
-                    ->where('status', $status->value)
+                $statusTotal = Story::where('user_id', $developer->id)
+                    ->where('status', $status)
                     ->whereRaw('EXTRACT(QUARTER FROM updated_at) = ?', [$quarter])
                     ->when($year !== 'All Time', function ($query) use ($year) {
                         return $query->whereYear('updated_at', $year);
@@ -215,7 +214,7 @@ class ReportController extends Controller
                     ->count();
 
                 // Aggiungi il totale per lo stato corrente
-                $userData[$status->value . '_total'] = $statusTotal;
+                $userData[$status . '_total'] = $statusTotal;
 
                 // Aggiungi il totale di tutte le storie dell'utente per il quarter
                 $userData['total'] += $statusTotal;
@@ -230,30 +229,30 @@ class ReportController extends Controller
         return $reportByUser; // Restituisce i dati per tutti gli utenti per questo quarter
     }
 
-    private function calculateUserTotalsByYear($year, $users, &$totalOverall)
+    private function calculateUserTotalsByYear($year, $developers, &$totalOverall)
     {
         $reportByUser = [];
 
-        foreach ($users as $user) {
-            $userName = $user->user->name ?? 'non assegnato'; // Recupera il nome utente
+        foreach ($developers as $developer) {
+            $userName = $developer->name ?? 'non assegnato'; // Recupera il nome utente
 
             // Inizializza i dati dell'utente per l'anno
             $userData = [
-                'user_id' => $userName,
+                'developerName' => $userName,
                 'total' => 0, // Totale inizializzato a 0
             ];
 
-            foreach (StoryStatus::cases() as $status) {
+            foreach (StoryStatus::values() as $status) {
                 // Calcola il totale delle storie per utente e stato specifico per l'intero anno
-                $statusTotal = Story::where('user_id', $user->user_id)
-                    ->where('status', $status->value)
+                $statusTotal = Story::where('user_id', $developer->id)
+                    ->where('status', $status)
                     ->when($year !== 'All Time', function ($query) use ($year) {
                         return $query->whereYear('updated_at', $year);
                     })
                     ->count();
 
                 // Aggiungi il totale per lo stato corrente
-                $userData[$status->value . '_total'] = $statusTotal;
+                $userData[$status . '_total'] = $statusTotal;
 
                 // Aggiungi il totale di tutte le storie dell'utente per l'anno
                 $userData['total'] += $statusTotal;
