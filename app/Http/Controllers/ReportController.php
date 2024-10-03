@@ -167,7 +167,7 @@ class ReportController extends Controller
     {
         // Variabile per contenere i totali degli utenti e per l'intero anno
         $reportByUser = [];
-        $reportByUser['thead'] = array_merge(['nome utente'], StoryStatus::values(), ['totale']);
+        $reportByUser['thead'] = array_merge(['nome'], StoryStatus::values(), ['totale']);
         $reportByUser['tbody'] = [];
 
         // Variabile per il totale complessivo (come intero)
@@ -175,11 +175,9 @@ class ReportController extends Controller
 
 
         // Calcolo del totale annuo
-        $tbody['year'] = $this->calculateUserTotalsByYear($year, $developers, $totalOverall);
-        $tbody['year'] = collect($tbody['year'])->sortByDesc('total')->toArray();
+        $tbody['year'] = $this->calculateUserTotalsByYear($year, $developers,  $reportByUser['thead'], $totalOverall);
         foreach ($availableQuarters as $quarter) {
-            $tbody['q' . $quarter] = $this->calculateUserTotalsByQuarter($year, $quarter, $developers, $totalOverall);
-            $tbody['q' . $quarter] = collect($tbody['q' . $quarter])->sortByDesc('total')->toArray();
+            $tbody['q' . $quarter] = $this->calculateUserTotalsByQuarter($year, $quarter, $developers, $reportByUser['thead'], $totalOverall);
         }
 
         $reportByUser['tbody'] =   $tbody;
@@ -190,80 +188,57 @@ class ReportController extends Controller
     }
 
 
-    private function calculateUserTotalsByQuarter($year, $quarter, $developers, &$totalOverall)
+    private function calculateUserTotalsByQuarter($year, $quarter, $developers, $thead, &$totalOverall)
     {
-        $reportByUser = [];
-
-        foreach ($developers as $developer) {
-            $developerName = $developer->name ?? 'non assegnato'; // Recupera il nome utente
-
-            // Inizializza i dati dell'utente per il quarter corrente
-            $userData = [
-                'developerName' => $developerName,
-                'total' => 0, // Totale inizializzato a 0
-            ];
-
-            foreach (StoryStatus::values() as $status) {
-                // Calcola il totale delle storie per utente e stato specifico nel quarter corrente
-                $statusTotal = Story::where('user_id', $developer->id)
-                    ->where('status', $status)
-                    ->whereRaw('EXTRACT(QUARTER FROM updated_at) = ?', [$quarter])
-                    ->when($year !== 'All Time', function ($query) use ($year) {
-                        return $query->whereYear('updated_at', $year);
-                    })
-                    ->count();
-
-                // Aggiungi il totale per lo stato corrente
-                $userData[$status . '_total'] = $statusTotal;
-
-                // Aggiungi il totale di tutte le storie dell'utente per il quarter
-                $userData['total'] += $statusTotal;
-
-                // Aumenta il totale complessivo
-                $totalOverall += $statusTotal;
-            }
-
-            $reportByUser[] = $userData;
-        }
-
-        return $reportByUser; // Restituisce i dati per tutti gli utenti per questo quarter
+        return $this->calculateUserTotals($year, $developers, $thead, $totalOverall, $quarter);
     }
 
-    private function calculateUserTotalsByYear($year, $developers, &$totalOverall)
+
+    private function calculateUserTotalsByYear($year, $developers, $thead, &$totalOverall)
     {
-        $reportByUser = [];
+        return $this->calculateUserTotals($year, $developers, $thead, $totalOverall);
+    }
 
+
+    private function calculateUserTotals($year, $developers, $thead, &$totalOverall, $quarter = null)
+    {
+        $rows = [];
         foreach ($developers as $developer) {
-            $userName = $developer->name ?? 'non assegnato'; // Recupera il nome utente
+            $row = [];
+            foreach ($thead as $column) {
+                if ($column === 'nome') {
+                    $row[] = $developer->name ?? 'non assegnato';
+                } elseif ($column === 'totale') {
+                    $totalPerUser = array_sum(array_slice($row, 1)); // Somma dei valori per gli stati
+                    $row[] = $totalPerUser;
+                } else {
+                    $query = Story::where('user_id', $developer->id)
+                        ->where('status', $column);
 
-            // Inizializza i dati dell'utente per l'anno
-            $userData = [
-                'developerName' => $userName,
-                'total' => 0, // Totale inizializzato a 0
-            ];
+                    if ($quarter) {
+                        // Filtra per quarter se fornito
+                        $query->whereRaw('EXTRACT(QUARTER FROM updated_at) = ?', [$quarter]);
+                    }
 
-            foreach (StoryStatus::values() as $status) {
-                // Calcola il totale delle storie per utente e stato specifico per l'intero anno
-                $statusTotal = Story::where('user_id', $developer->id)
-                    ->where('status', $status)
-                    ->when($year !== 'All Time', function ($query) use ($year) {
-                        return $query->whereYear('updated_at', $year);
-                    })
-                    ->count();
+                    if ($year !== 'All Time') {
+                        $query->whereYear('updated_at', $year);
+                    }
 
-                // Aggiungi il totale per lo stato corrente
-                $userData[$status . '_total'] = $statusTotal;
+                    $statusTotal = $query->count();
 
-                // Aggiungi il totale di tutte le storie dell'utente per l'anno
-                $userData['total'] += $statusTotal;
+                    // Aggiungi il totale per lo stato corrente
+                    $row[] = $statusTotal;
 
-                // Aumenta il totale complessivo
-                $totalOverall += $statusTotal;
+                    // Aggiungi al totale complessivo
+                    $totalOverall += $statusTotal;
+                }
             }
-
-            $reportByUser[] = $userData;
+            $rows[] = $row;
         }
+        usort($rows, function ($a, $b) {
+            return $b[count($a) - 1] <=> $a[count($a) - 1]; // Ordina in base all'ultima colonna (totale)
+        });
 
-        return $reportByUser; // Restituisce i dati per tutti gli utenti per l'anno
+        return $rows; // Restituisce un array di righe che segue l'ordine di thead
     }
 }
