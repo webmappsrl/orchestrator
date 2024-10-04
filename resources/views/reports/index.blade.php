@@ -17,15 +17,15 @@
         @if(isset($error))
         <p class="text-red-500 text-center">{{ $error }}</p>
         @else
-        @include('reports.story-type')
-        @include('reports.story-status')
-        @include('reports.story-user')
-        @include('reports.story-type-user')
-        @include('reports.story-customer')
-        @include('reports.story-type-customer')
-        @include('reports.story-tag')
-        @include('reports.story-type-tag')
-        @include('reports.story-status-tag')
+        @include('reports.tab1-type')
+        @include('reports.tab2-status')
+        @include('reports.tab3-dev-status')
+        @include('reports.tab4-status-dev')
+        @include('reports.tab5-customer-status')
+        @include('reports.tab6-status-customer')
+        @include('reports.tab7-tag-customer')
+        @include('reports.tab8-customer-tag')
+        @include('reports.tab9-tag-type')
         @endif
     </div>
 

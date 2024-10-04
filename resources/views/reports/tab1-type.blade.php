@@ -1,6 +1,6 @@
 <!-- resources/views/reports/story-type.blade.php -->
 <div class="bg-white shadow-md rounded-lg overflow-hidden mb-8">
-    <h2 class="text-2xl font-bold text-center mb-4">Analisi delle storie per tipo</h2>
+    <h2 class="text-2xl font-bold text-center mb-4">Analisi per tipo</h2>
     <table class="min-w-full leading-normal table-auto border-collapse border border-gray-400">
         <thead>
             <tr class="bg-gray-100">
@@ -12,7 +12,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($reportByType as $data)
+            @foreach($tab1Type as $data)
             <tr class="bg-white border-b">
                 <td class="px-5 py-4 text-sm font-bold">{{ ucfirst($data['type']) }}</td>
                 <td class="px-5 py-4 text-sm">
@@ -31,9 +31,9 @@
             <!-- Riga Totale -->
             <tr class="bg-gray-200 text-black font-bold">
                 <td class="px-5 py-4 text-sm">TOT</td>
-                <td class="px-5 py-4 text-sm">{{ $totals['year_total'] }}</td>
+                <td class="px-5 py-4 text-sm">{{ $tab2StatusTotals['year_total'] }}</td>
                 @foreach ($availableQuarters as $quarter)
-                <td class="px-5 py-4 text-sm">{{ $totals['q' . $quarter] }}</td>
+                <td class="px-5 py-4 text-sm">{{ $tab2StatusTotals['q' . $quarter] }}</td>
                 @endforeach
             </tr>
         </tbody>

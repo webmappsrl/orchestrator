@@ -6,12 +6,11 @@ use App\Enums\StoryStatus;
 use App\Enums\StoryType;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Models\Story;
+use App\Models\Story as Ticket;
 use App\Models\Tag;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -28,34 +27,32 @@ class ReportController extends Controller
         $customers = $this->getCustomers();
         $tags = $this->getTags();
 
-        // Ottieni i report per Tipo e Stato tramite funzioni separate
-        $reportByType = $this->generateReportByType($year, $availableQuarters);
-        [$reportByStatus, $totals] = $this->generateReportByStatus($year, $availableQuarters); // Ora include i totali
-        // Ottieni i report per Utente e somma totale
-        $reportByUser = $this->generateReportByUser($year, $availableQuarters, $developers);
-        $reportByCustomer = $this->generateReportByCustomer($year, $availableQuarters, $customers);
-        $reportByTag = $this->generateReportByTag($year, $availableQuarters, $tags, $customers);
-        $reportByStatusUser = $this->generateReportByStatusUser($year, $availableQuarters, $developers);
-        $reportByStatusCustomer = $this->generateReportByStatusCustomer($year, $availableQuarters, $customers);
-        $reportByStatusTag = $this->generateReportByStatusTag($year, $availableQuarters, $tags, $customers);
-        $reportByTagType = $this->generateReportByTagType($year, $availableQuarters, $tags, $customers);
+        $tab1Type = $this->tab1Type($year, $availableQuarters);
+        [$tab2Status, $tab2StatusTotals] = $this->tab2Status($year, $availableQuarters); // Ora include i totali
+        $tab3DevStatus = $this->tab3DevStatus($year, $availableQuarters, $developers);
+        $tab4StatusDev = $this->tab4StatusDev($year, $availableQuarters, $developers);
+        $tab5CustomerStatus = $this->tab5CustomerStatus($year, $availableQuarters, $customers);
+        $tab6StatusCustomer = $this->tab6StatusCustomer($year, $availableQuarters, $customers);
+        $tab7TagCustomer = $this->tab7TagCustomer($year, $availableQuarters, $tags, $customers);
+        $tab8CustomerTag = $this->tab8CustomerTag($year, $availableQuarters, $tags, $customers);
+        $tab9TagType = $this->tab9TagType($year, $availableQuarters, $tags, $customers);
 
-        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'developers', 'reportByStatusUser', 'reportByCustomer', 'reportByStatusCustomer', 'reportByTag', 'reportByStatusTag', 'reportByTagType'));
+        return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType'));
     }
     /**
      * Genera il report per Tipo di Storia
      */
-    private function generateReportByType($year, $availableQuarters)
+    private function tab1Type($year, $availableQuarters)
     {
-        $totalStories = $year === 'All Time' ? Story::count() : Story::whereYear('updated_at', $year)->count();
+        $totalStories = $year === 'All Time' ? Ticket::count() : Ticket::whereYear('updated_at', $year)->count();
 
-        $reportByType = [];
+        $tab1Type = [];
         foreach (StoryType::cases() as $type) {
-            $yearTotal = $year === 'All Time' ? Story::where('type', $type->value)->count() : Story::where('type', $type->value)->whereYear('updated_at', $year)->count();
-            $q1 = $year === 'All Time' ? Story::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count() : Story::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count();
-            $q2 = $year === 'All Time' ? Story::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count() : Story::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count();
-            $q3 = $year === 'All Time' ? Story::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count() : Story::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count();
-            $q4 = $year === 'All Time' ? Story::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count() : Story::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count();
+            $yearTotal = $year === 'All Time' ? Ticket::where('type', $type->value)->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->count();
+            $q1 = $year === 'All Time' ? Ticket::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count();
+            $q2 = $year === 'All Time' ? Ticket::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count();
+            $q3 = $year === 'All Time' ? Ticket::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count();
+            $q4 = $year === 'All Time' ? Ticket::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count();
 
             // Calcola la percentuale rispetto al totale
             $yearPercentage = $totalStories > 0 ? ($yearTotal / $totalStories) * 100 : 0;
@@ -64,7 +61,7 @@ class ReportController extends Controller
             $q3Percentage = $totalStories > 0 ? ($q3 / $totalStories) * 100 : 0;
             $q4Percentage = $totalStories > 0 ? ($q4 / $totalStories) * 100 : 0;
 
-            $reportByType[] = [
+            $tab1Type[] = [
                 'type' => $type->value,
                 'year_total' => $yearTotal,
                 'year_percentage' => $yearPercentage,
@@ -79,16 +76,16 @@ class ReportController extends Controller
             ];
         }
 
-        return $reportByType;
+        return $tab1Type;
     }
     /**
      * Genera il report per Stato di Storia
      */
-    private function generateReportByStatus($year, $availableQuarters)
+    private function tab2Status($year, $availableQuarters)
     {
-        $totalStories = $year === 'All Time' ? Story::count() : Story::whereYear('updated_at', $year)->count();
+        $totalStories = $year === 'All Time' ? Ticket::count() : Ticket::whereYear('updated_at', $year)->count();
 
-        $reportByStatus = [];
+        $tab2Status = [];
         $totals = [
             'year_total' => 0,
             'q1' => 0,
@@ -98,11 +95,11 @@ class ReportController extends Controller
         ];
 
         foreach (StoryStatus::cases() as $status) {
-            $yearTotal = $year === 'All Time' ? Story::where('status', $status->value)->count() : Story::where('status', $status->value)->whereYear('updated_at', $year)->count();
-            $q1 = $year === 'All Time' ? Story::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count() : Story::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count();
-            $q2 = $year === 'All Time' ? Story::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count() : Story::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count();
-            $q3 = $year === 'All Time' ? Story::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count() : Story::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count();
-            $q4 = $year === 'All Time' ? Story::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count() : Story::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count();
+            $yearTotal = $year === 'All Time' ? Ticket::where('status', $status->value)->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->count();
+            $q1 = $year === 'All Time' ? Ticket::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count();
+            $q2 = $year === 'All Time' ? Ticket::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count();
+            $q3 = $year === 'All Time' ? Ticket::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count();
+            $q4 = $year === 'All Time' ? Ticket::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count();
 
             // Calcola la percentuale rispetto al totale
             $yearPercentage = $totalStories > 0 ? ($yearTotal / $totalStories) * 100 : 0;
@@ -118,7 +115,7 @@ class ReportController extends Controller
             $totals['q3'] += $q3;
             $totals['q4'] += $q4;
 
-            $reportByStatus[] = [
+            $tab2Status[] = [
                 'status' => $status->value,
                 'year_total' => $yearTotal,
                 'year_percentage' => $yearPercentage,
@@ -133,7 +130,7 @@ class ReportController extends Controller
             ];
         }
 
-        return [$reportByStatus, $totals]; // Restituisci anche i totali
+        return [$tab2Status, $totals]; // Restituisci anche i totali
     }
     /**
      * Funzione per determinare l'anno e i quarter disponibili
@@ -169,7 +166,7 @@ class ReportController extends Controller
     }
     private function getCustomers()
     {
-        return Story::whereNotNull('creator_id')
+        return Ticket::whereNotNull('creator_id')
             ->whereHas('creator', function ($query) {
                 $query->whereJsonContains('roles', UserRole::Customer); // Filtra utenti con il ruolo 'Customer'
             })
@@ -230,10 +227,10 @@ class ReportController extends Controller
     }
 
 
-    private function generateReportByUser($year, $availableQuarters, $developers)
+    private function tab3DevStatus($year, $availableQuarters, $developers)
     {
         $queryFn = function ($cell, $column) {
-            return   Story::where('user_id', $cell->id)
+            return   Ticket::where('user_id', $cell->id)
                 ->where('status', $column);
         };
         $nameFn = function ($cell) {
@@ -244,10 +241,10 @@ class ReportController extends Controller
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
-    private function generateReportByCustomer($year, $availableQuarters, $customers)
+    private function tab5CustomerStatus($year, $availableQuarters, $customers)
     {
         $queryFn = function ($cell, $column) {
-            return   Story::where('creator_id', $cell->id)
+            return   Ticket::where('creator_id', $cell->id)
                 ->where('status', $column);
         };
         $nameFn = function ($cell) {
@@ -258,11 +255,11 @@ class ReportController extends Controller
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
-    private function generateReportByTag($year, $availableQuarters, $tags, $customers)
+    private function tab7TagCustomer($year, $availableQuarters, $tags, $customers)
     {
         $queryFn = function ($tag, $column) {
             // Query per contare quante storie hanno il tag specificato e lo stato specificato
-            return Story::whereHas('tags', function ($query) use ($tag) {
+            return Ticket::whereHas('tags', function ($query) use ($tag) {
                 $query->where('tags.id', $tag->id); // Filtra per il tag specifico
             })
                 ->whereHas('creator', function ($q) use ($column) {
@@ -278,11 +275,11 @@ class ReportController extends Controller
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
 
-    private function generateReportByStatusUser($year, $availableQuarters, $developers)
+    private function tab4StatusDev($year, $availableQuarters, $developers)
     {
         $thead = array_merge([''], $developers->pluck('name')->toArray(), ['totale']);
         $queryFn = function ($cell, $column) {
-            return     Story::where('status', $cell)
+            return     Ticket::where('status', $cell)
                 ->whereHas('user', function ($q) use ($column) {
                     $q->where('name', $column); // Filtra per il nome dell'utente nel campo 'column'
                 });
@@ -295,11 +292,11 @@ class ReportController extends Controller
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
 
-    private function generateReportByStatusCustomer($year, $availableQuarters, $customer)
+    private function tab6StatusCustomer($year, $availableQuarters, $customer)
     {
         $thead = array_merge([''], $customer->pluck('name')->toArray(), ['totale']);
         $queryFn = function ($cell, $column) {
-            return     Story::where('status', $cell)
+            return     Ticket::where('status', $cell)
                 ->whereHas('creator', function ($q) use ($column) {
                     $q->where('name', $column); // Filtra per il nome dell'utente nel campo 'column'
                 });
@@ -311,11 +308,11 @@ class ReportController extends Controller
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
-    private function generateReportByStatusTag($year, $availableQuarters, $tags, $customers)
+    private function tab8CustomerTag($year, $availableQuarters, $tags, $customers)
     {
         $thead = array_merge([''], $tags->pluck('name')->toArray(), ['totale']);
         $queryFn = function ($cell, $column) use ($year) {
-            return Story::whereNotNull('creator_id')
+            return Ticket::whereNotNull('creator_id')
                 ->whereHas('creator', function ($q) use ($cell, $column) {
                     $q->where('name', $cell->name); // Filtra per il nome dell'utente nel campo 'column'
                 }) // Filtra per lo stato specifico
@@ -332,11 +329,11 @@ class ReportController extends Controller
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
 
-    private function generateReportByTagType($year, $availableQuarters, $tags, $customers)
+    private function tab9TagType($year, $availableQuarters, $tags, $customers)
     {
         $thead = array_merge([''], StoryType::values(), ['totale']);
         $queryFn = function ($cell, $column) use ($year) {
-            return Story::whereNotNull('creator_id')
+            return Ticket::whereNotNull('creator_id')
                 ->whereHas('tags', function ($query) use ($cell, $column) {
                     $query->where('tags.name', $cell->name); // Filtra per il nome del tag
                 })
