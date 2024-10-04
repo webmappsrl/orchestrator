@@ -25,7 +25,7 @@ use App\Http\Middleware\TestRouteAccess;
 
 Route::get('/quote/{id}', [QuoteController::class, 'show'])->name('quote');
 Route::get('/deadline/{id}', [DeadlineController::class, 'email'])->name('deadline.email');
-Route::get('report/story/{year?}', [ReportController::class, 'index']);
+Route::get('report/{year?}', [ReportController::class, 'index']);
 
 
 //route to test the mailable
