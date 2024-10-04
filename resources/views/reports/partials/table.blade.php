@@ -5,8 +5,12 @@
         <table class="min-w-full leading-normal table-auto border-collapse border border-gray-400">
             @include('reports.partials.thead', ['elements' => $thead])
             <tbody>
-                @foreach ($tbody as $row)
-                <tr class="bg-white border-b">
+                @foreach ($tbody as $rowIndex => $row)
+                @php
+                // Verifica se è l'ultima riga
+                $isLastRow = $rowIndex === count($tbody) - 1;
+                @endphp
+                <tr class="bg-white border-b {{ $isLastRow ? 'font-bold' : '' }}">
                     @foreach ($row as $index => $cell)
                     @php
                     // Ottieni il totale (ultimo elemento della riga)

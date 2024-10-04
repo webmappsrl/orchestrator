@@ -103,13 +103,15 @@ class ReportController extends Controller
     private function calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter = null)
     {
         $rows = [];
+        $columnSums = array_fill(0, count($thead), 0); // Inizializza array per i totali delle colonne
+
         foreach ($firstColumnCells as $indexRowObj) {
             $row = [];
-            foreach ($thead as $indexColumnObj) {
+            foreach ($thead as $index => $indexColumnObj) {
                 if ($indexColumnObj === '') {
                     $row[] = $firstColumnNameFn($indexRowObj, $indexColumnObj);
                 } elseif ($indexColumnObj === 'totale') {
-                    $row[] = array_sum(array_slice($row, 1));
+                    $row[] = array_sum(array_slice($row, 1)); // Somma delle celle precedenti nella riga
                 } else {
                     $query = $cellQueryFn($indexRowObj, $indexColumnObj);
                     if ($quarter) {
@@ -120,16 +122,36 @@ class ReportController extends Controller
                     }
                     $statusTotal = $query->count();
                     $row[] = $statusTotal;
+
+                    // Aggiorna il totale della colonna corrente
+                    $columnSums[$index] += $statusTotal;
                 }
             }
             $rows[] = $row;
         }
+
+        // Ordina le righe in base all'ultima colonna (totale)
         usort($rows, function ($a, $b) {
             return $b[count($a) - 1] <=> $a[count($a) - 1];
         });
 
+        // Aggiungi la riga dei totali alla fine
+        $totalsRow = ['Totale']; // La prima cella della riga è 'Totale'
+        foreach ($thead as $index => $indexColumnObj) {
+            if ($indexColumnObj === '') {
+                continue; // Salta la prima cella (già 'Totale')
+            } elseif ($indexColumnObj === 'totale') {
+                $totalsRow[] = array_sum(array_slice($columnSums, 1)); // Totale finale (somma delle somme delle colonne)
+            } else {
+                $totalsRow[] = $columnSums[$index]; // Aggiungi la somma verticale della colonna
+            }
+        }
+
+        $rows[] = $totalsRow; // Aggiungi la riga dei totali alla fine delle righe
+
         return $rows;
     }
+
 
     private function tab1Type($year, $availableQuarters)
     {
