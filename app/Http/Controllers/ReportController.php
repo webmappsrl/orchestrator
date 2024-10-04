@@ -34,10 +34,10 @@ class ReportController extends Controller
         // Ottieni i report per Utente e somma totale
         $reportByUser = $this->generateReportByUser($year, $availableQuarters, $developers);
         $reportByCustomer = $this->generateReportByCustomer($year, $availableQuarters, $customers);
-        $reportByTag = $this->generateReportByTag($year, $availableQuarters, $tags);
+        $reportByTag = $this->generateReportByTag($year, $availableQuarters, $tags, $customers);
         $reportByStatusUser = $this->generateReportByStatusUser($year, $availableQuarters, $developers);
         $reportByStatusCustomer = $this->generateReportByStatusCustomer($year, $availableQuarters, $customers);
-        $reportByStatusTag = $this->generateReportByStatusTag($year, $availableQuarters, $tags);
+        $reportByStatusTag = $this->generateReportByStatusTag($year, $availableQuarters, $tags, $customers);
 
         return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'developers', 'reportByStatusUser', 'reportByCustomer', 'reportByStatusCustomer', 'reportByTag', 'reportByStatusTag'));
     }
@@ -257,19 +257,21 @@ class ReportController extends Controller
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
-    private function generateReportByTag($year, $availableQuarters, $tags)
+    private function generateReportByTag($year, $availableQuarters, $tags, $customers)
     {
-        $queryFn = function ($tag, $status) use ($year) {
+        $queryFn = function ($tag, $column) {
             // Query per contare quante storie hanno il tag specificato e lo stato specificato
             return Story::whereHas('tags', function ($query) use ($tag) {
                 $query->where('tags.id', $tag->id); // Filtra per il tag specifico
             })
-                ->where('status', $status); // Filtra per lo stato specificato
+                ->whereHas('creator', function ($q) use ($column) {
+                    $q->where('name', $column); // Filtra per il nome dell'utente nel campo 'column'
+                });
         };
         $nameFn = function ($cell) {
             return $cell->name;
         };
-        $thead = array_merge([''], StoryStatus::values(), ['totale']);
+        $thead = array_merge([''], $customers->pluck('name')->toArray(), ['totale']);
         $firstColumnCells = $tags;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
@@ -308,19 +310,23 @@ class ReportController extends Controller
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
-    private function generateReportByStatusTag($year, $availableQuarters, $tags)
+    private function generateReportByStatusTag($year, $availableQuarters, $tags, $customers)
     {
         $thead = array_merge([''], $tags->pluck('name')->toArray(), ['totale']);
-        $queryFn = function ($status, $tag) use ($year) {
-            return Story::where('status', $status) // Filtra per lo stato specifico
-                ->whereHas('tags', function ($query) use ($tag) {
-                    $query->where('tags.name', $tag); // Filtra per il nome del tag
-                });
+        $queryFn = function ($cell, $column) use ($year) {
+            return Story::whereNotNull('creator_id')
+                ->whereHas('creator', function ($q) use ($cell, $column) {
+                    $q->where('name', $cell->name); // Filtra per il nome dell'utente nel campo 'column'
+                }) // Filtra per lo stato specifico
+                ->whereHas('tags', function ($query) use ($cell, $column) {
+                    $query->where('tags.name', $column); // Filtra per il nome del tag
+                })
+            ;
         };
         $nameFn = function ($cell, $column) {
-            return $cell ?? 'non assegnato';
+            return $cell->name ?? 'non assegnato';
         };
-        $firstColumnCells = StoryStatus::values();
+        $firstColumnCells = $customers;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
