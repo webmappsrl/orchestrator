@@ -38,8 +38,9 @@ class ReportController extends Controller
         $reportByStatusUser = $this->generateReportByStatusUser($year, $availableQuarters, $developers);
         $reportByStatusCustomer = $this->generateReportByStatusCustomer($year, $availableQuarters, $customers);
         $reportByStatusTag = $this->generateReportByStatusTag($year, $availableQuarters, $tags, $customers);
+        $reportByTagType = $this->generateReportByTagType($year, $availableQuarters, $tags, $customers);
 
-        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'developers', 'reportByStatusUser', 'reportByCustomer', 'reportByStatusCustomer', 'reportByTag', 'reportByStatusTag'));
+        return view('reports.index', compact('reportByType', 'reportByStatus', 'totals', 'year', 'availableQuarters', 'reportByUser', 'developers', 'reportByStatusUser', 'reportByCustomer', 'reportByStatusCustomer', 'reportByTag', 'reportByStatusTag', 'reportByTagType'));
     }
     /**
      * Genera il report per Tipo di Storia
@@ -327,6 +328,24 @@ class ReportController extends Controller
             return $cell->name ?? 'non assegnato';
         };
         $firstColumnCells = $customers;
+
+        return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
+    }
+
+    private function generateReportByTagType($year, $availableQuarters, $tags, $customers)
+    {
+        $thead = array_merge([''], StoryType::values(), ['totale']);
+        $queryFn = function ($cell, $column) use ($year) {
+            return Story::whereNotNull('creator_id')
+                ->whereHas('tags', function ($query) use ($cell, $column) {
+                    $query->where('tags.name', $cell->name); // Filtra per il nome del tag
+                })
+                ->where('type', $column);
+        };
+        $nameFn = function ($cell, $column) {
+            return $cell->name ?? 'non assegnato';
+        };
+        $firstColumnCells = $tags;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $nameFn, $queryFn);
     }
