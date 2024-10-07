@@ -26,6 +26,7 @@
         @include('reports.tab7-tag-customer')
         @include('reports.tab8-customer-tag')
         @include('reports.tab9-tag-type')
+        @include('reports.tab10-dev-type')
         @endif
     </div>
 

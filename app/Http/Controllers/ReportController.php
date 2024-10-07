@@ -36,8 +36,9 @@ class ReportController extends Controller
         $tab7TagCustomer = $this->tab7TagCustomer($year, $availableQuarters, $tags, $customers);
         $tab8CustomerTag = $this->tab8CustomerTag($year, $availableQuarters, $tags, $customers);
         $tab9TagType = $this->tab9TagType($year, $availableQuarters, $tags, $customers);
+        $tab10DevType = $this->tab10DevType($year, $availableQuarters, $developers);
 
-        return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType'));
+        return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType', 'tab10DevType'));
     }
     private function generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn)
     {
@@ -361,6 +362,21 @@ class ReportController extends Controller
         };
         $thead = array_merge([''], StoryType::values(), ['totale']);
         $firstColumnCells = $tags;
+
+        return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
+    }
+
+    private function tab10DevType($year, $availableQuarters, $developers)
+    {
+        $cellQueryFn = function ($indexRowObj, $indexColumnObj) {
+            return   Ticket::where('user_id', $indexRowObj->id)
+                ->where('type', $indexColumnObj);
+        };
+        $firstColumnNameFn = function ($indexRowObj) {
+            return $indexRowObj->name;
+        };
+        $thead = array_merge([''], StoryType::values(), ['totale']);
+        $firstColumnCells = $developers;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
     }
