@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -15,11 +16,35 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('queue:work --stop-when-empty')->timezone('Europe/Rome')->hourly()->withoutOverlapping();
-        $schedule->command('sync:stories-calendar')->timezone('Europe/Rome')->dailyAt('07:00');
-        $schedule->command('story:auto-update-status')->timezone('Europe/Rome')->dailyAt('07:00');
-        $schedule->command('story:send-waiting-reminder')->timezone('Europe/Rome')->dailyAt('18:00');
-        $schedule->job(new \App\Jobs\SendDigestEmail)->timezone('Europe/Rome')->dailyAt('19:00');
+        $schedule->command('sync:stories-calendar')
+            ->timezone('Europe/Rome')
+            ->dailyAt('07:45')
+            ->before(function () {
+                Log::info('sync:stories-calendar command starting');
+            })
+            ->after(function () {
+                Log::info('sync:stories-calendar command finished');
+            });
+        $schedule
+            ->command('story:auto-update-status')
+            ->timezone('Europe/Rome')
+            ->dailyAt('07:45')
+            ->before(function () {
+                Log::info('story:auto-update-status command starting');
+            })
+            ->after(function () {
+                Log::info('story:auto-update-status command finished');
+            });
+        $schedule
+            ->command('story:send-waiting-reminder')
+            ->timezone('Europe/Rome')
+            ->dailyAt('18:00')
+            ->before(function () {
+                Log::info('story:send-waiting-reminder command starting');
+            })
+            ->after(function () {
+                Log::info('story:send-waiting-reminder command finished');
+            });
     }
 
     /**
