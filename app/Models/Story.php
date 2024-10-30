@@ -262,9 +262,10 @@ class Story extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
 
-        $this->addMediaCollection('documents')->acceptsMimeTypes(config('services.media-library.allowed_document_formats'));
-
-        $this->addMediaCollection('images')->acceptsMimeTypes(config('services.media-library.allowed_image_formats'));
+        $this->addMediaCollection('documents')->acceptsMimeTypes(array_merge(
+            config('services.media-library.allowed_document_formats'),
+            config('services.media-library.allowed_image_formats')
+        ));
     }
 
     /**

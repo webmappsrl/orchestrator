@@ -190,8 +190,8 @@ class Story extends Resource
             $this->deadlineField($request),
             $this->tagsField(),
             Files::make(__('Documents'), 'documents')
-                ->singleMediaRules('mimes:pdf,doc,docx,json,geojson,txt,csv,jpeg,png,gif,bmp,webp,svg,tiff,heic')
-                ->help(__('Only specific document types are allowed') . '(PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV, JPEG, PNG, GIF, BMP, WEBP, SVG, TIFF, HEIC).')
+                ->singleMediaRules('mimes:pdf,doc,docx,json,geojson,txt,csv,jpeg,png,gif,bmp,webp,svg,tiff,heic,jpg,jpeg,png')
+                ->help(__('Only specific document types are allowed') . '(PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV, JPEG, PNG, GIF, BMP, WEBP, SVG, TIFF, HEIC, JPG, JPEG, PNG).')
                 ->onlyOnDetail(),
             $this->descriptionField(),
             $this->titleField(),
