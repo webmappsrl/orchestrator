@@ -45,22 +45,13 @@
 
 <body>
     <div class="container">
-        <h1>Ticket Non Registrato</h1>
-        <p>Ciao,</p>
-        <p>Orchestrator ha ricevuto una segnalazione da un cliente, ma non è riuscito a trovare un account associato al
-            suo indirizzo email. Di seguito sono riportate le informazioni della mail originale del cliente:</p>
-
+        <h1>Ticket Da Utente Non Registrato</h1>
         <p>Mittente: <strong>{{ $userEmail }}</strong></p>
         <p>Oggetto: <strong>{{ $subject }}</strong></p>
 
         <p>Corpo:</p>
         <div style="background-color: #f9f9f9; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
             {!! $originalBody !!}
-        </div>
-
-        <div class="footer">
-            <p>Cordiali saluti,</p>
-            <p>Il Team di <strong>{{ config('app.name') }}</strong></p>
         </div>
     </div>
 </body>
