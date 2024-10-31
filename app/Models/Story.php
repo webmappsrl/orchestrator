@@ -63,10 +63,11 @@ class Story extends Model implements HasMedia
             }
 
             if ($story->user_id != $story->tester_id) {
-                if ($story->isDirty('user_id')) {
+                // Check if user_id or tester_id has changed
+                if ($story->wasChanged('user_id') && $story->user_id) {
                     $story->sendStatusUpdatedEmail($story, $story->user_id);
                 }
-                if ($story->isDirty('tester_id')) {
+                if ($story->wasChanged('tester_id') && $story->tester_id) {
                     $story->sendStatusUpdatedEmail($story, $story->tester_id);
                 }
             }
@@ -179,6 +180,29 @@ class Story extends Model implements HasMedia
                         ->action('View story', url('/nova/resources/stories/' . $story->id))
                         ->icon('star'));
                 }
+
+                if ($status == StoryStatus::Test->value && $story->tester_id) {
+                    $tester = User::find($story->tester_id);
+                    if ($tester) {
+                        try {
+                            Mail::to($tester->email)->send(new \App\Mail\StoryReadyForTesting($story, $tester));
+                        } catch (\Exception $e) {
+                            Log::error($e->getMessage());
+                        }
+                    }
+                }
+
+                // Invia un'email al developer quando la storia è "tested"
+                if ($status == StoryStatus::Tested->value && $story->user_id) {
+                    $developer = User::find($story->user_id);
+                    if ($developer) {
+                        try {
+                            Mail::to($developer->email)->send(new \App\Mail\StoryTested($story, $developer));
+                        } catch (\Exception $e) {
+                            Log::error($e->getMessage());
+                        }
+                    }
+                }
             }
         });
         static::saving(function ($story) {
@@ -192,6 +216,12 @@ class Story extends Model implements HasMedia
     {
         return $this->morphToMany(Tag::class, 'taggable');
     }
+
+    public function participants()
+    {
+        return $this->belongsToMany(User::class, 'story_participants');
+    }
+
     public function sendStatusUpdatedEmail(Story $story, $userId)
     {
         $user = User::find($userId);
@@ -301,48 +331,35 @@ class Story extends Model implements HasMedia
         $formattedResponse = $sender->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <div $style> <p>" . $response . " </p> </div>" . $divider;
         $this->customer_request = $formattedResponse . $this->customer_request;
         $this->save();
-        try {
-            if ($this->creator_id && $senderType != 'customer') {
-                Mail::to($this->creator->email)->send(new \App\Mail\StoryResponse($this, $this->creator, $sender, $response));
+
+        // Add sender as participant
+        $this->participants()->syncWithoutDetaching([$sender->id]);
+
+        // Collect all unique recipients
+        $recipients = $this->participants->pluck('id')->toArray();
+        if ($this->creator_id && !in_array($this->creator_id, $recipients)) {
+            $recipients[] = $this->creator_id;
+        }
+        if ($this->user_id && !in_array($this->user_id, $recipients)) {
+            $recipients[] = $this->user_id;
+        }
+        if ($this->tester_id && !in_array($this->tester_id, $recipients)) {
+            $recipients[] = $this->tester_id;
+        }
+
+        // Remove sender from recipients and check duplicates
+        $recipients = array_unique(array_diff($recipients, [$sender->id]));
+
+        // Send email to all unique recipients
+        foreach ($recipients as $recipientId) {
+            $recipient = User::find($recipientId);
+            if ($recipient) {
+                try {
+                    Mail::to($recipient->email)->send(new \App\Mail\StoryResponse($this, $recipient, $sender, $response));
+                } catch (\Exception $e) {
+                    Log::error($e->getMessage());
+                }
             }
-            switch ($senderType) {
-                case 'developer':
-                    if ($this->tester_id) {
-                        if ($this->tester_id != $this->user_id) {
-                            Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
-                        }
-                    }
-                    break;
-                case 'tester':
-                    if ($this->user_id) {
-                        if ($this->tester_id != $this->user_id) {
-                            Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
-                        }
-                    }
-                    break;
-                case 'customer':
-                    if ($this->user_id) {
-                        Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
-                    }
-                    //if the customer reply to a released ticket, change the ticket status to assigned
-                    if ($this->status == StoryStatus::Released->value) {
-                        $this->status = StoryStatus::Assigned->value;
-                        $this->save();
-                    }
-                    if ($this->tester_id) {
-                        Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
-                    }
-                    break;
-                default:
-                    if ($this->user_id) {
-                        Mail::to($this->developer->email)->send(new \App\Mail\StoryResponse($this, $this->developer, $sender, $response));
-                    }
-                    if ($this->tester_id) {
-                        Mail::to($this->tester->email)->send(new \App\Mail\StoryResponse($this, $this->tester, $sender, $response));
-                    }
-            }
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
         }
     }
 
@@ -390,5 +407,31 @@ class Story extends Model implements HasMedia
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Metodo per aggiungere un partecipante
+    protected function addParticipant($userId)
+    {
+        $participants = $this->participants ?? [];
+        if (!in_array($userId, $participants)) {
+            $participants[] = $userId;
+            $this->participants = $participants;
+            $this->save();
+        }
+    }
+
+    // Metodo per notificare tutti i partecipanti
+    protected function notifyParticipants($response, $sender)
+    {
+        $participants = $this->participants;
+        foreach ($participants as $participant) {
+            if ($participant->id !== $sender->id) {
+                try {
+                    Mail::to($participant->email)->send(new \App\Mail\StoryResponse($this, $participant, $sender, $response));
+                } catch (\Exception $e) {
+                    Log::error($e->getMessage());
+                }
+            }
+        }
     }
 }
