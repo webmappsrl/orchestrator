@@ -45,7 +45,6 @@
 
 <body>
     <div class="container">
-        <h1>Ticket Da Utente Non Registrato</h1>
         <p>Mittente: <strong>{{ $userEmail }}</strong></p>
         <p>Oggetto: <strong>{{ $subject }}</strong></p>
 

@@ -70,7 +70,7 @@ class ProcessInboundEmails implements ShouldQueue
         try {
             $userEmail = $message->getFrom()[0]->mail;
             $subject = $this->decodeSubject($message->getSubject());
-            $body = $message->hasTextBody() ? $this->cleanEmailBody($message->getTextBody()) : $this->cleanEmailBody($message->getBodies());
+            $body = $this->cleanEmailBody($message);
 
             $user = User::where('email', $userEmail)->first();
 
@@ -86,8 +86,9 @@ class ProcessInboundEmails implements ShouldQueue
         }
     }
 
-    private function cleanEmailBody($body)
+    private function cleanEmailBody($message)
     {
+        $body = $message->hasTextBody() ? $message->getTextBody() : $message->getBodies();
         $body = preg_replace('/---.*?---/s', '', $body);
         return trim($body);
     }
