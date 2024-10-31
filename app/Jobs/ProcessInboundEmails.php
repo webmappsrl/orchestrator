@@ -69,8 +69,8 @@ class ProcessInboundEmails implements ShouldQueue
     {
         try {
             $userEmail = $message->getFrom()[0]->mail;
-            $subject = $message->getSubject();
-            $body = $message->hasTextBody() ? $message->getTextBody() : $message->getBodies();
+            $subject = $this->decodeSubject($message->getSubject());
+            $body = $this->cleanEmailBody($message);
 
             $user = User::where('email', $userEmail)->first();
 
@@ -84,6 +84,19 @@ class ProcessInboundEmails implements ShouldQueue
         } catch (\Exception $e) {
             $logger->error('Error creating story: ' . $e->getMessage());
         }
+    }
+
+    private function cleanEmailBody($message)
+    {
+        $body = $message->hasTextBody() ? $message->getTextBody() : $message->getBodies();
+        $body = preg_replace('/---.*?---/s', '', $body);
+        return trim($body);
+    }
+
+    private function decodeSubject($subject)
+    {
+        $subject = mb_decode_mimeheader($subject);
+        return preg_replace('/^Fwd:\s*/', '', $subject);
     }
 
     private function handleUnregisteredUser($userEmail, $subject, $body, $logger)
@@ -100,9 +113,8 @@ class ProcessInboundEmails implements ShouldQueue
     private function createStory($user, $subject, $body, $logger)
     {
         $story = new Story();
-        $story->user_id = $user->id;
         $story->name = $subject;
-        $story->description = $body;
+        $story->customer_request = $body;
         $story->status = StoryStatus::New;
         $story->creator_id = $user->id;
         $story->save();
@@ -136,14 +148,14 @@ class ProcessInboundEmails implements ShouldQueue
 
     private function addMediaToStory($mimeType, $temporaryPath, $story, $logger)
     {
-        if (in_array($mimeType, config('services.media-library.allowed_document_formats'))) {
-            $logger->info("File documento: " . $temporaryPath . " MIME type: $mimeType");
+        if (
+            in_array($mimeType, config('services.media-library.allowed_document_formats')) ||
+            in_array($mimeType, config('services.media-library.allowed_image_formats'))
+        ) {
+            $logger->info("File: " . $temporaryPath . " MIME type: $mimeType");
             $story->addMedia($temporaryPath)->toMediaCollection('documents');
-        } elseif (in_array($mimeType, config('services.media-library.allowed_image_formats'))) {
-            $logger->info("File immagine: " . $temporaryPath . " MIME type: $mimeType");
-            $story->addMedia($temporaryPath)->toMediaCollection('images');
         } else {
-            $logger->warning("Allegato non supportato: " . $attachmentName . " con MIME type $mimeType");
+            $logger->warning("Allegato non supportato con MIME type $mimeType");
         }
     }
 }
