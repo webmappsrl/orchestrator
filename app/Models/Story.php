@@ -62,12 +62,14 @@ class Story extends Model implements HasMedia
                 $epic->save();
             }
 
-            // Check if user_id or tester_id has changed
-            if ($story->wasChanged('user_id') && $story->user_id) {
-                $story->sendStatusUpdatedEmail($story, $story->user_id);
-            }
-            if ($story->wasChanged('tester_id') && $story->tester_id) {
-                $story->sendStatusUpdatedEmail($story, $story->tester_id);
+            if ($story->user_id != $story->tester_id) {
+                // Check if user_id or tester_id has changed
+                if ($story->wasChanged('user_id') && $story->user_id) {
+                    $story->sendStatusUpdatedEmail($story, $story->user_id);
+                }
+                if ($story->wasChanged('tester_id') && $story->tester_id) {
+                    $story->sendStatusUpdatedEmail($story, $story->tester_id);
+                }
             }
         });
 
@@ -177,6 +179,29 @@ class Story extends Model implements HasMedia
                         ->message('The status of the story ' . $story->id . ' has been updated to ' . $status . ' by ' . auth()->user()->name)
                         ->action('View story', url('/nova/resources/stories/' . $story->id))
                         ->icon('star'));
+                }
+
+                if ($status == StoryStatus::Test->value && $story->tester_id) {
+                    $tester = User::find($story->tester_id);
+                    if ($tester) {
+                        try {
+                            Mail::to($tester->email)->send(new \App\Mail\StoryReadyForTesting($story, $tester));
+                        } catch (\Exception $e) {
+                            Log::error($e->getMessage());
+                        }
+                    }
+                }
+
+                // Invia un'email al developer quando la storia è "tested"
+                if ($status == StoryStatus::Tested->value && $story->user_id) {
+                    $developer = User::find($story->user_id);
+                    if ($developer) {
+                        try {
+                            Mail::to($developer->email)->send(new \App\Mail\StoryTested($story, $developer));
+                        } catch (\Exception $e) {
+                            Log::error($e->getMessage());
+                        }
+                    }
                 }
             }
         });
