@@ -2,23 +2,26 @@
 
 namespace App\Models;
 
-use App\Models\Epic;
 use App\Models\Tag;
+use App\Models\Epic;
 use App\Enums\UserRole;
-use App\Enums\StoryStatus;
 use App\Enums\StoryType;
-use App\Mail\CustomerNewStoryCreated;
+use App\Mail\StoryTested;
+use App\Enums\StoryStatus;
+use App\Mail\StoryStatusUpdated;
+use Spatie\MediaLibrary\HasMedia;
+use App\Mail\StoryReadyForTesting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
+use App\Mail\CustomerNewStoryCreated;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Laravel\Nova\Notifications\NovaNotification;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Story extends Model implements HasMedia
 {
@@ -104,7 +107,7 @@ class Story extends Model implements HasMedia
                         $child->save();
                     }
                 }
-                if ($story->isDirty('parent_id')) {
+                if ($story->wasChanged('parent_id')) {
                     try {
 
                         $originalStory = $story->getOriginal();
@@ -181,25 +184,26 @@ class Story extends Model implements HasMedia
                         ->icon('star'));
                 }
 
-                if ($status == StoryStatus::Test->value && $story->tester_id) {
-                    $tester = User::find($story->tester_id);
-                    if ($tester) {
-                        try {
-                            Mail::to($tester->email)->send(new \App\Mail\StoryReadyForTesting($story, $tester));
-                        } catch (\Exception $e) {
-                            Log::error($e->getMessage());
+                if ($story->wasChanged('status')) {
+                    if ($status == StoryStatus::Test->value && $story->tester_id) {
+                        $tester = User::find($story->tester_id);
+                        if ($tester) {
+                            try {
+                                Mail::to($tester->email)->send(new StoryReadyForTesting($story, $tester));
+                            } catch (\Exception $e) {
+                                Log::error($e->getMessage());
+                            }
                         }
                     }
-                }
 
-                // Invia un'email al developer quando la storia è "tested"
-                if ($status == StoryStatus::Tested->value && $story->user_id) {
-                    $developer = User::find($story->user_id);
-                    if ($developer) {
-                        try {
-                            Mail::to($developer->email)->send(new \App\Mail\StoryTested($story, $developer));
-                        } catch (\Exception $e) {
-                            Log::error($e->getMessage());
+                    if ($status == StoryStatus::Tested->value && $story->user_id) {
+                        $developer = User::find($story->user_id);
+                        if ($developer) {
+                            try {
+                                Mail::to($developer->email)->send(new StoryTested($story, $developer));
+                            } catch (\Exception $e) {
+                                Log::error($e->getMessage());
+                            }
                         }
                     }
                 }
@@ -226,7 +230,7 @@ class Story extends Model implements HasMedia
     {
         $user = User::find($userId);
         try {
-            Mail::to($user->email)->send(new \App\Mail\StoryStatusUpdated($story, $user));
+            Mail::to($user->email)->send(new StoryStatusUpdated($story, $user));
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             throw new \Exception($e->getMessage());
