@@ -6,11 +6,9 @@ use App\Models\Tag;
 use App\Models\Epic;
 use App\Enums\UserRole;
 use App\Enums\StoryType;
-use App\Mail\StoryTested;
 use App\Enums\StoryStatus;
-use App\Mail\StoryStatusUpdated;
+use App\Mail\StoryStatusUpdate;
 use Spatie\MediaLibrary\HasMedia;
-use App\Mail\StoryReadyForTesting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -18,7 +16,6 @@ use App\Mail\CustomerNewStoryCreated;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Laravel\Nova\Notifications\NovaNotification;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -231,7 +228,7 @@ class Story extends Model implements HasMedia
     {
         $user = User::find($userId);
         try {
-            Mail::to($user->email)->send(new StoryTest($story, $user));
+            Mail::to($user->email)->send(new StoryStatusUpdate($story, $user));
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             throw new \Exception($e->getMessage());

@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Envelope;
 
-class StoryTest extends Mailable
+class StoryStatusUpdate extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -31,14 +31,14 @@ class StoryTest extends Mailable
 
         return new Envelope(
             from: new Address($from, $name),
-            subject: '[.' . $this->story->status . '][' . $this->story->creator->name . ']: ' . $this->story->name,
+            subject: '[' . $this->story->status . '][' . $this->story->creator->name . ']: ' . $this->story->name,
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'mails.story-test',
+            view: 'mails.story-status-updated',
             with: [
                 'story' => $this->story,
                 'recipient' => $this->recipient,

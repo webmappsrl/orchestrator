@@ -1,17 +1,83 @@
-@component('mail::message')
-# Aggiornamento di stato della storia [{{$story->id}}]({{ url('resources/stories/' . $story->id) }}).
+    <!DOCTYPE html>
+    <html lang="it">
 
-Ciao {{ $user->name }},
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                color: #333;
+                line-height: 1.6;
+                margin: 0;
+                padding: 0;
+            }
 
-({{$story->id}})[<span style="background-color:{{ $colorMapping[$status] ?? 'black' }}; color: white; padding: 2px 4px;">{{ $status }}</span>]<br>
-{{$story->name}}
+            .container {
+                max-width: 600px;
+                margin: 20px auto;
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
 
-@if (count($story->deadlines) > 0)
-La storia è inserita nella deadline : [{{ $story->deadlines->first()->title }}]( {{ url('resources/deadlines/' . $story->deadlines->first()->id) }} ) con scadenza: {{$story->deadlines->first()->due_date->format('d-m-Y')}}.
-@endif
+            .content {
+                margin: 20px 0;
+            }
 
-Puoi visualizzare i dettagli della storia a questo [link]({{ url('resources/stories/' . $story->id) }}).
+            .footer {
+                text-align: center;
+                font-size: 0.9em;
+                color: #777;
+                border-top: 1px solid #ddd;
+                padding-top: 10px;
+            }
 
-Grazie,<br>
-{{ config('app.name') }}
-@endcomponent
+            a {
+                color: #3498db;
+                text-decoration: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        @if ($recipient->role === 'customer')
+            <div class="container">
+                <div class="content">
+                    <p>
+                        Il ticket <strong>#{{ $story->id }}</strong> - {{ $story->name }}
+                        @switch($story->status)
+                            @case('test')
+                                è pronto per essere testato
+                            @break
+
+                            @case('tested')
+                                è stato testato
+                            @break
+
+                            @default
+                                ha cambiato stato in: {{ $story->status }}
+                        @endswitch
+                        .
+                    </p>
+                    <p>Puoi visualizzare i dettagli della storia a questo <a
+                            href="{{ url('resources/stories/' . $story->id) }}">link</a>.</p>
+                </div>
+            </div>
+        @else
+            <div class="container">
+                <div class="content">
+                    <p>
+                        <strong>Ticket #{{ $story->id }} - {{ $story->name }}</strong><br>
+                    <div style="text-align: center">
+                        <a href="{{ url('resources/stories/' . $story->id) }}">Link</a>
+                    </div>
+                    </p>
+                </div>
+            </div>
+        @endif
+    </body>
+
+    </html>
