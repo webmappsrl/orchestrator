@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Story;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
@@ -10,44 +11,37 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Envelope;
 
-class StoryReadyForTesting extends Mailable
+class StoryTest extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $story;
-    public $tester;
+    public $recipient;
 
-    public function __construct(Story $story, $tester)
+    public function __construct(Story $story, User $recipient)
     {
         $this->story = $story;
-        $this->tester = $tester;
+        $this->recipient = $recipient;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         $from = config('mail.from.address');
         $name = config('mail.from.name');
 
-
         return new Envelope(
             from: new Address($from, $name),
-            subject: 'Il ticket ' . $this->story->id . ' è pronto per essere testato',
+            subject: '[.' . $this->story->status . '][' . $this->story->creator->name . ']: ' . $this->story->name,
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
-            view: 'mails.story-ready-for-testing',
+            view: 'mails.story-test',
             with: [
                 'story' => $this->story,
-                'tester' => $this->tester,
+                'recipient' => $this->recipient,
             ],
         );
     }

@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use App\Mail\StoryTest;
 
 class Story extends Model implements HasMedia
 {
@@ -189,7 +190,7 @@ class Story extends Model implements HasMedia
                         $tester = User::find($story->tester_id);
                         if ($tester) {
                             try {
-                                Mail::to($tester->email)->send(new StoryReadyForTesting($story, $tester));
+                                Mail::to($tester->email)->send(new StoryTest($story, $tester));
                             } catch (\Exception $e) {
                                 Log::error($e->getMessage());
                             }
@@ -200,7 +201,7 @@ class Story extends Model implements HasMedia
                         $developer = User::find($story->user_id);
                         if ($developer) {
                             try {
-                                Mail::to($developer->email)->send(new StoryTested($story, $developer));
+                                Mail::to($developer->email)->send(new StoryTest($story, $developer));
                             } catch (\Exception $e) {
                                 Log::error($e->getMessage());
                             }
@@ -230,7 +231,7 @@ class Story extends Model implements HasMedia
     {
         $user = User::find($userId);
         try {
-            Mail::to($user->email)->send(new StoryStatusUpdated($story, $user));
+            Mail::to($user->email)->send(new StoryTest($story, $user));
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             throw new \Exception($e->getMessage());

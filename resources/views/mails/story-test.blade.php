@@ -23,12 +23,6 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        .header {
-            text-align: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-        }
-
         .content {
             margin: 20px 0;
         }
@@ -51,7 +45,19 @@
 <body>
     <div class="container">
         <div class="content">
-            <p>Il ticket <strong>#{{ $story->id }}</strong> è pronto per essere testato.</p>
+            <p>
+                Il ticket <strong>#{{ $story->id }}</strong> - {{ $story->name }}
+                @switch($story->status)
+                    @case('test')
+                        è pronto per essere testato
+                    @break
+
+                    @case('tested')
+                        è stato testato
+                    @break
+                @endswitch
+                .
+            </p>
             <p>Puoi visualizzare i dettagli della storia a questo <a
                     href="{{ url('resources/stories/' . $story->id) }}">link</a>.</p>
         </div>
