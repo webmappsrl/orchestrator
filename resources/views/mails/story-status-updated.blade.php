@@ -48,22 +48,12 @@
                 <div class="content">
                     <p>
                         Il ticket <strong>#{{ $story->id }}</strong> - {{ $story->name }}
-                        @switch($story->status)
-                            @case('test')
-                                è pronto per essere testato
-                            @break
 
-                            @case('tested')
-                                è stato testato
-                            @break
+                        ha cambiato stato in: {{ $story->status }}
 
-                            @default
-                                ha cambiato stato in: {{ $story->status }}
-                        @endswitch
-                        .
                     </p>
                     <p>Puoi visualizzare i dettagli della storia a questo <a
-                            href="{{ url('resources/stories/' . $story->id) }}">link</a>.</p>
+                            href="{{ url('resources/story-showed-by-customers/' . $story->id) }}">link</a>.</p>
                 </div>
             </div>
         @else
