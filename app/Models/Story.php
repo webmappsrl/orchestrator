@@ -64,11 +64,11 @@ class Story extends Model implements HasMedia
 
             if ($story->user_id != $story->tester_id) {
                 // Check if user_id or tester_id has changed
-                if ($story->wasChanged('user_id') && $story->user_id) {
+                if ($story->wasChanged('user_id') && $story->user_id && $story->user_id != $story->creator_id) {
                     //send email to the new developer 
                     $story->sendStatusUpdatedEmail($story, $story->user_id);
                 }
-                if ($story->wasChanged('tester_id') && $story->tester_id) {
+                if ($story->wasChanged('tester_id') && $story->tester_id && $story->tester_id != $story->creator_id) {
                     //send email to the new tester
                     $story->sendStatusUpdatedEmail($story, $story->tester_id);
                 }
