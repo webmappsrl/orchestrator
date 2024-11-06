@@ -6,23 +6,20 @@ use App\Models\Tag;
 use App\Models\Epic;
 use App\Enums\UserRole;
 use App\Enums\StoryType;
-use App\Mail\StoryTested;
 use App\Enums\StoryStatus;
-use App\Mail\StoryStatusUpdated;
 use Spatie\MediaLibrary\HasMedia;
-use App\Mail\StoryReadyForTesting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Jobs\SendStatusUpdateMailJob;
 use App\Mail\CustomerNewStoryCreated;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Laravel\Nova\Notifications\NovaNotification;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use App\Mail\StoryTest;
+use Illuminate\Support\Facades\Auth;
 
 class Story extends Model implements HasMedia
 {
@@ -68,10 +65,12 @@ class Story extends Model implements HasMedia
 
             if ($story->user_id != $story->tester_id) {
                 // Check if user_id or tester_id has changed
-                if ($story->wasChanged('user_id') && $story->user_id) {
+                if ($story->wasChanged('user_id') && $story->user_id && $story->user_id != Auth::user()->id) {
+                    //send email to the new developer 
                     $story->sendStatusUpdatedEmail($story, $story->user_id);
                 }
-                if ($story->wasChanged('tester_id') && $story->tester_id) {
+                if ($story->wasChanged('tester_id') && $story->tester_id && $story->tester_id != Auth::user()->id) {
+                    //send email to the new tester
                     $story->sendStatusUpdatedEmail($story, $story->tester_id);
                 }
             }
@@ -157,7 +156,7 @@ class Story extends Model implements HasMedia
                 $status = is_object($story->status) ? $story->status->value : $story->status;
 
                 $devHasUpdatedStatus = $devIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'testing';
-                $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'done' || $status == 'rejected';
+                $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'tested' || $status == 'done' || $status == 'rejected';
 
                 $devAndTesterAreTheSamePerson = $story->tester_id == $story->user_id;
 
@@ -184,30 +183,6 @@ class Story extends Model implements HasMedia
                         ->action('View story', url('/nova/resources/stories/' . $story->id))
                         ->icon('star'));
                 }
-
-                if ($story->wasChanged('status')) {
-                    if ($status == StoryStatus::Test->value && $story->tester_id) {
-                        $tester = User::find($story->tester_id);
-                        if ($tester) {
-                            try {
-                                Mail::to($tester->email)->send(new StoryTest($story, $tester));
-                            } catch (\Exception $e) {
-                                Log::error($e->getMessage());
-                            }
-                        }
-                    }
-
-                    if ($status == StoryStatus::Tested->value && $story->user_id) {
-                        $developer = User::find($story->user_id);
-                        if ($developer) {
-                            try {
-                                Mail::to($developer->email)->send(new StoryTest($story, $developer));
-                            } catch (\Exception $e) {
-                                Log::error($e->getMessage());
-                            }
-                        }
-                    }
-                }
             }
         });
         static::saving(function ($story) {
@@ -230,12 +205,7 @@ class Story extends Model implements HasMedia
     public function sendStatusUpdatedEmail(Story $story, $userId)
     {
         $user = User::find($userId);
-        try {
-            Mail::to($user->email)->send(new StoryTest($story, $user));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            throw new \Exception($e->getMessage());
-        }
+        SendStatusUpdateMailJob::dispatch($story, $user);
     }
     public function projects()
     {
