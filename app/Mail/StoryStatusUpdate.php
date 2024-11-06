@@ -31,7 +31,7 @@ class StoryStatusUpdate extends Mailable
 
         return new Envelope(
             from: new Address($from, $name),
-            subject: '[' . $this->story->status . '][' . $this->story->creator->name . ']: ' . $this->story->name,
+            subject: __('[' . $this->story->status . ']') . '[' . $this->story->creator->name . ']: ' . $this->story->name,
         );
     }
 
