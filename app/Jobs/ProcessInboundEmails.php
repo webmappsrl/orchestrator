@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Story;
 use App\Enums\UserRole;
 use App\Enums\StoryStatus;
+use App\Enums\StoryType;
 use Illuminate\Bus\Queueable;
 use Webklex\IMAP\Facades\Client;
 use App\Mail\NotRegisteredTicket;
@@ -115,6 +116,7 @@ class ProcessInboundEmails implements ShouldQueue
         $story = new Story();
         $story->name = $subject;
         $story->customer_request = $body;
+        $story->type = StoryType::Helpdesk;
         $story->status = StoryStatus::New;
         $story->creator_id = $user->id;
         $story->save();
