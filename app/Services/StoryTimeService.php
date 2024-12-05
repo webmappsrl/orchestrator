@@ -19,7 +19,16 @@ class StoryTimeService
 
   public function getAvailableHoursPerDay(User $user, string $date): int
   {
+    //TODO: dynamic by user
+    //TODO: dynamic by date
     return 8;
+  }
+
+  public function isAnHolidayDay(Carbon $date, User $user)
+  {
+    //TODO: dynamic by user
+    //TODO: dynamic by date/user
+    return (int) $date->format('N') > 5; //Exclude saturday and sunday
   }
 
   //story time
@@ -118,13 +127,15 @@ class StoryTimeService
 
       //get the next storyLog event related to the progress one to understand when the story was "closed"
       $nextStoryLog = $allStoryLogs->where('created_at', '>', $progressLog->created_at)->first();
-      $nextStoryLogDay = $this->formatDate($nextStoryLog->created_at);
+      $nextStoryLogDay = $nextStoryLog ? $this->formatDate($nextStoryLog->created_at) : $progressLogDay;
 
       if ($nextStoryLogDay != $progressLogDay) {
         //the story wasn't completed on the same day of the progress status event
         $period = new CarbonPeriod($progressLog->created_at, $nextStoryLog->created_at);
         foreach ($period as $date) {
-          $progressDays[] = $this->formatDate($date);
+          //remove holidays: if you start a ticket on friday to end it on monday, you have used 2 days
+          if (! $this->isAnHolidayDay($date, $story->user))
+            $progressDays[] = $this->formatDate($date);
         }
       } else {
         //the story was completed in a day
