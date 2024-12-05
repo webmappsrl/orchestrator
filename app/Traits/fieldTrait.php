@@ -262,7 +262,7 @@ trait fieldTrait
             }
 
             // Nessuna parent o child story
-            return 'No relationship';
+            return ' ';
         })->canSee($this->canSee('relationship'))->asHtml();
     }
 
