@@ -2,12 +2,13 @@
 
 namespace App\Observers;
 
-use App\Enums\StoryStatus;
 use App\Models\Story;
 use App\Models\StoryLog;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Auth;
+use App\Enums\StoryStatus;
+use App\Actions\StoryTimeService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
 
 class StoryObserver
 {
@@ -56,13 +57,14 @@ class StoryObserver
 
         if (count($jsonChanges) > 0) {
             $timestamp = now()->format('Y-m-d H:i');
-            StoryLog::create([
+            $storyLog = StoryLog::create([
                 'story_id' => $story->id,
                 'user_id' => $user ? $user->id : null,
                 'viewed_at' => $timestamp,
                 'changes' => $jsonChanges,
             ]);
             $story->saveQuietly();
+            StoryTimeService::run($storyLog->story);
         }
     }
 
