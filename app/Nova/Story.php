@@ -4,25 +4,26 @@ namespace App\Nova;
 
 use App\Enums\UserRole;
 use Laravel\Nova\Panel;
-use App\Nova\Actions\EditStories;
 use App\Enums\StoryStatus;
+use App\Traits\fieldTrait;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Stack;
+use App\Nova\Metrics\StoryTime;
+use Laravel\Nova\Fields\HasMany;
+use App\Nova\Actions\EditStories;
 use Laravel\Nova\Fields\BelongsTo;
+use Formfeed\Breadcrumbs\Breadcrumb;
 use Laravel\Nova\Fields\MorphToMany;
+use App\Nova\Lenses\StoriesByQuarter;
+use Formfeed\Breadcrumbs\Breadcrumbs;
+use App\Nova\Deadline as novaDeadline;
+use Laravel\Nova\Fields\BelongsToMany;
+use Illuminate\Support\Facades\Session;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
-use App\Nova\Lenses\StoriesByQuarter;
-use App\Traits\fieldTrait;
-use Formfeed\Breadcrumbs\Breadcrumb;
-use Formfeed\Breadcrumbs\Breadcrumbs;
-use Illuminate\Support\Facades\Session;
-use Laravel\Nova\Fields\BelongsToMany;
-use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Stack;
-use App\Nova\Deadline as novaDeadline;
-
+use App\Nova\Metrics\StoryTimeTrend;
 
 class Story extends Resource
 {
@@ -82,8 +83,8 @@ class Story extends Resource
             Gentile Clientela,
         </p>
         <p style="font-size: 18px; line-height: 1.6;">
-            Vi informiamo che il nostro servizio di ticketing sarà <strong>ridotto solo alle situazioni urgenti</strong> da 
-            <strong>lunedì 12</strong> fino a <strong>venerdì 16</strong>. 
+            Vi informiamo che il nostro servizio di ticketing sarà <strong>ridotto solo alle situazioni urgenti</strong> da
+            <strong>lunedì 12</strong> fino a <strong>venerdì 16</strong>.
         </p>
         <p style="font-size: 18px; line-height: 1.6;">
             Il servizio riprenderà regolarmente da <strong>lunedì 19</strong>.
@@ -287,7 +288,9 @@ class Story extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        return [];
+        return [
+            (new StoryTimeTrend)->refreshWhenFiltersChange()
+        ];
     }
 
 

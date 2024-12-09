@@ -38,6 +38,7 @@ class BacklogStory extends Story
     {
         $query = $this->indexQuery($request,  Story::query());
         return [
+            ...parent::cards($request),
             (new Metrics\StoriesByField('status', 'Status', $query))->width('1/3'),
             (new Metrics\StoriesByUser('creator_id', 'Creator', $query))->width('1/3'),
             (new Metrics\StoriesByUser('user_id', 'Assigned',  $query))->width('1/3'),
