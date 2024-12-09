@@ -22,6 +22,8 @@ class StoryTimeTrend extends Value
         if ($requestModel instanceof Tag) {
             $query = Story::whereRelation('tags', 'taggables.taggable_type', Story::class)
                 ->whereRelation('tags', 'taggables.tag_id', $requestModel->id);
+        } elseif (! is_null($requestModel->id) && $requestModel instanceof Story) {
+            $query = Story::where('id', $requestModel->id);
         }
         return $this->sum($request, $query, 'hours')->suffix('Hours');
     }

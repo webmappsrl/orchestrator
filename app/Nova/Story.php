@@ -289,7 +289,8 @@ class Story extends Resource
     public function cards(NovaRequest $request)
     {
         return [
-            (new StoryTimeTrend)->refreshWhenFiltersChange()
+            (new StoryTimeTrend)->refreshWhenFiltersChange(),
+            (new StoryTimeTrend)->onlyOnDetail()
         ];
     }
 
