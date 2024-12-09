@@ -6,51 +6,85 @@ use App\Models\User;
 use App\Models\Story;
 use App\Models\StoryLog;
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
+use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Laravel\Nova\Actions\ActionEvent;
 
-class StoryTimeService
+class StoryTimeService extends AbstractService
 {
 
   static $comparableDateFormat = 'Y-m-d';
 
-  public function getAvailableHoursPerDay(User $user, string $date): int
+
+  public function getAvailableHoursPerDay(User $user, CarbonInterface $date): int
   {
-    //TODO: dynamic by user
-    //TODO: dynamic by date
-    return 8;
+
+    if ($this->isAnHolidayDay($user, $date))
+      return 0;
+
+    $estimatedWorkHours = GoogleCalendarService::getService()->getUserWorkingHoursByDate($user, $date);
+
+    if ($estimatedWorkHours > 4)
+      return 8; //all day
+
+    return 4; //half day
   }
 
-  public function isAnHolidayDay(Carbon $date, User $user)
+  public function isAnHolidayDay(User $user, CarbonInterface $date)
   {
-    //TODO: dynamic by user
-    //TODO: dynamic by date/user
+    if ($this->isSundayOrSaturday($date))
+      return true;
+
+    return $this->getUserStoryLogsHours($user, $date) === 0;
+  }
+
+  protected function isSundayOrSaturday(CarbonInterface $date)
+  {
     return (int) $date->format('N') > 5; //Exclude saturday and sunday
   }
 
-  //story time
+  public function getUserStoryLogsHours(User $user, Carbon $date): float
+  {
+    $events = StoryLog::where('user_id', $user->id)->whereDate('created_at', $date)->orderBy('created_at')->get();
+
+    if ($events->count() === 0)
+      return 0;
+
+    $period = CarbonPeriod::create(
+      $events->first()->created_at,
+      '1 minute', //with this interval i see also periods under 1h and have as result something that is greater than 0
+      $events->last()->created_at
+    );
+
+    return count($period) / 60;
+  }
+
+  /**
+   * Returns working hours and days of a story
+   *
+   * @param Story $story
+   * @return Collection - with working hours and days of the story provided
+   */
   public function getStoryTime(Story $story): Collection
   {
-
-    $details = collect(['days' => []]);
-    $storyTime = 0;
     /**
      * @var \App\Models\User
      */
     $user = $story->user;
-
+    $response = collect([]);
+    $storyTime = 0;
 
     //when it was worked
     $progressDays = $this->getStoryProgressDays($story);
-    $details['days'] = $progressDays->toArray();
+    $response['days'] = $progressDays->toArray();
 
-    //concurrency
+    //other stories concurrency
     $storiesByDays = $this->getStoryLogGroupedByDays($user, $progressDays, $story);
     foreach ($progressDays as $progressDay) {
-      $hoursAvailablePerDay = $this->getAvailableHoursPerDay($user, $progressDay);
+      $hoursAvailablePerDay = $this->getAvailableHoursPerDay($user, $this->stringToDate($progressDay));
       if (isset($storiesByDays[$progressDay])) {
         //that day the user had "$storiesByDays[$progressDay]->count() + 1" stories ( + 1 is the current one)
         $otherProgressStoriesThatDay = $storiesByDays[$progressDay]->count();
@@ -61,9 +95,9 @@ class StoryTimeService
     }
 
 
-    $details['hours'] = $storyTime;
+    $response['hours'] = $storyTime;
 
-    return $details;
+    return $response;
   }
 
 
@@ -95,22 +129,40 @@ class StoryTimeService
       ->map([$this, 'getModelDateFormattedForComparisons'])
       ->groupBy('created_at')
       ->mapWithKeys(function ($collection, $date) { //fixes an error on keys format
-        return [$this->formatDate(Carbon::parse($date)) => $collection];
+        return [$this->dateToString($this->stringToDate($date)) => $collection];
       });
   }
 
-  public function getModelDateFormattedForComparisons(Model $model)
+  protected function stringToDate(string $dateString): Carbon
   {
-    $model->created_at = $this->formatDate($model->created_at);
+    return Carbon::createFromFormat(static::$comparableDateFormat, $dateString);
+  }
+
+  /**
+   * Transform the created_at attribute from a DateTime to a Date
+   *
+   * @param Model $model
+   * @return Model
+   */
+  public function getModelDateFormattedForComparisons(Model $model): Model
+  {
+    $model->created_at = $this->dateToString($model->created_at);
     return $model;
   }
-  protected function formatDate(Carbon $date)
+
+  /**
+   * Date formatter
+   *
+   * @param Carbon $date
+   * @return string
+   */
+  protected function dateToString(Carbon $date): string
   {
     return $date->format(static::$comparableDateFormat);
   }
 
   /**
-   * Undocumented function
+   * Computes and returns working days of a provided Story
    *
    * @param Story $story - The story model
    * @return Collection - of days (strings) when the story was in a progress status
@@ -123,19 +175,19 @@ class StoryTimeService
 
     //iterate over all progress story logs of the story
     foreach ($progressLogs as $progressLog) {
-      $progressLogDay = $this->formatDate($progressLog->created_at);
+      $progressLogDay = $this->dateToString($progressLog->created_at);
 
       //get the next storyLog event related to the progress one to understand when the story was "closed"
       $nextStoryLog = $allStoryLogs->where('created_at', '>', $progressLog->created_at)->first();
-      $nextStoryLogDay = $nextStoryLog ? $this->formatDate($nextStoryLog->created_at) : $progressLogDay;
+      $nextStoryLogDay = $nextStoryLog ? $this->dateToString($nextStoryLog->created_at) : $progressLogDay;
 
       if ($nextStoryLogDay != $progressLogDay) {
         //the story wasn't completed on the same day of the progress status event
         $period = new CarbonPeriod($progressLog->created_at, $nextStoryLog->created_at);
         foreach ($period as $date) {
           //remove holidays: if you start a ticket on friday to end it on monday, you have used 2 days
-          if (! $this->isAnHolidayDay($date, $story->user))
-            $progressDays[] = $this->formatDate($date);
+          if (! $this->isAnHolidayDay($story->user, $date))
+            $progressDays[] = $this->dateToString($date);
         }
       } else {
         //the story was completed in a day
@@ -146,12 +198,5 @@ class StoryTimeService
     //unique ... if the progress status is triggered multiple times in a day we count them as once only
     return $progressDays
       ->unique();
-  }
-
-
-
-  static public function getService(): StoryTimeService
-  {
-    return app()->make(static::class);
   }
 }
