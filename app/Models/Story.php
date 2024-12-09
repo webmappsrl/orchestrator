@@ -66,7 +66,7 @@ class Story extends Model implements HasMedia
             if ($story->user_id != $story->tester_id) {
                 // Check if user_id or tester_id has changed
                 if ($story->wasChanged('user_id') && $story->user_id && $story->user_id != Auth::user()->id) {
-                    //send email to the new developer 
+                    //send email to the new developer
                     $story->sendStatusUpdatedEmail($story, $story->user_id);
                 }
                 if ($story->wasChanged('tester_id') && $story->tester_id && $story->tester_id != Auth::user()->id) {
@@ -201,6 +201,12 @@ class Story extends Model implements HasMedia
     {
         return $this->belongsToMany(User::class, 'story_participants');
     }
+
+    public function storyLogs()
+    {
+        return $this->hasMany(StoryLog::class);
+    }
+
 
     public function sendStatusUpdatedEmail(Story $story, $userId)
     {

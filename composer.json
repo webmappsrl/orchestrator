@@ -28,6 +28,7 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.12",
+        "lorisleiva/laravel-actions": "^2.8",
         "maatwebsite/excel": "^3.1",
         "manogi/nova-tiptap": "^3.2",
         "outl1ne/nova-multiselect-field": "^4.2",
@@ -50,7 +51,8 @@
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^7.0",
         "phpunit/phpunit": "^10.0",
-        "spatie/laravel-ignition": "^2.0"
+        "spatie/laravel-ignition": "^2.0",
+        "wulfheart/laravel-actions-ide-helper": "^0.8.0"
     },
     "autoload": {
         "psr-4": {

@@ -21,7 +21,9 @@ class DeveloperStory extends Story
     public static function searchableColumns()
     {
         return [
-            'id', 'name', new SearchableRelation('creator', 'name'),
+            'id',
+            'name',
+            new SearchableRelation('creator', 'name'),
         ];
     }
 
@@ -38,6 +40,7 @@ class DeveloperStory extends Story
     {
         $query = $this->indexQuery($request,  Story::query());
         return [
+            ...parent::cards($request),
             (new Metrics\StoriesByField('type', 'Type', $query))->width('1/2'),
             (new Metrics\StoriesByField('status', 'Status', $query))->width('1/2'),
             (new Metrics\StoriesByUser('creator_id', 'Customer', $query))->width('1/2'),
