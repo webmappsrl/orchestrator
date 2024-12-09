@@ -28,7 +28,7 @@ class StoryTimeService
     $storyId = $command->argument('story_id');
 
     if ($storyId) {
-      $story = Story::findOrFail();
+      $story = Story::findOrFail($storyId);
       $success = $this->handle($story);
       if ($success)
         $command->line(sprintf('Story time updated for %s.', $story->name));
@@ -64,7 +64,7 @@ class StoryTimeService
 
     $estimatedWorkHours = GoogleCalendarService::getService()->getUserWorkingHoursByDate($user, $date);
 
-    if ($estimatedWorkHours > 4)
+    if ($estimatedWorkHours === false || $estimatedWorkHours > 4)
       return 8; //all day
 
     return 4; //half day
@@ -114,30 +114,69 @@ class StoryTimeService
     if (! $user)
       return false;
 
-    $response = collect([]);
+    $response = [];
     $storyTime = 0;
 
     //when it was worked
     $progressDays = $this->getStoryProgressDays($story);
-    $response['days'] = $progressDays->toArray();
+
+    $response['days'] = [];
 
     //other stories concurrency
-    $storiesByDays = $this->getStoryLogGroupedByDays($user, $progressDays, $story);
+    $storyLogsByDays = $this->getProgressStoryLogGroupedByDays($user, $progressDays, $story);
+
+    $storiesByDays = $this->getConcurrentStoriesByDays($progressDays, $storyLogsByDays);
+
     foreach ($progressDays as $progressDay) {
       $hoursAvailablePerDay = $this->getAvailableHoursPerDay($user, $this->stringToDate($progressDay));
       if (isset($storiesByDays[$progressDay])) {
+        $response['days'][$progressDay]['otherStories'] = $storiesByDays[$progressDay];
         //that day the user had "$storiesByDays[$progressDay]->count() + 1" stories ( + 1 is the current one)
-        $otherProgressStoriesThatDay = $storiesByDays[$progressDay]->count();
-        $storyTime +=  $hoursAvailablePerDay / ($otherProgressStoriesThatDay + 1);
+        $otherProgressStoriesThatDay = count($storiesByDays[$progressDay]);
+        $time =  $hoursAvailablePerDay / ($otherProgressStoriesThatDay + 1);
+        $response['days'][$progressDay]['storiesCount'] = $otherProgressStoriesThatDay + 1;
       } else {
-        $storyTime += $hoursAvailablePerDay;
+        $time = $hoursAvailablePerDay;
+        $response['days'][$progressDay]['storiesCount'] = 1;
       }
+      $storyTime += $time;
+      $response['days'][$progressDay]['hours'] = $time;
     }
 
 
     $response['hours'] = round($storyTime, 2);
 
-    return $response;
+    return collect($response);
+  }
+
+  public function getConcurrentStoriesByDays(Collection $progressDays, Collection $storyLogsByDays): Collection
+  {
+    //get only stories ids
+    $daysWithStoriesId = $storyLogsByDays->map(function ($storyLogs) {
+      return $storyLogs->pluck('story_id')->unique();
+    });
+
+    //optimize stories models load
+    $stories = Story::whereIn('id', $daysWithStoriesId->collapse())->with('storyLogs')->get();
+    $storiesDays = [];
+    foreach ($stories as $story) {
+      $storiesDays[$story->id] = $this->getStoryProgressDays($story);
+    }
+
+    //compute concurrent stories by days
+    $result = $daysWithStoriesId->toArray();
+    foreach ($daysWithStoriesId as $dateKey => $group) {
+      foreach ($group as $storyIndex => $storyId) {
+        $days = $storiesDays[$storyId];
+        $daysIntersection = $progressDays->intersect($days);
+        foreach ($daysIntersection as $day) {
+          if (! in_array($storyId, $result[$day]))
+            $result[$day][] = $storyId;
+        }
+      }
+    }
+
+    return collect($result);
   }
 
 
@@ -149,7 +188,7 @@ class StoryTimeService
    * @param Story|false $story - exlude a specific story's StoryLog models
    * @return Collection - of StoryLog models GROUPED BY the day
    */
-  public function getStoryLogGroupedByDays(User $user, Collection $progressDays, Story|false $story = false): Collection
+  public function getProgressStoryLogGroupedByDays(User $user, Collection $progressDays, Story|false $story = false): Collection
   {
     $query = StoryLog::where('changes->status', 'progress')->whereRelation('story', 'user_id', $user->id);
 
@@ -158,7 +197,7 @@ class StoryTimeService
       $query->whereNot('story_id', $story->id);
     }
 
-    return $query->where(function (Builder $query) use ($progressDays) {
+    $groups = $query->where(function (Builder $query) use ($progressDays) {
       $progressDays->each(
         function (string $dateString) use ($query) {
           $query->orWhereDate('created_at', '=', $dateString);
@@ -171,6 +210,10 @@ class StoryTimeService
       ->mapWithKeys(function ($collection, $date) { //fixes an error on keys format
         return [$this->dateToString(Carbon::parse($date)) => $collection];
       });
+
+
+
+    return $groups;
   }
 
   protected function stringToDate(string $dateString): Carbon
@@ -218,12 +261,16 @@ class StoryTimeService
       $progressLogDay = $this->dateToString($progressLog->created_at);
 
       //get the next storyLog event related to the progress one to understand when the story was "closed"
-      $nextStoryLog = $allStoryLogs->where('created_at', '>', $progressLog->created_at)->first();
+      $nextStoryLog = $allStoryLogs
+        ->where('created_at', '>', $progressLog->created_at)
+        ->filter(function ($storyLog) {
+          return key_exists('status', $storyLog->changes); //exclude some items, evaluates only status change
+        })->first();
       $nextStoryLogDay = $nextStoryLog ? $this->dateToString($nextStoryLog->created_at) : $progressLogDay;
 
       if ($nextStoryLogDay != $progressLogDay) {
         //the story wasn't completed on the same day of the progress status event
-        $period = new CarbonPeriod($progressLog->created_at, $nextStoryLog->created_at);
+        $period = new CarbonPeriod($progressLog->created_at->startOfDay(), $nextStoryLog->created_at->endOfDay());
         foreach ($period as $date) {
           //remove holidays: if you start a ticket on friday to end it on monday, you have used 2 days
           if (! $this->isAnHolidayDay($story->user, $date))
