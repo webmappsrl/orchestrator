@@ -1,22 +1,59 @@
 <?php
 
-namespace App\Services;
+namespace App\Actions;
 
+use Illuminate\Support\Carbon;
 use App\Models\User;
 use App\Models\Story;
 use App\Models\StoryLog;
-use Carbon\Carbon;
-use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
-use Illuminate\Contracts\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
+use Carbon\CarbonInterface;
+use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
-use Laravel\Nova\Actions\ActionEvent;
+use App\Services\GoogleCalendarService;
+use Illuminate\Database\Eloquent\Model;
+use Lorisleiva\Actions\Concerns\AsAction;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 
-class StoryTimeService extends AbstractService
+class StoryTimeService
 {
-
+  use AsAction;
   static $comparableDateFormat = 'Y-m-d';
+
+  public string $commandSignature = 'service:story-time {story_id?}';
+  public string $commandDescription = 'Updates the story time of all stories or the one provided as argument.';
+
+  public function asCommand(Command $command)
+  {
+    $storyId = $command->argument('story_id');
+
+    if ($storyId) {
+      $story = Story::findOrFail();
+      $success = $this->handle($story);
+      if ($success)
+        $command->line(sprintf('Story time updated for %s.', $story->name));
+      else
+        $command->error(sprintf('An error occurred updating time for %s.', $story->name));
+    } else {
+      $command->withProgressBar(Story::all(), function (Story $story) {
+        $this->handle($story);
+      });
+    }
+  }
+
+  public function handle(Story $story): bool
+  {
+    $storyTime = $this->getStoryTime($story);
+    if ($storyTime === false)
+      return false;
+    $story->hours = $storyTime['hours'];
+    if ($story->hours) {
+      $story->saveQuietly();
+      return true;
+    }
+    return false;
+  }
+
 
 
   public function getAvailableHoursPerDay(User $user, CarbonInterface $date): int
@@ -66,14 +103,17 @@ class StoryTimeService extends AbstractService
    * Returns working hours and days of a story
    *
    * @param Story $story
-   * @return Collection - with working hours and days of the story provided
+   * @return Collection|false - with working hours and days of the story provided or false if the story hasn't the user
    */
-  public function getStoryTime(Story $story): Collection
+  public function getStoryTime(Story $story): Collection|false
   {
     /**
      * @var \App\Models\User
      */
     $user = $story->user;
+    if (! $user)
+      return false;
+
     $response = collect([]);
     $storyTime = 0;
 
@@ -95,7 +135,7 @@ class StoryTimeService extends AbstractService
     }
 
 
-    $response['hours'] = $storyTime;
+    $response['hours'] = round($storyTime, 2);
 
     return $response;
   }
@@ -129,7 +169,7 @@ class StoryTimeService extends AbstractService
       ->map([$this, 'getModelDateFormattedForComparisons'])
       ->groupBy('created_at')
       ->mapWithKeys(function ($collection, $date) { //fixes an error on keys format
-        return [$this->dateToString($this->stringToDate($date)) => $collection];
+        return [$this->dateToString(Carbon::parse($date)) => $collection];
       });
   }
 

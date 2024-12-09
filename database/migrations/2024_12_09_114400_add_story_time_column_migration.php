@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('story_participants', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('story_id')->constrained('stories');
-            $table->foreignId('user_id')->constrained('users');
-            $table->timestamps();
+        Schema::table('stories', function (Blueprint $table) {
+            $table->float('hours')->nullable();
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('story_participants');
+        Schema::table('stories', function (Blueprint $table) {
+            $table->dropColumn('hours');
+        });
     }
 };
