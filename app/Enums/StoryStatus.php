@@ -7,6 +7,7 @@ enum StoryStatus: string
     case Backlog = 'backlog';
     case New = 'new';
     case Assigned = 'assigned';
+    case Todo = 'todo';
     case Progress = 'progress';
     case Test = 'testing';
     case Tested = 'tested';

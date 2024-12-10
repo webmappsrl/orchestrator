@@ -31,7 +31,7 @@ class StoryObserver
 
     private function syncStoryCalendarIfStatusChanged(Story $story): void
     {
-        if ($story->isDirty('status') && $story->status === StoryStatus::Progress->value) {
+        if ($story->isDirty('status') && $story->status === StoryStatus::Todo->value) {
             $developerId = $story->user_id;
             if ($developerId) {
                 $developer = DB::table('users')->where('id', $developerId)->first();

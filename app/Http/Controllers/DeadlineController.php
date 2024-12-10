@@ -66,7 +66,7 @@ class DeadlineController extends Controller
     }
 
     /**
-     * Get the email for the deadline 
+     * Get the email for the deadline
      */
     public function email($id)
     {
@@ -75,7 +75,14 @@ class DeadlineController extends Controller
         $customer = $deadline->customer()->first();
 
         $doneStories = $deadline->stories()->where('status', StoryStatus::Done)->get();
-        $progressStories = $deadline->stories()->where('status', StoryStatus::Test)->orWhere('status', StoryStatus::Progress)->get();
+        $progressStories = $deadline->stories()->whereIn(
+            'status',
+            [
+                StoryStatus::Test,
+                StoryStatus::Progress,
+                StoryStatus::Todo
+            ]
+        )->get();
         $storiesToStart = $deadline->stories()->where('status', StoryStatus::New)->get();
 
         return view(
