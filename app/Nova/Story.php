@@ -289,10 +289,10 @@ class Story extends Resource
     {
         return [
             (new StoryTime)->refreshWhenFiltersChange()->canSee(function ($request) {
-                return $request->user()->hasRole(UserRole::Customer);
+                return ! $request->user()->hasRole(UserRole::Customer);
             }),
             (new StoryTime)->onlyOnDetail()->canSee(function ($request) {
-                return $request->user()->hasRole(UserRole::Customer);
+                return ! $request->user()->hasRole(UserRole::Customer);
             })
         ];
     }
