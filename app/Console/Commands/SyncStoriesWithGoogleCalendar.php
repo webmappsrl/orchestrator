@@ -88,17 +88,17 @@ class SyncStoriesWithGoogleCalendar extends Command
                     }
 
                     // Crea un singolo evento per la storia
-                    $event = new Event;
                     $creator = DB::table('users')->where('id', $story->creator_id)->first();
-                    $event->name = "OC: {$story->id} [{$creator->name}] - {$story->name}"; // Nome della storia come titolo dell'evento
-                    $event->description = "{$story->description}\n\nType: {$story->type}, Status: {$story->status}\nLink: https://orchestrator.maphub.it/resources/developer-stories/{$story->id}";
-                    $event->startDateTime = $startTime;
-                    $event->endDateTime = $endTime;
-                    $event->colorId = $colorId; // Imposta il colore dell'evento
 
                     // Salva l'evento nel calendario specifico del developer
                     try {
-                        $event->save(null, ['calendarId' => $calendarId]);
+                        Event::create([
+                            'name' => "OC: {$story->id} [{$creator->name}] - {$story->name}", // Nome della storia come titolo dell'evento,
+                            'description' => "{$story->description}\n\nType: {$story->type}, Status: {$story->status}\nLink: https://orchestrator.maphub.it/resources/developer-stories/{$story->id}",
+                            'startDateTime' => $startTime,
+                            'endDateTime' => $endTime,
+                            'colorId' => $colorId, // Imposta il colore dell'evento
+                        ], $calendarId);
                         $this->info("Event for OC: {$story->id} synced to Google Calendar for developer: {$developer->name}");
                     } catch (\Exception $e) {
                         $this->error("Failed to create event for OC: {$story->id}. Error: " . $e->getMessage());
@@ -120,7 +120,7 @@ class SyncStoriesWithGoogleCalendar extends Command
         try {
 
             // Ottieni tutti gli eventi nel calendario per oggi
-            $events = Event::get(Carbon::today('Europe/Rome'), Carbon::today('Europe/Rome')->endOfDay(), ['calendarId' => $calendarId]);
+            $events = Event::get(Carbon::today('Europe/Rome'), Carbon::today('Europe/Rome')->endOfDay(), [], $calendarId);
         } catch (\Exception $e) {
             $this->error("Failed to fetch events from Google Calendar. Error: " . $e->getMessage());
             $events = [];
