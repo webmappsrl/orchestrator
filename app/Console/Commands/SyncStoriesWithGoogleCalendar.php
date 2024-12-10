@@ -131,8 +131,7 @@ class SyncStoriesWithGoogleCalendar extends Command
             if (strpos($event->name, 'OC:') === 0) {
                 try {
                     // Utilizza l'ID dell'evento per cancellarlo
-                    $calendar = GoogleCalendarFactory::createForCalendarId($calendarId);
-                    $calendar->deleteEvent($event->id);
+                    $event->delete();
                     $this->info("Deleted event: {$event->name}");
                 } catch (\Exception $e) {
                     $this->error("Failed to delete event: {$event->name}. Error: " . $e->getMessage());
