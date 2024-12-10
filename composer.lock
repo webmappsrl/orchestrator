@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "099f6d223b2dce6b67987c677b95ea60",
+    "content-hash": "dc3583bdfd56ac3d4496f6f0eee08176",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -10594,7 +10594,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feat/dev-time-features-oc-4432",
+            "version": "dev-0463833646027ffbcbedba578e18ed5a740554f0",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -13646,8 +13646,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "davidpiesse/nova-toggle": 20,
-        "wm/wm-package": 20
+        "davidpiesse/nova-toggle": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

@@ -42,7 +42,7 @@
         "suenerds/nova-searchable-belongs-to-filter": "^1.0",
         "webklex/laravel-imap": "^5.3",
         "wm/wm-internal": "*",
-        "wm/wm-package": "dev-main"
+        "wm/wm-package": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
