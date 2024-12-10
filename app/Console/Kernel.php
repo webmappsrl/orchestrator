@@ -16,6 +16,15 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command('story:progress-to-todo')
+            ->timezone('Europe/Rome')
+            ->dailyAt('18:00')
+            ->before(function () {
+                Log::info('story:progress-to-todo command starting');
+            })
+            ->after(function () {
+                Log::info('story:progress-to-todo command finished');
+            });
         $schedule->command('sync:stories-calendar')
             ->timezone('Europe/Rome')
             ->dailyAt('07:45')

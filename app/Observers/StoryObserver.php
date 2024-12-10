@@ -29,9 +29,29 @@ class StoryObserver
         $this->createStoryLog($story);
     }
 
+    /**
+     * Handle the Story "updated" event.
+     */
+    public function saving(Story $story): void
+    {
+        // Only one progress story per user is allowed
+        // moves all other progress stories in Todo
+        if ($story->isDirty('status') && $story->status === StoryStatus::Progress->value) {
+            Story::where('user_id', $story->user_id)
+                ->where('status', StoryStatus::Progress->value)
+                ->whereNot('id', $story->id)
+                //->update('status', StoryStatus::Todo->value); -> this doesn't trigger events
+                ->get()
+                ->each(function (Story $progressStory) {
+                    $progressStory->status = StoryStatus::Todo->value;
+                    $progressStory->save(); // -> this triggers events (like the gogle calendar update)
+                });
+        }
+    }
+
     private function syncStoryCalendarIfStatusChanged(Story $story): void
     {
-        if ($story->isDirty('status') && $story->status === StoryStatus::Progress->value) {
+        if ($story->isDirty('status') && $story->status === StoryStatus::Todo->value) {
             $developerId = $story->user_id;
             if ($developerId) {
                 $developer = DB::table('users')->where('id', $developerId)->first();

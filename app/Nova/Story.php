@@ -23,7 +23,6 @@ use Illuminate\Support\Facades\Session;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
-use App\Nova\Metrics\StoryTimeTrend;
 
 class Story extends Resource
 {
@@ -289,8 +288,12 @@ class Story extends Resource
     public function cards(NovaRequest $request)
     {
         return [
-            (new StoryTimeTrend)->refreshWhenFiltersChange(),
-            (new StoryTimeTrend)->onlyOnDetail()
+            (new StoryTime)->refreshWhenFiltersChange()->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Customer);
+            }),
+            (new StoryTime)->onlyOnDetail()->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Customer);
+            })
         ];
     }
 
@@ -387,6 +390,12 @@ class Story extends Resource
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Rejected->value;
                 }),
+
+            (new actions\StoryToTodoStatusAction)
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Todo or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
         ];
         if ($request->user()->hasRole(UserRole::Developer)) {
             array_push($actions, (new actions\CreateDocumentationFromStory())

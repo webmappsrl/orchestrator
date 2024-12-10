@@ -45,7 +45,12 @@ class CustomerStoriesDigest extends Mailable
     {
         $doneStories = Story::where('creator_id', $this->customer->id)->where('status', StoryStatus::Done)->get();
         $testStories = Story::where('creator_id', $this->customer->id)->where('status', StoryStatus::Test)->get();
-        $progressStories = Story::where('creator_id', $this->customer->id)->where('status', StoryStatus::Progress)->get();
+        $progressStories = Story::where('creator_id', $this->customer->id)
+            ->whereIn('status', [
+                StoryStatus::Todo,
+                StoryStatus::Progress
+            ])
+            ->get();
         $newStories = Story::where('creator_id', $this->customer->id)->where('status', StoryStatus::New)->get();
         return new Content(
             view: 'mails.customer-stories-digest',

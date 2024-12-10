@@ -107,6 +107,10 @@
         {
             "type": "path",
             "url": "./wm-internal"
+        },
+        {
+            "type": "path",
+            "url": "./wm-package"
         }
     ]
 }

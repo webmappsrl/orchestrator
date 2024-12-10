@@ -53,6 +53,7 @@ class CustomerTickets extends Story
     {
         $query = $this->indexQuery($request,  Story::query());
         return [
+            ...parent::cards($request),
             (new Metrics\DynamicPartitionMetric('Customer', $query, 'creator_id', \App\Models\User::class, 'name'))->width('full'),
             (new Metrics\DynamicPartitionMetric('Status', $query,  'status'))->width('1/2'),
             (new Metrics\DynamicPartitionMetric('Type', $query, 'type'))->width('1/2'),

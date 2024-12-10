@@ -3,15 +3,13 @@
 namespace App\Nova\Lenses;
 
 use App\Enums\UserRole;
-use App\Models\Story;
-use App\Nova\Story as NovaStory;
+use App\Nova\Metrics\StoryTime;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Http\Requests\LensRequest;
 use Laravel\Nova\Lenses\Lens;
-use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class StoriesByQuarter extends Lens
@@ -101,8 +99,8 @@ class StoriesByQuarter extends Lens
         $statusColor = $this->getStatusColor($this->status);
         $storyType = $this->type;
         return <<<HTML
-            Status: <span style="background-color:{$statusColor}; color: white; padding: 2px 4px;">{$this->status}</span> 
-            <br> 
+            Status: <span style="background-color:{$statusColor}; color: white; padding: 2px 4px;">{$this->status}</span>
+            <br>
             <span style="color:blue">{$storyType}</span>
             HTML;
     }
@@ -125,9 +123,9 @@ class StoriesByQuarter extends Lens
         if ($app) {
             $url = url("/resources/apps/{$app->id}");
             return <<<HTML
-            <a 
-                href="{$url}" 
-                target="_blank" 
+            <a
+                href="{$url}"
+                target="_blank"
                 style="color:red; font-weight:bold;">
                 App: {$app->name}
             </a> <br>
@@ -143,9 +141,9 @@ class StoriesByQuarter extends Lens
             foreach ($tags as $tag) {
                 $url = $tag->getResourceUrlAttribute();
                 $HTML .=    <<<HTML
-            <a 
+            <a
                 href="$url"
-                target="_blank" 
+                target="_blank"
                 style="color:orange; font-weight:bold;">
                 {$tag->name}
             </a> <br>
@@ -161,14 +159,21 @@ class StoriesByQuarter extends Lens
         if ($creator) {
             $url = url("/resources/users/{$creator->id}");
             return <<<HTML
-            <a 
-                href="{$url}" 
-                target="_blank" 
+            <a
+                href="{$url}"
+                target="_blank"
                 style="color:chocolate; font-weight:bold;">
                 Creator: {$creator->name}
             </a> <br>
             HTML;
         }
         return '';
+    }
+
+    public function cards(NovaRequest $request)
+    {
+        return [
+            (new StoryTime())->refreshWhenFiltersChange()
+        ];
     }
 }
