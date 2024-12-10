@@ -30,7 +30,9 @@ class StoryTime extends Value
                 $query = $requestResource->indexQuery($request, (new Story)->newQuery());
             }
         }
-        return $this->sum($request, $query, 'hours')->suffix('Hours');
+
+
+        return $this->precision(2)->sum($request, $query, 'hours')->suffix('Hours');
     }
 
     /**
