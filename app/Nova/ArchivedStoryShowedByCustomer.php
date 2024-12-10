@@ -90,6 +90,12 @@ class ArchivedStoryShowedByCustomer extends Story
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
 
+            (new actions\StoryToTodoStatusAction)
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Todo or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
+
         ];
 
         if ($request->viaResource == 'projects') {

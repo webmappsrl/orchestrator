@@ -390,6 +390,12 @@ class Story extends Resource
                 ->canSee(function () {
                     return $this->status !== StoryStatus::Rejected->value;
                 }),
+
+            (new actions\StoryToTodoStatusAction)
+                ->onlyInline()
+                ->confirmText('Click on the "Confirm" button to save the status in Todo or "Cancel" to cancel.')
+                ->confirmButtonText('Confirm')
+                ->cancelButtonText('Cancel'),
         ];
         if ($request->user()->hasRole(UserRole::Developer)) {
             array_push($actions, (new actions\CreateDocumentationFromStory())
