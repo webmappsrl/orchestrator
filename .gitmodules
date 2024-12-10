@@ -1,0 +1,3 @@
+[submodule "wm-package"]
+	path = wm-package
+	url = https://github.com/webmappsrl/wm-package.git
