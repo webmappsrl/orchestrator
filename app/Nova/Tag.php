@@ -2,13 +2,11 @@
 
 namespace App\Nova;
 
-use App\Models\Project;
-use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\MorphTo;
-use App\Nova\Metrics\StoryTimeTrend;
+use App\Nova\Metrics\StoryTime;
 use Laravel\Nova\Fields\MorphToMany;
 
 class Tag extends Resource
@@ -69,7 +67,7 @@ class Tag extends Resource
     public function cards(Request $request)
     {
         return [
-            (new StoryTimeTrend())->onlyOnDetail()
+            (new StoryTime())->onlyOnDetail()
         ];
     }
 

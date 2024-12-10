@@ -7,7 +7,7 @@ use App\Models\Story;
 use Laravel\Nova\Metrics\Value;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class StoryTimeTrend extends Value
+class StoryTime extends Value
 {
     /**
      * Calculate the value of the metric.

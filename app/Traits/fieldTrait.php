@@ -179,8 +179,8 @@ trait fieldTrait
                 $app = $this->getAppLink();
                 $url = url("/resources/stories/{$childStory->id}");
                 $story = <<<HTML
-                <a 
-                    href="{$url}" 
+                <a
+                    href="{$url}"
                     style="color: green;">
                     {$childStory->id}
                     </a>
@@ -203,8 +203,8 @@ trait fieldTrait
             $app = $this->getAppLink();
             $url = url("/resources/stories/{$parentStory->id}");
             $story = <<<HTML
-                <a 
-                    href="{$url}" 
+                <a
+                    href="{$url}"
                     style="color: green;">
                     {$parentStory->id}
                     </a>
@@ -229,8 +229,8 @@ trait fieldTrait
                 $url = url("/resources/stories/{$parentStory->id}");
                 $story = <<<HTML
                     <h3 style="color:yellow; font-weight: bold">PARENT:<h3/>
-                    <a 
-                        href="{$url}" 
+                    <a
+                        href="{$url}"
                         style="color: green;">
                         {$parentStory->id}
                         </a>
@@ -250,8 +250,8 @@ trait fieldTrait
                     $app = $this->getAppLink($childStory->creator);
                     $url = url("/resources/stories/{$childStory->id}");
                     $story = <<<HTML
-                    <a 
-                        href="{$url}" 
+                    <a
+                        href="{$url}"
                         style="color: green;">
                         {$childStory->id}
                         </a>
@@ -304,6 +304,7 @@ trait fieldTrait
             return Status::make(__('Status'), 'status')
                 ->loadingWhen([
                     StoryStatus::Assigned->value,
+                    StoryStatus::Todo->value,
                     StoryStatus::Progress->value,
                     StoryStatus::Tested->value,
                     StoryStatus::Backlog->value,
@@ -492,9 +493,9 @@ trait fieldTrait
         if ($app) {
             $url = url("/resources/apps/{$app->id}");
             return <<<HTML
-            <a 
-                href="{$url}" 
-                target="_blank" 
+            <a
+                href="{$url}"
+                target="_blank"
                 style="color:red; font-weight:bold;">
                 App: {$app->name}
             </a> <br>
@@ -529,9 +530,9 @@ trait fieldTrait
             foreach ($tags as $tag) {
                 $url = $tag->getResourceUrlAttribute();
                 $HTML .=    <<<HTML
-            <a 
+            <a
                 href="$url"
-                target="_blank" 
+                target="_blank"
                 style="color:orange; font-weight:bold;">
                 {$tag->name}
             </a> <br>
@@ -548,9 +549,9 @@ trait fieldTrait
         if ($creator) {
             $url = url("/resources/users/{$creator->id}");
             return <<<HTML
-            <a 
-                href="{$url}" 
-                target="_blank" 
+            <a
+                href="{$url}"
+                target="_blank"
                 style="color:chocolate; font-weight:bold;">
                 Creator: {$creator->name}
             </a> <br>
@@ -599,6 +600,7 @@ trait fieldTrait
         $statusOptions = [
             StoryStatus::New->value => StoryStatus::New,
             StoryStatus::Assigned->value => StoryStatus::Assigned,
+            StoryStatus::Todo->value => StoryStatus::Todo,
             StoryStatus::Progress->value => StoryStatus::Progress,
             StoryStatus::Waiting->value => StoryStatus::Waiting,
             StoryStatus::Test->value => StoryStatus::Test,
