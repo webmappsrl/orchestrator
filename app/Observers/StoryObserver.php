@@ -72,10 +72,9 @@ class StoryObserver
     {
         $dirtyFields = $story->getDirty();
 
-        if (app()->runningInConsole() || app()->runningUnitTests())
+        $user = Auth::user();
+        if (is_null($user))
             $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first(); //there is a seeder for this user (PhpArtisanUserSeeder)
-        else
-            $user = Auth::user();
 
         $jsonChanges = [];
 
