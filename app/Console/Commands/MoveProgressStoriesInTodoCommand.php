@@ -15,9 +15,9 @@ class MoveProgressStoriesInTodoCommand extends Command
     {
         Story::where('status', StoryStatus::Progress->value)
             ->each(function ($story) {
-                $story->status = StoryStatus::Assigned->value;
+                $story->status = StoryStatus::Todo->value;
                 $story->save();
-                $this->info("ASSIGNED Story ID {$story->id} updated.");
+                $this->info("TODO Story ID {$story->id} updated.");
             });
         $this->info('All applicable stories have been updated.');
     }

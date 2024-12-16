@@ -6,6 +6,7 @@ use App\Models\Story;
 use App\Models\StoryLog;
 use App\Enums\StoryStatus;
 use App\Actions\StoryTimeService;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
@@ -65,7 +66,12 @@ class StoryObserver
     private function createStoryLog(Story $story): void
     {
         $dirtyFields = $story->getDirty();
-        $user = Auth::user();
+
+        if (app()->runningInConsole())
+            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first(); //there is a seeder for this user (PhpArtisanUserSeeder)
+        else
+            $user = Auth::user();
+
         $jsonChanges = [];
 
         foreach ($dirtyFields as $field => $newValue) {
@@ -79,7 +85,7 @@ class StoryObserver
             $timestamp = now()->format('Y-m-d H:i');
             $storyLog = StoryLog::create([
                 'story_id' => $story->id,
-                'user_id' => $user ? $user->id : null,
+                'user_id' => $user->id,
                 'viewed_at' => $timestamp,
                 'changes' => $jsonChanges,
             ]);
