@@ -48,6 +48,11 @@ class StoryObserver
                     $progressStory->save(); // -> this triggers events (like the gogle calendar update)
                 });
         }
+
+        $user = auth()->user();
+        if ($story->isDirty('customer_request') && $user && $user->id != $story->user->id) {
+            $story->status = StoryStatus::Todo->value;
+        }
     }
 
     private function syncStoryCalendarIfStatusChanged(Story $story): void
