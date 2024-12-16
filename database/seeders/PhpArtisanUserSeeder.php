@@ -3,9 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Enums\UserRole;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class PhpArtisanUserSeeder extends Seeder
 {
@@ -14,10 +12,10 @@ class PhpArtisanUserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
+        User::firstOrCreate(['email' => 'orchestrator_artisan@webmapp.it'], [
             'name' => 'Php artisan',
             'email' => 'orchestrator_artisan@webmapp.it',
             'password' => bcrypt('a very strong password that probably no one will use'),
-        ])->markEmailAsVerified();
+        ]);
     }
 }
