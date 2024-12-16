@@ -37,6 +37,8 @@ jobs:
         run: php artisan migrate
         env:
           PGPASSWORD: orchestrator
+      - name: Seeders
+        run: php artisan db:seed PhpArtisanUserSeeder
       - name: Laravel Tests
         run: php artisan test
 

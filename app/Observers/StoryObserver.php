@@ -6,6 +6,7 @@ use App\Models\Story;
 use App\Models\StoryLog;
 use App\Enums\StoryStatus;
 use App\Actions\StoryTimeService;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
@@ -47,6 +48,11 @@ class StoryObserver
                     $progressStory->save(); // -> this triggers events (like the gogle calendar update)
                 });
         }
+
+        $user = auth()->user();
+        if ($story->isDirty('customer_request') && $user && $user->id != $story->user->id) {
+            $story->status = StoryStatus::Todo->value;
+        }
     }
 
     private function syncStoryCalendarIfStatusChanged(Story $story): void
@@ -65,7 +71,11 @@ class StoryObserver
     private function createStoryLog(Story $story): void
     {
         $dirtyFields = $story->getDirty();
+
         $user = Auth::user();
+        if (is_null($user))
+            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first(); //there is a seeder for this user (PhpArtisanUserSeeder)
+
         $jsonChanges = [];
 
         foreach ($dirtyFields as $field => $newValue) {
@@ -79,7 +89,7 @@ class StoryObserver
             $timestamp = now()->format('Y-m-d H:i');
             $storyLog = StoryLog::create([
                 'story_id' => $story->id,
-                'user_id' => $user ? $user->id : null,
+                'user_id' => $user->id,
                 'viewed_at' => $timestamp,
                 'changes' => $jsonChanges,
             ]);
