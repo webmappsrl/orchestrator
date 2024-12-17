@@ -167,8 +167,6 @@ class StoryTimeService
 
       //use now() if the ticket is still in progress
       $closeStoryLogDate = $nextStoryLog ? $nextStoryLog->created_at : Carbon::now();
-      dump($progressLogDateTimeString, ' --- to --- ', $this->dateTimeToString($closeStoryLogDate), '####');
-
       $period = new CarbonPeriod($progressLogDateTime, '1 minute', $closeStoryLogDate);
       $time = count($period);
 
