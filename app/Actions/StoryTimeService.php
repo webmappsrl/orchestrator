@@ -15,6 +15,7 @@ class StoryTimeService
 {
   use AsAction;
   static $comparableDateFormat = 'Y-m-d';
+  static $comparableDateTimeFormat = 'Y-m-d H:i:s';
 
   public string $commandSignature = 'service:story-time {story_id?}';
   public string $commandDescription = 'Updates the story time of all stories or the one provided as argument.';
@@ -122,6 +123,19 @@ class StoryTimeService
     return $date->format(static::$comparableDateFormat);
   }
 
+
+
+  /**
+   * Date formatter
+   *
+   * @param Carbon $date
+   * @return string
+   */
+  protected function dateTimeToString(Carbon $date): string
+  {
+    return $date->format(static::$comparableDateTimeFormat);
+  }
+
   /**
    * Computes and returns working days of a provided Story
    *
@@ -130,29 +144,30 @@ class StoryTimeService
    */
   public function getStoryProgressDaysMinutes(Story $story): Collection
   {
-    $allStoryLogs = $story->storyLogs; //get all story logs
+    $allStoryLogs = $story->storyLogs->sortByDesc('created_at'); //get all story logs
     $progressLogs = $allStoryLogs->where('changes.status', 'progress'); //get only the progress ones
     $progressDays = collect();
 
     //iterate over all progress story logs of the story
     foreach ($progressLogs as $progressLog) {
-      $progressLogDay = $this->dateToString($progressLog->created_at);
+      $progressLogDateTime = $progressLog->created_at;
+      $progressLogDateTimeString = $this->dateTimeToString($progressLogDateTime);
+      //$progressLogDay = $this->dateToString($progressLogDateTime);
 
-      if (! $progressDays->has($progressLogDay))
-        $progressDays[$progressLogDay] = 0;
+      if (! $progressDays->has($progressLogDateTimeString))
+        $progressDays[$progressLogDateTimeString] = 0;
 
       //get the next storyLog event related to the progress one to understand when the story was "closed"
       $nextStoryLog = $allStoryLogs
-        ->where('created_at', '>', $progressLog->created_at)
+        ->where('created_at', '>', $progressLogDateTime)
         ->filter(function ($storyLog) {
           return key_exists('status', $storyLog->changes); //exclude some items, evaluates only status change
         })
-        ->first();
+        ->last();
 
       //use now() if the ticket is still in progress
       $closeStoryLogDate = $nextStoryLog ? $nextStoryLog->created_at : Carbon::now();
-
-      $period = new CarbonPeriod($progressLog->created_at, '1 minute', $closeStoryLogDate);
+      $period = new CarbonPeriod($progressLogDateTime, '1 minute', $closeStoryLogDate);
       $time = count($period);
 
 
@@ -164,7 +179,7 @@ class StoryTimeService
           $time -= 10;
       }
 
-      $progressDays[$progressLogDay] += $time;
+      $progressDays[$progressLogDateTimeString] += $time;
     }
 
 

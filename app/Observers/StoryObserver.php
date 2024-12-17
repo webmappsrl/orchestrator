@@ -50,7 +50,7 @@ class StoryObserver
         }
 
         $user = auth()->user();
-        if ($story->isDirty('customer_request') && $user && $user->id != $story->user->id) {
+        if ($story->isDirty('customer_request') && $user && $user->id != $story->user?->id) {
             $story->status = StoryStatus::Todo->value;
         }
     }
