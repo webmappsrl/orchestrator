@@ -592,20 +592,14 @@ trait fieldTrait
     }
 
 
-    function getStatusLabel($statusValue)
+    public function getStatusLabel($statusValue): array
     {
-        $statusOptions = [
-            StoryStatus::New->value => StoryStatus::New,
-            StoryStatus::Assigned->value => StoryStatus::Assigned,
-            StoryStatus::Todo->value => StoryStatus::Todo,
-            StoryStatus::Progress->value => StoryStatus::Progress,
-            StoryStatus::Waiting->value => StoryStatus::Waiting,
-            StoryStatus::Test->value => StoryStatus::Test,
-            StoryStatus::Tested->value => StoryStatus::Tested,
-            StoryStatus::Released->value => StoryStatus::Released,
-            StoryStatus::Rejected->value => StoryStatus::Rejected,
-            StoryStatus::Done->value => StoryStatus::Done,
-        ];
-        return $statusOptions[$statusValue] != null ? [$statusOptions[$statusValue]->value => $statusOptions[$statusValue]] : [];
+        $statusOptions = collect(StoryStatus::cases())->mapWithKeys(fn($status) => [
+            $status->value => $status
+        ])->toArray();
+
+        return isset($statusOptions[$statusValue])
+            ? [$statusOptions[$statusValue]->value => $statusOptions[$statusValue]]
+            : [];
     }
 }
