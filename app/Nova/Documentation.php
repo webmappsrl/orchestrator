@@ -2,15 +2,16 @@
 
 namespace App\Nova;
 
-use App\Traits\fieldTrait;
-use App\Enums\DocumentationCategory;
-use App\Enums\UserRole;
 use App\Models\Story;
-use App\Nova\Actions\ExportToPdf;
+use App\Enums\UserRole;
+use Manogi\Tiptap\Tiptap;
+use App\Traits\fieldTrait;
+use Laravel\Nova\Resource;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
+use App\Nova\Actions\ExportToPdf;
+use App\Enums\DocumentationCategory;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Laravel\Nova\Resource;
 
 class Documentation extends Resource
 {
@@ -57,7 +58,12 @@ class Documentation extends Resource
                 ->default(DocumentationCategory::Customer->value)
                 ->sortable()
                 ->rules('required'),
-            $this->descriptionField($request),
+            Tiptap::make(__('Dev notes'), 'description')
+                ->hideFromIndex()
+                ->buttons($this->tiptapAllButtons)
+                ->canSee($this->canSee('description'))
+                ->help(__('Provide all the necessary information. You can add images using the "Add Image" option. If you\'d like to include a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and pasting the link here. The more details you provide, the easier it will be for us to resolve the issue.'))
+                ->alwaysShow()
         ];
     }
 
