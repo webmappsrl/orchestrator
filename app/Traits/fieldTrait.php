@@ -395,7 +395,7 @@ trait fieldTrait
             return Text::make($label, $fieldName)
                 ->asHtml()
                 ->canSee(function ($request) use ($fieldName) {
-                    return $this->canSee($fieldName) && $this->resource->creator;
+                    return $this->canSee($fieldName);
                 });
         } else {
             $creator = auth()->user();
