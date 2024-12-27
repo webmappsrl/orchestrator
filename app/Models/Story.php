@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\Auth;
+use App\Services\StoryResponseService;
 
 class Story extends Model implements HasMedia
 {
@@ -37,7 +38,7 @@ class Story extends Model implements HasMedia
         parent::boot();
 
         static::saving(function ($story) {
-            // Controlla se lo stato è 'New' e se è stato assegnato un developer.
+            // Check if the status is 'New' and if a developer has been assigned.
             if ($story->status == StoryStatus::New->value && $story->user_id && $story->isDirty('user_id')) {
                 $story->status = StoryStatus::Assigned->value;
             }
@@ -277,71 +278,6 @@ class Story extends Model implements HasMedia
             config('services.media-library.allowed_document_formats'),
             config('services.media-library.allowed_image_formats')
         ));
-    }
-
-    /**
-     * Add a response to the story customer_request field
-     * @return void
-     */
-    public function addResponse($response)
-    {
-        $sender = auth()->user();
-        $senderRoles = $sender->roles->toArray();
-        $style = '';
-        $divider = "<div style='height: 2px; background-color: #e2e8f0; margin: 20px 0;'></div>";
-
-        if (array_search(UserRole::Developer, $senderRoles) !== false) {
-            $senderType = 'developer';
-            $style = "style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 10px 20px;'";
-        } else if ($sender->id == $this->tester_id) {
-            $senderType = 'tester';
-            $style = "style='background-color: #e6f7ff; border-left: 4px solid #1890ff; padding: 10px 20px;'";
-        } else if (array_search(UserRole::Customer, $senderRoles) !== false) {
-            $senderType = 'customer';
-            $style = "style='background-color: #fff7e6; border-left: 4px solid #ffa940; padding: 10px 20px;'";
-        } else {
-            $senderType = 'other';
-            $style = "style='background-color: #d7f7de; border-left: 4px solid #6c757d; padding: 10px 20px;'";
-            $string = '';
-            foreach ($senderRoles as $role) {
-                $string .= $role->value . ', ';
-            }
-            Log::info('Sender answering to story with id: ' . $this->id .  ' has roles: ' . $string);
-        }
-
-        $formattedResponse = $sender->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <div $style> <p>" . $response . " </p> </div>" . $divider;
-        $this->customer_request = $formattedResponse . $this->customer_request;
-        $this->save();
-
-        // Add sender as participant
-        $this->participants()->syncWithoutDetaching([$sender->id]);
-
-        // Collect all unique recipients
-        $recipients = $this->participants->pluck('id')->toArray();
-        if ($this->creator_id && !in_array($this->creator_id, $recipients)) {
-            $recipients[] = $this->creator_id;
-        }
-        if ($this->user_id && !in_array($this->user_id, $recipients)) {
-            $recipients[] = $this->user_id;
-        }
-        if ($this->tester_id && !in_array($this->tester_id, $recipients)) {
-            $recipients[] = $this->tester_id;
-        }
-
-        // Remove sender from recipients and check duplicates
-        $recipients = array_unique(array_diff($recipients, [$sender->id]));
-
-        // Send email to all unique recipients
-        foreach ($recipients as $recipientId) {
-            $recipient = User::find($recipientId);
-            if ($recipient) {
-                try {
-                    Mail::to($recipient->email)->send(new \App\Mail\StoryResponse($this, $recipient, $sender, $response));
-                } catch (\Exception $e) {
-                    Log::error($e->getMessage());
-                }
-            }
-        }
     }
 
     public function views()

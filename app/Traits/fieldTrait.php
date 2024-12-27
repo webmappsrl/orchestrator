@@ -14,6 +14,7 @@ use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use App\Enums\StoryPriority;
 use App\Models\Documentation;
+use App\Services\StoryResponseService;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -375,62 +376,81 @@ trait fieldTrait
 
     public function customerRequestField(NovaRequest $request, $fieldName = 'customer_request')
     {
-        $customerRequestFieldEdit = Tiptap::make(__('Request'), $fieldName)
-            ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml'])
-            ->required();
+        return $this->richTextField($request, $fieldName, __('Request'));
+    }
 
+    public function descriptionField(NovaRequest $request)
+    {
+        return $this->richTextField($request, 'description', __('Dev notes'));
+    }
+
+    private function richTextField(NovaRequest $request, $fieldName, $label)
+    {
+        $editField = Tiptap::make($label, $fieldName)
+            ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml']);
 
         if ($request->isCreateOrAttachRequest()) {
-            return $customerRequestFieldEdit;
+            return $editField;
         } else if ($request->isResourceDetailRequest()) {
-            return Text::make(__('Request'), $fieldName)
+            return Text::make($label, $fieldName)
                 ->asHtml()
                 ->canSee(function ($request) use ($fieldName) {
-                    $creator = $this->resource->creator;
-                    return $this->canSee($fieldName) &&  (isset($creator));
+                    return $this->canSee($fieldName) && $this->resource->creator;
                 });
         } else {
             $creator = auth()->user();
             if (isset($creator) && !isset($request->resourceId)) {
-                return $customerRequestFieldEdit;
+                return $editField;
             } else {
-                return Trix::make(__('Request'), $fieldName)
+                return Trix::make($label, $fieldName)
                     ->readOnly()
                     ->canSee($this->canSee($fieldName));
             }
         }
     }
 
-    public function answerToTicketField($fieldName = 'answer_to_ticket')
+    private function answerField($fieldName, $label, $responseField)
     {
-        //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
-        return  Tiptap::make(__('Answer to ticket'), $fieldName)
+        return Tiptap::make($label, $fieldName)
             ->canSee(
                 function ($request) use ($fieldName) {
-                    return  $this->canSee($fieldName) && $request->resourceId !== null && $this->status != StoryStatus::Done->value;
+                    return $this->canSee($fieldName) &&
+                        $request->resourceId !== null &&
+                        $this->status != StoryStatus::Done->value;
                 }
             )
             ->readonly(function ($request) {
-                return $request->resourceId !== null && ($this->status == StoryStatus::Done->value);
+                return $request->resourceId !== null &&
+                    ($this->status == StoryStatus::Done->value);
             })
-            ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+            ->fillUsing(function ($request, $model, $attribute, $requestAttribute) use ($responseField) {
                 if (empty($request[$requestAttribute])) {
                     return;
                 }
-                $model->addResponse($request[$requestAttribute]);
+                $storyResponseService = new StoryResponseService();
+                $storyResponseService->addResponse($model, $request[$requestAttribute], $responseField);
             })
             ->buttons($this->tiptapAllButtons);
     }
 
-    public function descriptionField()
+    public function answerToTicketField($fieldName = 'answer_to_ticket')
     {
-        return  Tiptap::make(__('Dev notes'), 'description')
-            ->hideFromIndex()
-            ->buttons($this->tiptapAllButtons)
-            ->canSee($this->canSee('description'))
-            ->help(__('Provide all the necessary information. You can add images using the "Add Image" option. If you\'d like to include a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and pasting the link here. The more details you provide, the easier it will be for us to resolve the issue.'))
-            ->alwaysShow();
+        return $this->answerField(
+            $fieldName,
+            __('Answer to ticket'),
+            'customer_request'
+        );
     }
+
+    public function answerToDevNotesField($fieldName = 'answer_to_dev_notes')
+    {
+        return $this->answerField(
+            $fieldName,
+            __('Answer to dev notes'),
+            'description'
+        );
+    }
+
 
     public function infoField(NovaRequest $request, $fieldName = 'info')
     {
@@ -592,20 +612,14 @@ trait fieldTrait
     }
 
 
-    function getStatusLabel($statusValue)
+    public function getStatusLabel($statusValue): array
     {
-        $statusOptions = [
-            StoryStatus::New->value => StoryStatus::New,
-            StoryStatus::Assigned->value => StoryStatus::Assigned,
-            StoryStatus::Todo->value => StoryStatus::Todo,
-            StoryStatus::Progress->value => StoryStatus::Progress,
-            StoryStatus::Waiting->value => StoryStatus::Waiting,
-            StoryStatus::Test->value => StoryStatus::Test,
-            StoryStatus::Tested->value => StoryStatus::Tested,
-            StoryStatus::Released->value => StoryStatus::Released,
-            StoryStatus::Rejected->value => StoryStatus::Rejected,
-            StoryStatus::Done->value => StoryStatus::Done,
-        ];
-        return $statusOptions[$statusValue] != null ? [$statusOptions[$statusValue]->value => $statusOptions[$statusValue]] : [];
+        $statusOptions = collect(StoryStatus::cases())->mapWithKeys(fn($status) => [
+            $status->value => $status
+        ])->toArray();
+
+        return isset($statusOptions[$statusValue])
+            ? [$statusOptions[$statusValue]->value => $statusOptions[$statusValue]]
+            : [];
     }
 }
