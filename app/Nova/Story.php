@@ -326,7 +326,7 @@ class Story extends Resource
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
             return [
-                (new actions\RespondToStoryAction('customer_request'))
+                (new actions\RespondToStoryAction('customer_request', __('Answer to ticket')))
                     ->showInline()
                     ->sole()
                     ->confirmText(__('Click on the "Confirm" button to send the response or "Cancel" to cancel.'))
