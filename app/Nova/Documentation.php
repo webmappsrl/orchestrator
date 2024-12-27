@@ -57,7 +57,7 @@ class Documentation extends Resource
                 ->default(DocumentationCategory::Customer->value)
                 ->sortable()
                 ->rules('required'),
-            $this->descriptionField(),
+            $this->descriptionField($request),
         ];
     }
 
