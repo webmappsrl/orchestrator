@@ -78,6 +78,9 @@ trait fieldTrait
                 return $this->trimText($name);
             })
             ->sortable()
+            ->readonly(function ($request) {
+                return $request->user()->hasRole(UserRole::Customer);
+            })
             ->required()
             ->help(__('Enter a title for the ticket.'))
             ->asHtml();
