@@ -381,7 +381,7 @@ trait fieldTrait
 
     public function descriptionField(NovaRequest $request)
     {
-        return $this->richTextField($request, 'description', __('Dev notes'));
+        return $this->richTextField($request, 'description', __('Dev notes'))->canSee($this->canSee('description'));
     }
 
     private function richTextField(NovaRequest $request, $fieldName, $label)
@@ -448,7 +448,7 @@ trait fieldTrait
             $fieldName,
             __('Answer to dev notes'),
             'description'
-        );
+        )->canSee($this->canSee('description'));
     }
 
 
