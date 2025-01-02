@@ -79,6 +79,9 @@ trait fieldTrait
             })
             ->sortable()
             ->readonly(function ($request) {
+                if ($request->resourceId == null) {
+                    return false;
+                }
                 return $request->user()->hasRole(UserRole::Customer);
             })
             ->required()
