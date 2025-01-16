@@ -11,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Laravel\Nova\Auth\Impersonatable;
 use Illuminate\Notifications\Notifiable;
 use Overtrue\LaravelFavorite\Traits\Favoriter;
-use Wm\WmPackage\Model\User as Authenticatable;
+use Wm\WmPackage\Models\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 
@@ -50,17 +50,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'roles' => AsEnumCollection::class . ':' . UserRole::class,
     ];
-
-    /**
-     * Check if user has a specific single role
-     *
-     * @param UserRole $role
-     * @return boolean
-     */
-    public function hasRole(UserRole $role): bool
-    {
-        return $this->roles->contains($role);
-    }
 
     public function stories()
     {
