@@ -220,7 +220,8 @@ class Quote extends Resource
                 }),
             Text::make('PDF')
                 ->resolveUsing(function ($value, $resource, $attribute) {
-                    return '<a class="link-default" target="_blank" href="' . route('quote', ['id' => $resource->id]) . '">[x]</a>';
+                    return '<a class="link-default" target="_blank" href="' . route('quote', ['id' => $resource->id]) . '">[ITA]</a>' .
+                        '<a class="link-default ml-2" target="_blank" href="' . route('quote', ['id' => $resource->id, 'lang' => 'en']) . '">[EN]</a>';
                 })
                 ->asHtml()
                 ->exceptOnForms(),
