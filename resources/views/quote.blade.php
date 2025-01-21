@@ -77,7 +77,7 @@
                                         <h3 class="description">{{ __('Maintenance Services') }}:</h3>
                                         @foreach ($quote->recurringProducts as $recurringProduct)
                                             <li><span class="product-title">{{ __($recurringProduct->name) }}</span> -
-                                                {{ __('portapporta_maintenance_description') }}
+                                                {{ __($recurringProduct->description) }}
                                             </li>
                                         @endforeach
                                     @endif
