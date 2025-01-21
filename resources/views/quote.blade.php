@@ -1,10 +1,10 @@
 @php
     $customerName = $quote->customer->full_name ?? $quote->customer->name;
-    $pdfName = 'Preventivo_WEBMAPP_' . $customerName;
+    $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
 @endphp
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ App::getLocale() }}">
 
 <head>
     <meta charset="UTF-8">
@@ -46,45 +46,45 @@
                 <td colspan="5">
                     <div class="customer-details-page">
                         <div class="customer-details">
-                            <h3>Spett.le</h3>
+                            <h3>{{ __('Dear') }}</h3>
                             <p><strong>{{ $quote->customer->full_name ?? $quote->customer->name }}</strong></p>
                             {{-- additional customers info --}}
                             <p class="indent-heading-customer">{!! nl2br($quote->customer->heading) !!}</p>
                         </div>
                         <div class="subject-container">
-                            <p>Oggetto: <br><br>{{ $quote->title }}</p>
+                            <p>{{ __('Subject') }}: <br><br>{{ __($quote->title) }}</p>
                         </div>
                     </div>
 
-                    <h4>Con la presente inviamo il preventivo per i servizi qui sotto descritti:</h4>
+                    <h4>{{ __('The service includes') }}:</h4>
 
                     <div class="service-description">
                         @if (count($quote->products) < 1 && count($quote->recurringProducts) < 1 && count($quote->additional_services) < 1)
-                            <h2 style="color:red;">Nessun elemento disponibile</h2>
+                            <h2 style="color:red;">{{ __('No elements available') }}</h2>
                         @else
-                            <h2 class="description">Caratteristiche del servizio</h2>
-                            <p>Il servizio prevede:</p>
+                            <h2 class="description">{{ __('Service Features') }}</h2>
+                            <p>{{ __('The service includes') }}:</p>
                             <div class="service-details">
                                 <ul>
                                     @if (count($quote->products) > 0)
-                                        <h3 class="description">Servizi di attivazione:</h3>
+                                        <h3 class="description">{{ __('Activation Services') }}:</h3>
                                         @foreach ($quote->products as $product)
-                                            <li> <span class="product-title">{{ $product->name }}</span> -
-                                                {{ $product->description }} </li>
+                                            <li> <span class="product-title">{{ __($product->name) }}</span> -
+                                                {{ __($product->description) }} </li>
                                         @endforeach
                                     @endif
                                     @if (count($quote->recurringProducts) > 0)
-                                        <h3 class="description">Servizi di Manutenzione:</h3>
+                                        <h3 class="description">{{ __('Maintenance Services') }}:</h3>
                                         @foreach ($quote->recurringProducts as $recurringProduct)
-                                            <li><span class="product-title">{{ $recurringProduct->name }}</span> -
-                                                {{ $recurringProduct->description }}
+                                            <li><span class="product-title">{{ __($recurringProduct->name) }}</span> -
+                                                {{ __('portapporta_maintenance_description') }}
                                             </li>
                                         @endforeach
                                     @endif
                                     @if (count($quote->additional_services) > 0)
-                                        <h3 class="description">Servizi Aggiuntivi:</h3>
+                                        <h3 class="description">{{ __('Additional Services') }}:</h3>
                                         @foreach ($quote->additional_services as $description => $price)
-                                            <li>{{ $description }}</li>
+                                            <li>{{ __($description) }}</li>
                                         @endforeach
                                     @endif
                                 </ul>
@@ -92,27 +92,25 @@
                         @endif
 
                         @if ($quote->additional_info)
-                            <h2 class="description">Informazioni aggiuntive</h2>
-                            <p class="additional-info indent-paragraph">{!! $quote->additional_info !!}</p>
+                            <h2 class="description">{{ __('Additional Information') }}</h2>
+                            <p class="additional-info indent-paragraph">{!! __($quote->additional_info) !!}</p>
                         @endif
                         @if ($quote->payment_plan)
                             <div class="payment-plan">
-                                <h2 class="description">Modalità di pagamento</h2>
-                                <p> {!! $quote->payment_plan !!}</p>
+                                <h2 class="description">{{ __('Payment Plan') }}</h2>
+                                <p> {!! __($quote->payment_plan) !!}</p>
                             </div>
                         @endif
                         @if ($quote->delivery_time)
                             <div class="delivery-time">
-                                <h2 class="description">Tempi di consegna</h2>
-                                <p> {!! $quote->delivery_time !!}</p>
+                                <h2 class="description">{{ __('Delivery Time') }}</h2>
+                                <p> {!! __($quote->delivery_time) !!}</p>
                             </div>
                         @endif
                     </div>
-                    <h2 style="color: #005485; page-break-before:always;">Costi</h2>
-                    <p>Di seguito indichiamo i costi del servizio suddivisi in costi di attivazione e costi
-                        di
-                        abbonamento
-                        annuale
+                    <h2 style="color: #005485; page-break-before:always;">{{ __('Costs') }}</h2>
+                    <p>{{ __('Below we indicate the costs of the service divided into activation costs and annual subscription costs') }}
+                    </p>
                     </p>
                     @if ($quote->products->count() > 0)
                         {{-- Start Prodotti e servizi table --}}
@@ -121,7 +119,7 @@
                             <thead>
                                 <tr class="table-header-style">
                                     <td class="td">
-                                        Prodotti e servizi (costo di attivazione)
+                                        {{ __('Products and services (activation costs)') }}
                                     </td>
                                     <td class="td" style="display: none"></td>
 
@@ -130,18 +128,18 @@
 
                             <thead>
                                 <tr>
-                                    <th>Oggetto</th>
-                                    <th>SKU</th>
-                                    <th>Prezzo unitario</th>
-                                    <th>Quantita'</th>
-                                    <th class="aligned-right">Prezzo totale</th>
+                                    <th>{{ __('Item') }}</th>
+                                    <th>{{ __('SKU') }}</th>
+                                    <th>{{ __('Unit price') }}</th>
+                                    <th>{{ __('Quantity') }}</th>
+                                    <th class="aligned-right">{{ __('Total price') }}</th>
                                 </tr>
                             </thead>
                             @foreach ($quote->products as $product)
                                 <thead>
                                     <tr>
-                                        <td class="td">{{ $product->name }}</td>
-                                        <td class="td">{{ $product->sku }}</td>
+                                        <td class="td">{{ __($product->name) }}</td>
+                                        <td class="td">{{ __($product->sku) }}</td>
                                         <td class="td">{{ number_format($product->price, 2, ',', '.') }} €</td>
                                         <td class="td">{{ $product->pivot->quantity }}</td>
                                         <td class="aligned-right td">
@@ -153,7 +151,7 @@
                             @endforeach
                             <thead>
                                 <tr style="color: #005485;">
-                                    <td class="td">Subtotale:</td>
+                                    <td class="td">{{ __('Subtotal') }}:</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -163,7 +161,7 @@
                             </thead>
                             <thead>
                                 <tr style="color: #005485;">
-                                    <td class="td">IVA:</td>
+                                    <td class="td">{{ __('VAT') }}:</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -174,7 +172,7 @@
                             </thead>
                             <thead style="page-break-after:always;">
                                 <tr class="table-header-style">
-                                    <td class="td">Totale costi attivazione</td>
+                                    <td class="td">{{ __('Total activation costs') }}</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -191,25 +189,26 @@
                         <div class="recurring-products-page">
                             <thead>
                                 <tr class="table-header-style">
-                                    <td class="td">Servizi di manutenzione <br> (costi di abbonamento annuale)
+                                    <td class="td">{{ __('Maintenance Services') }} <br>
+                                        ({{ __('Annual subscription costs') }})
                                     </td>
                                 </tr>
                             </thead>
 
                             <thead>
                                 <tr>
-                                    <th>Oggetto</th>
-                                    <th>SKU</th>
-                                    <th>Prezzo unitario</th>
-                                    <th>Quantita'</th>
-                                    <th class="aligned-right">Prezzo totale</th>
+                                    <th>{{ __('Item') }}</th>
+                                    <th>{{ __('SKU') }}</th>
+                                    <th>{{ __('Unit price') }}</th>
+                                    <th>{{ __('Quantity') }}</th>
+                                    <th class="aligned-right">{{ __('Total price') }}</th>
                                 </tr>
                             </thead>
                             @foreach ($quote->recurringProducts as $recurringProduct)
                                 <thead>
                                     <tr>
-                                        <td class="td">{{ $recurringProduct->name }}</td>
-                                        <td class="td">{{ $recurringProduct->sku }}</td>
+                                        <td class="td">{{ __($recurringProduct->name) }}</td>
+                                        <td class="td">{{ __($recurringProduct->sku) }}</td>
                                         <td class="td">
                                             {{ number_format($recurringProduct->price, 2, ',', '.') }} €</td>
                                         <td class="td" class="td">{{ $recurringProduct->pivot->quantity }}
@@ -223,7 +222,7 @@
                             @endforeach
                             <thead>
                                 <tr style="color: #005485;">
-                                    <td class="td">Subtotale annuo:</td>
+                                    <td class="td">{{ __('Subtotal annual') }}:</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -236,7 +235,7 @@
                             </thead>
                             <thead>
                                 <tr style="color: #005485;">
-                                    <td class="td">Subtotale complessivo:</td>
+                                    <td class="td">{{ __('Total annual subtotal') }}:</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -248,7 +247,7 @@
                             </thead>
                             {{-- <thead>
                                 <tr style="color: #005485;">
-                                    <td class="td">IVA annua:</td>
+                                    <td class="td">{{ __('Annual VAT') }}:</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -259,7 +258,7 @@
                             </thead> --}}
                             <thead>
                                 <tr style="color: #005485;">
-                                    <td class="td">IVA complessiva:</td>
+                                    <td class="td">{{ __('Total annual VAT') }}:</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -271,7 +270,7 @@
                             </thead>
                             {{-- <thead>
                                 <tr class="table-header-style">
-                                    <td class="td">Totale costi abbonamento annuo</td>
+                                    <td class="td">{{ __('Total annual subscription costs') }}</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -283,7 +282,7 @@
                             </thead> --}}
                             <thead>
                                 <tr style="page-break-after:always;" class="table-header-style">
-                                    <td class="td">Totale costi abbonamento complessivo</td>
+                                    <td class="td">{{ __('Total annual subscription costs') }}</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -300,17 +299,17 @@
                         <div class="additional-services page">
                             <thead>
                                 <tr class="table-header-style">
-                                    <td class="td">Servizi Aggiuntivi</td>
+                                    <td class="td">{{ __('Additional Services') }}</td>
                                 </tr>
                             </thead>
 
                             <thead>
                                 <tr>
-                                    <th>Oggetto</th>
+                                    <th>{{ __('Item') }}</th>
                                     <th></th>
                                     <th></th>
                                     <th></th>
-                                    <th class="aligned-right">Prezzo totale</th>
+                                    <th class="aligned-right">{{ __('Total price') }}</th>
                                 </tr>
                             </thead>
                             @foreach ($quote->additional_services as $description => $price)
@@ -330,12 +329,12 @@
                     @endif
                     {{-- start riepilogo table --}}
                     <thead style="page-break-before:always;" <tr class="table-header-style">
-                        <td>Riepilogo</td>
+                        <td>{{ __('Summary') }}</td>
             </tr>
             </thead>
             <thead>
                 <tr>
-                    <td class="td">Ammontare dei costi di attivazione </td>
+                    <td class="td">{{ __('Activation costs') }}</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
@@ -346,7 +345,7 @@
             </thead>
             <thead>
                 <tr>
-                    <td class="td">Ammontare dei costi di abbonamento annuale</td>
+                    <td class="td">{{ __('Annual subscription costs') }}</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
@@ -357,7 +356,7 @@
             </thead>
             <thead>
                 <tr>
-                    <td class="td">Ammontare dei servizi aggiuntivi</td>
+                    <td class="td">{{ __('Additional services costs') }}</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
@@ -369,7 +368,7 @@
             <thead>
                 @if ($quote->discount > 0)
                     <tr>
-                        <td class="td">Sconto</td>
+                        <td class="td">{{ __('Discount') }}</td>
                         <td class="td"></td>
                         <td class="td"></td>
                         <td class="td"></td>
@@ -380,7 +379,7 @@
             </thead>
             <thead>
                 <tr>
-                    <td class="td" style="color: #005485;">Prezzo finale (senza IVA)</td>
+                    <td class="td" style="color: #005485;">{{ __('Final price (without VAT)') }}</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
@@ -390,7 +389,7 @@
             </thead>
             <thead>
                 <tr>
-                    <td class="td">IVA (22%)</td>
+                    <td class="td">{{ __('VAT (22%)') }}</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
@@ -401,7 +400,7 @@
             </thead>
             <thead>
                 <tr class="table-header-style">
-                    <td class="td">Prezzo finale (con IVA)</td>
+                    <td class="td">{{ __('Final price (with VAT)') }}</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
@@ -429,11 +428,11 @@
     </table>
 
     <div class="message">
-        <p>A disposizione per ogni eventuale chiarimento, inviamo cordiali saluti.</p>
+        <p>{{ __('At your disposal for any clarification, we send you cordial greetings.') }}</p>
         <br>
-        <p>Pisa, {{ date('d-m-Y') }}</p>
-        <p>Alessio Piccioli,</p>
-        <p>Amministratore di Webmapp.</p>
+        <p>{{ __('Pisa,') }} {{ date('d-m-Y') }}</p>
+        <p>{{ __('Alessio Piccioli,') }}</p>
+        <p>{{ __('Administrator of Webmapp.') }}</p>
     </div>
 
 

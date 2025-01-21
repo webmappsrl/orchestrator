@@ -29,7 +29,7 @@ class RecurringProduct extends Resource
 
     public function title()
     {
-        return $this->name . ' - ' . $this->price . '€';
+        return __($this->name) . ' - ' . $this->price . '€';
     }
 
     /**
@@ -73,10 +73,12 @@ class RecurringProduct extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('name')->sortable(),
-            Textarea::make('description')->hideFromIndex()->nullable(),
-            Text::make('sku')->sortable(),
-            Currency::make('price')->currency('EUR')->nullable(),
+            Text::make(__('Name'), 'name')->sortable()->displayUsing(function ($name) {
+                return __($name);
+            }),
+            Textarea::make(__('Description'), 'description')->hideFromIndex()->nullable(),
+            Text::make(__('SKU'), 'sku')->sortable(),
+            Currency::make(__('Price'), 'price')->currency('EUR')->nullable(),
 
         ];
     }

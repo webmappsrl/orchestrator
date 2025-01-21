@@ -6,6 +6,8 @@ use App\Models\Quote;
 use Barryvdh\DomPDF\Facade\PDF;
 use App\Http\Requests\StoreQuoteRequest;
 use App\Http\Requests\UpdateQuoteRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class QuoteController extends Controller
 {
@@ -36,16 +38,13 @@ class QuoteController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $quote = Quote::findOrFail($id);
+        $lang = $request->get('lang', 'it');
+        App::setLocale($lang);
 
-        return view(
-            'quote',
-            [
-                'quote' => $quote,
-            ]
-        );
+        return view('quote', compact('quote'));
     }
 
     /**
