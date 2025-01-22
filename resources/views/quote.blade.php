@@ -4,7 +4,7 @@
 @endphp
 
 <!DOCTYPE html>
-<html lang="{{ $lang }}">
+<html lang="{{ App::getLocale() }}">
 
 <head>
     <meta charset="UTF-8">
@@ -45,7 +45,7 @@
                             <p class="indent-heading-customer">{!! nl2br($quote->customer->heading) !!}</p>
                         </div>
                         <div class="subject-container">
-                            <p>{{ __('Subject') }}: <br><br>{{ $quote->getTranslation('title', $lang) }}</p>
+                            <p>{{ __('Subject') }}: <br><br>{{ $quote->getTranslation('title', App::getLocale()) }}</p>
                         </div>
                     </div>
 
@@ -62,22 +62,33 @@
                                     @if (count($quote->products) > 0)
                                         <h3 class="description">{{ __('Activation Services') }}:</h3>
                                         @foreach ($quote->products as $product)
-                                            <li> <span class="product-title">{{ __($product->name) }}</span> -
-                                                {{ __($product->description) }} </li>
+                                            <li> <span
+                                                    class="product-title">{{ $product->getTranslation('name', App::getLocale()) }}</span>
+                                                -
+                                                {{ $product->getTranslation('description', App::getLocale()) }} </li>
                                         @endforeach
                                     @endif
                                     @if (count($quote->recurringProducts) > 0)
                                         <h3 class="description">{{ __('Maintenance Services') }}:</h3>
                                         @foreach ($quote->recurringProducts as $recurringProduct)
-                                            <li><span class="product-title">{{ __($recurringProduct->name) }}</span> -
-                                                {{ __('portapporta_maintenance_description') }}
+                                            <li><span
+                                                    class="product-title">{{ $recurringProduct->getTranslation('name', App::getLocale()) }}</span>
+                                                -
+                                                {{ $recurringProduct->getTranslation('description', App::getLocale()) }}
                                             </li>
                                         @endforeach
                                     @endif
-                                    @if (count(json_decode($quote->additional_services, true) ?? []) > 0)
+                                    @php
+                                        $additionalServices = $quote->getTranslation(
+                                            'additional_services',
+                                            App::getLocale(),
+                                        );
+                                    @endphp
+                                    @if (count($additionalServices) > 0)
                                         <h3 class="description">{{ __('Additional Services') }}:</h3>
-                                        @foreach (json_decode($quote->additional_services, true) as $description => $price)
-                                            <li>{{ $description }}</li>
+                                        @foreach ($additionalServices as $description => $price)
+                                            <li>{{ $description }}
+                                            </li>
                                         @endforeach
                                     @endif
                                 </ul>
@@ -86,18 +97,18 @@
 
                         @if ($quote->additional_info)
                             <h2 class="description">{{ __('Additional Information') }}</h2>
-                            <p class="additional-info indent-paragraph">{!! $quote->getTranslation('additional_info', $lang) !!}</p>
+                            <p class="additional-info indent-paragraph">{!! $quote->getTranslation('additional_info', App::getLocale()) !!}</p>
                         @endif
                         @if ($quote->payment_plan)
                             <div class="payment-plan">
                                 <h2 class="description">{{ __('Payment Plan') }}</h2>
-                                <p>{!! $quote->getTranslation('payment_plan', $lang) !!}</p>
+                                <p>{!! $quote->getTranslation('payment_plan', App::getLocale()) !!}</p>
                             </div>
                         @endif
                         @if ($quote->delivery_time)
                             <div class="delivery-time">
                                 <h2 class="description">{{ __('Delivery Time') }}</h2>
-                                <p>{!! $quote->getTranslation('delivery_time', $lang) !!}</p>
+                                <p>{!! $quote->getTranslation('delivery_time', App::getLocale()) !!}</p>
                             </div>
                         @endif
                     </div>
@@ -265,7 +276,10 @@
                         {{-- end servizi di manutenzione table --}}
                     @endif
                     {{-- start servizi aggiuntivi table --}}
-                    @if (count(json_decode($quote->additional_services, true) ?? []) > 0)
+                    @php
+                        $additionalServices = $quote->getTranslation('additional_services', App::getLocale());
+                    @endphp
+                    @if (count($additionalServices) > 0)
                         <div class="additional-services page">
                             <thead>
                                 <tr class="table-header-style">
@@ -282,7 +296,7 @@
                                     <th class="aligned-right">{{ __('Total price') }}</th>
                                 </tr>
                             </thead>
-                            @foreach (json_decode($quote->additional_services, true) as $description => $price)
+                            @foreach ($additionalServices as $description => $price)
                                 <thead>
                                     <tr>
                                         <td class="td">{{ $description }}</td>

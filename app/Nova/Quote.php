@@ -176,28 +176,14 @@ class Quote extends Resource
                 ->displayUsing(function () {
                     return number_format($this->discount, 2, ',', '.') . ' €';
                 }),
-            KeyValue::make(__('Additional Services'), 'additional_services')
-                ->hideFromIndex()
-                ->rules(['json', function ($attribute, $value, $fail) {
-                    $json = json_decode($value, true);
-
-                    foreach ($json as $key => $price) {
-                        if (strpos($price, ',') !== false) {
-                            //replace comma with dot
-                            $price = str_replace(',', '.', $price);
-                        }
-                        if (!is_numeric($price)) {
-                            $fail(__($attribute) . ': ' . __('must be a valid JSON' . '.'));
-                        }
-                        if (strpos($price, ',') !== false) {
-                            //replace comma with dot
-                            $value = str_replace(',', '.', $value);
-                        }
-                    }
-                }])
-                ->keyLabel(__('Description'))
-                ->valueLabel(__('Price') . '(€)')
-                ->help(__('The price field cannot contain commas. Use `.` as decimal separator.')),
+            NovaTabTranslatable::make([
+                KeyValue::make(__('Additional Services'), 'additional_services')
+                    ->hideFromIndex()
+                    ->keyLabel(__('Description'))
+                    ->valueLabel(__('Price') . '(€)')
+                    ->help(__('The price field cannot contain commas. Use `.` as decimal separator.'))
+                    ->hideFromIndex(),
+            ])->hideFromIndex(),
             Currency::make('Additional Services Total Price')
                 ->currency('EUR')
                 ->locale('it')
