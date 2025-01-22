@@ -26,17 +26,10 @@
         </div>
 
     </header>
-    {{-- <footer class="webmapp-footer">
-        <p>Webmapp S.r.l. - Via Antonio Cei - 56123 Pisa <br>
-            CF/P.iva 02266770508 - Tel +39 3285360803 <br>
-            ww.webmapp.it | info@webmapp.it</p>
-
-    </footer> --}}
     <table>
         <thead>
             <tr>
                 <td class="td-placeholder">
-                    <!--place holder for the fixed-position header-->
                     <div class="header-space"></div>
                 </td>
             </tr>
@@ -77,7 +70,7 @@
                                         <h3 class="description">{{ __('Maintenance Services') }}:</h3>
                                         @foreach ($quote->recurringProducts as $recurringProduct)
                                             <li><span class="product-title">{{ __($recurringProduct->name) }}</span> -
-                                                {{ __($recurringProduct->description) }}
+                                                {{ __('portapporta_maintenance_description') }}
                                             </li>
                                         @endforeach
                                     @endif
@@ -245,17 +238,6 @@
 
                                 </tr>
                             </thead>
-                            {{-- <thead>
-                                <tr style="color: #005485;">
-                                    <td class="td">{{ __('Annual VAT') }}:</td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="aligned-right td">
-                                        {{ number_format(($quote->getTotalRecurringPrice() / count($quote->recurringProducts)) * 0.22, 2, ',', '.') }}
-                                        €</td>
-                                </tr>
-                            </thead> --}}
                             <thead>
                                 <tr style="color: #005485;">
                                     <td class="td">{{ __('Total annual VAT') }}:</td>
@@ -268,18 +250,6 @@
                                     </td>
                                 </tr>
                             </thead>
-                            {{-- <thead>
-                                <tr class="table-header-style">
-                                    <td class="td">{{ __('Total annual subscription costs') }}</td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="aligned-right td">
-                                        {{ number_format(($quote->getTotalRecurringPrice() / count($quote->recurringProducts)) * 1.22, 2, ',', '.') }}
-                                        €
-                                    </td>
-                                </tr>
-                            </thead> --}}
                             <thead>
                                 <tr style="page-break-after:always;" class="table-header-style">
                                     <td class="td">{{ __('Total annual subscription costs') }}</td>
