@@ -61,7 +61,7 @@ class StoryObserver
             && $user && $story->user
             && $user->id != $story->user->id
         ) {
-            $story->status = StoryStatus::Todo->value;
+            $story->status = StoryStatus::Assigned->value;
         }
     }
 
