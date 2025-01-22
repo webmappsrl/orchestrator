@@ -44,16 +44,6 @@ class Kernel extends ConsoleKernel
             ->after(function () {
                 Log::info('story:auto-update-status command finished');
             });
-        $schedule
-            ->command('story:send-waiting-reminder')
-            ->timezone('Europe/Rome')
-            ->dailyAt('18:00')
-            ->before(function () {
-                Log::info('story:send-waiting-reminder command starting');
-            })
-            ->after(function () {
-                Log::info('story:send-waiting-reminder command finished');
-            });
     }
 
     /**
