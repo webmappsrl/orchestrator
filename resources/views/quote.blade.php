@@ -53,14 +53,14 @@
 
                     <div class="service-description">
                         @if (count($quote->products) < 1 && count($quote->recurringProducts) < 1 && count($quote->additional_services) < 1)
-                            <h2 style="color:red;">{{ __('No elements available') }}</h2>
+                            <h2 style="color:red;">{{ __('No items available') }}</h2>
                         @else
-                            <h2 class="description">{{ __('Service Features') }}</h2>
+                            <h2 class="description">{{ __('Service features') }}</h2>
                             <p>{{ __('The service includes') }}:</p>
                             <div class="service-details">
                                 <ul>
                                     @if (count($quote->products) > 0)
-                                        <h3 class="description">{{ __('Activation Services') }}:</h3>
+                                        <h3 class="description">{{ __('Activation services') }}:</h3>
                                         @foreach ($quote->products as $product)
                                             <li> <span
                                                     class="product-title">{{ $product->getTranslation('name', App::getLocale()) }}</span>
@@ -69,7 +69,7 @@
                                         @endforeach
                                     @endif
                                     @if (count($quote->recurringProducts) > 0)
-                                        <h3 class="description">{{ __('Maintenance Services') }}:</h3>
+                                        <h3 class="description">{{ __('Maintenance services') }}:</h3>
                                         @foreach ($quote->recurringProducts as $recurringProduct)
                                             <li><span
                                                     class="product-title">{{ $recurringProduct->getTranslation('name', App::getLocale()) }}</span>
@@ -85,7 +85,7 @@
                                         );
                                     @endphp
                                     @if (count($additionalServices) > 0)
-                                        <h3 class="description">{{ __('Additional Services') }}:</h3>
+                                        <h3 class="description">{{ __('Additional services') }}:</h3>
                                         @foreach ($additionalServices as $description => $price)
                                             <li>{{ $description }}
                                             </li>
@@ -96,24 +96,24 @@
                         @endif
 
                         @if ($quote->additional_info)
-                            <h2 class="description">{{ __('Additional Information') }}</h2>
+                            <h2 class="description">{{ __('Additional information') }}</h2>
                             <p class="additional-info indent-paragraph">{!! $quote->getTranslation('additional_info', App::getLocale()) !!}</p>
                         @endif
                         @if ($quote->payment_plan)
                             <div class="payment-plan">
-                                <h2 class="description">{{ __('Payment Plan') }}</h2>
+                                <h2 class="description">{{ __('Payment plan') }}</h2>
                                 <p>{!! $quote->getTranslation('payment_plan', App::getLocale()) !!}</p>
                             </div>
                         @endif
                         @if ($quote->delivery_time)
                             <div class="delivery-time">
-                                <h2 class="description">{{ __('Delivery Time') }}</h2>
+                                <h2 class="description">{{ __('Delivery time') }}</h2>
                                 <p>{!! $quote->getTranslation('delivery_time', App::getLocale()) !!}</p>
                             </div>
                         @endif
                     </div>
                     <h2 style="color: #005485; page-break-before:always;">{{ __('Costs') }}</h2>
-                    <p>{{ __('Below we indicate the costs of the service divided into activation costs and annual subscription costs') }}
+                    <p>{{ __('Below we indicate the costs of the service divided into activation costs and annual maintenance costs') }}
                     </p>
                     </p>
                     @if ($quote->products->count() > 0)
@@ -193,8 +193,8 @@
                         <div class="recurring-products-page">
                             <thead>
                                 <tr class="table-header-style">
-                                    <td class="td">{{ __('Maintenance Services') }} <br>
-                                        ({{ __('Annual subscription costs') }})
+                                    <td class="td">{{ __('Maintenance services') }} <br>
+                                        ({{ __('Annual maintenance costs') }})
                                     </td>
                                 </tr>
                             </thead>
@@ -239,7 +239,7 @@
                             </thead>
                             <thead>
                                 <tr style="color: #005485;">
-                                    <td class="td">{{ __('Total annual subtotal') }}:</td>
+                                    <td class="td">{{ __('Annual total') }}:</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -251,7 +251,7 @@
                             </thead>
                             <thead>
                                 <tr style="color: #005485;">
-                                    <td class="td">{{ __('Total annual VAT') }}:</td>
+                                    <td class="td">{{ __('Annual VAT') }}:</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -263,7 +263,7 @@
                             </thead>
                             <thead>
                                 <tr style="page-break-after:always;" class="table-header-style">
-                                    <td class="td">{{ __('Total annual subscription costs') }}</td>
+                                    <td class="td">{{ __('Annual total') }}</td>
                                     <td class="td"></td>
                                     <td class="td"></td>
                                     <td class="td"></td>
@@ -283,17 +283,17 @@
                         <div class="additional-services page">
                             <thead>
                                 <tr class="table-header-style">
-                                    <td class="td">{{ __('Additional Services') }}</td>
+                                    <td class="td">{{ __('Additional services') }}</td>
                                 </tr>
                             </thead>
 
                             <thead>
                                 <tr>
-                                    <th>{{ __('Item') }}</th>
+                                    <th>{{ __('Element') }}</th>
                                     <th></th>
                                     <th></th>
                                     <th></th>
-                                    <th class="aligned-right">{{ __('Total price') }}</th>
+                                    <th class="aligned-right">{{ __('Total') }}</th>
                                 </tr>
                             </thead>
                             @foreach ($additionalServices as $description => $price)
@@ -329,7 +329,7 @@
             </thead>
             <thead>
                 <tr>
-                    <td class="td">{{ __('Annual subscription costs') }}</td>
+                    <td class="td">{{ __('Annual maintenance costs') }}</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>

@@ -118,12 +118,6 @@ class Quote extends Resource
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
-            new Panel(__('NOTES'), [
-                MarkdownTui::make(__('Notes'), 'notes')
-                    ->hideFromIndex()
-                    ->initialEditType(EditorType::MARKDOWN)
-                    ->nullable()
-            ]),
             BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
                 ->filterable()
                 ->searchable(),
@@ -231,6 +225,10 @@ class Quote extends Resource
                 Tiptap::make(__('Billing Plan'), 'billing_plan')
                     ->hideFromIndex()
                     ->buttons($allButtons),
+                MarkdownTui::make(__('Notes'), 'notes')
+                    ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN)
+                    ->nullable()
             ])->hideFromIndex(),
 
             Files::make(__('Documents'), 'documents')
