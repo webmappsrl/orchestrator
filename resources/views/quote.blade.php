@@ -4,7 +4,7 @@
 @endphp
 
 <!DOCTYPE html>
-<html lang="{{ App::getLocale() }}">
+<html lang="{{ $lang }}">
 
 <head>
     <meta charset="UTF-8">
@@ -45,7 +45,7 @@
                             <p class="indent-heading-customer">{!! nl2br($quote->customer->heading) !!}</p>
                         </div>
                         <div class="subject-container">
-                            <p>{{ __('Subject') }}: <br><br>{{ __($quote->title) }}</p>
+                            <p>{{ __('Subject') }}: <br><br>{{ $quote->getTranslation('title', $lang) }}</p>
                         </div>
                     </div>
 
@@ -74,10 +74,10 @@
                                             </li>
                                         @endforeach
                                     @endif
-                                    @if (count($quote->additional_services) > 0)
+                                    @if (count(json_decode($quote->additional_services, true) ?? []) > 0)
                                         <h3 class="description">{{ __('Additional Services') }}:</h3>
-                                        @foreach ($quote->additional_services as $description => $price)
-                                            <li>{{ __($description) }}</li>
+                                        @foreach (json_decode($quote->additional_services, true) as $description => $price)
+                                            <li>{{ $description }}</li>
                                         @endforeach
                                     @endif
                                 </ul>
@@ -86,18 +86,18 @@
 
                         @if ($quote->additional_info)
                             <h2 class="description">{{ __('Additional Information') }}</h2>
-                            <p class="additional-info indent-paragraph">{!! __($quote->additional_info) !!}</p>
+                            <p class="additional-info indent-paragraph">{!! $quote->getTranslation('additional_info', $lang) !!}</p>
                         @endif
                         @if ($quote->payment_plan)
                             <div class="payment-plan">
                                 <h2 class="description">{{ __('Payment Plan') }}</h2>
-                                <p> {!! __($quote->payment_plan) !!}</p>
+                                <p>{!! $quote->getTranslation('payment_plan', $lang) !!}</p>
                             </div>
                         @endif
                         @if ($quote->delivery_time)
                             <div class="delivery-time">
                                 <h2 class="description">{{ __('Delivery Time') }}</h2>
-                                <p> {!! __($quote->delivery_time) !!}</p>
+                                <p>{!! $quote->getTranslation('delivery_time', $lang) !!}</p>
                             </div>
                         @endif
                     </div>
@@ -265,7 +265,7 @@
                         {{-- end servizi di manutenzione table --}}
                     @endif
                     {{-- start servizi aggiuntivi table --}}
-                    @if (count($quote->additional_services) > 0)
+                    @if (count(json_decode($quote->additional_services, true) ?? []) > 0)
                         <div class="additional-services page">
                             <thead>
                                 <tr class="table-header-style">
@@ -282,7 +282,7 @@
                                     <th class="aligned-right">{{ __('Total price') }}</th>
                                 </tr>
                             </thead>
-                            @foreach ($quote->additional_services as $description => $price)
+                            @foreach (json_decode($quote->additional_services, true) as $description => $price)
                                 <thead>
                                     <tr>
                                         <td class="td">{{ $description }}</td>
