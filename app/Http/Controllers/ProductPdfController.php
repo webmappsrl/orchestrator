@@ -20,8 +20,8 @@ class ProductPdfController extends Controller
         $recurringProductIds = is_array($recurringProductIds) ? $recurringProductIds : explode(',', $recurringProductIds);
 
         // Recupera i prodotti dal database
-        $products = Product::whereIn('id', $productIds)->get();
-        $recurringProducts = RecurringProduct::whereIn('id', $recurringProductIds)->get();
+        $products = Product::whereIn('id', $productIds)->get()->sortBy("sku");
+        $recurringProducts = RecurringProduct::whereIn('id', $recurringProductIds)->get()->sortBy("sku");
 
         // Verifica se ci sono prodotti da includere
         if ($products->isEmpty() && $recurringProducts->isEmpty()) {
