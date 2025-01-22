@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Lista Prodotti</title>
+    <title>{{ __('Products List') }}</title>
 </head>
 
 <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333;">
@@ -44,7 +44,7 @@
                         <th style="width: 40%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
                             {{ __('Description') }}</th>
                         <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
-                            {{ __('Price') }}
+                            {{ __('One-off price') }}
                             (€)</th>
                     </tr>
                 </thead>
@@ -73,13 +73,16 @@
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-family: Arial, sans-serif;">
                 <thead>
                     <tr style="background-color: #f4f4f4; border-bottom: 2px solid #ccc;">
-                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">Nome
+                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
+                            {{ __('Name') }}
                         </th>
-                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">SKU
+                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
+                            {{ __('SKU') }}
                         </th>
                         <th style="width: 40%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
-                            Descrizione</th>
-                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">Prezzo
+                            {{ __('Description') }}</th>
+                        <th style="width: 20%; padding: 8px; text-align: left; font-size: 13px; color: #005485;">
+                            {{ __('Annual price') }}
                             (€)</th>
                     </tr>
                 </thead>
