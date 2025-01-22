@@ -17,6 +17,8 @@ class SyncStoriesWithGoogleCalendar extends Command
     protected $description = 'Sync assigned stories with Google Calendar';
 
     private $today;
+    private $startTime;
+    private $currentTimeForDeveloper = [];
 
     private const DEFAULT_COLOR_ID = '5'; // Yellow
     private const TESTING_COLOR_ID = '6'; // Tangerine
@@ -24,11 +26,13 @@ class SyncStoriesWithGoogleCalendar extends Command
     private const BUG_COLOR_ID = '11'; // Bold Red
     private const HELPDESK_COLOR_ID = '2'; // Green
     private const FEATURE_COLOR_ID = '1'; // Blue
+    private const TESTED_COLOR_ID = '3'; // Grape
 
     public function __construct()
     {
         parent::__construct();
         $this->today = Carbon::today('Europe/Rome');
+        $this->startTime = $this->today->setTime(0, 1);
     }
 
     public function handle()
@@ -47,12 +51,14 @@ class SyncStoriesWithGoogleCalendar extends Command
         }
         $todoTickets = $this->getTicketsWithStatus(StoryStatus::Todo->value, $developerId);
         $testingTickets = $this->getTicketsWithStatus(StoryStatus::Test->value, $developerId);
+        $testedTickets = $this->getTicketsWithStatus(StoryStatus::Tested->value, $developerId);
         $waitingTickets = $this->getTicketsWithStatus(StoryStatus::Waiting->value, $developerId);
 
         // Prendi tutti gli ID degli sviluppatori coinvolti
         $developersInvolved = $todoTickets->pluck('user_id')
             ->merge($testingTickets->pluck('user_id'))
             ->merge($testingTickets->pluck('tester_id'))
+            ->merge($testedTickets->pluck('user_id'))
             ->merge($waitingTickets->pluck('user_id'))
             ->unique()
             ->toArray();
@@ -62,55 +68,55 @@ class SyncStoriesWithGoogleCalendar extends Command
             $this->deleteCalendar($developerId);
         }
 
-        // Il tempo parte da mezzanotte
-        $startTime = $this->today->setTime(0, 1);
-        $currentTimeForDeveloper = [];
-
         // Inizializza il tempo per ogni sviluppatore
-        foreach($developersInvolved as $developerId){
-            $currentTimeForDeveloper[$developerId] = $startTime->copy();
-        }
+        $this->initializeTimeForAllDevelopers($developersInvolved);
 
         // Crea gli eventi per i ticket di todo
         $todoTickets = $todoTickets->groupBy('user_id');
-        foreach ($todoTickets as $developerId => $tickets) {
-            $currentTimeForTicket = $currentTimeForDeveloper[$developerId]->copy();
-            foreach($tickets as $ticket){
-                $currentTimeForTicket = $this->createEvent($developerId, $ticket, $currentTimeForTicket);
-                $currentTimeForDeveloper[$developerId] = $currentTimeForTicket;
-            }
-        }
+        $this->createEventsForTickets($todoTickets);
         
         // Pausa di 30 minuti per separare i ticket di testing
         // Aggiorna il tempo per ogni sviluppatore
-        foreach($currentTimeForDeveloper as $developerId => $time){
-            $currentTimeForDeveloper[$developerId] = $time->copy()->addMinutes(30);
-        }
+        $this->add30MinutesToAllDevelopers();
 
         // Crea gli eventi per i ticket di testing
         $testingTickets = $testingTickets->groupBy('tester_id');
-        foreach ($testingTickets as $developerId => $tickets) {
-            $currentTimeForTicket = $currentTimeForDeveloper[$developerId]->copy();
-            foreach($tickets as $ticket){
-                if($ticket->tester_id == null){ // Se il ticket non ha un tester, lo assegna allo sviluppatore assegnato
-                    $developerId = $ticket->user_id;
-                    $currentTimeForTicket = $currentTimeForDeveloper[$developerId]->copy();
-                }
-                $currentTimeForTicket = $this->createEvent($developerId, $ticket, $currentTimeForTicket);
-                $currentTimeForDeveloper[$developerId] = $currentTimeForTicket;
-            }
-        }
+        $this->createEventsForTickets($testingTickets);
+        // Crea gli eventi per i ticket di tested
+        $testedTickets = $testedTickets->groupBy('user_id');
+        $this->createEventsForTickets($testedTickets);
+
         // Crea gli eventi per i ticket di waiting
         $waitingTickets = $waitingTickets->groupBy('user_id');
-        foreach ($waitingTickets as $developerId => $tickets) {
-            $currentTimeForTicket = $currentTimeForDeveloper[$developerId]->copy();
-            foreach($tickets as $ticket){
-                $currentTimeForTicket = $this->createEvent($developerId, $ticket, $currentTimeForTicket);
-                $currentTimeForDeveloper[$developerId] = $currentTimeForTicket;
-            }
-        }
+        $this->createEventsForTickets($waitingTickets);
 
         $this->info('All stories have been synced to Google Calendar');
+    }
+
+    public function initializeTimeForAllDevelopers($developersInvolved): void{
+        foreach($developersInvolved as $developerId){
+            $this->currentTimeForDeveloper[$developerId] = $this->startTime->copy();
+        }
+    }
+
+    public function add30MinutesToAllDevelopers(): void{
+        foreach($this->currentTimeForDeveloper as $developerId => $time){
+            $this->currentTimeForDeveloper[$developerId] = $time->copy()->addMinutes(30);
+        }
+    }
+
+    function createEventsForTickets($ticketList): void{
+        foreach ($ticketList as $developerId => $tickets) {
+            $currentTimeForTicket = $this->currentTimeForDeveloper[$developerId]->copy();
+            foreach($tickets as $ticket){
+                if($ticket->status == StoryStatus::Test->value && $ticket->tester_id == null){ // Se il ticket non ha un tester, lo assegna allo sviluppatore assegnato
+                    $developerId = $ticket->user_id;
+                    $currentTimeForTicket = $this->currentTimeForDeveloper[$developerId]->copy();
+                }
+                $currentTimeForTicket = $this->createEvent($developerId, $ticket, $currentTimeForTicket);
+                $this->currentTimeForDeveloper[$developerId] = $currentTimeForTicket;
+            }
+        }
     }
 
     private function createEvent($developerId, $ticket, Carbon $startTime){
@@ -190,6 +196,9 @@ class SyncStoriesWithGoogleCalendar extends Command
                     break;
                 case StoryStatus::Waiting->value:
                     $colorId = self::WAITING_COLOR_ID; // Light Gray
+                    break;
+                case StoryStatus::Tested->value:
+                    $colorId = self::TESTED_COLOR_ID; // Grape
                     break;
             }
         }
