@@ -206,32 +206,10 @@ class Quote extends Resource
                     $itaUrl = route('quote', ['id' => $resource->id]);
                     $enUrl = route('quote', ['id' => $resource->id, 'lang' => 'en']);
 
-                    return <<<HTML
-                        <a style="display: inline-flex; align-items: center; padding: 0.5rem 1rem; background-color: rgb(20 184 166); color: rgb(254 243 199); font-weight: 500; border-radius: 0.5rem; margin-right: 0.5rem;" target="_blank" href="{$itaUrl}">
-                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                                <line x1="16" y1="13" x2="8" y2="13"/>
-                                <line x1="16" y1="17" x2="8" y2="17"/>
-                                <line x1="10" y1="9" x2="8" y2="9"/>
-                            </svg>
-                            ITA
-                        </a>
-                        <a style="display: inline-flex; align-items: center; padding: 0.5rem 1rem; background-color: rgb(20 184 166); color: rgb(254 243 199); font-weight: 500; border-radius: 0.5rem;" target="_blank" href="{$enUrl}">
-                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                                <line x1="16" y1="13" x2="8" y2="13"/>
-                                <line x1="16" y1="17" x2="8" y2="17"/>
-                                <line x1="10" y1="9" x2="8" y2="9"/>
-                            </svg>
-                            EN
-                        </a>
-                    HTML;
+                    return $this->pdfButton($itaUrl, 'ITA') . $this->pdfButton($enUrl, 'EN');
                 })
                 ->asHtml()
                 ->exceptOnForms(),
-
             NovaTabTranslatable::make([
                 Tiptap::make(__('Additional Info'), 'additional_info')
                     ->hideFromIndex()
@@ -330,5 +308,14 @@ class Quote extends Resource
     public function authorizedToReplicate(Request $request)
     {
         return false;
+    }
+
+    protected function pdfButton(string $url, string $label): string
+    {
+        return <<<HTML
+                        <a style="display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background-color: rgb(20 184 166); color: rgb(254 243 199); font-weight: 500; border-radius: 0.375rem; margin-right: 0.5rem; font-size: 0.875rem;" target="_blank" href="{$url}">
+                            {$label}
+                        </a>
+                    HTML;
     }
 }
