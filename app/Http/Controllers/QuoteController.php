@@ -42,9 +42,8 @@ class QuoteController extends Controller
     {
         $quote = Quote::findOrFail($id);
         $lang = $request->get('lang', 'it');
-        App::setLocale($lang);
 
-        return view('quote', compact('quote'));
+        return view('quote', compact('quote', 'lang'));
     }
 
     /**

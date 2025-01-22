@@ -6,6 +6,7 @@ use Laravel\Nova\Panel;
 use Manogi\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
 use Laravel\Nova\Fields\ID;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use App\Nova\Metrics\NewQuotes;
 use App\Nova\Metrics\WonQuotes;
@@ -19,12 +20,12 @@ use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\DuplicateQuote;
 use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Filters\QuoteStatusFilter;
-use App\Nova\Metrics\DynamicPartitionMetric;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Metrics\DynamicPartitionMetric;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
-use Illuminate\Http\Request;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
 class Quote extends Resource
 {
@@ -96,13 +97,15 @@ class Quote extends Resource
         ];
         return [
             ID::make()->sortable(),
-            Text::make(__('Title'), 'title')
-                ->displayUsing(function ($name, $a, $b) {
-                    $wrappedName = wordwrap($name, 50, "\n", true);
-                    $htmlName = str_replace("\n", '<br>', $wrappedName);
-                    return $htmlName;
-                })
-                ->asHtml(),
+            NovaTabTranslatable::make([
+                Text::make(__('Title'), 'title')
+                    ->displayUsing(function ($name, $a, $b) {
+                        $wrappedName = wordwrap($name, 50, "\n", true);
+                        $htmlName = str_replace("\n", '<br>', $wrappedName);
+                        return $htmlName;
+                    })
+                    ->asHtml(),
+            ])->setTitle(__('Title')),
             Status::make('Status')->loadingWhen(['new', 'sent'])->failedWhen(['closed lost'])->displayUsing(function () {
                 return __($this->status);
             })->onlyOnIndex(),
@@ -226,21 +229,23 @@ class Quote extends Resource
                 ->asHtml()
                 ->exceptOnForms(),
 
-            Tiptap::make(__('Additional Info'), 'additional_info')
-                ->hideFromIndex()
-                ->buttons($allButtons),
+            NovaTabTranslatable::make([
+                Tiptap::make(__('Additional Info'), 'additional_info')
+                    ->hideFromIndex()
+                    ->buttons($allButtons),
 
-            Tiptap::make(__('Delivery Time'), 'delivery_time')
-                ->hideFromIndex()
-                ->buttons($allButtons),
+                Tiptap::make(__('Delivery Time'), 'delivery_time')
+                    ->hideFromIndex()
+                    ->buttons($allButtons),
 
-            Tiptap::make(__('Payment Plan'), 'payment_plan')
-                ->hideFromIndex()
-                ->buttons($allButtons),
+                Tiptap::make(__('Payment Plan'), 'payment_plan')
+                    ->hideFromIndex()
+                    ->buttons($allButtons),
 
-            Tiptap::make(__('Billing Plan'), 'billing_plan')
-                ->hideFromIndex()
-                ->buttons($allButtons),
+                Tiptap::make(__('Billing Plan'), 'billing_plan')
+                    ->hideFromIndex()
+                    ->buttons($allButtons),
+            ])->hideFromIndex(),
 
             Files::make(__('Documents'), 'documents')
                 ->hideFromIndex(),

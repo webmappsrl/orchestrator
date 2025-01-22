@@ -10,10 +10,11 @@ use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Translatable\HasTranslations;
 
 class Quote extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, HasTranslations;
 
     protected $casts = [
         'additional_services' => 'array',
@@ -31,6 +32,15 @@ class Quote extends Model implements HasMedia
         'notes'
     ];
 
+    public $translatable = [
+        'title',
+        'notes',
+        'additional_info',
+        'delivery_time',
+        'payment_plan',
+        'billing_plan',
+        'additional_services'
+    ];
 
 
     public function customer()

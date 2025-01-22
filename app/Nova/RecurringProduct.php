@@ -9,6 +9,7 @@ use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Textarea;
 use App\Nova\Actions\ExportProductsToPdf;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class RecurringProduct extends Resource
@@ -73,10 +74,10 @@ class RecurringProduct extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make(__('Name'), 'name')->sortable()->displayUsing(function ($name) {
-                return __($name);
-            }),
-            Textarea::make(__('Description'), 'description')->hideFromIndex()->nullable(),
+            NovaTabTranslatable::make([
+                Text::make(__('Name'), 'name')->sortable(),
+                Textarea::make(__('Description'), 'description')->hideFromIndex()->nullable()
+            ]),
             Text::make(__('SKU'), 'sku')->sortable(),
             Currency::make(__('Price'), 'price')->currency('EUR')->nullable(),
 
