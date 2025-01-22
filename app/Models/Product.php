@@ -18,7 +18,7 @@ class Product extends Model
         'price',
     ];
 
-    protected $translatable = ['name', 'description'];
+    public $translatable = ['name', 'description'];
 
 
     public function quotes()
