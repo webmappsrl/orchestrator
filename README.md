@@ -29,6 +29,10 @@ docker exec -u 0 -it php81_${instance name} bash
 touch /var/log/xdebug.log
 chown -R 33 /var/log/
 ```
+Before running the install, ensure that the submodule are initialized and updated correctly with this command
+```bash
+git submodule update --init --recursive
+```
 
 At the end run install command to for this instance
 ```bash
