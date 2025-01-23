@@ -158,9 +158,16 @@ class SyncStoriesWithGoogleCalendar extends Command
         // Query per ottenere i ticket con lo status passato come parametro
         $query = Story::where(function ($query) use ($status) {
             $query->whereIn('status', [$status]);
+            if ($status == StoryStatus::Todo->value) {
+                $query->orWhereHas('views', function ($query) {
+                    $query->whereJsonContains('changes->status', StoryStatus::Todo->value)
+                        ->whereDate('viewed_at', $this->today);
+                });
+            }
         })
             ->whereNotNull('user_id')
             ->whereNotNull('type');
+
             
         // Se è stato passato un developerId, filtra i ticket in base a quello
         if(isset($developerId)){
