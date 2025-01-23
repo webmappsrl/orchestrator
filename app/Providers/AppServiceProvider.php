@@ -6,6 +6,7 @@ use App\Models\Story;
 use App\Observers\StoryObserver;
 use Illuminate\Support\ServiceProvider;
 use Lorisleiva\Actions\Facades\Actions;
+use Spatie\Translatable\Facades\Translatable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,5 +31,9 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             Actions::registerCommands();
         }
+
+        Translatable::fallback(
+            fallbackAny: true,
+        );
     }
 }
