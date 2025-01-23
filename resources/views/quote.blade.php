@@ -79,12 +79,9 @@
                                         @endforeach
                                     @endif
                                     @php
-                                        $additionalServices = $quote->getTranslation(
-                                            'additional_services',
-                                            App::getLocale(),
-                                        );
+                                        $additionalServices = $quote->additional_services;
                                     @endphp
-                                    @if (count($additionalServices) > 0)
+                                    @if (!is_string($additionalServices) && count($additionalServices) > 0)
                                         <h3 class="description">{{ __('Additional services') }}:</h3>
                                         @foreach ($additionalServices as $description => $price)
                                             <li>{{ $description }}
@@ -279,7 +276,7 @@
                     @php
                         $additionalServices = $quote->getTranslation('additional_services', App::getLocale());
                     @endphp
-                    @if (count($additionalServices) > 0)
+                    @if (!is_string($additionalServices) && count($additionalServices) > 0)
                         <div class="additional-services page">
                             <thead>
                                 <tr class="table-header-style">

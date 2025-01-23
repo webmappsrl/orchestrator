@@ -41,6 +41,7 @@ class QuoteController extends Controller
     public function show(Request $request, $id)
     {
         $quote = Quote::findOrFail($id);
+        $quote->clearEmptyAdditionalServicesTranslations(); //necessary for the fallback locale to work, otherwise will return a language key with empty string
         $lang = $request->get('lang', 'it');
 
         App::setLocale($lang);

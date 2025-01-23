@@ -132,4 +132,25 @@ class Quote extends Model implements HasMedia
     {
         $this->addMediaCollection('documents');
     }
+
+    public function clearEmptyAdditionalServicesTranslations(): void
+    {
+        if (empty($this->getTranslations('additional_services'))) {
+            return;
+        }
+
+        $filtered = collect($this->getTranslations('additional_services'))
+            ->filter(function ($translation) {
+                return !empty($translation);
+            })
+            ->toArray();
+
+        if (empty($filtered)) {
+            $this->replaceTranslations('additional_services', []);
+        } else {
+            $this->replaceTranslations('additional_services', $filtered);
+        }
+
+        $this->save();
+    }
 }
