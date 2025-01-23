@@ -16,7 +16,8 @@ return new class extends Migration
 
         foreach ($quotes as $quote) {
             $translatedData = [
-                'it' => json_decode($quote->additional_services, true)
+                'it' => json_decode($quote->additional_services, true),
+                'en' => []
             ];
 
             DB::table('quotes')
