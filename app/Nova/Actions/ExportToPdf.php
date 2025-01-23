@@ -31,23 +31,29 @@ class ExportToPdf extends Action
             // Aggiungi uno stile inline per i blocchi <pre> per gestire la lunghezza delle righe
             $description = str_replace('<pre><code>', '<pre style="white-space: pre-wrap; word-wrap: break-word;"><code>', $description);
 
+            $description = '<div style="padding: 15px 0;">' . $description . '</div>';
             $title = str_replace(' ', '', $model->name);
             $fileName = "{$title}.pdf";
             $filePath = storage_path("app/public/{$fileName}");
             $header = '
             <header style="padding-bottom: 20px;text-align: right;width: 100%;top: 0;display: flex;flex-direction: column;justify-content: space-between;">
                     <img  style="width: 80px;height: 80px;margin-right: 20px;align-self: flex-end;" src="https://orchestrator.maphub.it/images/logo.svg" alt="webmapp logo">
-                <div style="font-size: 10px;line-height: 0.9rem;">
-                    <p>Webmapp S.r.l. - Via Antonio Cei - 56123 Pisa <br>
-                        CF/P.iva 02266770508 - Tel +39 3285360803 <br>
-                        www.webmapp.it | info@webmapp.it</p>
-                </div>
             </header>';
+
+            $footer = '
+            <footer style="text-align: center; padding-top: 20px; font-size: 14px; color: #777; position: fixed; bottom: 0; left: 0; right: 0;">
+                <div>
+                    <p>Webmapp S.r.l. - Via Antonio Cei, 2 - 56123 Pisa <br>
+                    C.F. / P. IVA: 02266770508 - Tel. +39 328 5360803 <br>
+                    www.webmapp.it | info@webmapp.it</p>
+                </div>
+            </footer>';
 
             $html =
                 '<div style="margin: 20px; padding: 20px;">'
                 . $header
-                . $description .
+                . $description
+                . $footer .
                 '</div>';
             $pdf = Pdf::loadHTML($html);
 
