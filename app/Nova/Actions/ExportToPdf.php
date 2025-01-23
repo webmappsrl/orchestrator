@@ -35,9 +35,10 @@ class ExportToPdf extends Action
             $title = str_replace(' ', '', $model->name);
             $fileName = "{$title}.pdf";
             $filePath = storage_path("app/public/{$fileName}");
+            $imagePath = public_path('/images/logo-orizzontale.png');
             $header = '
-            <header style="padding-bottom: 20px;text-align: right;width: 100%;top: 0;display: flex;flex-direction: column;justify-content: space-between;">
-                    <img  style="width: 80px;height: 80px;margin-right: 20px;align-self: flex-end;" src="https://orchestrator.maphub.it/images/logo.svg" alt="webmapp logo">
+            <header style="padding-bottom: 20px; text-align: right; width: 100%; top: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;">
+                    <img style="width: 115px; height: auto; margin-right: 20px;" src="' . $imagePath . '" alt="webmapp logo">
             </header>';
 
             $footer = '
