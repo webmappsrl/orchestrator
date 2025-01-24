@@ -77,7 +77,9 @@ class SyncStoriesWithGoogleCalendar extends Command
         
         // Pausa di 30 minuti per separare i ticket di testing
         // Aggiorna il tempo per ogni sviluppatore
-        $this->add30MinutesToAllDevelopers();
+        if($todoTickets->count() > 0){
+            $this->add30MinutesToAllDevelopers();
+        }
 
         // Crea gli eventi per i ticket di testing
         $testingTickets = $testingTickets->groupBy('tester_id');
