@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Models\Quote;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Translatable\HasTranslations;
 
 class RecurringProduct extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslations;
 
 
     protected $fillable = [
@@ -17,9 +18,7 @@ class RecurringProduct extends Model
         'sku',
         'price',
     ];
-
-    //translatable fields
-    public $translatable = ['name'];
+    public $translatable = ['name', 'description'];
 
     public function quotes()
     {

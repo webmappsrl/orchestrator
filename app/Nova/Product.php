@@ -9,6 +9,7 @@ use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Textarea;
 use App\Nova\Actions\ExportProductsToPdf;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Product extends Resource
@@ -31,7 +32,7 @@ class Product extends Resource
 
     public function title()
     {
-        return $this->name . ' - ' . $this->price . '€';
+        return __($this->name) . ' - ' . $this->price . '€';
     }
 
     /**
@@ -79,10 +80,12 @@ class Product extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('name')->sortable(),
-            Textarea::make('description')->hideFromIndex()->nullable(),
-            Text::make('sku')->sortable(),
-            Currency::make('price')->currency('EUR')->nullable(),
+            NovaTabTranslatable::make([
+                Text::make(__('Name'), 'name')->sortable(),
+                Textarea::make(__('Description'), 'description')->hideFromIndex()->nullable()
+            ]),
+            Text::make(__('SKU'), 'sku')->sortable(),
+            Currency::make(__('Price'), 'price')->currency('EUR')->nullable(),
         ];
     }
 
