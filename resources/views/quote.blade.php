@@ -1,6 +1,6 @@
 @php
-    $customerName = $quote->customer->full_name ?? $quote->customer->name;
-    $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
+$customerName = $quote->customer->full_name ?? $quote->customer->name;
+$pdfName = __('Preventivo_WEBMAPP_' . $customerName);
 @endphp
 
 <!DOCTYPE html>
@@ -53,261 +53,253 @@
 
                     <div class="service-description">
                         @if (count($quote->products) < 1 && count($quote->recurringProducts) < 1 && count($quote->additional_services) < 1)
-                            <h2 style="color:red;">{{ __('No items available') }}</h2>
-                        @else
-                            <h2 class="description">{{ __('Service features') }}</h2>
-                            <p>{{ __('The service includes') }}:</p>
-                            <div class="service-details">
-                                <ul>
-                                    @if (count($quote->products) > 0)
-                                        <h3 class="description">{{ __('Activation services') }}:</h3>
-                                        @foreach ($quote->products as $product)
+                                    <h2 style="color:red;">{{ __('No items available') }}</h2>
+                                    @else
+                                    <h2 class="description">{{ __('Service features') }}</h2>
+                                    <p>{{ __('The service includes') }}:</p>
+                                    <div class="service-details">
+                                        <ul>
+                                            @if (count($quote->products) > 0)
+                                            <h3 class="description">{{ __('Activation services') }}:</h3>
+                                            @foreach ($quote->products as $product)
                                             <li> <span
                                                     class="product-title">{{ $product->getTranslation('name', App::getLocale()) }}</span>
                                                 -
-                                                {{ $product->getTranslation('description', App::getLocale()) }} </li>
-                                        @endforeach
-                                    @endif
-                                    @if (count($quote->recurringProducts) > 0)
-                                        <h3 class="description">{{ __('Maintenance services') }}:</h3>
-                                        @foreach ($quote->recurringProducts as $recurringProduct)
+                                                {{ $product->getTranslation('description', App::getLocale()) }}
+                                            </li>
+                                            @endforeach
+                                            @endif
+                                            @if (count($quote->recurringProducts) > 0)
+                                            <h3 class="description">{{ __('Maintenance services') }}:</h3>
+                                            @foreach ($quote->recurringProducts as $recurringProduct)
                                             <li><span
                                                     class="product-title">{{ $recurringProduct->getTranslation('name', App::getLocale()) }}</span>
                                                 -
                                                 {{ $recurringProduct->getTranslation('description', App::getLocale()) }}
                                             </li>
-                                        @endforeach
-                                    @endif
-                                    @php
-                                        $additionalServices = $quote->additional_services;
-                                    @endphp
-                                    @if (!is_string($additionalServices) && count($additionalServices) > 0)
-                                        <h3 class="description">{{ __('Additional services') }}:</h3>
-                                        @foreach ($additionalServices as $description => $price)
+                                            @endforeach
+                                            @endif
+                                            @php
+                                            $additionalServices = $quote->additional_services;
+                                            @endphp
+                                            @if (!is_string($additionalServices) && count($additionalServices) > 0)
+                                            <h3 class="description">{{ __('Additional services') }}:</h3>
+                                            @foreach ($additionalServices as $description => $price)
                                             <li>{{ $description }}
                                             </li>
-                                        @endforeach
+                                            @endforeach
+                                            @endif
+                                        </ul>
+                                    </div>
                                     @endif
-                                </ul>
-                            </div>
-                        @endif
 
-                        @if ($quote->additional_info)
-                            <h2 class="description">{{ __('Additional information') }}</h2>
-                            <p class="additional-info indent-paragraph">{!! $quote->getTranslation('additional_info', App::getLocale()) !!}</p>
-                        @endif
-                        @if ($quote->payment_plan)
-                            <div class="payment-plan">
-                                <h2 class="description">{{ __('Payment plan') }}</h2>
-                                <p>{!! $quote->getTranslation('payment_plan', App::getLocale()) !!}</p>
-                            </div>
-                        @endif
-                        @if ($quote->delivery_time)
-                            <div class="delivery-time">
-                                <h2 class="description">{{ __('Delivery time') }}</h2>
-                                <p>{!! $quote->getTranslation('delivery_time', App::getLocale()) !!}</p>
-                            </div>
-                        @endif
+                                    @if ($quote->additional_info)
+                                    <h2 class="description">{{ __('Additional information') }}</h2>
+                                    <p class="additional-info indent-paragraph">{!! $quote->getTranslation('additional_info', App::getLocale()) !!}</p>
+                                    @endif
+                                    @if ($quote->payment_plan)
+                                    <div class="payment-plan">
+                                        <h2 class="description">{{ __('Payment plan') }}</h2>
+                                        <p>{!! $quote->getTranslation('payment_plan', App::getLocale()) !!}</p>
+                                    </div>
+                                    @endif
+                                    @if ($quote->delivery_time)
+                                    <div class="delivery-time">
+                                        <h2 class="description">{{ __('Delivery time') }}</h2>
+                                        <p>{!! $quote->getTranslation('delivery_time', App::getLocale()) !!}</p>
+                                    </div>
+                                    @endif
                     </div>
                     <h2 style="color: #005485; page-break-before:always;">{{ __('Costs') }}</h2>
                     <p>{{ __('Below we indicate the costs of the service divided into activation costs and annual maintenance costs') }}
                     </p>
                     </p>
                     @if ($quote->products->count() > 0)
-                        {{-- Start Prodotti e servizi table --}}
-                        <div class="products-and-services-page">
+                    {{-- Start Prodotti e servizi table --}}
+                    <div class="products-and-services-page">
 
-                            <thead>
-                                <tr class="table-header-style">
-                                    <td class="td">
-                                        {{ __('Products and services (activation costs)') }}
-                                    </td>
-                                    <td class="td" style="display: none"></td>
+                        <thead>
+                            <tr class="table-header-style">
+                                <td class="td">
+                                    {{ __('Products and services (activation costs)') }}
+                                </td>
+                                <td class="td" style="display: none"></td>
 
-                                </tr>
-                            </thead>
+                            </tr>
+                        </thead>
 
-                            <thead>
-                                <tr>
-                                    <th>{{ __('Item') }}</th>
-                                    <th>{{ __('SKU') }}</th>
-                                    <th>{{ __('Unit price') }}</th>
-                                    <th>{{ __('Quantity') }}</th>
-                                    <th class="aligned-right">{{ __('Total price') }}</th>
-                                </tr>
-                            </thead>
-                            @foreach ($quote->products as $product)
-                                <thead>
-                                    <tr>
-                                        <td class="td">{{ __($product->name) }}</td>
-                                        <td class="td">{{ __($product->sku) }}</td>
-                                        <td class="td">{{ number_format($product->price, 2, ',', '.') }} €</td>
-                                        <td class="td">{{ $product->pivot->quantity }}</td>
-                                        <td class="aligned-right td">
-                                            {{ number_format($product->price * $product->pivot->quantity, 2, ',', '.') }}
-                                            €
-                                        </td>
-                                    </tr>
-                                </thead>
-                            @endforeach
-                            <thead>
-                                <tr style="color: #005485;">
-                                    <td class="td">{{ __('Subtotal') }}:</td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="aligned-right td">
-                                        {{ number_format($quote->getTotalPrice(), 2, ',', '.') }} €</td>
-                                </tr>
-                            </thead>
-                            <thead>
-                                <tr style="color: #005485;">
-                                    <td class="td">{{ __('VAT') }}:</td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="aligned-right td">
-                                        {{ number_format($quote->getTotalPrice() * 0.22, 2, ',', '.') }}
-                                        €</td>
-                                </tr>
-                            </thead>
-                            <thead style="page-break-after:always;">
-                                <tr class="table-header-style">
-                                    <td class="td">{{ __('Total activation costs') }}</td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="aligned-right td">
-                                        {{ number_format($quote->getTotalPrice() * 1.22, 2, ',', '.') }}
-                                        €</td>
-                                </tr>
-                            </thead>
-                        </div>
-                        {{-- end prodotti e servizi table --}}
+                        <thead>
+                            <tr>
+                                <th>{{ __('Item') }}</th>
+                                <th>{{ __('SKU') }}</th>
+                                <th>{{ __('Unit price') }}</th>
+                                <th>{{ __('Quantity') }}</th>
+                                <th class="aligned-right">{{ __('Total price') }}</th>
+                            </tr>
+                        </thead>
+                        @foreach ($quote->products as $product)
+                        <thead>
+                            <tr>
+                                <td class="td">{{ __($product->name) }}</td>
+                                <td class="td">{{ __($product->sku) }}</td>
+                                <td class="td">{{ number_format($product->price, 2, ',', '.') }} €</td>
+                                <td class="td">{{ $product->pivot->quantity }}</td>
+                                <td class="aligned-right td">
+                                    {{ number_format($product->price * $product->pivot->quantity, 2, ',', '.') }}
+                                    €
+                                </td>
+                            </tr>
+                        </thead>
+                        @endforeach
+                        <thead>
+                            <tr style="color: #005485;">
+                                <td class="td">{{ __('Subtotal') }}:</td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="aligned-right td">
+                                    {{ number_format($quote->getTotalPrice(), 2, ',', '.') }} €
+                                </td>
+                            </tr>
+                        </thead>
+                        <thead>
+                            <tr style="color: #005485;">
+                                <td class="td">{{ __('VAT') }}:</td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="aligned-right td">
+                                    {{ number_format($quote->getTotalPrice() * 0.22, 2, ',', '.') }}
+                                    €
+                                </td>
+                            </tr>
+                        </thead>
+                        <thead style="page-break-after:always;">
+                            <tr class="table-header-style">
+                                <td class="td">{{ __('Total activation costs') }}</td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="aligned-right td">
+                                    {{ number_format($quote->getTotalPrice() * 1.22, 2, ',', '.') }}
+                                    €
+                                </td>
+                            </tr>
+                        </thead>
+                    </div>
+                    {{-- end prodotti e servizi table --}}
                     @endif
                     @if ($quote->recurringProducts->count() > 0)
-                        {{-- start servizi di manutenzione table --}}
-                        <div class="recurring-products-page">
-                            <thead>
-                                <tr class="table-header-style">
-                                    <td class="td">{{ __('Maintenance services') }} <br>
-                                        ({{ __('Annual maintenance costs') }})
-                                    </td>
-                                </tr>
-                            </thead>
+                    {{-- start servizi di manutenzione table --}}
+                    <div class="recurring-products-page">
+                        <thead>
+                            <tr class="table-header-style">
+                                <td class="td">{{ __('Maintenance services') }} <br>
+                                    ({{ __('Annual maintenance costs') }})
+                                </td>
+                            </tr>
+                        </thead>
 
-                            <thead>
-                                <tr>
-                                    <th>{{ __('Item') }}</th>
-                                    <th>{{ __('SKU') }}</th>
-                                    <th>{{ __('Unit price') }}</th>
-                                    <th>{{ __('Quantity') }}</th>
-                                    <th class="aligned-right">{{ __('Total price') }}</th>
-                                </tr>
-                            </thead>
-                            @foreach ($quote->recurringProducts as $recurringProduct)
-                                <thead>
-                                    <tr>
-                                        <td class="td">{{ __($recurringProduct->name) }}</td>
-                                        <td class="td">{{ __($recurringProduct->sku) }}</td>
-                                        <td class="td">
-                                            {{ number_format($recurringProduct->price, 2, ',', '.') }} €</td>
-                                        <td class="td" class="td">{{ $recurringProduct->pivot->quantity }}
-                                        </td>
-                                        <td class="aligned-right td">
-                                            {{ number_format($recurringProduct->price * $recurringProduct->pivot->quantity, 2, ',', '.') }}
-                                            €
-                                        </td>
-                                    </tr>
-                                </thead>
-                            @endforeach
-                            <thead>
-                                <tr style="color: #005485;">
-                                    <td class="td">{{ __('Subtotal annual') }}:</td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="aligned-right td">
-                                        {{ number_format($quote->getTotalRecurringPrice() / count($quote->recurringProducts), 2, ',', '.') }}
-                                        €
-                                    </td>
+                        <thead>
+                            <tr>
+                                <th>{{ __('Item') }}</th>
+                                <th>{{ __('SKU') }}</th>
+                                <th>{{ __('Unit price') }}</th>
+                                <th>{{ __('Quantity') }}</th>
+                                <th class="aligned-right">{{ __('Total price') }}</th>
+                            </tr>
+                        </thead>
+                        @foreach ($quote->recurringProducts as $recurringProduct)
+                        <thead>
+                            <tr>
+                                <td class="td">{{ __($recurringProduct->name) }}</td>
+                                <td class="td">{{ __($recurringProduct->sku) }}</td>
+                                <td class="td">
+                                    {{ number_format($recurringProduct->price, 2, ',', '.') }} €
+                                </td>
+                                <td class="td" class="td">{{ $recurringProduct->pivot->quantity }}
+                                </td>
+                                <td class="aligned-right td">
+                                    {{ number_format($recurringProduct->price * $recurringProduct->pivot->quantity, 2, ',', '.') }}
+                                    €
+                                </td>
+                            </tr>
+                        </thead>
+                        @endforeach
+                        <thead>
+                            <tr style="color: #005485;">
+                                <td class="td">{{ __('Annual total') }}:</td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="aligned-right td">
+                                    {{ number_format($quote->getTotalRecurringPrice(), 2, ',', '.') }} €
+                                </td>
 
-                                </tr>
-                            </thead>
-                            <thead>
-                                <tr style="color: #005485;">
-                                    <td class="td">{{ __('Annual total') }}:</td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="aligned-right td">
-                                        {{ number_format($quote->getTotalRecurringPrice(), 2, ',', '.') }} €
-                                    </td>
-
-                                </tr>
-                            </thead>
-                            <thead>
-                                <tr style="color: #005485;">
-                                    <td class="td">{{ __('Annual VAT') }}:</td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="aligned-right td">
-                                        {{ number_format($quote->getTotalRecurringPrice() * 0.22, 2, ',', '.') }}
-                                        €
-                                    </td>
-                                </tr>
-                            </thead>
-                            <thead>
-                                <tr style="page-break-after:always;" class="table-header-style">
-                                    <td class="td">{{ __('Annual total') }}</td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="td"></td>
-                                    <td class="aligned-right td">
-                                        {{ number_format($quote->getTotalRecurringPrice() * 1.22, 2, ',', '.') }} €
-                                    </td>
-                                </tr>
-                            </thead>
-                        </div>
-                        {{-- end servizi di manutenzione table --}}
+                            </tr>
+                        </thead>
+                        <thead>
+                            <tr style="color: #005485;">
+                                <td class="td">{{ __('Annual VAT') }}:</td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="aligned-right td">
+                                    {{ number_format($quote->getTotalRecurringPrice() * 0.22, 2, ',', '.') }}
+                                    €
+                                </td>
+                            </tr>
+                        </thead>
+                        <thead>
+                            <tr style="page-break-after:always;" class="table-header-style">
+                                <td class="td">{{ __('Annual total') }}</td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="aligned-right td">
+                                    {{ number_format($quote->getTotalRecurringPrice() * 1.22, 2, ',', '.') }} €
+                                </td>
+                            </tr>
+                        </thead>
+                    </div>
+                    {{-- end servizi di manutenzione table --}}
                     @endif
                     {{-- start servizi aggiuntivi table --}}
                     @php
-                        $additionalServices = $quote->getTranslation('additional_services', App::getLocale());
+                    $additionalServices = $quote->getTranslation('additional_services', App::getLocale());
                     @endphp
                     @if (!is_string($additionalServices) && count($additionalServices) > 0)
-                        <div class="additional-services page">
-                            <thead>
-                                <tr class="table-header-style">
-                                    <td class="td">{{ __('Additional services') }}</td>
-                                </tr>
-                            </thead>
+                    <div class="additional-services page">
+                        <thead>
+                            <tr class="table-header-style">
+                                <td class="td">{{ __('Additional services') }}</td>
+                            </tr>
+                        </thead>
 
-                            <thead>
-                                <tr>
-                                    <th>{{ __('Element') }}</th>
-                                    <th></th>
-                                    <th></th>
-                                    <th></th>
-                                    <th class="aligned-right">{{ __('Total') }}</th>
-                                </tr>
-                            </thead>
-                            @foreach ($additionalServices as $description => $price)
-                                <thead>
-                                    <tr>
-                                        <td class="td">{{ $description }}</td>
-                                        <td class="td"></td>
-                                        <td class="td"></td>
-                                        <td class="td"></td>
-                                        <td class="aligned-right td">
-                                            {{ number_format(str_replace(',', '.', $price), 2, ',', '.') }} €
-                                        </td>
-                                    </tr>
-                                </thead>
-                            @endforeach
-                        </div>
-                        {{-- end servizi aggiuntivi table --}}
+                        <thead>
+                            <tr>
+                                <th>{{ __('Element') }}</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th class="aligned-right">{{ __('Total') }}</th>
+                            </tr>
+                        </thead>
+                        @foreach ($additionalServices as $description => $price)
+                        <thead>
+                            <tr>
+                                <td class="td">{{ $description }}</td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="td"></td>
+                                <td class="aligned-right td">
+                                    {{ number_format(str_replace(',', '.', $price), 2, ',', '.') }} €
+                                </td>
+                            </tr>
+                        </thead>
+                        @endforeach
+                    </div>
+                    {{-- end servizi aggiuntivi table --}}
                     @endif
                     {{-- start riepilogo table --}}
                     <thead style="page-break-before:always;" <tr class="table-header-style">
@@ -349,14 +341,14 @@
             </thead>
             <thead>
                 @if ($quote->discount > 0)
-                    <tr>
-                        <td class="td">{{ __('Discount') }}</td>
-                        <td class="td"></td>
-                        <td class="td"></td>
-                        <td class="td"></td>
-                        <td class="aligned-right td">{{ number_format($quote->discount, 2, ',', '.') }} €
-                        </td>
-                    </tr>
+                <tr>
+                    <td class="td">{{ __('Discount') }}</td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="td"></td>
+                    <td class="aligned-right td">{{ number_format($quote->discount, 2, ',', '.') }} €
+                    </td>
+                </tr>
                 @endif
             </thead>
             <thead>
@@ -366,7 +358,8 @@
                     <td class="td"></td>
                     <td class="td"></td>
                     <td style="color: #005485;" class="aligned-right td ">
-                        {{ number_format($quote->getQuoteNetPrice(), 2, ',', '.') }} €</td>
+                        {{ number_format($quote->getQuoteNetPrice(), 2, ',', '.') }} €
+                    </td>
                 </tr>
             </thead>
             <thead>
