@@ -7,10 +7,11 @@ use App\Models\Quote;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\RecurringProduct;
-
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class QuoteGetNetPriceTest extends TestCase
 {
+    use DatabaseTransactions;
     /**
      * @test
      */
@@ -34,10 +35,13 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                'service1' => 100,
-                'service2' => 50,
-                'service3' => 30,
-            ], 'discount' => 20
+                'en' => [
+                    'service1' => 100,
+                    'service2' => 50,
+                    'service3' => 30,
+                ]
+            ],
+            'discount' => 20
         ]);
         $quote->products()->attach([
             $products[0]->id => ['quantity' => 1],
@@ -121,10 +125,13 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                'service1' => 10,
-                'service2' => 20,
-                'service3' => 30,
-            ], 'discount' => null
+                'en' => [
+                    'service1' => 10,
+                    'service2' => 20,
+                    'service3' => 30,
+                ]
+            ],
+            'discount' => null
 
         ]);
         $quote->products()->attach([
@@ -204,10 +211,13 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                'service1' => 10,
-                'service2' => 20,
-                'service3' => 30,
-            ], 'discount' => 20
+                'en' => [
+                    'service1' => 10,
+                    'service2' => 20,
+                    'service3' => 30,
+                ]
+            ],
+            'discount' => 20
         ]);
         $quote->products()->attach([
             $products[0]->id => ['quantity' => 1],
@@ -271,10 +281,13 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                'service1' => 10,
-                'service2' => 20,
-                'service3' => 30,
-            ], 'discount' => null
+                'en' => [
+                    'service1' => 10,
+                    'service2' => 20,
+                    'service3' => 30,
+                ]
+            ],
+            'discount' => null
         ]);
         $quote->products()->attach([
             $products[0]->id => ['quantity' => 1],
@@ -308,10 +321,13 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                'service1' => 10,
-                'service2' => 20,
-                'service3' => 30,
-            ], 'discount' => 20
+                'en' => [
+                    'service1' => 10,
+                    'service2' => 20,
+                    'service3' => 30,
+                ]
+            ],
+            'discount' => 20
         ]);
         $quote->recurringProducts()->attach([
             $recurringProducts[0]->id => ['quantity' => 1],
@@ -339,10 +355,13 @@ class QuoteGetNetPriceTest extends TestCase
         // Create a quote and associate the products with it
         $quote = Quote::factory()->create([
             'additional_services' => [
-                'service1' => 10,
-                'service2' => 20,
-                'service3' => 30,
-            ], 'discount' => 20
+                'en' => [
+                    'service1' => 10,
+                    'service2' => 20,
+                    'service3' => 30,
+                ]
+            ],
+            'discount' => 20
         ]);
 
         // Verify that the net price of the quote is calculated correctly
