@@ -14,7 +14,6 @@ use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use App\Enums\StoryPriority;
 use App\Models\Documentation;
-use App\Services\StoryResponseService;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
@@ -382,81 +381,62 @@ trait fieldTrait
 
     public function customerRequestField(NovaRequest $request, $fieldName = 'customer_request')
     {
-        return $this->richTextField($request, $fieldName, __('Request'));
-    }
+        $customerRequestFieldEdit = Tiptap::make(__('Request'), $fieldName)
+            ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml'])
+            ->required();
 
-    public function descriptionField(NovaRequest $request)
-    {
-        return $this->richTextField($request, 'description', __('Dev notes'))->canSee($this->canSee('description'));
-    }
-
-    private function richTextField(NovaRequest $request, $fieldName, $label)
-    {
-        $editField = Tiptap::make($label, $fieldName)
-            ->buttons(['heading', 'code', 'codeBlock', 'link', 'image', 'history', 'editHtml']);
 
         if ($request->isCreateOrAttachRequest()) {
-            return $editField;
+            return $customerRequestFieldEdit;
         } else if ($request->isResourceDetailRequest()) {
-            return Text::make($label, $fieldName)
+            return Text::make(__('Request'), $fieldName)
                 ->asHtml()
                 ->canSee(function ($request) use ($fieldName) {
-                    return $this->canSee($fieldName);
+                    $creator = $this->resource->creator;
+                    return $this->canSee($fieldName) &&  (isset($creator));
                 });
         } else {
             $creator = auth()->user();
             if (isset($creator) && !isset($request->resourceId)) {
-                return $editField;
+                return $customerRequestFieldEdit;
             } else {
-                return Trix::make($label, $fieldName)
+                return Trix::make(__('Request'), $fieldName)
                     ->readOnly()
                     ->canSee($this->canSee($fieldName));
             }
         }
     }
 
-    private function answerField($fieldName, $label, $responseField)
+    public function answerToTicketField($fieldName = 'answer_to_ticket')
     {
-        return Tiptap::make($label, $fieldName)
+        //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )
+        return  Tiptap::make(__('Answer to ticket'), $fieldName)
             ->canSee(
                 function ($request) use ($fieldName) {
-                    return $this->canSee($fieldName) &&
-                        $request->resourceId !== null &&
-                        $this->status != StoryStatus::Done->value;
+                    return  $this->canSee($fieldName) && $request->resourceId !== null && $this->status != StoryStatus::Done->value;
                 }
             )
             ->readonly(function ($request) {
-                return $request->resourceId !== null &&
-                    ($this->status == StoryStatus::Done->value);
+                return $request->resourceId !== null && ($this->status == StoryStatus::Done->value);
             })
-            ->fillUsing(function ($request, $model, $attribute, $requestAttribute) use ($responseField) {
+            ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
                 if (empty($request[$requestAttribute])) {
                     return;
                 }
-                $storyResponseService = new StoryResponseService();
-                $storyResponseService->addResponse($model, $request[$requestAttribute], $responseField);
+                $model->addResponse($request[$requestAttribute]);
             })
             ->buttons($this->tiptapAllButtons);
     }
 
-    public function answerToTicketField($fieldName = 'answer_to_ticket')
+    public function descriptionField()
     {
-        return $this->answerField(
-            $fieldName,
-            __('Answer to ticket'),
-            'customer_request'
-        );
+        return  Tiptap::make(__('Dev notes'), 'description')
+            ->hideFromIndex()
+            ->buttons($this->tiptapAllButtons)
+            ->canSee($this->canSee('description'))
+            ->help(__('Provide all the necessary information. You can add images using the "Add Image" option. If you\'d like to include a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and pasting the link here. The more details you provide, the easier it will be for us to resolve the issue.'))
+            ->alwaysShow();
     }
-
-    public function answerToDevNotesField($fieldName = 'answer_to_dev_notes')
-    {
-        return $this->answerField(
-            $fieldName,
-            __('Answer to dev notes'),
-            'description'
-        )->canSee($this->canSee('description'));
-    }
-
 
     public function infoField(NovaRequest $request, $fieldName = 'info')
     {

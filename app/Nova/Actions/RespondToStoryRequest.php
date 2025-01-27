@@ -4,7 +4,6 @@ namespace App\Nova\Actions;
 
 use Manogi\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
-use App\Services\StoryResponseService;
 use Closure;
 use Illuminate\Bus\Queueable;
 use Laravel\Nova\Actions\Action;
@@ -15,19 +14,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
 
-class RespondToStoryAction extends Action
+class RespondToStoryRequest extends Action
 {
     use InteractsWithQueue, Queueable;
 
-
-    private $responseService;
-    private $field;
-    public function __construct(string $field, string $name)
-    {
-        $this->responseService = new StoryResponseService();
-        $this->field = $field;
-        $this->name = __($name);
-    }
+    public $name = 'Respond to Customer Request';
 
     /**
      * Perform the action on the given models.
@@ -38,12 +29,12 @@ class RespondToStoryAction extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-
         foreach ($models as $model) {
             if ($model->status == StoryStatus::Done->value) {
                 return Action::danger('This story is already done!');
             }
-            $this->responseService->addResponse($model, $fields->response, $this->field);
+
+            $model->addResponse($fields->response);
         }
 
         return Action::message('The response has been added successfully!');
@@ -93,5 +84,15 @@ class RespondToStoryAction extends Action
         return [
             Tiptap::make('Response')->rules('required')->buttons($tiptapAllButtons)
         ];
+    }
+
+    /**
+     * Get the displayable name of the action.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return __('Respond to Customer Request');
     }
 }
