@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Models\Quote;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Translatable\HasTranslations;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslations;
 
     protected $fillable = [
         'name',
@@ -17,8 +18,8 @@ class Product extends Model
         'price',
     ];
 
-    //translatable fields
-    public $translatable = ['name'];
+    public $translatable = ['name', 'description'];
+
 
     public function quotes()
     {

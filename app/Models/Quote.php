@@ -10,10 +10,11 @@ use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Translatable\HasTranslations;
 
 class Quote extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, HasTranslations;
 
     protected $casts = [
         'additional_services' => 'array',
@@ -31,6 +32,15 @@ class Quote extends Model implements HasMedia
         'notes'
     ];
 
+    public $translatable = [
+        'title',
+        'notes',
+        'additional_info',
+        'delivery_time',
+        'payment_plan',
+        'billing_plan',
+        'additional_services'
+    ];
 
 
     public function customer()
@@ -92,20 +102,26 @@ class Quote extends Model implements HasMedia
      */
     public function getTotalAdditionalServicesPrice(): float
     {
-        $totalAdditionalServicesPrice = 0;
+        $translations = $this->getTranslations('additional_services');
+        if (empty($translations)) {
+            return 0;
+        }
 
-        if (empty($this->additional_services)) return $totalAdditionalServicesPrice;
+        // Get first non-empty translation
+        $services = collect($translations)->first(function ($services) {
+            return !empty($services);
+        });
 
-        foreach ($this->additional_services as $description => $price) {
-            //format $price to float
+        if (empty($services)) {
+            return 0;
+        }
+
+        return collect($services)->reduce(function ($total, $price) {
             if (strpos($price, ',') !== false) {
                 $price = str_replace(',', '.', $price);
             }
-
-
-            $totalAdditionalServicesPrice += $price ?? 0;
-        }
-        return $totalAdditionalServicesPrice;
+            return $total + (float)($price ?? 0);
+        }, 0);
     }
 
     /**
@@ -121,5 +137,26 @@ class Quote extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('documents');
+    }
+
+    public function clearEmptyAdditionalServicesTranslations(): void
+    {
+        if (empty($this->getTranslations('additional_services'))) {
+            return;
+        }
+
+        $filtered = collect($this->getTranslations('additional_services'))
+            ->filter(function ($translation) {
+                return !empty($translation);
+            })
+            ->toArray();
+
+        if (empty($filtered)) {
+            $this->replaceTranslations('additional_services', []);
+        } else {
+            $this->replaceTranslations('additional_services', $filtered);
+        }
+
+        $this->save();
     }
 }

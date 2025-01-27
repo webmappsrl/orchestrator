@@ -6,6 +6,7 @@ use Laravel\Nova\Panel;
 use Manogi\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
 use Laravel\Nova\Fields\ID;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use App\Nova\Metrics\NewQuotes;
 use App\Nova\Metrics\WonQuotes;
@@ -19,12 +20,12 @@ use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\DuplicateQuote;
 use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Filters\QuoteStatusFilter;
-use App\Nova\Metrics\DynamicPartitionMetric;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Metrics\DynamicPartitionMetric;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
-use Illuminate\Http\Request;
+use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 
 class Quote extends Resource
 {
@@ -96,13 +97,15 @@ class Quote extends Resource
         ];
         return [
             ID::make()->sortable(),
-            Text::make(__('Title'), 'title')
-                ->displayUsing(function ($name, $a, $b) {
-                    $wrappedName = wordwrap($name, 50, "\n", true);
-                    $htmlName = str_replace("\n", '<br>', $wrappedName);
-                    return $htmlName;
-                })
-                ->asHtml(),
+            NovaTabTranslatable::make([
+                Text::make(__('Title'), 'title')
+                    ->displayUsing(function ($name, $a, $b) {
+                        $wrappedName = wordwrap($name, 50, "\n", true);
+                        $htmlName = str_replace("\n", '<br>', $wrappedName);
+                        return $htmlName;
+                    })
+                    ->asHtml(),
+            ])->setTitle(__('Title')),
             Status::make('Status')->loadingWhen(['new', 'sent'])->failedWhen(['closed lost'])->displayUsing(function () {
                 return __($this->status);
             })->onlyOnIndex(),
@@ -115,12 +118,6 @@ class Quote extends Resource
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
-            new Panel(__('NOTES'), [
-                MarkdownTui::make(__('Notes'), 'notes')
-                    ->hideFromIndex()
-                    ->initialEditType(EditorType::MARKDOWN)
-                    ->nullable()
-            ]),
             BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
                 ->filterable()
                 ->searchable(),
@@ -173,28 +170,13 @@ class Quote extends Resource
                 ->displayUsing(function () {
                     return number_format($this->discount, 2, ',', '.') . ' €';
                 }),
-            KeyValue::make(__('Additional Services'), 'additional_services')
-                ->hideFromIndex()
-                ->rules(['json', function ($attribute, $value, $fail) {
-                    $json = json_decode($value, true);
-
-                    foreach ($json as $key => $price) {
-                        if (strpos($price, ',') !== false) {
-                            //replace comma with dot
-                            $price = str_replace(',', '.', $price);
-                        }
-                        if (!is_numeric($price)) {
-                            $fail(__($attribute) . ': ' . __('must be a valid JSON' . '.'));
-                        }
-                        if (strpos($price, ',') !== false) {
-                            //replace comma with dot
-                            $value = str_replace(',', '.', $value);
-                        }
-                    }
-                }])
-                ->keyLabel(__('Description'))
-                ->valueLabel(__('Price') . '(€)')
-                ->help(__('The price field cannot contain commas. Use `.` as decimal separator.')),
+            NovaTabTranslatable::make([
+                KeyValue::make(__('Additional Services'), 'additional_services')
+                    ->hideFromIndex()
+                    ->keyLabel(__('Description'))
+                    ->valueLabel(__('Price') . '(€)')
+                    ->hideFromIndex(),
+            ])->hideFromIndex(),
             Currency::make('Additional Services Total Price')
                 ->currency('EUR')
                 ->locale('it')
@@ -220,26 +202,34 @@ class Quote extends Resource
                 }),
             Text::make('PDF')
                 ->resolveUsing(function ($value, $resource, $attribute) {
-                    return '<a class="link-default" target="_blank" href="' . route('quote', ['id' => $resource->id]) . '">[x]</a>';
+                    $itaUrl = route('quote', ['id' => $resource->id]);
+                    $enUrl = route('quote', ['id' => $resource->id, 'lang' => 'en']);
+
+                    return $this->pdfButton($itaUrl, 'ITA') . $this->pdfButton($enUrl, 'EN');
                 })
                 ->asHtml()
                 ->exceptOnForms(),
+            NovaTabTranslatable::make([
+                Tiptap::make(__('Additional Info'), 'additional_info')
+                    ->hideFromIndex()
+                    ->buttons($allButtons),
 
-            Tiptap::make(__('Additional Info'), 'additional_info')
-                ->hideFromIndex()
-                ->buttons($allButtons),
+                Tiptap::make(__('Delivery Time'), 'delivery_time')
+                    ->hideFromIndex()
+                    ->buttons($allButtons),
 
-            Tiptap::make(__('Delivery Time'), 'delivery_time')
-                ->hideFromIndex()
-                ->buttons($allButtons),
+                Tiptap::make(__('Payment Plan'), 'payment_plan')
+                    ->hideFromIndex()
+                    ->buttons($allButtons),
 
-            Tiptap::make(__('Payment Plan'), 'payment_plan')
-                ->hideFromIndex()
-                ->buttons($allButtons),
-
-            Tiptap::make(__('Billing Plan'), 'billing_plan')
-                ->hideFromIndex()
-                ->buttons($allButtons),
+                Tiptap::make(__('Billing Plan'), 'billing_plan')
+                    ->hideFromIndex()
+                    ->buttons($allButtons),
+                MarkdownTui::make(__('Notes'), 'notes')
+                    ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN)
+                    ->nullable()
+            ])->hideFromIndex(),
 
             Files::make(__('Documents'), 'documents')
                 ->hideFromIndex(),
@@ -317,5 +307,14 @@ class Quote extends Resource
     public function authorizedToReplicate(Request $request)
     {
         return false;
+    }
+
+    protected function pdfButton(string $url, string $label): string
+    {
+        return <<<HTML
+                        <a style="display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background-color: rgb(20 184 166); color: rgb(254 243 199); font-weight: 500; border-radius: 0.375rem; margin-right: 0.5rem; font-size: 0.875rem;" target="_blank" href="{$url}">
+                            {$label}
+                        </a>
+                    HTML;
     }
 }
