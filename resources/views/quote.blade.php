@@ -300,7 +300,8 @@
                                         <td class="td"></td>
                                         <td class="td"></td>
                                         <td class="td"></td>
-                                        <td class="aligned-right td">{{ number_format($price, 2, ',', '.') }} €
+                                        <td class="aligned-right td">
+                                            {{ number_format(str_replace(',', '.', $price), 2, ',', '.') }} €
                                         </td>
                                     </tr>
                                 </thead>

@@ -102,20 +102,26 @@ class Quote extends Model implements HasMedia
      */
     public function getTotalAdditionalServicesPrice(): float
     {
-        $totalAdditionalServicesPrice = 0;
+        $translations = $this->getTranslations('additional_services');
+        if (empty($translations)) {
+            return 0;
+        }
 
-        if (empty($this->additional_services)) return $totalAdditionalServicesPrice;
+        // Get first non-empty translation
+        $services = collect($translations)->first(function ($services) {
+            return !empty($services);
+        });
 
-        foreach ($this->additional_services as $description => $price) {
-            //format $price to float
+        if (empty($services)) {
+            return 0;
+        }
+
+        return collect($services)->reduce(function ($total, $price) {
             if (strpos($price, ',') !== false) {
                 $price = str_replace(',', '.', $price);
             }
-
-
-            $totalAdditionalServicesPrice += $price ?? 0;
-        }
-        return $totalAdditionalServicesPrice;
+            return $total + (float)($price ?? 0);
+        }, 0);
     }
 
     /**

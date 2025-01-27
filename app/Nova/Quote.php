@@ -175,7 +175,6 @@ class Quote extends Resource
                     ->hideFromIndex()
                     ->keyLabel(__('Description'))
                     ->valueLabel(__('Price') . '(€)')
-                    ->help(__('The price field cannot contain commas. Use `.` as decimal separator.'))
                     ->hideFromIndex(),
             ])->hideFromIndex(),
             Currency::make('Additional Services Total Price')
