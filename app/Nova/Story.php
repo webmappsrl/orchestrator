@@ -193,7 +193,7 @@ class Story extends Resource
                 ->singleMediaRules('mimes:pdf,doc,docx,json,geojson,txt,csv,jpeg,png,gif,bmp,webp,svg,tiff,heic,jpg,jpeg,png')
                 ->help(__('Only specific document types are allowed') . '(PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV, JPEG, PNG, GIF, BMP, WEBP, SVG, TIFF, HEIC, JPG, JPEG, PNG).')
                 ->onlyOnDetail(),
-            $this->descriptionField($request),
+            $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
             HasMany::make(__('Logs'), 'views', StoryLog::class)->canSee(function ($request) {
@@ -231,8 +231,7 @@ class Story extends Resource
             $this->testedByField(),
             $this->tagsField(),
             $this->typeField($request),
-            $this->descriptionField($request),
-            $this->answerToDevNotesField(),
+            $this->descriptionField(),
             Files::make('Documents', 'documents')
                 ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
                 ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).')),
@@ -326,7 +325,7 @@ class Story extends Resource
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
             return [
-                (new actions\RespondToStoryAction('customer_request', __('Answer to ticket')))
+                (new actions\RespondToStoryRequest())
                     ->showInline()
                     ->sole()
                     ->confirmText(__('Click on the "Confirm" button to send the response or "Cancel" to cancel.'))
@@ -336,22 +335,11 @@ class Story extends Resource
                         function ($request) {
                             return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                         }
-                    ),
+                    )
             ];
         }
         $actions = [
-            (new actions\RespondToStoryAction('customer_request', __('Answer to ticket')))
-                ->showInline()
-                ->sole()
-                ->confirmText(__('Click on the "Confirm" button to send the response or "Cancel" to cancel.'))
-                ->confirmButtonText(__('Confirm'))
-                ->cancelButtonText(__('Cancel'))
-                ->canSee(
-                    function ($request) {
-                        return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
-                    }
-                ),
-            (new actions\RespondToStoryAction('description', __('Answer to dev notes')))
+            (new actions\RespondToStoryRequest())
                 ->showInline()
                 ->sole()
                 ->confirmText(__('Click on the "Confirm" button to send the response or "Cancel" to cancel.'))
