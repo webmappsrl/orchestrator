@@ -68,7 +68,7 @@ class ReportController extends Controller
             return [ALL_TIME, [1, 2, 3, 4], null]; // Nessun errore, tutti i quarter sono disponibili
         }
         if ($year > $currentYear) {
-            return [$year, [], _(NO_DATA)];
+            return [$year, [], NO_DATA];
         }
         $availableQuarters = $year == $currentYear ? range(1, $currentQuarter) : [1, 2, 3, 4];
 
@@ -305,7 +305,7 @@ class ReportController extends Controller
                 });
         };
         $firstColumnNameFn = function ($indexRowObj, $indexColumnObj) {
-            return $indexRowObj ?? 'non assegnato';
+            return $indexRowObj ?? NOT_ASSIGNED;
         };
         $thead = array_merge([''], $customer->pluck('name')->toArray(), [VALUE_FOR_FIELD_TOTAL]);
         $firstColumnCells = StoryStatus::values();
@@ -346,7 +346,7 @@ class ReportController extends Controller
             ;
         };
         $firstColumnNameFn = function ($indexRowObj, $indexColumnObj) {
-            return $indexRowObj->name ?? _(NOT_ASSIGNED);
+            return $indexRowObj->name ?? NOT_ASSIGNED;
         };
         $thead = array_merge([''], $tags->pluck('name')->toArray(), [VALUE_FOR_FIELD_TOTAL]);
         $firstColumnCells = $customers;
@@ -364,7 +364,7 @@ class ReportController extends Controller
                 ->where('type', $indexColumnObj);
         };
         $firstColumnNameFn = function ($indexRowObj, $indexColumnObj) {
-            return $indexRowObj->name ?? _(NOT_ASSIGNED);
+            return $indexRowObj->name ?? NOT_ASSIGNED;
         };
         $thead = array_merge([''], StoryType::values(), [VALUE_FOR_FIELD_TOTAL]);
         $firstColumnCells = $tags;
