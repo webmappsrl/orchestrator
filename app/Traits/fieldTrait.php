@@ -451,6 +451,40 @@ trait fieldTrait
             ->asHtml();
     }
 
+    public function infoWithTagsField(NovaRequest $request, $fieldName = 'info')
+    {
+        return Text::make(__('Info'), $fieldName, function () use ($request) {
+            $infoHtml = $request->user()->hasRole(UserRole::Customer) 
+                ? $this->getCustomerInfo() 
+                : $this->getNonCustomerInfo();
+                
+            $tags = $this->resource->tags;
+            $tagsHtml = $this->tagsToHTML($tags, url('/resources/stories/' . $this->resource->id));
+            
+            return $infoHtml . $tagsHtml;
+        })
+        ->canSee($this->canSee($fieldName))
+        ->asHtml();
+    }
+    
+    private function tagsToHTML($tags, $url = null)
+    {
+        $tagsHtml = '';
+        if ($tags) {
+            foreach ($tags as $tag) {
+                $url = $url ?? $tag->getResourceUrlAttribute();
+                $tagsHtml .= <<<HTML
+                <a
+                    href="$url"
+                    target="_self"
+                    style="color:orange; font-weight:bold;">
+                    {$tag->name}
+                </a> <br>
+                HTML;
+            }
+        }
+        return $tagsHtml;
+    }
 
     public function estimatedHoursFieldCanSee($fieldName)
     {

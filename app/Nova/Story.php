@@ -164,7 +164,7 @@ class Story extends Resource
                 $this->assignedToField(),
                 $this->estimatedHoursField($request),
             ]),
-            $this->infoField($request),
+            $this->infoWithTagsField($request),
             $this->createdAtField(),
             $this->deadlineField($request),
 
