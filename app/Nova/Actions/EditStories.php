@@ -21,7 +21,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-
+use App\Enums\StoryType;
 class EditStories extends Action
 {
     use InteractsWithQueue, Queueable;
@@ -43,6 +43,9 @@ class EditStories extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         foreach ($models as $model) {
+            if (isset($fields['type'])) {
+                $model->type = $fields['type'];
+            }   
             if (isset($fields['status'])) {
                 $model->status = $fields['status'];
             }
@@ -78,7 +81,10 @@ class EditStories extends Action
     {
         $storyStatusOptions =
             collect(StoryStatus::cases())->mapWithKeys(fn($status) => [$status->value => $status]);
+        $storyTypeOptions = 
+            collect(StoryType::cases())->mapWithKeys(fn($type) => [$type->value => $type]);
         return [
+            Select::make('Type')->options($storyTypeOptions),
             Select::make('Status')->options($storyStatusOptions),
             Select::make('Assigned To')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             Select::make('Tester')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
