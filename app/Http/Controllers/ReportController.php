@@ -237,6 +237,13 @@ class ReportController extends Controller
             'q3' => 0,
             'q4' => 0,
         ];
+        $hoursTotals = [
+            'year_total' => 0,
+            'q1' => 0,
+            'q2' => 0,
+            'q3' => 0,
+            'q4' => 0,
+        ];
 
         foreach (StoryStatus::cases() as $status) {
             $yearTotal = $year === ALL_TIME ? Ticket::where('status', $status->value)->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->count();
@@ -270,6 +277,12 @@ class ReportController extends Controller
             $secondQuarterHours = round($secondQuarterHours, 2);
             $thirdQuarterHours = round($thirdQuarterHours, 2);
             $fourthQuarterHours = round($fourthQuarterHours, 2);
+
+            $hoursTotals['year_total'] += $totalHours;
+            $hoursTotals['q1'] += $firstQuarterHours;
+            $hoursTotals['q2'] += $secondQuarterHours;
+            $hoursTotals['q3'] += $thirdQuarterHours;
+            $hoursTotals['q4'] += $fourthQuarterHours;
                     
             $tab2Status[] = [
                 'status' => $status->value,
@@ -285,6 +298,12 @@ class ReportController extends Controller
                 'q4_percentage' => $fourthQuarterPercentage,
             ];
         }
+
+        $totals['year_total'] = $totals['year_total']. " (". $hoursTotals['year_total'].")";
+        $totals['q1'] = $totals['q1']. " (". $hoursTotals['q1'].")";
+        $totals['q2'] = $totals['q2']. " (". $hoursTotals['q2'].")";
+        $totals['q3'] = $totals['q3']. " (". $hoursTotals['q3'].")";
+        $totals['q4'] = $totals['q4']. " (". $hoursTotals['q4'].")";
 
         return [$tab2Status, $totals]; // Restituisci anche i totali
     }
