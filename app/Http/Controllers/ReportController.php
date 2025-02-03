@@ -124,10 +124,8 @@ class ReportController extends Controller
                     $counts = [];
                     $hours = [];
                     foreach ($precedentCells as $cell) {
-                        if (preg_match('/(\d+)\s*\((\d+\.?\d*)\)/', $cell, $matches)) {
-                            $counts[] = intval($matches[1]);
-                            $hours[] = floatval($matches[2]); 
-                        }
+                        $counts[] = $this->extractCount($cell);
+                        $hours[] = $this->extractHours($cell); 
                     }
                     $row[] = array_sum($counts) . " (" . round(array_sum($hours), 2) . ")";
                 } else {
@@ -150,13 +148,7 @@ class ReportController extends Controller
             $rows[] = $row;
         }
 
-        usort($rows, function ($a, $b) {
-            preg_match(REGEX_FOR_EXTRACTING_HOURS, $a[count($a) - 1], $matchesA);
-            preg_match(REGEX_FOR_EXTRACTING_HOURS, $b[count($b) - 1], $matchesB);
-            $hoursA = isset($matchesA[2]) ? floatval($matchesA[2]) : 0;
-            $hoursB = isset($matchesB[2]) ? floatval($matchesB[2]) : 0;
-            return $hoursB <=> $hoursA; 
-        });
+        $this->sortRowsByHours($rows);
 
         // Aggiungi la riga dei totali alla fine
         $totalsRow = [LAST_COLUMN_LABEL]; // La prima cella della riga è 'Totale'
@@ -175,6 +167,31 @@ class ReportController extends Controller
         return $rows;
     }
 
+    private function sortRowsByHours($rows): void
+    {
+        usort($rows, function ($firstElement, $secondElement) {
+            $hoursFirstElement = $this->extractHours($this->getLastColumnValue($firstElement));
+            $hoursSecondElement = $this->extractHours($this->getLastColumnValue($secondElement));
+            return $hoursSecondElement <=> $hoursFirstElement; 
+        });
+    }
+
+    private function extractHours($cell)
+    {
+        preg_match(REGEX_FOR_EXTRACTING_HOURS, $cell, $matches);
+        return isset($matches[2]) ? floatval($matches[2]) : 0;
+    }
+
+    private function extractCount($cell)
+    {
+        preg_match(REGEX_FOR_EXTRACTING_HOURS, $cell, $matches);
+        return isset($matches[1]) ? intval($matches[1]) : 0;
+    }
+
+    private function getLastColumnValue(array $columns)
+    {
+        return $columns[count($columns) - 1];
+    }
 
     private function tab1Type($year, $availableQuarters)
     {
