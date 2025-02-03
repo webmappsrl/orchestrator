@@ -466,17 +466,22 @@ trait fieldTrait
             ->help(__('Enter the estimated time to resolve the ticket in hours.'))
             ->canSee($this->estimatedHoursFieldCanSee($fieldName));
     }
+
     private function getCustomerInfo()
     {
-        return $this->generateTagLinks(DocumentationCategory::Customer);
+
+        $tagLinks = $this->getTagLinks(DocumentationCategory::Customer);
+        return <<<HTML
+            {$tagLinks}
+            HTML;
     }
-    
+
     private function getNonCustomerInfo()
     {
-        $appLink = $this->generateAppLink();
-        $creatorLink = $this->generateCreatorLink();
-        $tagLinks = $this->generateTagLinks();
-    
+        $appLink = $this->getAppLink();
+        $tagLinks = $this->getTagLinks();
+        $creatorLink = $this->getCreatorLink();
+
         return "{$appLink}{$creatorLink}{$tagLinks}";
     }
 
@@ -501,73 +506,62 @@ trait fieldTrait
         return '';
     }
 
-    
-    private function generateAppLink($creator = null)
+    private function getTagLinks(DocumentationCategory $category = DocumentationCategory::Internal)
     {
-        $creator = $creator ?? $this->resource->creator;
-        if($creator){
-            $app = $creator->apps->first() ?? null;
-            if ($app) {
-                $url = url("/resources/apps/{$app->id}");
-                return $this->createHtmlLink($url, "App: {$app->name}", 'red', 'bold');
+        $tags = $this->resource->tags;
+        $tags = $tags->filter(function ($tag) use ($category) {
+            if ($tag->taggable_type == "Documentation") {
+                // Recupera la documentation associata
+                $documentation = Documentation::find($tag->taggable_id);
+                if ($documentation) {
+                    // Se la categoria è Customer, filtra solo per Customer
+                    if ($category == DocumentationCategory::Customer) {
+                        return $documentation->category == DocumentationCategory::Customer;
+                    }
+
+                    // Se la categoria è Internal, mostra sia Internal che Customer
+                    if ($category == DocumentationCategory::Internal) {
+                        return in_array($documentation->category, [DocumentationCategory::Internal, DocumentationCategory::Customer]);
+                    }
+                }
             }
+            return false;
+        });
+        $HTML = '';
+        if ($tags) {
+            foreach ($tags as $tag) {
+                $url = $tag->getResourceUrlAttribute();
+                $HTML .=    <<<HTML
+            <a
+                href="$url"
+                target="_blank"
+                style="color:orange; font-weight:bold;">
+                {$tag->name}
+            </a> <br>
+            HTML;
+            }
+            return $HTML;
         }
         return '';
     }
-    
-    private function generateTagLinks($isCustomer = false)
-    {
-        $tags = $this->resource->tags()->get();
 
-        $filteredTags = $tags->filter(function ($tag) use ($isCustomer) {
-            switch ($tag->taggable_type) {
-                case "Project":
-                    return !$isCustomer;
-
-                case "Documentation":
-                    $documentation = Documentation::find($tag->taggable_id);
-                    if (!$documentation) {
-                        return false;
-                    }
-
-                    return $isCustomer
-                        ? $documentation->category === DocumentationCategory::Customer
-                        : in_array($documentation->category, [DocumentationCategory::Internal, DocumentationCategory::Customer], true);
-
-                default:
-                    return false;
-                }
-        });
-    
-        return $filteredTags->isNotEmpty() 
-            ? $filteredTags->map(function ($tag) {
-                $url = $tag->getResourceUrlAttribute();
-                return $this->createHtmlLink($url, $tag->name, 'orange', 'bold');
-            })->implode('')
-            : '';
-    }
-    
-    private function generateCreatorLink()
+    private function getCreatorLink()
     {
         $creator = $this->resource->creator;
         if ($creator) {
             $url = url("/resources/users/{$creator->id}");
-            return $this->createHtmlLink($url, "Creator: {$creator->name}", 'chocolate', 'bold');
-        }
-    
-        return '';
-    }
-    
-    private function createHtmlLink(string $url, string $text, string $color, string $fontWeight): string
-    {
-        return 
-            <<<HTML
-            <a href="{$url}" target="_blank" style="color:{$color}; font-weight:{$fontWeight};">
-                {$text}
+            return <<<HTML
+            <a
+                href="{$url}"
+                target="_blank"
+                style="color:chocolate; font-weight:bold;">
+                Creator: {$creator->name}
             </a> <br>
             HTML;
+        }
+        return '';
     }
-    
+
     private function getStatusColor($status)
     {
         $mapping = config('orchestrator.story.status.color-mapping');
