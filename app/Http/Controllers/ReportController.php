@@ -18,6 +18,7 @@ const NOT_ASSIGNED = 'non assegnato';
 const LAST_COLUMN_VALUE = 'totale';
 const LAST_COLUMN_LABEL = 'Totale';
 const SQL_PREFIX_FOR_EXTRACTING_QUARTER = 'EXTRACT(QUARTER FROM updated_at)';
+const REGEX_FOR_EXTRACTING_HOURS = '/(\d+)\s*\((\d+\.?\d*)\)/';
 class ReportController extends Controller
 {
     public function index(Request $request, $year = null)
@@ -119,7 +120,16 @@ class ReportController extends Controller
                 if ($indexColumnObj === '') {
                     $row[] = $firstColumnNameFn($indexRowObj, $indexColumnObj);
                 } elseif ($indexColumnObj === LAST_COLUMN_VALUE) {
-                    $row[] = array_sum(array_slice($row, 1)); // Somma delle celle precedenti nella riga
+                    $precedentCells = array_slice($row, 1);
+                    $counts = [];
+                    $hours = [];
+                    foreach ($precedentCells as $cell) {
+                        if (preg_match('/(\d+)\s*\((\d+\.?\d*)\)/', $cell, $matches)) {
+                            $counts[] = intval($matches[1]);
+                            $hours[] = floatval($matches[2]); 
+                        }
+                    }
+                    $row[] = array_sum($counts) . " (" . round(array_sum($hours), 2) . ")";
                 } else {
                     $query = $cellQueryFn($indexRowObj, $indexColumnObj);
                     if ($quarter) {
@@ -140,9 +150,12 @@ class ReportController extends Controller
             $rows[] = $row;
         }
 
-        // Ordina le righe in base all'ultima colonna (totale)
         usort($rows, function ($a, $b) {
-            return $b[count($a) - 1] <=> $a[count($a) - 1];
+            preg_match(REGEX_FOR_EXTRACTING_HOURS, $a[count($a) - 1], $matchesA);
+            preg_match(REGEX_FOR_EXTRACTING_HOURS, $b[count($b) - 1], $matchesB);
+            $hoursA = isset($matchesA[2]) ? floatval($matchesA[2]) : 0;
+            $hoursB = isset($matchesB[2]) ? floatval($matchesB[2]) : 0;
+            return $hoursB <=> $hoursA; 
         });
 
         // Aggiungi la riga dei totali alla fine
@@ -151,9 +164,9 @@ class ReportController extends Controller
             if ($indexColumnObj === '') {
                 continue; // Salta la prima cella (già 'Totale')
             } elseif ($indexColumnObj === LAST_COLUMN_VALUE) {
-                $totalsRow[] = array_sum(array_slice($columnSums, 1)); // Totale finale (somma delle somme delle colonne)
+                $totalsRow[] = array_sum(array_slice($columnSums, 1)). " (". round(array_sum(array_slice($columnHours, 1)), 2).")"; // Totale finale (somma delle somme delle colonne)
             } else {
-                $totalsRow[] = $columnSums[$index]; // Aggiungi la somma verticale della colonna
+                $totalsRow[] = $columnSums[$index]. " (". $columnHours[$index].")"; // Aggiungi la somma verticale della colonna
             }
         }
 
