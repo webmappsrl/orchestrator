@@ -148,7 +148,7 @@ class ReportController extends Controller
             $rows[] = $row;
         }
 
-        $this->sortRowsByHours($rows);
+        $rows =$this->sortRowsByHours($rows);
 
         // Aggiungi la riga dei totali alla fine
         $totalsRow = [LAST_COLUMN_LABEL]; // La prima cella della riga è 'Totale'
@@ -167,13 +167,14 @@ class ReportController extends Controller
         return $rows;
     }
 
-    private function sortRowsByHours($rows): void
+    private function sortRowsByHours($rows): array
     {
         usort($rows, function ($firstElement, $secondElement) {
             $hoursFirstElement = $this->extractHours($this->getLastColumnValue($firstElement));
             $hoursSecondElement = $this->extractHours($this->getLastColumnValue($secondElement));
             return $hoursSecondElement <=> $hoursFirstElement; 
         });
+        return $rows;
     }
 
     private function extractHours($cell)
