@@ -450,8 +450,7 @@ trait fieldTrait
             ->canSee($this->canSee($fieldName))
             ->asHtml();
     }
-
-
+    
     public function estimatedHoursFieldCanSee($fieldName)
     {
         return function ($request) use ($fieldName) {
@@ -526,7 +525,7 @@ trait fieldTrait
                     }
                 }
             }
-            return false;
+            return $tag->taggable_type == "Project" && $category == DocumentationCategory::Internal;
         });
         $HTML = '';
         if ($tags) {
