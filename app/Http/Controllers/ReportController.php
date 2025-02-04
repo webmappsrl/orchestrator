@@ -200,11 +200,11 @@ class ReportController extends Controller
 
         $tab1Type = [];
         foreach (StoryType::cases() as $type) {
-            $yearTotal = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->count();
-            $firstQuarter = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 1')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 1')->count();
-            $secondQuarter = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 2')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 2')->count();
-            $thirdQuarter = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 3')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 3')->count();
-            $fourthQuarter = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 4')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 4')->count();
+            $yearTotal = $this->getTicketsCountBy('type', $type, $year);
+            $firstQuarter = $this->getTicketsCountBy('type', $type, $year, 1);
+            $secondQuarter = $this->getTicketsCountBy('type', $type, $year, 2);
+            $thirdQuarter = $this->getTicketsCountBy('type', $type, $year, 3);
+            $fourthQuarter = $this->getTicketsCountBy('type', $type, $year, 4);
 
             // Calcola la percentuale rispetto al totale
             $yearPercentage = $totalStories > 0 ? ($yearTotal / $totalStories) * 100 : 0;
@@ -213,17 +213,11 @@ class ReportController extends Controller
             $thirdQuarterPercentage = $totalStories > 0 ? ($thirdQuarter / $totalStories) * 100 : 0;
             $fourthQuarterPercentage = $totalStories > 0 ? ($fourthQuarter / $totalStories) * 100 : 0;
 
-            $totalHours = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->sum('hours') : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->sum('hours');
-            $firstQuarterHours = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 1')->sum('hours') : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 1')->sum('hours');
-            $secondQuarterHours = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 2')->sum('hours') : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 2')->sum('hours');
-            $thirdQuarterHours = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 3')->sum('hours') : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 3')->sum('hours');
-            $fourthQuarterHours = $year === self::ALL_TIME ? Ticket::where('type', $type->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 4')->sum('hours') : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 4')->sum('hours');
-
-            $totalHours = round($totalHours, 2);
-            $firstQuarterHours = round($firstQuarterHours, 2);
-            $secondQuarterHours = round($secondQuarterHours, 2);
-            $thirdQuarterHours = round($thirdQuarterHours, 2);
-            $fourthQuarterHours = round($fourthQuarterHours, 2);
+            $totalHours = $this->getTicketsSumOfHoursBy('type', $type, $year);
+            $firstQuarterHours = $this->getTicketsSumOfHoursBy('type', $type, $year, 1);
+            $secondQuarterHours = $this->getTicketsSumOfHoursBy('type', $type, $year, 2);
+            $thirdQuarterHours = $this->getTicketsSumOfHoursBy('type', $type, $year, 3);
+            $fourthQuarterHours = $this->getTicketsSumOfHoursBy('type', $type, $year, 4);
 
             $tab1Type[] = [
                 'type' => $type->value,
@@ -264,11 +258,11 @@ class ReportController extends Controller
         ];
 
         foreach (StoryStatus::cases() as $status) {
-            $yearTotal = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->count();
-            $firstQuarter = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 1')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 1')->count();
-            $secondQuarter = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 2')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 2')->count();
-            $thirdQuarter = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 3')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 3')->count();
-            $fourthQuarter = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 4')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 4')->count();
+            $yearTotal = $this->getTicketsCountBy('status', $status, $year);
+            $firstQuarter = $this->getTicketsCountBy('status', $status, $year, 1);
+            $secondQuarter = $this->getTicketsCountBy('status', $status, $year, 2);
+            $thirdQuarter = $this->getTicketsCountBy('status', $status, $year, 3);
+            $fourthQuarter = $this->getTicketsCountBy('status', $status, $year, 4);
 
             // Calcola la percentuale rispetto al totale
             $yearPercentage = $totalStories > 0 ? ($yearTotal / $totalStories) * 100 : 0;
@@ -284,17 +278,11 @@ class ReportController extends Controller
             $totals['q3'] += $thirdQuarter;
             $totals['q4'] += $fourthQuarter;
 
-            $totalHours = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->sum('hours') : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->sum('hours');
-            $firstQuarterHours = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 1')->sum('hours') : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 1')->sum('hours');
-            $secondQuarterHours = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 2')->sum('hours') : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 2')->sum('hours');
-            $thirdQuarterHours = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 3')->sum('hours') : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 3')->sum('hours');
-            $fourthQuarterHours = $year === self::ALL_TIME ? Ticket::where('status', $status->value)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 4')->sum('hours') : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = 4')->sum('hours');
-            
-            $totalHours = round($totalHours, 2);
-            $firstQuarterHours = round($firstQuarterHours, 2);
-            $secondQuarterHours = round($secondQuarterHours, 2);
-            $thirdQuarterHours = round($thirdQuarterHours, 2);
-            $fourthQuarterHours = round($fourthQuarterHours, 2);
+            $totalHours = $this->getTicketsSumOfHoursBy('status', $status, $year);
+            $firstQuarterHours = $this->getTicketsSumOfHoursBy('status', $status, $year, 1);
+            $secondQuarterHours = $this->getTicketsSumOfHoursBy('status', $status, $year, 2);
+            $thirdQuarterHours = $this->getTicketsSumOfHoursBy('status', $status, $year, 3);
+            $fourthQuarterHours = $this->getTicketsSumOfHoursBy('status', $status, $year, 4);
 
             $hoursTotals['year_total'] += $totalHours;
             $hoursTotals['q1'] += $firstQuarterHours;
@@ -324,6 +312,31 @@ class ReportController extends Controller
         $totals['q4'] = $totals['q4']. " (". $hoursTotals['q4'].")";
 
         return [$tab2Status, $totals]; // Restituisci anche i totali
+    }
+
+    private function getTicketsCountBy($nameOfElementToCheck = 'type', $elementToCheck, $year = self::ALL_TIME, $quarter = null)
+    {
+
+        $query = Ticket::where($nameOfElementToCheck, $elementToCheck->value);
+        if($year !== self::ALL_TIME){
+            $query->whereYear('updated_at', $year);
+        }
+        if($quarter){
+            $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
+        }
+        return $query->count();
+    }
+
+    private function getTicketsSumOfHoursBy($nameOfElementToCheck = 'type', $elementToCheck, $year = self::ALL_TIME, $quarter = null)
+    {
+        $query = Ticket::where($nameOfElementToCheck, $elementToCheck->value);
+        if($year !== self::ALL_TIME){
+            $query->whereYear('updated_at', $year);
+        }
+        if($quarter){
+            $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
+        }
+        return round($query->sum('hours'), 2);
     }
 
     private function tab3DevStatus($year, $availableQuarters, $developers)
