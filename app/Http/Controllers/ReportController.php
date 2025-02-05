@@ -14,6 +14,13 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
+    const ALL_TIME = "All Time";
+    const NO_DATA = 'Nessun dato disponibile';
+    const NOT_ASSIGNED = 'non assegnato';
+    const LAST_COLUMN_VALUE = 'totale';
+    const LAST_COLUMN_LABEL = 'Totale';
+    const SQL_PREFIX_FOR_EXTRACTING_QUARTER = 'EXTRACT(QUARTER FROM updated_at)';
+    const REGEX_FOR_EXTRACTING_HOURS = '/(\d+)\s*\((\d+\.?\d*)\)/';
     public function index(Request $request, $year = null)
     {
         // Recupera l'anno e i quarter disponibili tramite una funzione separata
@@ -59,10 +66,10 @@ class ReportController extends Controller
         $currentYear = Carbon::now()->year;
         $currentQuarter = Carbon::now()->quarter;
         if (!$year) {
-            return ['All Time', [1, 2, 3, 4], null]; // Nessun errore, tutti i quarter sono disponibili
+            return [self::ALL_TIME, [1, 2, 3, 4], null]; // Nessun errore, tutti i quarter sono disponibili
         }
         if ($year > $currentYear) {
-            return [$year, [], 'Nessun dato disponibile per il futuro.'];
+            return [$year, [], self::NO_DATA];
         }
         $availableQuarters = $year == $currentYear ? range(1, $currentQuarter) : [1, 2, 3, 4];
 
@@ -105,46 +112,53 @@ class ReportController extends Controller
     {
         $rows = [];
         $columnSums = array_fill(0, count($thead), 0); // Inizializza array per i totali delle colonne
+        $columnHours = array_fill(0, count($thead), 0); // Inizializza array per i totali delle colonne
 
         foreach ($firstColumnCells as $indexRowObj) {
             $row = [];
             foreach ($thead as $index => $indexColumnObj) {
                 if ($indexColumnObj === '') {
                     $row[] = $firstColumnNameFn($indexRowObj, $indexColumnObj);
-                } elseif ($indexColumnObj === 'totale') {
-                    $row[] = array_sum(array_slice($row, 1)); // Somma delle celle precedenti nella riga
+                } elseif ($indexColumnObj === self::LAST_COLUMN_VALUE) {
+                    $precedentCells = array_slice($row, 1);
+                    $counts = [];
+                    $hours = [];
+                    foreach ($precedentCells as $cell) {
+                        $counts[] = $this->extractCount($cell);
+                        $hours[] = $this->extractHours($cell); 
+                    }
+                    $row[] = array_sum($counts) . " (" . round(array_sum($hours), 2) . ")";
                 } else {
                     $query = $cellQueryFn($indexRowObj, $indexColumnObj);
                     if ($quarter) {
-                        $query->whereRaw('EXTRACT(QUARTER FROM updated_at) = ?', [$quarter]);
+                        $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
                     }
-                    if ($year !== 'All Time') {
+                    if ($year !== self::ALL_TIME) {
                         $query->whereYear('updated_at', $year);
                     }
                     $statusTotal = $query->count();
-                    $row[] = $statusTotal;
+                    $statusHours = round($query->sum('hours'), 2);
+                    $row[] = $statusTotal. " (".$statusHours.")";
 
                     // Aggiorna il totale della colonna corrente
                     $columnSums[$index] += $statusTotal;
+                    $columnHours[$index] += $statusHours;
                 }
             }
             $rows[] = $row;
         }
 
-        // Ordina le righe in base all'ultima colonna (totale)
-        usort($rows, function ($a, $b) {
-            return $b[count($a) - 1] <=> $a[count($a) - 1];
-        });
+        $rows =$this->sortRowsByHours($rows);
 
         // Aggiungi la riga dei totali alla fine
-        $totalsRow = ['Totale']; // La prima cella della riga è 'Totale'
+        $totalsRow = [self::LAST_COLUMN_LABEL]; // La prima cella della riga è 'Totale'
         foreach ($thead as $index => $indexColumnObj) {
             if ($indexColumnObj === '') {
                 continue; // Salta la prima cella (già 'Totale')
-            } elseif ($indexColumnObj === 'totale') {
-                $totalsRow[] = array_sum(array_slice($columnSums, 1)); // Totale finale (somma delle somme delle colonne)
+            } elseif ($indexColumnObj === self::LAST_COLUMN_VALUE) {
+                $totalsRow[] = array_sum(array_slice($columnSums, 1)). " (". round(array_sum(array_slice($columnHours, 1)), 2).")"; // Totale finale (somma delle somme delle colonne)
             } else {
-                $totalsRow[] = $columnSums[$index]; // Aggiungi la somma verticale della colonna
+                $totalsRow[] = $columnSums[$index]. " (". $columnHours[$index].")"; // Aggiungi la somma verticale della colonna
             }
         }
 
@@ -153,38 +167,70 @@ class ReportController extends Controller
         return $rows;
     }
 
+    private function sortRowsByHours($rows): array
+    {
+        usort($rows, function ($firstElement, $secondElement) {
+            $hoursFirstElement = $this->extractHours($this->getLastColumnValue($firstElement));
+            $hoursSecondElement = $this->extractHours($this->getLastColumnValue($secondElement));
+            return $hoursSecondElement <=> $hoursFirstElement; 
+        });
+        return $rows;
+    }
+
+    private function extractHours($cell)
+    {
+        preg_match(self::REGEX_FOR_EXTRACTING_HOURS, $cell, $matches);
+        return isset($matches[2]) ? floatval($matches[2]) : 0;
+    }
+
+    private function extractCount($cell)
+    {
+        preg_match(self::REGEX_FOR_EXTRACTING_HOURS, $cell, $matches);
+        return isset($matches[1]) ? intval($matches[1]) : 0;
+    }
+
+    private function getLastColumnValue(array $columns)
+    {
+        return $columns[count($columns) - 1];
+    }
 
     private function tab1Type($year, $availableQuarters)
     {
-        $totalStories = $year === 'All Time' ? Ticket::count() : Ticket::whereYear('updated_at', $year)->count();
+        $totalStories = $year === self::ALL_TIME ? Ticket::count() : Ticket::whereYear('updated_at', $year)->count();
 
         $tab1Type = [];
         foreach (StoryType::cases() as $type) {
-            $yearTotal = $year === 'All Time' ? Ticket::where('type', $type->value)->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->count();
-            $q1 = $year === 'All Time' ? Ticket::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count();
-            $q2 = $year === 'All Time' ? Ticket::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count();
-            $q3 = $year === 'All Time' ? Ticket::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count();
-            $q4 = $year === 'All Time' ? Ticket::where('type', $type->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count() : Ticket::where('type', $type->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count();
+            $yearTotal = $this->getTicketsCountBy('type', $type, $year);
+            $firstQuarter = $this->getTicketsCountBy('type', $type, $year, 1);
+            $secondQuarter = $this->getTicketsCountBy('type', $type, $year, 2);
+            $thirdQuarter = $this->getTicketsCountBy('type', $type, $year, 3);
+            $fourthQuarter = $this->getTicketsCountBy('type', $type, $year, 4);
 
             // Calcola la percentuale rispetto al totale
             $yearPercentage = $totalStories > 0 ? ($yearTotal / $totalStories) * 100 : 0;
-            $q1Percentage = $totalStories > 0 ? ($q1 / $totalStories) * 100 : 0;
-            $q2Percentage = $totalStories > 0 ? ($q2 / $totalStories) * 100 : 0;
-            $q3Percentage = $totalStories > 0 ? ($q3 / $totalStories) * 100 : 0;
-            $q4Percentage = $totalStories > 0 ? ($q4 / $totalStories) * 100 : 0;
+            $firstQuarterPercentage = $totalStories > 0 ? ($firstQuarter / $totalStories) * 100 : 0;
+            $secondQuarterPercentage = $totalStories > 0 ? ($secondQuarter / $totalStories) * 100 : 0;
+            $thirdQuarterPercentage = $totalStories > 0 ? ($thirdQuarter / $totalStories) * 100 : 0;
+            $fourthQuarterPercentage = $totalStories > 0 ? ($fourthQuarter / $totalStories) * 100 : 0;
+
+            $totalHours = $this->getTicketsSumOfHoursBy('type', $type, $year);
+            $firstQuarterHours = $this->getTicketsSumOfHoursBy('type', $type, $year, 1);
+            $secondQuarterHours = $this->getTicketsSumOfHoursBy('type', $type, $year, 2);
+            $thirdQuarterHours = $this->getTicketsSumOfHoursBy('type', $type, $year, 3);
+            $fourthQuarterHours = $this->getTicketsSumOfHoursBy('type', $type, $year, 4);
 
             $tab1Type[] = [
                 'type' => $type->value,
-                'year_total' => $yearTotal,
+                'year_total' => $yearTotal. " (".$totalHours.")",
                 'year_percentage' => $yearPercentage,
-                'q1' => $q1,
-                'q1_percentage' => $q1Percentage,
-                'q2' => $q2,
-                'q2_percentage' => $q2Percentage,
-                'q3' => $q3,
-                'q3_percentage' => $q3Percentage,
-                'q4' => $q4,
-                'q4_percentage' => $q4Percentage,
+                'q1' => $firstQuarter. " (".$firstQuarterHours.")",
+                'q1_percentage' => $firstQuarterPercentage,
+                'q2' => $secondQuarter. " (".$secondQuarterHours.")",
+                'q2_percentage' => $secondQuarterPercentage,
+                'q3' => $thirdQuarter. " (".$thirdQuarterHours.")",
+                'q3_percentage' => $thirdQuarterPercentage,
+                'q4' => $fourthQuarter. " (".$fourthQuarterHours.")",
+                'q4_percentage' => $fourthQuarterPercentage,
             ];
         }
 
@@ -193,7 +239,7 @@ class ReportController extends Controller
 
     private function tab2Status($year, $availableQuarters)
     {
-        $totalStories = $year === 'All Time' ? Ticket::count() : Ticket::whereYear('updated_at', $year)->count();
+        $totalStories = $year === self::ALL_TIME ? Ticket::count() : Ticket::whereYear('updated_at', $year)->count();
 
         $tab2Status = [];
         $totals = [
@@ -203,44 +249,94 @@ class ReportController extends Controller
             'q3' => 0,
             'q4' => 0,
         ];
+        $hoursTotals = [
+            'year_total' => 0,
+            'q1' => 0,
+            'q2' => 0,
+            'q3' => 0,
+            'q4' => 0,
+        ];
 
         foreach (StoryStatus::cases() as $status) {
-            $yearTotal = $year === 'All Time' ? Ticket::where('status', $status->value)->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->count();
-            $q1 = $year === 'All Time' ? Ticket::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 1')->count();
-            $q2 = $year === 'All Time' ? Ticket::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 2')->count();
-            $q3 = $year === 'All Time' ? Ticket::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 3')->count();
-            $q4 = $year === 'All Time' ? Ticket::where('status', $status->value)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count() : Ticket::where('status', $status->value)->whereYear('updated_at', $year)->whereRaw('EXTRACT(QUARTER FROM updated_at) = 4')->count();
+            $yearTotal = $this->getTicketsCountBy('status', $status, $year);
+            $firstQuarter = $this->getTicketsCountBy('status', $status, $year, 1);
+            $secondQuarter = $this->getTicketsCountBy('status', $status, $year, 2);
+            $thirdQuarter = $this->getTicketsCountBy('status', $status, $year, 3);
+            $fourthQuarter = $this->getTicketsCountBy('status', $status, $year, 4);
 
             // Calcola la percentuale rispetto al totale
             $yearPercentage = $totalStories > 0 ? ($yearTotal / $totalStories) * 100 : 0;
-            $q1Percentage = $totalStories > 0 ? ($q1 / $totalStories) * 100 : 0;
-            $q2Percentage = $totalStories > 0 ? ($q2 / $totalStories) * 100 : 0;
-            $q3Percentage = $totalStories > 0 ? ($q3 / $totalStories) * 100 : 0;
-            $q4Percentage = $totalStories > 0 ? ($q4 / $totalStories) * 100 : 0;
+            $firstQuarterPercentage = $totalStories > 0 ? ($firstQuarter / $totalStories) * 100 : 0;
+            $secondQuarterPercentage = $totalStories > 0 ? ($secondQuarter / $totalStories) * 100 : 0;
+            $thirdQuarterPercentage = $totalStories > 0 ? ($thirdQuarter / $totalStories) * 100 : 0;
+            $fourthQuarterPercentage = $totalStories > 0 ? ($fourthQuarter / $totalStories) * 100 : 0;
 
             // Aggiorna i totali
             $totals['year_total'] += $yearTotal;
-            $totals['q1'] += $q1;
-            $totals['q2'] += $q2;
-            $totals['q3'] += $q3;
-            $totals['q4'] += $q4;
+            $totals['q1'] += $firstQuarter;
+            $totals['q2'] += $secondQuarter;
+            $totals['q3'] += $thirdQuarter;
+            $totals['q4'] += $fourthQuarter;
 
+            $totalHours = $this->getTicketsSumOfHoursBy('status', $status, $year);
+            $firstQuarterHours = $this->getTicketsSumOfHoursBy('status', $status, $year, 1);
+            $secondQuarterHours = $this->getTicketsSumOfHoursBy('status', $status, $year, 2);
+            $thirdQuarterHours = $this->getTicketsSumOfHoursBy('status', $status, $year, 3);
+            $fourthQuarterHours = $this->getTicketsSumOfHoursBy('status', $status, $year, 4);
+
+            $hoursTotals['year_total'] += $totalHours;
+            $hoursTotals['q1'] += $firstQuarterHours;
+            $hoursTotals['q2'] += $secondQuarterHours;
+            $hoursTotals['q3'] += $thirdQuarterHours;
+            $hoursTotals['q4'] += $fourthQuarterHours;
+                    
             $tab2Status[] = [
                 'status' => $status->value,
-                'year_total' => $yearTotal,
+                'year_total' => $yearTotal." (".$totalHours.")",
                 'year_percentage' => $yearPercentage,
-                'q1' => $q1,
-                'q1_percentage' => $q1Percentage,
-                'q2' => $q2,
-                'q2_percentage' => $q2Percentage,
-                'q3' => $q3,
-                'q3_percentage' => $q3Percentage,
-                'q4' => $q4,
-                'q4_percentage' => $q4Percentage,
+                'q1' => $firstQuarter." (".$firstQuarterHours.")",
+                'q1_percentage' => $firstQuarterPercentage,
+                'q2' => $secondQuarter." (".$secondQuarterHours.")",
+                'q2_percentage' => $secondQuarterPercentage,
+                'q3' => $thirdQuarter." (".$thirdQuarterHours.")",
+                'q3_percentage' => $thirdQuarterPercentage,
+                'q4' => $fourthQuarter." (".$fourthQuarterHours.")",
+                'q4_percentage' => $fourthQuarterPercentage,
             ];
         }
 
+        $totals['year_total'] = $totals['year_total']. " (". $hoursTotals['year_total'].")";
+        $totals['q1'] = $totals['q1']. " (". $hoursTotals['q1'].")";
+        $totals['q2'] = $totals['q2']. " (". $hoursTotals['q2'].")";
+        $totals['q3'] = $totals['q3']. " (". $hoursTotals['q3'].")";
+        $totals['q4'] = $totals['q4']. " (". $hoursTotals['q4'].")";
+
         return [$tab2Status, $totals]; // Restituisci anche i totali
+    }
+
+    private function getTicketsCountBy($nameOfElementToCheck = 'type', $elementToCheck, $year = self::ALL_TIME, $quarter = null)
+    {
+
+        $query = Ticket::where($nameOfElementToCheck, $elementToCheck->value);
+        if($year !== self::ALL_TIME){
+            $query->whereYear('updated_at', $year);
+        }
+        if($quarter){
+            $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
+        }
+        return $query->count();
+    }
+
+    private function getTicketsSumOfHoursBy($nameOfElementToCheck = 'type', $elementToCheck, $year = self::ALL_TIME, $quarter = null)
+    {
+        $query = Ticket::where($nameOfElementToCheck, $elementToCheck->value);
+        if($year !== self::ALL_TIME){
+            $query->whereYear('updated_at', $year);
+        }
+        if($quarter){
+            $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
+        }
+        return round($query->sum('hours'), 2);
     }
 
     private function tab3DevStatus($year, $availableQuarters, $developers)
@@ -252,7 +348,7 @@ class ReportController extends Controller
         $firstColumnNameFn = function ($indexRowObj) {
             return $indexRowObj->name;
         };
-        $thead = array_merge([''], StoryStatus::values(), ['totale']);
+        $thead = array_merge([''], StoryStatus::values(), [self::LAST_COLUMN_VALUE]);
         $firstColumnCells = $developers;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
@@ -267,9 +363,9 @@ class ReportController extends Controller
                 });
         };
         $firstColumnNameFn = function ($indexRowObj, $indexColumnObj) {
-            return $indexRowObj ?? 'non assegnato';
+            return $indexRowObj ?? self::NOT_ASSIGNED;
         };
-        $thead = array_merge([''], $developers->pluck('name')->toArray(), ['totale']);
+        $thead = array_merge([''], $developers->pluck('name')->toArray(), [self::LAST_COLUMN_VALUE]);
         $firstColumnCells = StoryStatus::values();
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
@@ -284,7 +380,7 @@ class ReportController extends Controller
         $firstColumnNameFn = function ($indexRowObj) {
             return $indexRowObj->name;
         };
-        $thead = array_merge([''], StoryStatus::values(), ['totale']);
+        $thead = array_merge([''], StoryStatus::values(), [self::LAST_COLUMN_VALUE]);
         $firstColumnCells = $customers;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
@@ -299,9 +395,9 @@ class ReportController extends Controller
                 });
         };
         $firstColumnNameFn = function ($indexRowObj, $indexColumnObj) {
-            return $indexRowObj ?? 'non assegnato';
+            return $indexRowObj ?? self::NOT_ASSIGNED;
         };
-        $thead = array_merge([''], $customer->pluck('name')->toArray(), ['totale']);
+        $thead = array_merge([''], $customer->pluck('name')->toArray(), [self::LAST_COLUMN_VALUE]);
         $firstColumnCells = StoryStatus::values();
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
@@ -321,7 +417,7 @@ class ReportController extends Controller
         $firstColumnNameFn = function ($indexRowObj) {
             return $indexRowObj->name;
         };
-        $thead = array_merge([''], $customers->pluck('name')->toArray(), ['totale']);
+        $thead = array_merge([''], $customers->pluck('name')->toArray(), [self::LAST_COLUMN_VALUE]);
         $firstColumnCells = $tags;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
@@ -340,9 +436,9 @@ class ReportController extends Controller
             ;
         };
         $firstColumnNameFn = function ($indexRowObj, $indexColumnObj) {
-            return $indexRowObj->name ?? 'non assegnato';
+            return $indexRowObj->name ?? self::NOT_ASSIGNED;
         };
-        $thead = array_merge([''], $tags->pluck('name')->toArray(), ['totale']);
+        $thead = array_merge([''], $tags->pluck('name')->toArray(), [self::LAST_COLUMN_VALUE]);
         $firstColumnCells = $customers;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
@@ -358,9 +454,9 @@ class ReportController extends Controller
                 ->where('type', $indexColumnObj);
         };
         $firstColumnNameFn = function ($indexRowObj, $indexColumnObj) {
-            return $indexRowObj->name ?? 'non assegnato';
+            return $indexRowObj->name ?? self::NOT_ASSIGNED;
         };
-        $thead = array_merge([''], StoryType::values(), ['totale']);
+        $thead = array_merge([''], StoryType::values(), [self::LAST_COLUMN_VALUE]);
         $firstColumnCells = $tags;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
@@ -375,7 +471,7 @@ class ReportController extends Controller
         $firstColumnNameFn = function ($indexRowObj) {
             return $indexRowObj->name;
         };
-        $thead = array_merge([''], StoryType::values(), ['totale']);
+        $thead = array_merge([''], StoryType::values(), [self::LAST_COLUMN_VALUE]);
         $firstColumnCells = $developers;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
