@@ -23,7 +23,6 @@ use App\Nova\Actions\AdminAddFavoriteProjectsAction;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Nova\Actions\AdminRemoveFavoriteProjectsAction;
 use Laravel\Nova\Fields\FormData;
-use Illuminate\Database\Eloquent\Builder;
 
 class User extends Resource
 {
