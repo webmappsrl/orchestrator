@@ -20,6 +20,7 @@ use App\Nova\Filters\CustomerWpMigrationFilter;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\Textarea;
+use App\Nova\QuoteNoFilter;
 
 class Customer extends Resource
 {
@@ -194,7 +195,7 @@ class Customer extends Resource
                     HasMany::make(__('Projects'), 'projects', Project::class),
                 ]),
                 Tab::make('Quotes', [
-                    HasMany::make('Quotes', 'quotes', Quote::class),
+                    HasMany::make('Quotes', 'quotes', QuoteNoFilter::class),
                 ]),
                 Tab::make('Deadlines', [
                     HasMany::make('Deadlines', 'deadlines', Deadline::class),
