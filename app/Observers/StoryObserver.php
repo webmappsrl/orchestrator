@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
+use App\Enums\UserRole;
 
 class StoryObserver
 {
@@ -61,8 +62,9 @@ class StoryObserver
             && $story->isDirty('customer_request')
             && $user && $story->user
             && $user->id != $story->user->id
+            && $story->user->hasRole(UserRole::Customer)
         ) {
-            $story->status = StoryStatus::Assigned->value;
+            $story->status = StoryStatus::Todo->value;
         }
     }
 
