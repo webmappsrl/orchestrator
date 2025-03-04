@@ -32,31 +32,76 @@ class ExportToPdf extends Action
             $description = str_replace('<pre><code>', '<pre style="white-space: pre-wrap; word-wrap: break-word;"><code>', $description);
 
             $description = '<div style="padding: 15px 0;">' . $description . '</div>';
-            $title = str_replace(' ', '', $model->name);
-            $fileName = "{$title}.pdf";
+            $title = $model->name;
+            $pdfTitle = str_replace(' ', '', $title);
+            $fileName = "{$pdfTitle}.pdf";
             $filePath = storage_path("app/public/{$fileName}");
             $imagePath = public_path('/images/logo-orizzontale.png');
+            
+            $style = '
+            <style>
+                @page {
+                margin: 120px 50px 80px 50px;
+                }
+
+                .header {
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: flex-start;
+                    position: fixed;
+                    top: -80px;
+                    left: 0;
+                    right: 0;
+                    width: 100%;
+                    text-align: right;
+                }
+            
+                .footer {
+                    position: fixed;
+                    bottom: -50px;
+                    left: 0;
+                    right: 0;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #777;
+                }
+
+                .content {
+                    margin-top: 20px;
+                    margin-bottom: 20px;
+                }
+
+                h1 {
+                    text-align: center;
+                }
+            </style>';
+
             $header = '
-            <header style="padding-bottom: 20px; text-align: right; width: 100%; top: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;">
+            <div class="header">
                     <img style="width: 115px; height: auto; margin-right: 20px;" src="' . $imagePath . '" alt="webmapp logo">
-            </header>';
+            </div>';
 
             $footer = '
-            <footer style="text-align: center; padding-top: 20px; font-size: 14px; color: #777; position: fixed; bottom: 0; left: 0; right: 0;">
-                <div>
-                    <p>Webmapp S.r.l. - Via Antonio Cei, 2 - 56123 Pisa <br>
-                    C.F. / P. IVA: 02266770508 - Tel. +39 328 5360803 <br>
-                    www.webmapp.it | info@webmapp.it</p>
-                </div>
-            </footer>';
+            <div class="footer">
+                <p>Webmapp S.r.l. - Via Antonio Cei, 2 - 56123 Pisa <br>
+                C.F. / P. IVA: 02266770508 - Tel. +39 328 5360803 <br>
+                www.webmapp.it | info@webmapp.it</p>
+            </div>';
 
-            $html =
-                '<div style="margin: 20px; padding: 20px;">'
-                . $header
-                . $description
-                . $footer .
-                '</div>';
-            $pdf = Pdf::loadHTML($html);
+            $html = '
+            <html>
+            <head>
+                ' . $style . '
+            </head>
+            <body>
+                ' . $header . '
+                ' . $footer . '
+                <h1>' . $title . '</h1>
+                <div class="content">' . $description . '</div>
+            </body>
+            </html>';
+
+            $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
 
             file_put_contents($filePath, $pdf->output());
             $downloadUrl = asset("storage/{$fileName}");
