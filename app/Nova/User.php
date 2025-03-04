@@ -84,7 +84,7 @@ class User extends Resource
             BelongsToMany::make('Apps'),
             HasMany::make('Epics'),
             HasMany::make('Stories'),
-            HasMany::make('Quotes', 'quotes', QuoteNoFilter::class),
+            HasMany::make('Quotes', 'quotes', Quote::class),
             Text::make(__('Favorite Projects'), function () {
                 $projects = [];
                 $userFavorites = $this->getFavoriteItems(Project::class)->get();
