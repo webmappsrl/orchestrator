@@ -68,7 +68,7 @@ class SyncStoriesWithGoogleCalendar extends Command
                 $this->createEventLabel($developerId, '2BETESTED', $this->currentTimeForDeveloper[$developerId]);
                 $this->createEventsForTickets($tobeTestedTickets, $developerId);
             }
-            $testedTickets = $this->getTestedTickets(StoryStatus::Tested->value, $developerId);
+            $testedTickets = $this->getTestedTickets($developerId);
             if (count($testedTickets) > 0) {
                 $this->createEventLabel($developerId, 'TESTED', $this->currentTimeForDeveloper[$developerId]);
                 $this->createEventsForTickets($testedTickets, $developerId);
