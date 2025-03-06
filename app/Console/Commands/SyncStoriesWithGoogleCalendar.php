@@ -9,9 +9,6 @@ use Carbon\Carbon;
 use Spatie\GoogleCalendar\Event;
 use Illuminate\Support\Facades\DB;
 use App\Enums\StoryType;
-use Spatie\GoogleCalendar\GoogleCalendarFactory;
-
-use function PHPUnit\Framework\isNull;
 
 class SyncStoriesWithGoogleCalendar extends Command
 {
@@ -124,7 +121,7 @@ class SyncStoriesWithGoogleCalendar extends Command
 
         $endTime = $startTime->copy()->addMinutes(30);
 
-        $colorId = $this->getColorId($ticket, $status);
+        $colorId = $this->getColorId($ticket, $status[0]);
 
         // Crea un singolo evento per la storia
         $creator = DB::table('users')->where('id', $ticket->creator_id)->first();
