@@ -85,11 +85,6 @@ class SyncStoriesWithGoogleCalendar extends Command
         $this->currentTimeForDeveloper[$developerId] = $this->startTime->copy();
     }
 
-    public function add30MinutesToDevelopers($developerId): void
-    {
-        $this->currentTimeForDeveloper[$developerId] = $time->copy()->addMinutes(30);
-    }
-
     function createEventsForTickets($ticketList, $developerId, $status = null): void
     {
         foreach ($ticketList as  $ticket) {
@@ -183,7 +178,7 @@ class SyncStoriesWithGoogleCalendar extends Command
 
         // Se è stato passato un developerId, filtra i ticket in base a quello
         if (isset($developerId)) {
-            if ($status == StoryStatus::Test->value) {
+            if ($status[0] == StoryStatus::Test->value) {
                 $query = $query->where("tester_id", $developerId);
             } else {
                 $query = $query->where("user_id", $developerId);
