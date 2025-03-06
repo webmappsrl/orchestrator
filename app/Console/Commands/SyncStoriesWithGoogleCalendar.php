@@ -59,11 +59,11 @@ class SyncStoriesWithGoogleCalendar extends Command
         foreach ($developerIds as $developerId) {
             $this->deleteCalendar($developerId);
             $this->initializeTimeForDeveloper($developerId);
-            $todoTickets = $this->getTicketsWithStatus(StoryStatus::Todo->value, $developerId);
+            $todoTickets = $this->getTicketsWithStatus([StoryStatus::Todo->value, StoryStatus::Progress->value], $developerId);
             if (count($todoTickets) > 0) {
-                $this->createEventsForTickets($todoTickets, $developerId, StoryStatus::Todo->value);
+                $this->createEventsForTickets($todoTickets, $developerId, [StoryStatus::Todo->value]);
             }
-            $tobeTestedTickets = $this->getTicketsWithStatus(StoryStatus::Test->value, $developerId);
+            $tobeTestedTickets = $this->getTicketsWithStatus([StoryStatus::Test->value], $developerId);
             if (count($tobeTestedTickets) > 0) {
                 $this->createEventLabel($developerId, '2BETESTED', $this->currentTimeForDeveloper[$developerId]);
                 $this->createEventsForTickets($tobeTestedTickets, $developerId);
@@ -73,7 +73,7 @@ class SyncStoriesWithGoogleCalendar extends Command
                 $this->createEventLabel($developerId, 'TESTED', $this->currentTimeForDeveloper[$developerId]);
                 $this->createEventsForTickets($testedTickets, $developerId);
             }
-            $waitingTickets = $this->getTicketsWithStatus(StoryStatus::Waiting->value, $developerId);
+            $waitingTickets = $this->getTicketsWithStatus([StoryStatus::Waiting->value], $developerId);
             if (count($waitingTickets) > 0) {
                 $this->createEventLabel($developerId, 'WAITING', $this->currentTimeForDeveloper[$developerId]);
                 $this->createEventsForTickets($waitingTickets, $developerId);
@@ -169,7 +169,7 @@ class SyncStoriesWithGoogleCalendar extends Command
         }
     }
 
-    public function getTicketsWithStatus($status, $developerId = null)
+    public function getTicketsWithStatus($status = [], $developerId = null)
     {
         // Query per ottenere i ticket con lo status passato come parametro
         $query = Story::where(function ($query) use ($status) {
