@@ -9,6 +9,8 @@ use Carbon\Carbon;
 use Spatie\GoogleCalendar\Event;
 use Illuminate\Support\Facades\DB;
 use App\Enums\StoryType;
+use App\Enums\UserRole;
+use App\Models\User;
 
 class SyncStoriesWithGoogleCalendar extends Command
 {
@@ -111,18 +113,27 @@ class SyncStoriesWithGoogleCalendar extends Command
     private function createEvent($developerId, $ticket, $status = null)
     {
         $startTime = $this->currentTimeForDeveloper[$developerId]->copy();
-
         $developer = DB::table('users')->where('id', $developerId)->first();
-
         $endTime = $startTime->copy()->addMinutes(30);
-
         $colorId = $this->getColorId($ticket, $status);
+        $creator = User::find($ticket->creator_id);
+        $progress = $ticket->status == StoryStatus::Progress->value ? '[P]' : ' ';
+        $name = $creator->name;
 
-        // Crea un singolo evento per la storia
-        $creator = DB::table('users')->where('id', $ticket->creator_id)->first();
+        try {
+            if ($creator->hasRole(UserRole::Developer)) {
+                $name = implode('', array_map(function ($word) {
+                    return strtoupper($word[0]);
+                }, explode(' ', $creator->name)));
+            } else {
+                $name = strtoupper(last(explode(' ', $creator->name)));
+            }
+        } catch (\Exception $e) {
+        }
+
         try {
             Event::create([
-                'name' => "OC: {$ticket->id} [{$creator->name}] - {$ticket->name}", // Nome della storia come titolo dell'evento,
+                'name' => "{$progress}OC:{$ticket->id}[{$name}] {$ticket->name}", // Nome della storia come titolo dell'evento,
                 'description' => "{$ticket->description}\n\nType: {$ticket->type}, Status: {$ticket->status}\nLink: https://orchestrator.maphub.it/resources/developer-stories/{$ticket->id}",
                 'startDateTime' => $startTime,
                 'endDateTime' => $endTime,
