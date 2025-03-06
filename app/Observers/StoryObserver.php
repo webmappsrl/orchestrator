@@ -83,7 +83,7 @@ class StoryObserver
             if ($story->status === StoryStatus::Test->value) {
                 $tester = $story->tester;
                 if ($tester && $tester->email) {
-                    Artisan::call('sync:stories-calendar', ['testerEmail' => $tester->email]);
+                    Artisan::call('sync:stories-calendar', ['developerEmail' => $tester->email]);
                 }
             }
         }

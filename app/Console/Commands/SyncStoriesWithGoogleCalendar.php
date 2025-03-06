@@ -148,7 +148,7 @@ class SyncStoriesWithGoogleCalendar extends Command
         $endTime = $startTime->copy()->addMinutes(30);
         try {
             Event::create([
-                'name' => "OC: {$label}", // Nome della storia come titolo dell'evento,
+                'name' => "***OC: {$label}***", // Nome della storia come titolo dell'evento,
                 'startDateTime' => $startTime,
                 'endDateTime' => $endTime,
                 'colorId' => self::DEFAULT_COLOR_ID // Imposta il colore dell'evento
@@ -173,7 +173,7 @@ class SyncStoriesWithGoogleCalendar extends Command
     {
         // Query per ottenere i ticket con lo status passato come parametro
         $query = Story::where(function ($query) use ($status) {
-            $query->whereIn('status', [$status]);
+            $query->whereIn('status', $status);
             if ($status == StoryStatus::Todo->value) {
                 $query->orWhereHas('views', function ($query) {
                     $query->whereJsonContains('changes->status', StoryStatus::Todo->value)
