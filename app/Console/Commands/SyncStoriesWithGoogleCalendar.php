@@ -58,7 +58,7 @@ class SyncStoriesWithGoogleCalendar extends Command
             $this->initializeTimeForDeveloper($developerId);
             $todoTickets = $this->getTicketsWithStatus([StoryStatus::Todo->value, StoryStatus::Progress->value], $developerId);
             if (count($todoTickets) > 0) {
-                $this->createEventsForTickets($todoTickets, $developerId, [StoryStatus::Todo->value]);
+                $this->createEventsForTickets($todoTickets, $developerId, StoryStatus::Todo->value);
             }
             $tobeTestedTickets = $this->getTicketsWithStatus([StoryStatus::Test->value], $developerId);
             if (count($tobeTestedTickets) > 0) {
@@ -121,7 +121,7 @@ class SyncStoriesWithGoogleCalendar extends Command
 
         $endTime = $startTime->copy()->addMinutes(30);
 
-        $colorId = $this->getColorId($ticket, $status[0]);
+        $colorId = $this->getColorId($ticket, $status);
 
         // Crea un singolo evento per la storia
         $creator = DB::table('users')->where('id', $ticket->creator_id)->first();
