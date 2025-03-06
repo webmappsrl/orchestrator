@@ -240,7 +240,7 @@ class SyncStoriesWithGoogleCalendar extends Command
 
         foreach ($events as $event) {
             // Se il nome dell'evento inizia con "OC: ", cancellalo
-            if (strpos($event->name, 'OC:') === 0) {
+            if (strpos($event->name, 'OC:') !== false) {
                 try {
                     // Utilizza l'ID dell'evento per cancellarlo
                     $event->delete();
