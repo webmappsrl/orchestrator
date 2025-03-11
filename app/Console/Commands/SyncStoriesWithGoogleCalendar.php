@@ -118,7 +118,7 @@ class SyncStoriesWithGoogleCalendar extends Command
         $colorId = $this->getColorId($ticket, $status);
         $creator = User::find($ticket->creator_id);
         $progress = $ticket->status == StoryStatus::Progress->value ? '[P]' : ' ';
-        $name = $creator->name;
+        $name = $creator->name ?? $developer->name;
 
         try {
             if ($creator->hasRole(UserRole::Developer)) {
@@ -174,13 +174,15 @@ class SyncStoriesWithGoogleCalendar extends Command
 
     public function getTicketsWithStatus($status = [], $developerId = null)
     {
+        $logghedStatus = [StoryStatus::Todo->value, StoryStatus::Progress->value];
         // Query per ottenere i ticket con lo status passato come parametro
-        $query = Story::where(function ($query) use ($status) {
+        $query = Story::where(function ($query) use ($status, $logghedStatus) {
             $query->whereIn('status', $status);
-            if ($status == StoryStatus::Todo->value) {
-                $query->orWhereHas('views', function ($query) {
-                    $query->whereJsonContains('changes->status', StoryStatus::Todo->value)
-                        ->whereDate('viewed_at', $this->today);
+
+            if (!empty(array_intersect($status, $logghedStatus))) {
+                $query->orWhereHas('views', function ($query) use ($logghedStatus) {
+                    $query->whereIn('changes->status', $logghedStatus)
+                        ->whereDate('viewed_at', Carbon::today('Europe/Rome'));
                 });
             }
         })
@@ -189,10 +191,10 @@ class SyncStoriesWithGoogleCalendar extends Command
 
         // Se è stato passato un developerId, filtra i ticket in base a quello
         if (isset($developerId)) {
-            if ($status[0] == StoryStatus::Test->value) {
-                $query = $query->where("tester_id", $developerId);
+            if (in_array(StoryStatus::Test->value, $status, true)) {
+                $query->where("tester_id", $developerId);
             } else {
-                $query = $query->where("user_id", $developerId);
+                $query->where("user_id", $developerId);
             }
         }
 
