@@ -122,9 +122,8 @@ class SyncStoriesWithGoogleCalendar extends Command
 
         try {
             if ($creator->hasRole(UserRole::Developer)) {
-                $name = implode('', array_map(function ($word) {
-                    return strtoupper($word[0]);
-                }, explode(' ', $creator->name)));
+                $nameParts = explode(' ', $creator->name);
+                $name = strtoupper(substr($nameParts[1] ?? $nameParts[0], 0, 3));
             } else {
                 $name = strtoupper(last(explode(' ', $creator->name)));
             }
