@@ -11,6 +11,8 @@ use App\Models\Tag;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -31,8 +33,8 @@ class ReportController extends Controller
             return view('reports.index')->with('error', $error);
         }
         $developers = $this->getDevelopers();
-        $customers = $this->getCustomers();
-        $tags = $this->getTags();
+        $customers = $this->getCustomers($year, $availableQuarters);
+        $tags = $this->getTags($year, $availableQuarters);
 
         $tab1Type = $this->tab1Type($year, $availableQuarters);
         [$tab2Status, $tab2StatusTotals] = $this->tab2Status($year, $availableQuarters); // Ora include i totali
@@ -84,28 +86,81 @@ class ReportController extends Controller
             ->get();
         return $developers;
     }
-    private function getCustomers()
+    private function getCustomers($year, $availableQuarters)
     {
-        return Ticket::whereNotNull('creator_id')
+        $query = Ticket::select('creator_id')
+            ->selectRaw('SUM(hours) as hours_sum')
+            ->whereNotNull('creator_id')
             ->whereHas('creator', function ($query) {
-                $query->whereJsonContains('roles', UserRole::Customer); // Filtra utenti con il ruolo 'Customer'
-            })
-            ->selectRaw('creator_id, COUNT(*) as story_count') // Seleziona il creator_id e conta le storie
-            ->groupBy('creator_id') // Raggruppa per creator_id
-            ->orderByDesc('story_count') // Ordina per il numero di storie in modo decrescente
-            ->limit(10) // Limita ai primi 10
-            ->with('creator') // Precarica il creatore
-            ->get()
-            ->pluck('creator') // Ottiene solo i creatori
-            ->unique('id'); // Rimuovi eventuali duplicati, se ce ne sono
+                $query->whereJsonContains('roles', UserRole::Customer);
+            });
 
-    }
-    private function getTags()
-    {
-        return Tag::withCount('tagged') // Conta quante storie sono associate a ciascun tag
-            ->orderBy('tagged_count', 'desc') // Ordina per frequenza di utilizzo
-            ->limit(10) // Limita ai primi 10 tag più usati
+        // Ottimizzazione dei filtri temporali
+        if ($year !== self::ALL_TIME) {
+            $query->whereYear('created_at', $year);
+
+            if (!empty($availableQuarters)) {
+                $query->whereIn(DB::raw('EXTRACT(QUARTER FROM created_at)'), $availableQuarters);
+            }
+        }
+
+        // Otteniamo i creator_ids ordinati per ore totali, escludendo quelli con 0 ore
+        $topCreators = $query
+            ->groupBy('creator_id')
+            ->havingRaw('SUM(hours) > 0')  // Usiamo la stessa espressione del selectRaw
+            ->orderByRaw('SUM(hours) DESC') // Usiamo la stessa espressione per l'ordinamento
+            ->limit(30)
             ->get();
+
+        // Prendiamo i dettagli degli utenti mantenendo l'ordine basato sulle ore
+        $users = User::whereIn('id', $topCreators->pluck('creator_id'))
+            ->select('id', 'name')
+            ->get()
+            ->sortBy(function ($user) use ($topCreators) {
+                return $topCreators->where('creator_id', $user->id)->first()->hours_sum * -1;
+            })
+            ->values();
+
+        // Log dei creators con le loro ore totali
+        Log::info('Top Creators in ordine:', $users->map(function ($user) use ($topCreators) {
+            $hours = $topCreators->where('creator_id', $user->id)->first()->hours_sum;
+            return [
+                'name' => $user->name,
+                'total_hours' => round($hours, 2)
+            ];
+        })->toArray());
+
+        return $users;
+    }
+    private function getTags($year, $availableQuarters)
+    {
+        $tags = Tag::with(['tagged' => function ($query) use ($year, $availableQuarters) {
+            if ($year !== self::ALL_TIME) {
+                $query->whereYear('stories.created_at', $year);
+                if (!empty($availableQuarters)) {
+                    $query->whereIn(DB::raw('EXTRACT(QUARTER FROM stories.created_at)'), $availableQuarters);
+                }
+            }
+        }])
+            ->get()
+            ->filter(function ($tag) {
+                return $tag->tagged->isNotEmpty();
+            })
+            ->sortByDesc(function ($tag) {
+                return $tag->tagged->count();
+            })
+            ->take(30)
+            ->values();
+
+        // Log per debug
+        Log::info('Top Tags in ordine:', $tags->map(function ($tag) {
+            return [
+                'name' => $tag->name,
+                'count' => $tag->tagged->count()
+            ];
+        })->toArray());
+
+        return $tags;
     }
 
     private function calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter = null)
@@ -125,7 +180,7 @@ class ReportController extends Controller
                     $hours = [];
                     foreach ($precedentCells as $cell) {
                         $counts[] = $this->extractCount($cell);
-                        $hours[] = $this->extractHours($cell); 
+                        $hours[] = $this->extractHours($cell);
                     }
                     $row[] = array_sum($counts) . " (" . round(array_sum($hours), 2) . ")";
                 } else {
@@ -134,11 +189,11 @@ class ReportController extends Controller
                         $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
                     }
                     if ($year !== self::ALL_TIME) {
-                        $query->whereYear('updated_at', $year);
+                        $query->whereYear('created_at', $year);
                     }
                     $statusTotal = $query->count();
                     $statusHours = round($query->sum('hours'), 2);
-                    $row[] = $statusTotal. " (".$statusHours.")";
+                    $row[] = $statusTotal . " (" . $statusHours . ")";
 
                     // Aggiorna il totale della colonna corrente
                     $columnSums[$index] += $statusTotal;
@@ -148,7 +203,7 @@ class ReportController extends Controller
             $rows[] = $row;
         }
 
-        $rows =$this->sortRowsByHours($rows);
+        $rows = $this->sortRowsByHours($rows);
 
         // Aggiungi la riga dei totali alla fine
         $totalsRow = [self::LAST_COLUMN_LABEL]; // La prima cella della riga è 'Totale'
@@ -156,9 +211,9 @@ class ReportController extends Controller
             if ($indexColumnObj === '') {
                 continue; // Salta la prima cella (già 'Totale')
             } elseif ($indexColumnObj === self::LAST_COLUMN_VALUE) {
-                $totalsRow[] = array_sum(array_slice($columnSums, 1)). " (". round(array_sum(array_slice($columnHours, 1)), 2).")"; // Totale finale (somma delle somme delle colonne)
+                $totalsRow[] = array_sum(array_slice($columnSums, 1)) . " (" . round(array_sum(array_slice($columnHours, 1)), 2) . ")"; // Totale finale (somma delle somme delle colonne)
             } else {
-                $totalsRow[] = $columnSums[$index]. " (". $columnHours[$index].")"; // Aggiungi la somma verticale della colonna
+                $totalsRow[] = $columnSums[$index] . " (" . $columnHours[$index] . ")"; // Aggiungi la somma verticale della colonna
             }
         }
 
@@ -169,11 +224,19 @@ class ReportController extends Controller
 
     private function sortRowsByHours($rows): array
     {
-        usort($rows, function ($firstElement, $secondElement) {
-            $hoursFirstElement = $this->extractHours($this->getLastColumnValue($firstElement));
-            $hoursSecondElement = $this->extractHours($this->getLastColumnValue($secondElement));
-            return $hoursSecondElement <=> $hoursFirstElement; 
+        // Rimuovi l'ultima riga (totale)
+        $lastRow = array_pop($rows);
+
+        // Ordina le righe rimanenti per il valore tra parentesi nell'ultima colonna
+        usort($rows, function ($a, $b) {
+            $hoursA = $this->extractHours($a[count($a) - 1]);
+            $hoursB = $this->extractHours($b[count($b) - 1]);
+            return $hoursB <=> $hoursA; // Ordine decrescente
         });
+
+        // Riaggiungi la riga totale alla fine
+        $rows[] = $lastRow;
+
         return $rows;
     }
 
@@ -221,15 +284,15 @@ class ReportController extends Controller
 
             $tab1Type[] = [
                 'type' => $type->value,
-                'year_total' => $yearTotal. " (".$totalHours.")",
+                'year_total' => $yearTotal . " (" . $totalHours . ")",
                 'year_percentage' => $yearPercentage,
-                'q1' => $firstQuarter. " (".$firstQuarterHours.")",
+                'q1' => $firstQuarter . " (" . $firstQuarterHours . ")",
                 'q1_percentage' => $firstQuarterPercentage,
-                'q2' => $secondQuarter. " (".$secondQuarterHours.")",
+                'q2' => $secondQuarter . " (" . $secondQuarterHours . ")",
                 'q2_percentage' => $secondQuarterPercentage,
-                'q3' => $thirdQuarter. " (".$thirdQuarterHours.")",
+                'q3' => $thirdQuarter . " (" . $thirdQuarterHours . ")",
                 'q3_percentage' => $thirdQuarterPercentage,
-                'q4' => $fourthQuarter. " (".$fourthQuarterHours.")",
+                'q4' => $fourthQuarter . " (" . $fourthQuarterHours . ")",
                 'q4_percentage' => $fourthQuarterPercentage,
             ];
         }
@@ -289,27 +352,27 @@ class ReportController extends Controller
             $hoursTotals['q2'] += $secondQuarterHours;
             $hoursTotals['q3'] += $thirdQuarterHours;
             $hoursTotals['q4'] += $fourthQuarterHours;
-                    
+
             $tab2Status[] = [
                 'status' => $status->value,
-                'year_total' => $yearTotal." (".$totalHours.")",
+                'year_total' => $yearTotal . " (" . $totalHours . ")",
                 'year_percentage' => $yearPercentage,
-                'q1' => $firstQuarter." (".$firstQuarterHours.")",
+                'q1' => $firstQuarter . " (" . $firstQuarterHours . ")",
                 'q1_percentage' => $firstQuarterPercentage,
-                'q2' => $secondQuarter." (".$secondQuarterHours.")",
+                'q2' => $secondQuarter . " (" . $secondQuarterHours . ")",
                 'q2_percentage' => $secondQuarterPercentage,
-                'q3' => $thirdQuarter." (".$thirdQuarterHours.")",
+                'q3' => $thirdQuarter . " (" . $thirdQuarterHours . ")",
                 'q3_percentage' => $thirdQuarterPercentage,
-                'q4' => $fourthQuarter." (".$fourthQuarterHours.")",
+                'q4' => $fourthQuarter . " (" . $fourthQuarterHours . ")",
                 'q4_percentage' => $fourthQuarterPercentage,
             ];
         }
 
-        $totals['year_total'] = $totals['year_total']. " (". $hoursTotals['year_total'].")";
-        $totals['q1'] = $totals['q1']. " (". $hoursTotals['q1'].")";
-        $totals['q2'] = $totals['q2']. " (". $hoursTotals['q2'].")";
-        $totals['q3'] = $totals['q3']. " (". $hoursTotals['q3'].")";
-        $totals['q4'] = $totals['q4']. " (". $hoursTotals['q4'].")";
+        $totals['year_total'] = $totals['year_total'] . " (" . $hoursTotals['year_total'] . ")";
+        $totals['q1'] = $totals['q1'] . " (" . $hoursTotals['q1'] . ")";
+        $totals['q2'] = $totals['q2'] . " (" . $hoursTotals['q2'] . ")";
+        $totals['q3'] = $totals['q3'] . " (" . $hoursTotals['q3'] . ")";
+        $totals['q4'] = $totals['q4'] . " (" . $hoursTotals['q4'] . ")";
 
         return [$tab2Status, $totals]; // Restituisci anche i totali
     }
@@ -318,10 +381,10 @@ class ReportController extends Controller
     {
 
         $query = Ticket::where($nameOfElementToCheck, $elementToCheck->value);
-        if($year !== self::ALL_TIME){
+        if ($year !== self::ALL_TIME) {
             $query->whereYear('updated_at', $year);
         }
-        if($quarter){
+        if ($quarter) {
             $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
         }
         return $query->count();
@@ -330,10 +393,10 @@ class ReportController extends Controller
     private function getTicketsSumOfHoursBy($nameOfElementToCheck = 'type', $elementToCheck, $year = self::ALL_TIME, $quarter = null)
     {
         $query = Ticket::where($nameOfElementToCheck, $elementToCheck->value);
-        if($year !== self::ALL_TIME){
+        if ($year !== self::ALL_TIME) {
             $query->whereYear('updated_at', $year);
         }
-        if($quarter){
+        if ($quarter) {
             $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
         }
         return round($query->sum('hours'), 2);
