@@ -160,9 +160,10 @@ class Story extends Resource
                 $this->titleField(),
                 $this->relationshipField($request),
             ]),
-            Stack::make(__('Assigned/estimated hours'), [
+            Stack::make(__('Assigned/estimated hours/effective hours'), [
                 $this->assignedToField(),
                 $this->estimatedHoursField($request),
+                $this->effectiveHoursField($request),
             ]),
             $this->infoField($request),
             $this->createdAtField(),

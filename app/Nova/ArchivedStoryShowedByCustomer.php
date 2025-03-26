@@ -41,6 +41,7 @@ class ArchivedStoryShowedByCustomer extends Story
             $this->titleField(),
             $this->relationshipField($request),
             $this->estimatedHoursField($request),
+            $this->effectiveHoursField($request),
             $this->updatedAtField(),
             $this->deadlineField($request),
 

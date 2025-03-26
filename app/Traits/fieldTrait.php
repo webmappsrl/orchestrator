@@ -450,7 +450,7 @@ trait fieldTrait
             ->canSee($this->canSee($fieldName))
             ->asHtml();
     }
-    
+
     public function estimatedHoursFieldCanSee($fieldName)
     {
         return function ($request) use ($fieldName) {
@@ -460,11 +460,44 @@ trait fieldTrait
 
     public function estimatedHoursField(NovaRequest $request, $fieldName = 'estimated_hours')
     {
-        return Number::make(__('Estimated Hours'), $fieldName)
-            ->sortable()
-            ->rules('nullable', 'numeric', 'min:0')
-            ->help(__('Enter the estimated time to resolve the ticket in hours.'))
-            ->canSee($this->estimatedHoursFieldCanSee($fieldName));
+        if ($request->isResourceDetailRequest() || $request->isResourceIndexRequest()) {
+            return Text::make(__('Estimated Hours'), $fieldName, function () {
+                $hours = $this->estimated_hours;
+                $html = '<span></span>';
+                if (isset($hours)) {
+                    $html =
+                        <<<HTML
+                            <span >Estimed Hours: $hours</span>
+                        HTML;
+                }
+                return $html;
+            })->asHtml();
+        } else {
+            return Number::make(__('Estimated Hours'), $fieldName)
+                ->sortable()
+                ->rules('nullable', 'numeric', 'min:0')
+                ->help(__('Enter the estimated time to resolve the ticket in hours.'))
+                ->canSee($this->estimatedHoursFieldCanSee($fieldName));
+        }
+    }
+
+    public function effectiveHoursField(NovaRequest $request, $fieldName = 'hours')
+    {
+        if ($request->isResourceDetailRequest() || $request->isResourceIndexRequest()) {
+            return Text::make(__('Effective Hours'), $fieldName, function () {
+                $hours = $this->hours ?? 0;
+                return
+                    <<<HTML
+                        <span >Effective Hours: $hours</span>
+                    HTML;
+            })->asHtml();
+        } else {
+            return Number::make(__('Effective Hours'), $fieldName)
+                ->sortable()
+                ->rules('nullable', 'numeric', 'min:0')
+                ->help(__('Enter the effective time to resolve the ticket in hours.'))
+                ->canSee($this->estimatedHoursFieldCanSee($fieldName));
+        }
     }
 
     private function getCustomerInfo()
