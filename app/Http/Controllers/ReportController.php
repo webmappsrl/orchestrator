@@ -21,7 +21,7 @@ class ReportController extends Controller
     const NOT_ASSIGNED = 'non assegnato';
     const LAST_COLUMN_VALUE = 'totale';
     const LAST_COLUMN_LABEL = 'Totale';
-    const SQL_PREFIX_FOR_EXTRACTING_QUARTER = 'EXTRACT(QUARTER FROM updated_at)';
+    const SQL_PREFIX_FOR_EXTRACTING_QUARTER = 'EXTRACT(QUARTER FROM created_at)';
     const REGEX_FOR_EXTRACTING_HOURS = '/(\d+)\s*\((\d+\.?\d*)\)/';
     public function index(Request $request, $year = null)
     {
@@ -259,7 +259,7 @@ class ReportController extends Controller
 
     private function tab1Type($year, $availableQuarters)
     {
-        $totalStories = $year === self::ALL_TIME ? Ticket::count() : Ticket::whereYear('updated_at', $year)->count();
+        $totalStories = $year === self::ALL_TIME ? Ticket::count() : Ticket::whereYear('created_at', $year)->count();
 
         $tab1Type = [];
         foreach (StoryType::cases() as $type) {
@@ -302,7 +302,7 @@ class ReportController extends Controller
 
     private function tab2Status($year, $availableQuarters)
     {
-        $totalStories = $year === self::ALL_TIME ? Ticket::count() : Ticket::whereYear('updated_at', $year)->count();
+        $totalStories = $year === self::ALL_TIME ? Ticket::count() : Ticket::whereYear('created_at', $year)->count();
 
         $tab2Status = [];
         $totals = [
@@ -382,7 +382,7 @@ class ReportController extends Controller
 
         $query = Ticket::where($nameOfElementToCheck, $elementToCheck->value);
         if ($year !== self::ALL_TIME) {
-            $query->whereYear('updated_at', $year);
+            $query->whereYear('created_at', $year);
         }
         if ($quarter) {
             $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
@@ -394,7 +394,7 @@ class ReportController extends Controller
     {
         $query = Ticket::where($nameOfElementToCheck, $elementToCheck->value);
         if ($year !== self::ALL_TIME) {
-            $query->whereYear('updated_at', $year);
+            $query->whereYear('created_at', $year);
         }
         if ($quarter) {
             $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
