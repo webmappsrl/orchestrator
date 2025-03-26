@@ -68,11 +68,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::externalLink('all times', url('/report'))->openInNewTab()->canSee(function ($request) {
                             return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
                         }),
-                        MenuItem::externalLink('2024', url('/report/2024'))->openInNewTab()->canSee(function ($request) {
-                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
-                        }),
-                        MenuItem::externalLink('2023', url('/report/2023'))->openInNewTab()->canSee(function ($request) {
-                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                        ...collect(range(now()->year, 2023))->map(function ($year) {
+                            return MenuItem::externalLink((string) $year, url("/report/{$year}"))->openInNewTab()
+                                ->canSee(function ($request) {
+                                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                                });
                         }),
                     ])->collapsedByDefault(),
 
