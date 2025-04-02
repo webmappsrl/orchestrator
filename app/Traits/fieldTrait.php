@@ -471,7 +471,7 @@ trait fieldTrait
                         HTML;
                 }
                 return $html;
-            })->asHtml();
+            })->asHtml()->canSee($this->estimatedHoursFieldCanSee($fieldName));
         } else {
             return Number::make(__('Estimated Hours'), $fieldName)
                 ->sortable()
@@ -490,7 +490,7 @@ trait fieldTrait
                     <<<HTML
                         <span >Effective Hours: $hours</span>
                     HTML;
-            })->asHtml();
+            })->asHtml()->canSee($this->estimatedHoursFieldCanSee($fieldName));
         } else {
             return Number::make(__('Effective Hours'), $fieldName)
                 ->sortable()
