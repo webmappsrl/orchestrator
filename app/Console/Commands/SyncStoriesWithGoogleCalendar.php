@@ -21,14 +21,14 @@ class SyncStoriesWithGoogleCalendar extends Command
     private $startTime;
     private $currentTimeForDeveloper = [];
 
-    private const DEFAULT_COLOR_ID = '8'; // Yellow
-    private const TESTING_COLOR_ID = '6'; // Tangerine
-    private const WAITING_COLOR_ID = '5'; // Light Gray
-    private const BUG_COLOR_ID = '11'; // Bold Red
-    private const HELPDESK_COLOR_ID = '2'; // Green
     private const FEATURE_COLOR_ID = '1'; // Blue
+    private const HELPDESK_COLOR_ID = '2'; // Green
     private const TESTED_COLOR_ID = '3'; // Grape
-
+    private const WAITING_COLOR_ID = '5'; // Light Gray
+    private const TESTING_COLOR_ID = '6'; // Tangerine
+    private const SCRUM_COLOR_ID = '7';
+    private const DEFAULT_COLOR_ID = '8'; // Yellow
+    private const BUG_COLOR_ID = '11'; // Bold Red
     public function __construct()
     {
         parent::__construct();
@@ -58,6 +58,10 @@ class SyncStoriesWithGoogleCalendar extends Command
         foreach ($developerIds as $developerId) {
             $this->deleteCalendar($developerId);
             $this->initializeTimeForDeveloper($developerId);
+            $scrumTickets = $this->getScrumTickets($developerId);
+            if (count($scrumTickets) > 0) {
+                $this->createEventsForTickets($scrumTickets, $developerId, StoryStatus::Todo->value);
+            }
             $todoTickets = $this->getTicketsWithStatus([StoryStatus::Todo->value, StoryStatus::Progress->value], $developerId);
             if (count($todoTickets) > 0) {
                 $this->createEventsForTickets($todoTickets, $developerId, StoryStatus::Todo->value);
@@ -170,6 +174,14 @@ class SyncStoriesWithGoogleCalendar extends Command
             $this->warn("Developer ID: {$developerId} does not have a valid email.");
         }
     }
+    public function getScrumTickets($developerId)
+    {
+        return Story::where('type', StoryType::Scrum->value)
+            ->where('creator_id', $developerId)
+            ->whereDate('created_at', today())
+            ->orderBy('created_at', 'asc')
+            ->get();
+    }
 
     public function getTicketsWithStatus($status = [], $developerId = null)
     {
@@ -217,6 +229,9 @@ class SyncStoriesWithGoogleCalendar extends Command
                     break;
                 case StoryType::Feature->value:
                     $colorId = self::FEATURE_COLOR_ID; // Blue
+                    break;
+                case StoryType::Scrum->value:
+                    $colorId = self::SCRUM_COLOR_ID; // Yellow
                     break;
             }
         } else {

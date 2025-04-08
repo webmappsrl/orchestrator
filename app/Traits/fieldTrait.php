@@ -124,11 +124,15 @@ trait fieldTrait
                     return [
                         StoryType::Feature->value =>  StoryType::Feature,
                         StoryType::Bug->value => StoryType::Bug,
-                        StoryType::Helpdesk->value => StoryType::Helpdesk
+                        StoryType::Helpdesk->value => StoryType::Helpdesk,
+                        StoryType::Scrum->value => StoryType::Scrum
                     ];
                 })
                 ->default(StoryType::Helpdesk->value)
                 ->help(__('Assign the type of the ticket.'))
+                ->readonly(function ($request) {
+                    return $this->type === StoryType::Scrum->value;
+                })
                 ->canSee(function ($request) {
                     return  !$request->user()->hasRole(UserRole::Customer);
                 });

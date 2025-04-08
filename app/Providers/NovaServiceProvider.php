@@ -56,12 +56,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             }
 
             return [
+                MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => 'qcz-incv-dem']))->openInNewTab()->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                }),
                 MenuSection::dashboard(Main::class)->icon('chart-bar')->canSee(function ($request) {
                     if ($request->user() == null)
                         return false;
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
-
                 MenuSection::make('ADMIN', [
                     MenuItem::resource(User::class),
                     MenuGroup::make(__('Reports'), [
@@ -138,9 +140,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
                     }),
                     MenuItem::externalLink('Google Calendar', 'https://calendar.google.com/calendar/u/0/r')->openInNewTab()->canSee(function ($request) {
-                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
-                    }),
-                    MenuItem::externalLink('Scrum Channel', ' https://meet.google.com/qcz-incv-dem')->openInNewTab()->canSee(function ($request) {
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
                 ])->icon('pencil')->collapsedByDefault(),

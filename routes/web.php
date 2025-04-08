@@ -5,13 +5,13 @@ use App\Jobs\TestJob;
 use App\Models\Story;
 use App\Mail\CustomerStoryFromMail;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use App\Mail\OrchestratorUserNotFound;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\DeadlineController;
 use App\Http\Controllers\ReportController;
 use App\Http\Middleware\TestRouteAccess;
+use App\Http\Controllers\ScrumController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -97,3 +97,6 @@ Route::middleware(TestRouteAccess::class)->group(function () {
 Route::get('/download-products-pdf', [\App\Http\Controllers\ProductPdfController::class, 'download'])
     ->name('products.pdf.download')
     ->middleware(['nova']);
+
+Route::get('/scrum-meeting/{meetCode}', [ScrumController::class, 'createOrUpdateScrumStory'])
+    ->middleware(['auth'])->name('scrum.meeting');
