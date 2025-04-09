@@ -29,6 +29,8 @@ class Story extends Model implements HasMedia
         'name',
         'status',
         'creator_id',
+        'type',
+        'user_id',
         'parent_id'
     ];
 

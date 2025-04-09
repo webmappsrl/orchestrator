@@ -26,10 +26,8 @@ class ScrumController extends Controller
                 'name' => $title,
                 'status' => StoryStatus::Progress->value,
                 'type' => StoryType::Scrum->value,
+                'user_id' => $user->id
             ]);
-            $scrumTicket->user_id = $user->id;
-            $scrumTicket->type = StoryType::Scrum->value;
-            $scrumTicket->save(); //TODO: capire perchè devo risalvare per cambiare il tipo
         } else {
             $scrumTicket->status = StoryStatus::Progress->value;
             $scrumTicket->save();
