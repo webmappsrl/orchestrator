@@ -198,7 +198,8 @@ class SyncStoriesWithGoogleCalendar extends Command
             }
         })
             ->whereNotNull('user_id')
-            ->whereNotNull('type');
+            ->whereNotNull('type')
+            ->where('type', '!=', StoryType::Scrum->value);
 
         // Se è stato passato un developerId, filtra i ticket in base a quello
         if (isset($developerId)) {
