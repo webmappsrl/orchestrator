@@ -562,7 +562,7 @@ trait fieldTrait
                     }
                 }
             }
-            return $tag->taggable_type == "Project" && $category == DocumentationCategory::Internal;
+            return  $category == DocumentationCategory::Internal;
         });
         $HTML = '';
         if ($tags) {
