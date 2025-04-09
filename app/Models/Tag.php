@@ -28,7 +28,11 @@ class Tag extends Model
 
     public function getResourceUrlAttribute()
     {
-        if (!$this->taggable_type || !$this->taggable_id) {
+        if (!$this->taggable_type || strtolower($this->taggable_type) === 'project') {
+            return url("resources/tags/{$this->id}"); // Ritorna l'URL del tag se il tipo manca o è 'project'
+        }
+
+        if (!$this->taggable_id) {
             return '#'; // Ritorna un link non cliccabile se non ci sono informazioni sufficienti.
         }
 
@@ -36,7 +40,6 @@ class Tag extends Model
         $baseName = class_basename($this->taggable_type);
         $resourcePath = Str::kebab(Str::plural($baseName));
 
-        $url = url("resources/{$resourcePath}/{$this->taggable_id}");
-        return $url;
+        return url("resources/{$resourcePath}/{$this->taggable_id}");
     }
 }
