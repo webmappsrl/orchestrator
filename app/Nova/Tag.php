@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\MorphTo;
 use App\Nova\Metrics\StoryTime;
+use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Fields\MorphToMany;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 
 class Tag extends Resource
 {
@@ -48,12 +50,14 @@ class Tag extends Resource
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255'),
+            MarkdownTui::make('Description')
+                ->hideFromIndex()
+                ->initialEditType(EditorType::MARKDOWN),
             MorphTo::make('Taggable')->types([
-                \App\Nova\Project::class,
                 \App\Nova\Customer::class,
                 \App\Nova\App::class,
                 \App\Nova\Documentation::class
-            ]),
+            ])->nullable(),
             MorphToMany::make('Tagged', 'tagged', \App\Nova\Story::class),
         ];
     }
