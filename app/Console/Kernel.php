@@ -25,6 +25,11 @@ class Kernel extends ConsoleKernel
             ->after(function () {
                 Log::info('story:progress-to-todo command finished');
             });
+
+        $schedule->command('story:scrum-to-done')
+            ->timezone('Europe/Rome')
+            ->dailyAt('16:00');
+
         $schedule->command('sync:stories-calendar')
             ->timezone('Europe/Rome')
             ->dailyAt('07:45')
