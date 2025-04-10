@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
 use App\Enums\UserRole;
+use Illuminate\Support\Facades\Http;
 
 class StoryObserver
 {
@@ -29,6 +30,7 @@ class StoryObserver
     {
         $this->syncStoryCalendarIfStatusChanged($story);
         $this->createStoryLog($story);
+        $this->notifyDeveloperIfIdle($story);
     }
 
     /**
@@ -116,6 +118,36 @@ class StoryObserver
             ]);
             $story->saveQuietly();
             StoryTimeService::run($storyLog->story);
+        }
+    }
+
+    private function notifyDeveloperIfIdle(Story $story): void
+    {
+        $developer = $story->user;
+        if (!$developer) {
+            return;
+        }
+
+        // Controllo se l'orario corrente è >= 15:30; se sì, non dispatcho il job
+        if (now()->greaterThanOrEqualTo(now()->setTime(15, 30))) {
+            return;
+        }
+
+        // Verifica se ci sono storie di tipo 'scrum' per il developer
+        $hasScrum = \App\Models\Story::where('user_id', $developer->id)
+            ->where('type', 'scrum')
+            ->exists();
+        if (!$hasScrum) {
+            return;
+        }
+
+        // Controllo se ci sono storie in stato 'Progress'
+        $hasProgress = \App\Models\Story::where('user_id', $developer->id)
+            ->where('status', \App\Enums\StoryStatus::Progress->value)
+            ->exists();
+
+        if (!$hasProgress) {
+            \App\Jobs\CheckDeveloperProgressJob::dispatch($developer->id)->delay(now()->addMinutes(30));
         }
     }
 
