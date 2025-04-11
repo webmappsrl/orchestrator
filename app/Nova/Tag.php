@@ -60,12 +60,11 @@ class Tag extends Resource
             Text::make('Sal')->resolveUsing(function () {
                 $totalHours = $this->getTotalHoursAttribute(); // Calcola la somma delle ore
                 $estimate = $this->estimate; // Ottieni il valore stimato
+                $color = $this->isClosed() ? 'green' : 'orange';
 
                 if ($totalHours && $estimate) {
                     // Calcola la percentuale
                     $salPercentage = $this->calculateSalPercentage();
-                    $status = $this->isClosed() ? 'Closed' : 'Open';
-                    $color = $this->isClosed() ? 'green' : 'orange';
                     return  <<<HTML
                     <a
                         style="color:{$color}; font-weight:bold;">
@@ -73,8 +72,12 @@ class Tag extends Resource
                     </a> <br>
                     HTML;
                 }
-
-                return "{$totalHours}/0"; // Restituisce il formato "somma/Dato mancante"
+                return  <<<HTML
+                <a
+                    style="color:{$color}; font-weight:bold;">
+                     {$totalHours} / -
+                </a> <br>
+                HTML;
             })->asHtml()->onlyOnIndex(),
             MarkdownTui::make('Description')
                 ->hideFromIndex()
