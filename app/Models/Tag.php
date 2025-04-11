@@ -31,14 +31,19 @@ class Tag extends Model
         return round($this->tagged()->sum('hours'), 2); // Somma delle ore delle storie associate arrotondata a due cifre
     }
 
-    public function calculateSalPercentage($actual, $estimated)
+    public function calculateSalPercentage()
     {
+        $actual = $this->getTotalHoursAttribute();
+        $estimated = $this->estimate;
+
         if ($actual && $estimated) {
-            return ($actual / $estimated) * 100; // Calcola la percentuale se entrambi i valori sono presenti
+            return round(($actual / $estimated) * 100, 2); // Calcola la percentuale se entrambi i valori sono presenti
         }
 
         return $actual; // Restituisci solo il valore di actual se estimated non è presente
     }
+
+
 
     public function getTaggableTypeAttribute()
     {
@@ -62,5 +67,9 @@ class Tag extends Model
         $resourcePath = Str::kebab(Str::plural($baseName));
 
         return url("resources/{$resourcePath}/{$this->taggable_id}");
+    }
+    public function isClosed()
+    {
+        return !$this->tagged()->whereNotIn('status', ['released', 'done'])->exists();
     }
 }

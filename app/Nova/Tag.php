@@ -11,6 +11,7 @@ use App\Nova\Metrics\TagSal;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Fields\MorphToMany;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use Laravel\Nova\Fields\Boolean;
 
 class Tag extends Resource
 {
@@ -62,12 +63,19 @@ class Tag extends Resource
 
                 if ($totalHours && $estimate) {
                     // Calcola la percentuale
-                    $salPercentage = ($totalHours / $estimate) * 100;
-                    return "{$salPercentage}%"; // Restituisce la percentuale
+                    $salPercentage = $this->calculateSalPercentage();
+                    $status = $this->isClosed() ? 'Closed' : 'Open';
+                    $color = $this->isClosed() ? 'green' : 'orange';
+                    return  <<<HTML
+                    <a
+                        style="color:{$color}; font-weight:bold;">
+                        {$salPercentage}%
+                    </a> <br>
+                    HTML;
                 }
 
                 return "{$totalHours}/0"; // Restituisce il formato "somma/Dato mancante"
-            })->onlyOnIndex(),
+            })->asHtml()->onlyOnIndex(),
             MarkdownTui::make('Description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
