@@ -5,8 +5,9 @@ namespace App\Nova;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\MorphTo;
-use App\Nova\Metrics\StoryTime;
+use App\Nova\Metrics\TagSal;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Fields\MorphToMany;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
@@ -50,6 +51,23 @@ class Tag extends Resource
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255'),
+            Number::make('Estimate (Hours)', 'estimate') // Specifica che è in ore
+                ->min(0) // Imposta un valore minimo di 0
+                ->step(
+                    1,  // Permette incrementi di 0.5 ore
+                )->onlyOnForms(),
+            Text::make('Sal')->resolveUsing(function () {
+                $totalHours = $this->getTotalHoursAttribute(); // Calcola la somma delle ore
+                $estimate = $this->estimate; // Ottieni il valore stimato
+
+                if ($totalHours && $estimate) {
+                    // Calcola la percentuale
+                    $salPercentage = ($totalHours / $estimate) * 100;
+                    return "{$salPercentage}%"; // Restituisce la percentuale
+                }
+
+                return "{$totalHours}/0"; // Restituisce il formato "somma/Dato mancante"
+            })->onlyOnIndex(),
             MarkdownTui::make('Description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
@@ -57,7 +75,7 @@ class Tag extends Resource
                 \App\Nova\Customer::class,
                 \App\Nova\App::class,
                 \App\Nova\Documentation::class
-            ])->nullable(),
+            ])->nullable()->hideFromIndex(),
             MorphToMany::make('Tagged', 'tagged', \App\Nova\Story::class),
         ];
     }
@@ -71,7 +89,7 @@ class Tag extends Resource
     public function cards(Request $request)
     {
         return [
-            (new StoryTime())->onlyOnDetail()
+            (new TagSal())->onlyOnDetail()
         ];
     }
 

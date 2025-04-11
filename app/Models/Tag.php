@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class Tag extends Model
 {
-    protected $fillable = ['name', 'taggable_type', 'taggable_id'];
+    protected $fillable = ['name', 'taggable_type', 'taggable_id', 'estimate'];
 
     public function taggable()
     {
@@ -17,6 +17,27 @@ class Tag extends Model
     public function tagged()
     {
         return $this->morphedByMany(Story::class, 'taggable');
+    }
+
+    public function getSalAttribute()
+    {
+        // Calcola la somma delle ore dalle story associate
+        $totalHours = $this->getTotalHoursAttribute(); // Usa la relazione 'tagged' per ottenere le story
+        return $this->estimate ? ($totalHours / $this->estimate) * 100 : 0; // Calcola la percentuale di avanzamento
+    }
+
+    public function getTotalHoursAttribute()
+    {
+        return round($this->tagged()->sum('hours'), 2); // Somma delle ore delle storie associate arrotondata a due cifre
+    }
+
+    public function calculateSalPercentage($actual, $estimated)
+    {
+        if ($actual && $estimated) {
+            return ($actual / $estimated) * 100; // Calcola la percentuale se entrambi i valori sono presenti
+        }
+
+        return $actual; // Restituisci solo il valore di actual se estimated non è presente
     }
 
     public function getTaggableTypeAttribute()
