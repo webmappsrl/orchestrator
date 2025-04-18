@@ -26,7 +26,8 @@ class ScrumController extends Controller
                 'name' => $title,
                 'status' => StoryStatus::Progress->value,
                 'type' => StoryType::Scrum->value,
-                'user_id' => $user->id
+                'user_id' => $user->id,
+                'hours' => 0
             ]);
         } else {
             $scrumTicket->status = StoryStatus::Progress->value;
