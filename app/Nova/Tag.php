@@ -66,19 +66,12 @@ class Tag extends Resource
                     // Calcola la percentuale
                     $salPercentage = $this->calculateSalPercentage();
                     return  <<<HTML
-                    <a
-                        style="color:{$color}; font-weight:bold;">
-                        {$salPercentage}%
-                    </a>   <a
-                    style="color:{$color}; font-weight:bold;">
-                     {$totalHours} / $estimate </a> <br>
+                    <a style="color:{$color}; font-weight:bold;"> {$totalHours} / $estimate </a> 
+                    <a style="color:{$color}; font-weight:bold;"> [{$salPercentage}%] </a>
                     HTML;
                 }
                 return  <<<HTML
-                <a
-                    style="color:{$color}; font-weight:bold;">
-                     {$totalHours} / -
-                </a> <br>
+                <a style="color:{$color}; font-weight:bold;"> {$totalHours} / - </a> 
                 HTML;
             })->asHtml()->onlyOnIndex(),
             MarkdownTui::make('Description')
