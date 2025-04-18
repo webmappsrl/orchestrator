@@ -69,7 +69,9 @@ class Tag extends Resource
                     <a
                         style="color:{$color}; font-weight:bold;">
                         {$salPercentage}%
-                    </a> <br>
+                    </a>   <a
+                    style="color:{$color}; font-weight:bold;">
+                     {$totalHours} / $estimate </a> <br>
                     HTML;
                 }
                 return  <<<HTML
