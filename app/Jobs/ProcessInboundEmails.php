@@ -89,7 +89,12 @@ class ProcessInboundEmails implements ShouldQueue
 
     private function cleanEmailBody($message)
     {
-        $body = $message->hasTextBody() ? $message->getTextBody() : $message->getBodies();
+        if ($message->hasTextBody()) {
+            $body = $message->getTextBody();
+        } else {
+            $bodies = $message->getBodies();
+            $body = is_array($bodies) ? implode("\n", $bodies) : $bodies;
+        }
         $body = preg_replace('/---.*?---/s', '', $body);
         return trim($body);
     }
