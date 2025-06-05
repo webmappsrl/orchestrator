@@ -4,24 +4,21 @@ namespace App\Nova\Actions;
 
 use App\Models\User;
 use App\Enums\UserRole;
-use App\Models\Project;
-use App\Models\Deadline;
 use App\Enums\StoryStatus;
-use App\Enums\StoryPriority;
-use App\Enums\DeadlineStatus;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Carbon;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Actions\Action;
 use Illuminate\Support\Collection;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\MultiSelect;
 use Laravel\Nova\Fields\ActionFields;
 use Illuminate\Queue\InteractsWithQueue;
-use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Datomatic\NovaMarkdownTui\Enums\EditorType;
+use App\Nova\Tag as novaTag;
 use App\Enums\StoryType;
+use App\Nova\Tag;
+use Laravel\Nova\Fields\MultiSelect;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
+
 class EditStories extends Action
 {
     use InteractsWithQueue, Queueable;
@@ -45,7 +42,7 @@ class EditStories extends Action
         foreach ($models as $model) {
             if (isset($fields['type'])) {
                 $model->type = $fields['type'];
-            }   
+            }
             if (isset($fields['status'])) {
                 $model->status = $fields['status'];
             }
@@ -58,6 +55,11 @@ class EditStories extends Action
             if (isset($fields['tester'])) {
                 $model->tester_id = $fields['tester'];
             }
+
+            if (isset($fields['tags']) && !empty($fields['tags'])) {
+                $model->tags()->sync($fields['tags']);
+            }
+
             if (isset($fields['deadlines']) && !empty($fields['deadlines'])) {
                 $model->deadlines()->sync($fields['deadlines']);
             }
@@ -81,7 +83,7 @@ class EditStories extends Action
     {
         $storyStatusOptions =
             collect(StoryStatus::cases())->mapWithKeys(fn($status) => [$status->value => $status]);
-        $storyTypeOptions = 
+        $storyTypeOptions =
             collect(StoryType::cases())->mapWithKeys(fn($type) => [$type->value => $type]);
         return [
             Select::make('Type')->options($storyTypeOptions),
@@ -89,37 +91,10 @@ class EditStories extends Action
             Select::make('Assigned To')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             Select::make('Tester')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             Select::make('Creator')->options(User::whereJsonContains('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
-            MultiSelect::make('Deadlines')
-                ->options(
-                    function () {
-                        $deadlines = Deadline::whereNotIn('status', [DeadlineStatus::Expired, DeadlineStatus::Done])->get();
-                        $options = [];
-                        //order the not expired deadlines by descending due date
-                        $deadlines = $deadlines->sortByDesc('due_date');
-                        foreach ($deadlines as $deadline) {
-                            if (isset($deadline->customer) && $deadline->customer != null) {
-                                $customer = $deadline->customer;
-                                //format the due_date
-                                $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
-                                //add the customer name to the option label
-                                $optionLabel = $formattedDate . '    ' . $customer->name . ' ' . $deadline->title;
-                            } else {
-                                $formattedDate = Carbon::parse($deadline->due_date)->format('Y-m-d');
-                                $optionLabel = $formattedDate . '    ' . $deadline->title;
-                            }
-                            $options[$deadline->id] = $optionLabel;
-                        }
-                        return $options;
-                    }
-                )->displayUsingLabels(),
-            Select::make('Project')->options(Project::all()->pluck('name', 'id'))
-                ->displayUsingLabels()
-                ->searchable(),
-            Select::make('Priority', 'priority')->options([
-                StoryPriority::Low->value => 'Low',
-                StoryPriority::Medium->value => 'Medium',
-                StoryPriority::High->value => 'High',
-            ])->default($this->priority ?? StoryPriority::Low->value),
+            MultiSelect::make('Tags', 'tags')
+                ->options(\App\Models\Tag::all()->pluck('name', 'id'))
+                ->placeholder('Seleziona i tag...')
+                ->nullable(),
         ];
     }
 
