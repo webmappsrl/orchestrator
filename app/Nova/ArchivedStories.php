@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Enums\StoryStatus;
 use Illuminate\Http\Request;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Actions\DuplicateStory;
 
 class ArchivedStories extends Story
 {
@@ -55,6 +56,13 @@ class ArchivedStories extends Story
             (new Metrics\StoriesByField('type', 'Type', $query))->width('1/3'),
             (new Metrics\StoriesByUser('creator_id', 'Customer', $query))->width('1/3'),
             (new Metrics\StoriesByUser('user_id', 'Assigned',  $query))->width('1/3'),
+        ];
+    }
+
+    public function actions(NovaRequest $request)
+    {
+        return [
+            (new DuplicateStory)->showInline()
         ];
     }
 }
