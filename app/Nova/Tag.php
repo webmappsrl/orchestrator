@@ -77,6 +77,10 @@ class Tag extends Resource
             MarkdownTui::make('Description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
+            Number::make('Estimate', 'estimate')
+                ->min(0)
+                ->step(1)
+                ->onlyOnDetail(),
             MorphTo::make('Taggable')->types([
                 \App\Nova\Customer::class,
                 \App\Nova\App::class,
