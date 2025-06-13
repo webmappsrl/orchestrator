@@ -58,25 +58,37 @@ class Tag extends Resource
                     1,  // Permette incrementi di 0.5 ore
                 )->onlyOnForms(),
             Text::make('Sal')->resolveUsing(function () {
-                $totalHours = $this->getTotalHoursAttribute(); // Calcola la somma delle ore
-                $estimate = $this->estimate; // Ottieni il valore stimato
+                $empty = __('Empty');
+                $totalHours = $this->getTotalHoursAttribute() ?? $empty; // Calcola la somma delle ore
+                $estimate = $this->estimate ?? $empty; // Ottieni il valore stimato
                 $color = $this->isClosed() ? 'green' : 'orange';
+                $salPercentage = $this->calculateSalPercentage();
+                $trend = $salPercentage >= 100 ? '😡' : '😊';
 
-                if ($totalHours && $estimate) {
-                    // Calcola la percentuale
-                    $salPercentage = $this->calculateSalPercentage();
+                if (!$this->getTotalHoursAttribute() && !$this->estimate) {
                     return  <<<HTML
-                    <a style="color:{$color}; font-weight:bold;"> {$totalHours} / $estimate </a> 
-                    <a style="color:{$color}; font-weight:bold;"> [{$salPercentage}%] </a>
+                        <a style="font-weight:bold;"> $empty </a> 
                     HTML;
                 }
+                if (!$this->getTotalHoursAttribute() || !$this->estimate) {
+                    return  <<<HTML
+                        <a style="font-weight:bold;"> $totalHours / $estimate </a> 
+                    HTML;
+                }
+
                 return  <<<HTML
-                <a style="color:{$color}; font-weight:bold;"> {$totalHours} / - </a> 
+                    $trend
+                    <a style="color:{$color}; font-weight:bold;"> $totalHours / $estimate </a> 
+                    <a style="color:{$color}; font-weight:bold;"> [$salPercentage%] </a>
                 HTML;
             })->asHtml()->onlyOnIndex(),
             MarkdownTui::make('Description')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
+            Number::make('Estimate', 'estimate')
+                ->min(0)
+                ->step(1)
+                ->onlyOnDetail(),
             MorphTo::make('Taggable')->types([
                 \App\Nova\Customer::class,
                 \App\Nova\App::class,
