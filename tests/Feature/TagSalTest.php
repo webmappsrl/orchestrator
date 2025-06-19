@@ -12,7 +12,11 @@ use Tests\TestCase;
 class TagSalTest extends TestCase
 {
     use DatabaseTransactions;
-    public $empty = __('Empty');
+
+    protected function emptyLabel(): string
+    {
+        return __('Empty');
+    }
 
     // Helper: create a Nova Tag resource and get the 'Sal' field for a tag
     private function getSalField(Tag $tag)
@@ -55,7 +59,7 @@ class TagSalTest extends TestCase
         $this->assertTrue($totalHours === null || $totalHours === 0.0);
 
         $salHtml = $this->resolveSalField($tag);
-        $this->assertStringContainsString("<a style=\"font-weight:bold;\"> $this->empty </a>", $salHtml);
+        $this->assertStringContainsString("<a style=\"font-weight:bold;\"> {$this->emptyLabel()} </a>", $salHtml);
     }
 
     public function test_sal_shows_total_hours_with_empty_estimate()
@@ -63,7 +67,7 @@ class TagSalTest extends TestCase
         $tag = $this->createTagWithStories(null, [15.00, 20.87]);
 
         $salHtml = $this->resolveSalField($tag);
-        $this->assertStringContainsString("<a style=\"font-weight:bold;\"> 35.87 / $this->empty </a>", $salHtml);
+        $this->assertStringContainsString("<a style=\"font-weight:bold;\"> 35.87 / {$this->emptyLabel()} </a>", $salHtml);
     }
 
     public function test_sal_shows_estimate_with_empty_total()
@@ -71,7 +75,7 @@ class TagSalTest extends TestCase
         $tag = $this->createTagWithStories(32);
 
         $salHtml = $this->resolveSalField($tag);
-        $this->assertStringContainsString("<a style=\"font-weight:bold;\"> $this->empty / 32 </a>", $salHtml);
+        $this->assertStringContainsString("<a style=\"font-weight:bold;\"> {$this->emptyLabel()} / 32 </a>", $salHtml);
     }
 
     public function test_sal_shows_total_and_estimate_with_percentage()
