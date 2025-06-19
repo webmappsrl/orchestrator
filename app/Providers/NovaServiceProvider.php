@@ -59,6 +59,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => 'qcz-incv-dem']))->openInNewTab()->canSee(function ($request) {
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
+                MenuItem::externalLink('MEET', 'https://meet.google.com/qcz-incv-dem')->openInNewTab()->canSee(function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                }),
                 MenuSection::dashboard(Main::class)->icon('chart-bar')->canSee(function ($request) {
                     if ($request->user() == null)
                         return false;
