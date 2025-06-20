@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Tag extends Model
 {
+    use HasFactory;
     protected $fillable = ['name', 'taggable_type', 'taggable_id', 'estimate'];
 
     public function taggable()
@@ -28,7 +30,7 @@ class Tag extends Model
 
     public function getTotalHoursAttribute()
     {
-        if(!$this->tagged()->exists()) {
+        if (!$this->tagged()->exists()) {
             return null; // Se non ci sono storie associate
         }
         return round($this->tagged()->sum('hours'), 2); // Somma delle ore delle storie associate arrotondata a due cifre
