@@ -3,6 +3,7 @@
 namespace App\Nova\Actions;
 
 use App\Models\Story;
+use App\Enums\StoryStatus;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -10,6 +11,8 @@ use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class DuplicateStory extends Action
 {
@@ -26,20 +29,20 @@ class DuplicateStory extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
+        $user = Auth::user();
+
         foreach ($models as $story) {
+            $story->user_id = $user->id;
             $newStory = Story::create($story->toArray());
-            //createQuietly
-    
             $newStory->status = StoryStatus::New->value;
+            $newStory->save();
+
             // belongsTo
             $newStory->developer()->associate($story->developer);
-            $newStory->creator()->associate($story->creator);
+            //$newStory->creator()->associate($story->creator);
             $newStory->tester()->associate($story->tester);
-            $newStory->project()->associate($story->project);
-            $newStory->epic()->associate($story->epic);
             $newStory->parentStory()->associate($story->parentStory);
-            $newStory->user()->associate($story->user);
-    
+
             // belongsToMany
             $participantsIds = $story->participants->pluck('id')->toArray();
             $newStory->participants()->sync($participantsIds);
@@ -52,17 +55,14 @@ class DuplicateStory extends Action
 
             $deadlinesIds = $story->deadlines->pluck('id')->toArray();
             $newStory->deadlines()->sync($deadlinesIds);
-
-            $newStory->save();
         }
-    
+
         if ($models->count() === 1 && isset($newStory)) {
             $resourceName = 'developer-stories';
             $newModelId = $newStory->id;
             $editUrl = url("/resources/{$resourceName}/{$newModelId}/edit");
             return Action::openInNewTab($editUrl);
         }
-        
     }
 
     /**

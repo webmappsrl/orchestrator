@@ -28,10 +28,13 @@ class Story extends Model implements HasMedia
     protected $fillable = [
         'name',
         'status',
+        'description',
         'creator_id',
-        'type',
+        'tester_id',
+        'developer_id',
         'user_id',
-        'parent_id'
+        'type',
+        'parent_id',
     ];
 
     public static function boot()
