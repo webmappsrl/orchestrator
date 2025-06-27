@@ -13,9 +13,28 @@ use App\Nova\Metrics\TotCustomers;
 use App\Nova\Metrics\TotMilestones;
 use Laravel\Nova\Dashboards\Main as Dashboard;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use App\Services\StoryFetcher;
+use Illuminate\Support\Facades\Log;
 
 class Main extends Dashboard
 {
+    /*---Helper---*/
+    protected function storyCard(string $status, string $label, $user)
+    {
+        $stories = StoryFetcher::byStatusAndUser($status, $user);
+        Log::debug('Stories full data: ' . json_encode($stories, JSON_PRETTY_PRINT));
+
+        return (new HtmlCard)
+            ->width('1/3')
+            ->view('story-viewer')
+            ->withMeta([
+                'stories' => $stories,
+                'statusLabel' => $label,
+            ])
+            ->center(true);
+    }
+
+
     /**
      * Get the cards for the dashboard.
      *
@@ -23,8 +42,9 @@ class Main extends Dashboard
      */
     public function cards()
     {
-        return [
+        $user = auth()->user();
 
+        return [
 
             (new TotCustomers)->canSee(function ($request) {
                 $user = $request->user();
@@ -64,12 +84,12 @@ class Main extends Dashboard
             (new HtmlCard)->width('1/3')->view('favorite')->canSee(function ($request) {
                 $user = $request->user();
                 return $user->hasRole(UserRole::Developer);
-            })->center(true)
+            })->center(true),
 
-
-
-
-
+            $this->storyCard('todo', __('To Do'), $user),
+            $this->storyCard('progress', __('Progress'), $user),
+            $this->storyCard('tobetested', __('Test'), $user),
+            $this->storyCard('tested', __('Tested'), $user),
 
         ];
     }
