@@ -35,11 +35,10 @@ class DuplicateStory extends Action
             $story->user_id = $user->id;
             $newStory = Story::create($story->toArray());
             $newStory->status = StoryStatus::New->value;
-            $newStory->save();
+            $newStory->saveQuietly();
 
             // belongsTo
             $newStory->developer()->associate($story->developer);
-            //$newStory->creator()->associate($story->creator);
             $newStory->tester()->associate($story->tester);
             $newStory->parentStory()->associate($story->parentStory);
 
@@ -53,8 +52,7 @@ class DuplicateStory extends Action
             $tagIds = $story->tags->pluck('id')->toArray();
             $newStory->tags()->sync($tagIds);
 
-            $deadlinesIds = $story->deadlines->pluck('id')->toArray();
-            $newStory->deadlines()->sync($deadlinesIds);
+            $newStory->save();
         }
 
         if ($models->count() === 1 && isset($newStory)) {
