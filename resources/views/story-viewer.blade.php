@@ -1,75 +1,156 @@
-<div class="story-viewer-card">
-    <h3>Visualizzatore Storie</h3>
-    
-    @if(isset($stories) && count($stories) > 0)
-        <div class="stories-list">
-            @foreach($stories as $story)
-                <div class="story-item">
-                    <h4>Story #{{ $story->id }}</h4>
-                    <p><strong>Titolo:</strong> {{ $story->name }}</p>
-                    <p><strong>Status:</strong> {{ $story->status }}</p>
-                    <p><strong>Creata il:</strong> {{ $story->created_at ? $story->created_at->format('d/m/Y H:i') : 'N/A' }}</p>
-                    
-                    @if($story->description)
-                        <p><strong>Descrizione:</strong></p>
-                        <div class="description">
-                            {!! Str::limit($story->description, 200) !!}
+@php
+    $urlNova = url('/resources/assigned-to-me-stories');
+@endphp
+
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ $statusLabel }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            color: #343434ad;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        table {
+            background-color: #fff;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        th {
+            background-color: #2FBDA5;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 5px;
+            text-align: left;
+        }
+
+        td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>{{ $statusLabel }}</h1>
+
+    <table>
+        <colgroup>
+            <col style="width: 50px;">
+            <col style="width: 150px;">
+            <col style="width: 200px;">
+            <col style="width: 400px;">
+            <col style="width: 100px;">
+            <col style="width: 100px;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>{{ __('ID') }}</th>
+                <th>{{ __('Title') }}</th>
+                <th>{{ __('Tags') }}</th>
+                <th>{{ __('Description') }}</th>
+                <th>{{ __('SAL') }}</th>
+                <th>{{ __('Created At') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($stories as $story)
+                <tr onclick="window.location='{{ $urlNova . '/' . $story->id }}';" style="cursor: pointer;">
+                    <td>
+                        <div class="text-500 font-bold" style="color:#2FBDA5;">{{ $story->id }}</div>
+                    </td>
+                    @php
+                        $typeColors = [
+                            'Bug' => 'color:red',
+                            'Help desk' => 'color:green',
+                            'Feature' => 'color:blue',
+                        ];
+                        $type = ucfirst(strtolower(trim($story->type ?? '')));
+                        $typeColorStyle = $typeColors[$type] ?? 'color:gray';
+                    @endphp
+                    <td>
+                        <div class="text-xs text-500 font-bold" style="{{ $typeColorStyle }}">
+                            {{ $story->type ?? 'No Type' }}
                         </div>
-                    @endif
-                    
-                    @if($story->customer_request)
-                        <p><strong>Richiesta Cliente:</strong></p>
-                        <div class="customer-request">
-                            {!! Str::limit($story->customer_request, 200) !!}
+                        <div class="text-gray-500">
+                            {{ $story->name }}
                         </div>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-    @else
-        <p>Nessuna storia disponibile</p>
-    @endif
-    
-    @if(isset($statusLabel))
-        <div class="status-info">
-            <p><strong>Status Label:</strong> {{ $statusLabel }}</p>
-        </div>
-    @endif
-</div>
+                    </td>
+                    <td>
+                        <div class="text-gray-500 font-bold">
+                            @forelse ($story->tags as $tags)
+                                <div class="text-yellow-500 font-bold">
+                                    {{ $tags->name }}
+                                </div>
+                            @empty
+                                <span class="text-gray-400 italic">No Tags</span>
+                            @endforelse
+                        </div>
+                    </td>
+                    <td>
+                        <div style="max-height: 100px; overflow-y: auto; padding-right: 5px;">
+                            @if ($story->description)
+                                {!! $story->description !!}
+                            @elseif($story->customer_request)
+                                <div class="max-height: 100px; overflow-y: auto; padding-right: 5px;">
+                                    {!! $story->customer_request !!}
+                                </div>
+                            @else
+                                <span class="text-gray-400 italic">No Description.</span>
+                            @endif
+                        </div>
+                    </td>
+                    <td>
+                        <div class="text-gray-500">
+                            @if ($story->hours || $story->effective_hours)
+                                {{ number_format($story->hours, 2) }} /
+                                {{ number_format($story->estimated_hours, 0) }}
+                            @else
+                                <span class="text-gray-500">0 / 0</span>
+                            @endif
+                        </div>
+                    </td>
+                    <td>
+                        @if ($story->created_at)
+                            <div class="text-gray-500">{{ $story->created_at->format('d/m/y') }}</div>
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6">No Ticket Available.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
 
-<style>
-.story-viewer-card {
-    padding: 20px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    font-family: Arial, sans-serif;
-}
+</body>
 
-.story-item {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: white;
-    border-radius: 5px;
-    border-left: 4px solid #007bff;
-}
-
-.story-item h4 {
-    margin-top: 0;
-    color: #007bff;
-}
-
-.description, .customer-request {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 4px;
-    margin-top: 5px;
-}
-
-.status-info {
-    margin-top: 15px;
-    padding: 10px;
-    background-color: #e9ecef;
-    border-radius: 4px;
-}
-</style> 
+</html>

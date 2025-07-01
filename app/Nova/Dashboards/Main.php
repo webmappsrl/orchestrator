@@ -19,15 +19,14 @@ use Illuminate\Support\Facades\Log;
 class Main extends Dashboard
 {
     /*---Helper---*/
-    protected function storyCard(string $status, string $label, $user)
+    protected function storyCard(string $status, string $label, $user, $width = '1/3')
     {
         $stories = StoryFetcher::byStatusAndUser($status, $user);
         Log::debug('Stories full data: ' . json_encode($stories, JSON_PRETTY_PRINT));
 
         return (new HtmlCard)
-            ->width('1/3')
-            ->view('story-viewer')
-            ->withMeta([
+            ->width($width)
+            ->view('story-viewer', [
                 'stories' => $stories,
                 'statusLabel' => $label,
             ])
@@ -45,6 +44,10 @@ class Main extends Dashboard
         $user = auth()->user();
 
         return [
+            $this->storyCard('progress', __('Progress'), $user, 'full'),
+            $this->storyCard('todo', __('To Do'), $user, 'full'),
+            $this->storyCard('testing', __('Test'), $user, '1/2'),
+            $this->storyCard('tested', __('Tested'), $user, '1/2'),
 
             (new TotCustomers)->canSee(function ($request) {
                 $user = $request->user();
@@ -58,12 +61,12 @@ class Main extends Dashboard
 
             (new TotMilestones)->canSee(function ($request) {
                 $user = $request->user();
-                return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
+                return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Admin);
             }),
 
             (new TotEpics)->canSee(function ($request) {
                 $user = $request->user();
-                return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
+                return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Admin);
             }),
 
             (new TotStories)->canSee(function ($request) {
@@ -83,14 +86,8 @@ class Main extends Dashboard
 
             (new HtmlCard)->width('1/3')->view('favorite')->canSee(function ($request) {
                 $user = $request->user();
-                return $user->hasRole(UserRole::Developer);
+                return $user->hasRole(UserRole::Admin);
             })->center(true),
-
-            $this->storyCard('todo', __('To Do'), $user),
-            $this->storyCard('progress', __('Progress'), $user),
-            $this->storyCard('tobetested', __('Test'), $user),
-            $this->storyCard('tested', __('Tested'), $user),
-
         ];
     }
 }
