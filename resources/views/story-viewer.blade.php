@@ -97,7 +97,7 @@
                     @endphp
                     <td>
                         <div class="text-xs text-500 font-bold" style="{{ $typeColorStyle }}">
-                            {{ $story->type ?? 'No Type' }}
+                            {{ $story->type ?? __('No Type') }}
                         </div>
                         <div class="text-gray-500">
                             {{ $story->name }}
@@ -110,7 +110,7 @@
                                     {{ $tags->name }}
                                 </div>
                             @empty
-                                <span class="text-gray-400 italic">No Tags</span>
+                                <span class="text-gray-400 italic">{{ __('No Tags') }}</span>
                             @endforelse
                         </div>
                     </td>
@@ -123,7 +123,7 @@
                                     {!! $story->customer_request !!}
                                 </div>
                             @else
-                                <span class="text-gray-400 italic">No Description.</span>
+                                <span class="text-gray-400 italic">{{ __('No Description') }}</span>
                             @endif
                         </div>
                     </td>
@@ -145,7 +145,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6">No Ticket Available.</td>
+                    <td colspan="6"> {{ __('No Ticket Available') }}</td>
                 </tr>
             @endforelse
         </tbody>
