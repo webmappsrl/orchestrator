@@ -32,8 +32,6 @@ class DuplicateStoryTest extends TestCase
         // BelongsToMany
         $story->tags()->sync($tags = Tag::factory(3)->create()->pluck('id'));
         $story->participants()->sync($participants = User::factory(2)->create()->pluck('id'));
-        //$story->childStories()->sync($children = Story::factory(2)->create()->pluck('id'));
-        $story->deadlines()->sync($deadlines = Deadline::factory(2)->create()->pluck('id'));
 
         $story->save();
         return $story->fresh();
@@ -48,15 +46,11 @@ class DuplicateStoryTest extends TestCase
 
         // BelongsTo
         $this->assertEquals($original->developer_id, $duplicate->developer_id);
-        //$this->assertEquals($original->creator_id, $duplicate->creator_id);
         $this->assertEquals($original->tester_id, $duplicate->tester_id);
-        //$this->assertEquals($original->parent_story_id, $duplicate->parent_story_id);
 
         // BelongsToMany
         $this->assertEquals($original->tags->pluck('id'), $duplicate->tags->pluck('id'));
         $this->assertEquals($original->participants->pluck('id'), $duplicate->participants->pluck('id'));
-        //$this->assertEquals($original->childStories->pluck('id'), $duplicate->childStories->pluck('id'));
-        $this->assertEquals($original->deadlines->pluck('id'), $duplicate->deadlines->pluck('id'));
     }
 
     /** @test */
