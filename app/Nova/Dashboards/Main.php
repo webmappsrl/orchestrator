@@ -5,6 +5,7 @@ namespace App\Nova\Dashboards;
 use App\Models\Story;
 use App\Enums\StoryType;
 use App\Enums\UserRole;
+use App\Enums\StoryStatus;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Nova\Dashboards\Main as Dashboard;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
@@ -19,9 +20,18 @@ class Main extends Dashboard
             ->whereNotNull('user_id')
             ->whereNotNull('type')
             ->where('type', '!=', StoryType::Scrum->value)
-            ->where(function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                    ->orWhere('tester_id', $user->id);
+            ->when(in_array($status, [
+                StoryStatus::Todo->value,
+                StoryStatus::Progress->value,
+                StoryStatus::Tested->value,
+                StoryStatus::Waiting->value,
+            ]), function ($q) use ($user) {
+                return $q->where('user_id', $user->id);
+            })
+            ->when(in_array($status, [
+                StoryStatus::Test->value,
+            ]), function ($q) use ($user) {
+                return $q->where('tester_id', $user->id);
             })
             ->get();
     }
