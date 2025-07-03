@@ -82,7 +82,7 @@
         </thead>
         <tbody>
             @forelse($stories as $story)
-                <tr onclick="window.location='{{ $urlNova . '/' . $story->id }}';" style="cursor: pointer;">
+                <tr onclick="window.open('{{ $urlNova . '/' . $story->id }}', '_blank');" style="cursor: pointer;">
                     <td>
                         <div class="text-500 font-bold" style="color:#2FBDA5;">{{ $story->id }}</div>
                     </td>
