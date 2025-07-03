@@ -23,12 +23,13 @@ class Main extends Dashboard
             ->when(in_array($status, [
                 StoryStatus::Todo->value,
                 StoryStatus::Progress->value,
+                StoryStatus::Tested->value,
+                StoryStatus::Waiting->value,
             ]), function ($q) use ($user) {
                 return $q->where('user_id', $user->id);
             })
             ->when(in_array($status, [
                 StoryStatus::Test->value,
-                StoryStatus::Tested->value,
             ]), function ($q) use ($user) {
                 return $q->where('tester_id', $user->id);
             })
