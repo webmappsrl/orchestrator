@@ -47,7 +47,11 @@ class ReportController extends Controller
         $tab9TagType = $this->tab9TagType($year, $availableQuarters, $tags, $customers);
         $tab10DevType = $this->tab10DevType($year, $availableQuarters, $developers);
 
-        return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType', 'tab10DevType'));
+        $tab11TagCustomer = $this->tab11TagCustomer($year, $availableQuarters, $tags, $customers);
+        $tab12CustomerTag = $this->tab12CustomerTag($year, $availableQuarters, $tags, $customers);
+        $tab13TagType = $this->tab13TagType($year, $availableQuarters, $tags, $customers);
+
+        return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType', 'tab10DevType', 'tab11TagCustomer', 'tab12CustomerTag', 'tab13TagType'));
     }
     private function generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn)
     {
@@ -134,17 +138,33 @@ class ReportController extends Controller
     }
     private function getTags($year, $availableQuarters)
     {
+        Log::info('DEBUG year', ['year' => $year]);
+        Log::info('DEBUG → availableQuarter:', ['availableQuarter' => $availableQuarters]);
+
+        $tagPrefixes = [];
+        if ($year !== self::ALL_TIME && !empty($availableQuarters)) {
+            $yearSuffix = substr((string) $year, -2);
+            Log::info('DEBUG → yearSuffix:', ['suffix' => $yearSuffix]);
+
+
+            foreach ($availableQuarters as $quarter) {
+                $tagPrefixes[] = '[' . strtoupper($yearSuffix . 'q' . $quarter);
+            }
+
+            Log::info('DEBUG → tagPrefixes:', ['prefixes' => $tagPrefixes]);
+        }
+
         $tags = Tag::with(['tagged' => function ($query) use ($year, $availableQuarters) {
             if ($year !== self::ALL_TIME) {
                 $query->whereYear('stories.created_at', $year);
-                if (!empty($availableQuarters)) {
-                    $query->whereIn(DB::raw('EXTRACT(QUARTER FROM stories.created_at)'), $availableQuarters);
-                }
             }
         }])
             ->get()
-            ->filter(function ($tag) {
-                return $tag->tagged->isNotEmpty();
+            ->filter(function ($tag) use ($tagPrefixes) {
+                return $tag->tagged->isNotEmpty() &&
+                    collect($tagPrefixes)->contains(function ($prefix) use ($tag) {
+                        return str_starts_with(strtoupper($tag->name), $prefix);
+                    });
             })
             ->sortByDesc(function ($tag) {
                 return $tag->tagged->count();
@@ -152,11 +172,11 @@ class ReportController extends Controller
             ->take(30)
             ->values();
 
-        // Log per debug
-        Log::info('Top Tags in ordine:', $tags->map(function ($tag) {
+
+        Log::info('DEBUG → tags:', $tags->map(function ($tag) {
             return [
                 'name' => $tag->name,
-                'count' => $tag->tagged->count()
+                'count' => $tag->tagged->count(),
             ];
         })->toArray());
 
@@ -538,5 +558,18 @@ class ReportController extends Controller
         $firstColumnCells = $developers;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
+    }
+
+    private function tab11TagCustomer($year, $availableQuarters, $tags, $customers)
+    {
+        return $this->tab7TagCustomer($year, $availableQuarters, $tags, $customers);
+    }
+    private function tab12CustomerTag($year, $availableQuarters, $tags, $customers)
+    {
+        return $this->tab8CustomerTag($year, $availableQuarters, $tags, $customers);
+    }
+    private function tab13TagType($year, $availableQuarters, $tags, $customers)
+    {
+        return $this->tab9TagType($year, $availableQuarters, $tags, $customers);
     }
 }
