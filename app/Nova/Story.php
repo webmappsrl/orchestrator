@@ -2,27 +2,28 @@
 
 namespace App\Nova;
 
-use App\Enums\UserRole;
-use Laravel\Nova\Panel;
 use App\Enums\StoryStatus;
-use App\Traits\fieldTrait;
-use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Text;
-use Laravel\Nova\Fields\Stack;
-use App\Nova\Metrics\StoryTime;
-use Laravel\Nova\Fields\HasMany;
+use App\Enums\UserRole;
 use App\Nova\Actions\EditStories;
-use Laravel\Nova\Fields\BelongsTo;
-use Formfeed\Breadcrumbs\Breadcrumb;
-use Laravel\Nova\Fields\MorphToMany;
-use App\Nova\Lenses\StoriesByQuarter;
-use Formfeed\Breadcrumbs\Breadcrumbs;
-use App\Nova\Deadline as novaDeadline;
-use Laravel\Nova\Fields\BelongsToMany;
-use Illuminate\Support\Facades\Session;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
+use App\Nova\Deadline as novaDeadline;
+use App\Nova\Lenses\StoriesByQuarter;
+use App\Nova\Metrics\StoryTime;
+use App\Traits\fieldTrait;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
+use Formfeed\Breadcrumbs\Breadcrumb;
+use Formfeed\Breadcrumbs\Breadcrumbs;
+use Illuminate\Support\Facades\Session;
+use InteractionDesignFoundation\HtmlCard\HtmlCard;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\MorphToMany;
+use Laravel\Nova\Fields\Stack;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Panel;
 
 class Story extends Resource
 {
@@ -74,19 +75,23 @@ class Story extends Resource
     }
 
     public static $linkToParent = false;
+
     public static $resolveParentBreadcrumbs = false;
-    public $holidayAlert = <<<HTML
+
+    public $holidayAlert = <<<'HTML'
     <div style="padding: 20px; border-radius: 8px; background-color: #f8f9fa; text-align: center; font-family: Arial, sans-serif; color: #333;">
         <h2 style="color: #dc3545; font-size: 24px; margin-bottom: 15px;">Avviso Importante</h2>
         <p style="font-size: 18px; line-height: 1.6;">
             Gentile Clientela,
         </p>
         <p style="font-size: 18px; line-height: 1.6;">
-            Vi informiamo che il nostro servizio di ticketing sarà <strong>ridotto solo alle situazioni urgenti</strong> da
-            <strong>lunedì 12</strong> fino a <strong>venerdì 16</strong>.
+            Vi informiamo che durante i mesi di <strong>luglio e agosto</strong> il nostro servizio di ticketing 
+            sarà attivo <strong>dal lunedì al giovedì</strong>.
         </p>
         <p style="font-size: 18px; line-height: 1.6;">
-            Il servizio riprenderà regolarmente da <strong>lunedì 19</strong>.
+            Inoltre, comunichiamo la <strong>chiusura aziendale per la settimana di ferragosto</strong>
+            dal <strong>10 al 15 agosto</strong>.
+             Il servizio riprenderà  da <strong>lunedì 17</strong>.
         </p>
         <p style="font-size: 18px; line-height: 1.6;">
             Vi ringraziamo per la vostra comprensione.
@@ -97,16 +102,18 @@ class Story extends Resource
     public function indexBreadcrumb(NovaRequest $resourceClass, Breadcrumbs $breadcrumbs, Breadcrumb $indexBreadcrumb)
     {
         $previousUrl = url()->previous();
-        $previousPath = parse_url($previousUrl, PHP_URL_PATH) . '?' . parse_url($previousUrl, PHP_URL_QUERY);
+        $previousPath = parse_url($previousUrl, PHP_URL_PATH).'?'.parse_url($previousUrl, PHP_URL_QUERY);
         if (strlen($previousPath) > 60) {
             Session::put('breadcrumb_path', $previousPath);
         }
         $bp = Session::get('breadcrumb_path');
-        if (!is_null($bp)) {
+        if (! is_null($bp)) {
             $indexBreadcrumb->path = $bp;
         }
+
         return $indexBreadcrumb;
     }
+
     /**
      * The model the resource corresponds to.
      *
@@ -128,9 +135,8 @@ class Story extends Resource
      */
     public static $perPageViaRelationship = 20;
 
-
-
     public $hideFields = [];
+
     /**
      * The columns that should be searched.
      *
@@ -139,9 +145,8 @@ class Story extends Resource
     public static $search = [
         'id',
         'name',
-        'description'
+        'description',
     ];
-
 
     public static function indexQuery(NovaRequest $request, $query)
     {
@@ -170,6 +175,7 @@ class Story extends Resource
             $this->deadlineField($request),
 
         ];
+
         return array_map(function ($field) {
             return $field->onlyOnIndex();
         }, $fields);
@@ -192,30 +198,31 @@ class Story extends Resource
             $this->tagsField(),
             Files::make(__('Documents'), 'documents')
                 ->singleMediaRules('mimes:pdf,doc,docx,json,geojson,txt,csv,jpeg,png,gif,bmp,webp,svg,tiff,heic,jpg,jpeg,png')
-                ->help(__('Only specific document types are allowed') . '(PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV, JPEG, PNG, GIF, BMP, WEBP, SVG, TIFF, HEIC, JPG, JPEG, PNG).')
+                ->help(__('Only specific document types are allowed').'(PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV, JPEG, PNG, GIF, BMP, WEBP, SVG, TIFF, HEIC, JPG, JPEG, PNG).')
                 ->onlyOnDetail(),
             $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
             HasMany::make(__('Logs'), 'views', StoryLog::class)->canSee(function ($request) {
-                return !$request->user()->hasRole(UserRole::Customer);
+                return ! $request->user()->hasRole(UserRole::Customer);
             }),
             BelongsToMany::make(__('Child Stories'), 'childStories', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
-                    return empty($this->parent_id) &&  !$request->user()->hasRole(UserRole::Customer);
+                    return empty($this->parent_id) && ! $request->user()->hasRole(UserRole::Customer);
                 })->filterable(),
             BelongsTo::make(__('Parent Story'), 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
+                    return ! $request->user()->hasRole(UserRole::Customer);
                 }),
             MorphToMany::make(__('Deadlines'), 'deadlines', novaDeadline::class)
                 ->showCreateRelationButton(),
 
         ];
+
         return array_map(function ($field) {
             return $field->onlyOnDetail();
         }, $fields);
@@ -253,10 +260,11 @@ class Story extends Resource
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
-                    return !$request->user()->hasRole(UserRole::Customer);
+                    return ! $request->user()->hasRole(UserRole::Customer);
                 })
                 ->help(__('Here you can attach the ticket that has the same issue. If multiple tickets share the same issue, attach the main ticket to all related tickets. You can find the main ticket by searching for its title. It is important to note that when the main ticket status changes, the status of all related tickets will also be updated.')),
         ];
+
         return array_map(function ($field) {
             return $field->onlyOnForms();
         }, $fields);
@@ -265,7 +273,6 @@ class Story extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function fields(NovaRequest $request)
@@ -280,10 +287,10 @@ class Story extends Resource
 
         ];
     }
+
     /**
      * Get the cards available for the request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -294,16 +301,16 @@ class Story extends Resource
             }),
             (new StoryTime)->onlyOnDetail()->canSee(function ($request) {
                 return ! $request->user()->hasRole(UserRole::Customer);
-            })
+            }),
+            (new HtmlCard())->width('full')->withMeta([
+                'content' => $this->holidayAlert,
+            ])->center(true),
         ];
     }
-
-
 
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -319,7 +326,6 @@ class Story extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function actions(NovaRequest $request)
@@ -336,7 +342,7 @@ class Story extends Resource
                         function ($request) {
                             return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                         }
-                    )
+                    ),
             ];
         }
         $actions = [
@@ -427,10 +433,6 @@ class Story extends Resource
         return $actions;
     }
 
-
-
-
-
     public function navigationLinks()
     {
         return [
@@ -452,17 +454,17 @@ class Story extends Resource
                     $nextLink = '';
 
                     if ($previousStory != null) {
-                        $previousLink = '<a href="/resources/stories/' . $previousStory->id . '" style="font-size: 30px;">⬅️</a>';
+                        $previousLink = '<a href="/resources/stories/'.$previousStory->id.'" style="font-size: 30px;">⬅️</a>';
                     }
 
                     if ($nextStory != null) {
-                        $nextLink = '<a href="/resources/stories/' . $nextStory->id . '" style="font-size: 30px;">➡️</a>';
+                        $nextLink = '<a href="/resources/stories/'.$nextStory->id.'" style="font-size: 30px;">➡️</a>';
                     }
 
-                    return $previousLink . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $nextLink;
+                    return $previousLink.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nextLink;
                 }
             })->canSee(function ($request) {
-                return !$request->user()->hasRole(UserRole::Customer);
+                return ! $request->user()->hasRole(UserRole::Customer);
             }),
         ];
     }
@@ -470,7 +472,6 @@ class Story extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
