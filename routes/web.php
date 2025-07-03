@@ -1,17 +1,18 @@
 <?php
 
-use App\Models\User;
+use App\Http\Controllers\DeadlineController;
+use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ScrumController;
+use App\Http\Middleware\TestRouteAccess;
 use App\Jobs\TestJob;
-use App\Models\Story;
 use App\Mail\CustomerStoryFromMail;
+use App\Mail\OrchestratorUserNotFound;
+use App\Models\Story;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
-use App\Mail\OrchestratorUserNotFound;
-use App\Http\Controllers\QuoteController;
-use App\Http\Controllers\DeadlineController;
-use App\Http\Controllers\ReportController;
-use App\Http\Middleware\TestRouteAccess;
-use App\Http\Controllers\ScrumController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -27,11 +28,11 @@ Route::get('/quote/{id}', [QuoteController::class, 'show'])->name('quote');
 Route::get('/deadline/{id}', [DeadlineController::class, 'email'])->name('deadline.email');
 Route::get('report/{year?}', [ReportController::class, 'index']);
 
-
 //route to test the mailable
 Route::get('/mailable', function () {
     //get the first user where roles contains customer
     $user = User::whereJsonContains('roles', 'customer')->firstOrFail();
+
     return new App\Mail\CustomerStoriesDigest($user);
 });
 Route::get('/logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
@@ -41,6 +42,7 @@ Route::middleware(TestRouteAccess::class)->group(function () {
 
     Route::get('/test-horizon', function () {
         TestJob::dispatch();
+
         return 'Test job dispatched';
     });
 
@@ -100,3 +102,16 @@ Route::get('/download-products-pdf', [\App\Http\Controllers\ProductPdfController
 
 Route::get('/scrum-meeting/{meetCode}', [ScrumController::class, 'createOrUpdateScrumStory'])
     ->middleware(['auth'])->name('scrum.meeting');
+
+// Rotta per gestire la selezione del developer nella dashboard
+Route::post('/set-dashboard-developer', function () {
+    $developerId = request('developer_id');
+
+    if ($developerId) {
+        session(['selected_developer_id' => $developerId]);
+    } else {
+        session()->forget('selected_developer_id');
+    }
+
+    return redirect('/dashboards/main');
+})->middleware(['auth'])->name('dashboard.set.developer');
