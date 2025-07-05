@@ -127,6 +127,7 @@ class Main extends Dashboard
         $cards = array_merge($cards, [
             $this->storyCard('progress', __('Progress'), $user),
             $this->storyCard('todo', __('To Do'), $user),
+            $this->storyCard('waiting', __('Waiting'), $user),
             $this->storyCard('testing', __('Test'), $user, '1/2'),
             $this->storyCard('tested', __('Tested'), $user, '1/2'),
         ]);
