@@ -25,6 +25,8 @@
             border-collapse: collapse;
             margin-bottom: 10px;
             width: 100%;
+            table-layout: fixed;
+            overflow: hidden;
         }
 
         th {
@@ -40,6 +42,8 @@
             border: 1px solid #ddd;
             padding: 5px;
             vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         tr:hover {
@@ -63,12 +67,12 @@
 
     <table>
         <colgroup>
-            <col style="width: 50px;">
-            <col style="width: 150px;">
-            <col style="width: 200px;">
-            <col style="width: 400px;">
-            <col style="width: 100px;">
-            <col style="width: 100px;">
+            <col style="width: 5%;">
+            <col style="width: 15%;">
+            <col style="width: 20%;">
+            <col style="width: 40%;">
+            <col style="width: 10%;">
+            <col style="width: 10%;">
         </colgroup>
         <thead>
             <tr>
@@ -115,11 +119,13 @@
                         </div>
                     </td>
                     <td>
-                        <div style="max-height: 100px; overflow-y: auto; padding-right: 5px;">
+                        <div
+                            style="max-height: 100px; overflow-y: auto; padding-right: 5px; word-wrap: break-word; overflow-wrap: break-word; white-spac: normal;">
                             @if ($story->description)
                                 {!! $story->description !!}
                             @elseif($story->customer_request)
-                                <div class="max-height: 100px; overflow-y: auto; padding-right: 5px;">
+                                <div
+                                    class="max-height: 100px; overflow-y: auto; padding-right: 5px; word-wrap: break-word; overflow-wrap: break-word; white-spac: normal;">
                                     {!! $story->customer_request !!}
                                 </div>
                             @else
