@@ -172,29 +172,43 @@ class ReportController extends Controller
     {
         $yearSuffix = substr((string) $year, -2);
 
-        // Ottieni tutti i tag con i relativi tagged filtrati per year e quarters multipli
+        // Carica i tag con i tagged associati nel periodo selezionato
         $tags = Tag::with(['tagged' => function ($query) use ($year, $availableQuarters) {
             if ($year !== self::ALL_TIME) {
-                $query->whereYear('stories.created_at', $year)
-                    ->when(!empty($availableQuarters), function ($q) use ($availableQuarters) {
-                        $q->whereIn(DB::raw('EXTRACT(QUARTER FROM stories.created_at)'), $availableQuarters);
-                    });
+                $query->whereYear('stories.created_at', $year);
+                if (!empty($availableQuarters)) {
+                    $query->whereIn(DB::raw('EXTRACT(QUARTER FROM stories.created_at)'), $availableQuarters);
+                }
             }
         }])
             ->get()
-            // filtra i tag che hanno almeno uno tagged in quei quarters e che iniziano con uno dei prefissi
+            // Filtro: tag che iniziano con [25Q31], 25Q31, [25Q32], ecc.
             ->filter(function ($tag) use ($yearSuffix, $availableQuarters) {
-                return $tag->tagged->isNotEmpty() && collect($availableQuarters)->contains(function ($quarter) use ($tag, $yearSuffix) {
-                    $prefix = '[' . strtoupper($yearSuffix . 'q' . $quarter);
-                    return str_starts_with(strtoupper($tag->name), $prefix);
-                });
+                if ($tag->tagged->isEmpty()) {
+                    return false;
+                }
+                $tagName = strtoupper($tag->name);
+
+                foreach ($availableQuarters as $quarter) {
+                    // Per ogni quarter Q1 → 1 → cerca "25Q21", "25Q22", "25Q23"
+                    for ($i = 1; $i <= 3; $i++) {
+                        $suffix = $yearSuffix . 'Q' . $quarter . $i;
+                        if (str_contains($tagName, $suffix)) {
+                            Log::debug('Tag Included: match suffix', ['tag' => $tagName, 'matched' => $suffix]);
+                            return true;
+                        }
+                    }
+                }
+                return false;
             })
-            ->sortByDesc(fn($tag) => $tag->tagged->count())
+            ->sortByDesc(function ($tag) {
+                return $tag->tagged->count();
+            })
             ->take(30)
             ->values();
 
         // Log per debug
-        Log::info('Top Tags in ordine:', $tags->map(function ($tag) {
+        Log::info('Top Tags per quarter:', $tags->map(function ($tag) {
             return [
                 'name' => $tag->name,
                 'count' => $tag->tagged->count()
@@ -203,7 +217,6 @@ class ReportController extends Controller
 
         return $tags;
     }
-
 
     private function calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter = null)
     {
