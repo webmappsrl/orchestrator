@@ -9,15 +9,10 @@ use App\Models\Story;
 use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
-use Laravel\Nova\Dashboards\Main as Dashboard;
+use Laravel\Nova\Dashboard as Dashboard;
 
-class Main extends Dashboard
+class Kanban extends Dashboard
 {
-    public function name()
-    {
-        return 'kanban';
-    }
-
     /*---Helper---*/
     protected function byStatusAndUser(string $status, Authenticatable $user)
     {

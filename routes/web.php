@@ -113,5 +113,5 @@ Route::post('/set-dashboard-developer', function () {
         session()->forget('selected_developer_id');
     }
 
-    return redirect('/dashboards/main');
+    return redirect('/dashboards/kanban');
 })->middleware(['auth'])->name('dashboard.set.developer');

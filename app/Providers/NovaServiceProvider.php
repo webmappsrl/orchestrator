@@ -2,35 +2,35 @@
 
 namespace App\Providers;
 
+use App\Enums\UserRole;
 use App\Nova\App;
-use App\Nova\User;
+use App\Nova\ArchivedDeadlines;
+use App\Nova\ArchivedQuotes;
+use App\Nova\ArchivedStories;
+use App\Nova\ArchivedStoryShowedByCustomer;
+use App\Nova\AssignedToMeStory;
+use App\Nova\BacklogStory;
+use App\Nova\Customer;
+use App\Nova\CustomerStory;
+use App\Nova\CustomerTickets;
+use App\Nova\Dashboards\Kanban;
+use App\Nova\Documentation;
 use App\Nova\Layer;
-use App\Nova\Quote;
 use App\Nova\Product;
 use App\Nova\Project;
-use App\Nova\Customer;
-use App\Nova\ArchivedDeadlines;
-use App\Nova\ArchivedStoryShowedByCustomer;
-use App\Nova\ArchivedStories;
-use App\Nova\StoryShowedByCustomer;
-use App\Nova\AssignedToMeStory;
-use App\Nova\CustomerStory;
-use App\Nova\Documentation;
-use App\Enums\UserRole;
-use App\Nova\CustomerTickets;
-use App\Nova\ArchivedQuotes;
-use App\Nova\BacklogStory;
-use Laravel\Nova\Nova;
-use Illuminate\Http\Request;
+use App\Nova\Quote;
 use App\Nova\RecurringProduct;
+use App\Nova\StoryShowedByCustomer;
 use App\Nova\Tag;
 use App\Nova\ToBeTestedStory;
-use Laravel\Nova\Menu\MenuItem;
-use Laravel\Nova\Dashboards\Main;
-use Laravel\Nova\Menu\MenuSection;
-use Illuminate\Support\Facades\Gate;
+use App\Nova\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Laravel\Nova\Menu\MenuGroup;
+use Laravel\Nova\Menu\MenuItem;
+use Laravel\Nova\Menu\MenuSection;
+use Laravel\Nova\Nova;
 use Laravel\Nova\NovaApplicationServiceProvider;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
@@ -45,9 +45,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         parent::boot();
         Nova::withBreadcrumbs(true);
 
-
         Nova::style('nova-custom', public_path('/nova-custom.css'));
-
 
         Nova::mainMenu(function (Request $request) {
             $newStoryUrl = '/resources/stories/new';
@@ -62,9 +60,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuItem::externalLink('MEET', 'https://meet.google.com/qcz-incv-dem')->openInNewTab()->canSee(function ($request) {
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
-                MenuSection::dashboard(Main::class)->icon('chart-bar')->canSee(function ($request) {
-                    if ($request->user() == null)
+                MenuSection::dashboard(Kanban::class)->icon('chart-bar')->canSee(function ($request) {
+                    if ($request->user() == null) {
                         return false;
+                    }
+
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
                 MenuSection::make('ADMIN', [
@@ -94,8 +94,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     ])->collapsedByDefault(),
                     MenuItem::resource(Customer::class),
                     MenuItem::resource(CustomerTickets::class)->canSee(function ($request) {
-                        if ($request->user() == null)
+                        if ($request->user() == null) {
                             return false;
+                        }
+
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
                     MenuItem::resource(Project::class),
@@ -119,18 +121,22 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(BacklogStory::class),
                     MenuItem::resource(CustomerStory::class),
                 ])->icon('code')->collapsable()->canSee(function ($request) {
-                    if ($request->user() == null)
+                    if ($request->user() == null) {
                         return false;
+                    }
+
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
 
                 MenuSection::make(__('CUSTOMER'), [
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(ArchivedStoryShowedByCustomer::class),
-                    MenuItem::resource(StoryShowedByCustomer::class)
+                    MenuItem::resource(StoryShowedByCustomer::class),
                 ])->canSee(function ($request) {
-                    if ($request->user() == null)
+                    if ($request->user() == null) {
                         return false;
+                    }
+
                     return $request->user()->hasRole(UserRole::Customer);
                 })->icon('at-symbol')->collapsable(),
 
@@ -146,7 +152,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
                 ])->icon('pencil')->collapsedByDefault(),
-
 
             ];
         });
@@ -187,6 +192,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             if (config('services.app_environment') == 'production' || config('services.app_environment') == 'develop') {
                 return $userIsAdmin || $userIsEditor || $userIsDeveloper || $userIsManager || $userIsCustomer;
             }
+
             return true;
         });
     }
@@ -199,7 +205,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function dashboards()
     {
         return [
-            new \App\Nova\Dashboards\Main,
+            new \App\Nova\Dashboards\Kanban,
         ];
     }
 
@@ -223,10 +229,18 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function register()
     {
         Nova::initialPath(function (Request $request) {
-            if (!$request->user() == null) {
+            if (! $request->user() == null) {
                 $user = $request->user();
                 if ($user->hasRole(UserRole::Customer)) {
                     return $user->initialPath();
+                }
+
+                // Per tutti gli altri utenti (Admin, Manager, Developer),
+                // reindirizza alla dashboard Kanban
+                if ($user->hasRole(UserRole::Admin) ||
+                    $user->hasRole(UserRole::Manager) ||
+                    $user->hasRole(UserRole::Developer)) {
+                    return '/dashboards/kanban';
                 }
             }
         });

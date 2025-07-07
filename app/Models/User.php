@@ -4,20 +4,18 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use App\Models\Quote;
 use App\Enums\UserRole;
-use App\Models\Project;
-use Laravel\Sanctum\HasApiTokens;
-use Laravel\Nova\Auth\Impersonatable;
+use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Nova\Auth\Impersonatable;
+use Laravel\Sanctum\HasApiTokens;
 use Overtrue\LaravelFavorite\Traits\Favoriter;
 use Wm\WmPackage\Model\User as Authenticatable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Impersonatable, Notifiable, Favoriter;
+    use Favoriter, HasApiTokens, HasFactory, Impersonatable, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -28,7 +26,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'roles'
+        'roles',
     ];
 
     /**
@@ -48,14 +46,11 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'roles' => AsEnumCollection::class . ':' . UserRole::class,
+        'roles' => AsEnumCollection::class.':'.UserRole::class,
     ];
 
     /**
      * Check if user has a specific single role
-     *
-     * @param UserRole $role
-     * @return boolean
      */
     public function hasRole(UserRole $role): bool
     {
@@ -102,7 +97,6 @@ class User extends Authenticatable
         return $this->hasRole(UserRole::Admin);
     }
 
-
     /**
      * Determine if the user can be impersonated.
      *
@@ -115,23 +109,21 @@ class User extends Authenticatable
 
     /**
      * define if user has breadcrumbs
-     * @return boolean
      */
     public function wantsBreadcrumbs(): bool
     {
-        return !$this->hasRole(UserRole::Customer);
+        return ! $this->hasRole(UserRole::Customer);
     }
 
     /**
      * Define the initial nova path for the logged user
-     * @return string
      */
     public function initialPath(): string
     {
         if ($this->hasRole(UserRole::Customer)) {
             return '/resources/story-showed-by-customers';
         } else {
-            return '/dashboard/main';
+            return '/dashboards/kanban';
         }
     }
 
