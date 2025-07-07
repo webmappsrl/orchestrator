@@ -43,7 +43,6 @@ class ReportController extends Controller
         $tags = $this->getTags($year, $availableQuarters);
         $tagsQuarter = $this->getTagsQuarter($year, $availableQuarters);
 
-<<<<<<< HEAD
         $tab1Type = $this->tab1Type($year, $availableQuarters);
         [$tab2Status, $tab2StatusTotals] = $this->tab2Status($year, $availableQuarters); // Ora include i totali
         $tab3DevStatus = $this->tab3DevStatus($year, $availableQuarters, $developers);
@@ -60,37 +59,13 @@ class ReportController extends Controller
         return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType', 'tab10DevType', 'tab11QuarterTagDev', 'tab12QuarterTagType'));
     }
     private function generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn,)
-=======
-        // $tab1Type = $this->tab1Type($year, $availableQuarters);
-        // [$tab2Status, $tab2StatusTotals] = $this->tab2Status($year, $availableQuarters); // Ora include i totali
-        // $tab3DevStatus = $this->tab3DevStatus($year, $availableQuarters, $developers);
-        // $tab4StatusDev = $this->tab4StatusDev($year, $availableQuarters, $developers);
-        // $tab5CustomerStatus = $this->tab5CustomerStatus($year, $availableQuarters, $customers);
-        // $tab6StatusCustomer = $this->tab6StatusCustomer($year, $availableQuarters, $customers);
-        // $tab7TagCustomer = $this->tab7TagCustomer($year, $availableQuarters, $tags, $customers);
-        // $tab8CustomerTag = $this->tab8CustomerTag($year, $availableQuarters, $tags, $customers);
-        // $tab9TagType = $this->tab9TagType($year, $availableQuarters, $tags, $customers);
-        // $tab10DevType = $this->tab10DevType($year, $availableQuarters, $developers);
-        $tab11QuarterTagCustomer = $this->tab11QuarterTagCustomer($year, $availableQuarters, $tagsQuarter, $customers);
-        $tab12QuarterCustomerTag = $this->tab12QuarterCustomerTag($year, $availableQuarters, $tagsQuarter, $customers);
-        $tab13QuarterTagType = $this->tab13QuarterTagType($year, $availableQuarters, $tagsQuarter, $customers);
-
-        return view('reports.index', compact(/* 'tab1Type', 'tab2Status', 'tab2StatusTotals', */ 'year', 'availableQuarters', /* 'tab3DevStatus', */ 'developers', /* 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType', 'tab10DevType', */ 'tab11QuarterTagCustomer', 'tab12QuarterCustomerTag', 'tab13QuarterTagType'));
-    }
-
-    private function generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn)
->>>>>>> origin/OC_5880
     {
         $quarterReport = [];
         $quarterReport['thead'] = $thead;
         $quarterReport['tbody'] = [];
         $tbody['year'] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, null, true);
         foreach ($availableQuarters as $quarter) {
-<<<<<<< HEAD
             $tbody['q' . $quarter] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter, true);
-=======
-            $tbody['q'.$quarter] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter);
->>>>>>> origin/OC_5880
         }
         $quarterReport['tbody'] = $tbody;
 
@@ -220,22 +195,11 @@ class ReportController extends Controller
                     return false;
                 }
                 $tagName = strtoupper($tag->name);
-<<<<<<< HEAD
                 $prefix = $yearSuffix . 'Q';
                 // Cerca "25Q" senza numero oppure "25Q1", "25Q2", ecc
                 if (str_contains($tagName, $prefix)) {
                     foreach ($availableQuarters as $quarter) {
                         if (str_contains($tagName, $prefix . $quarter)) {
-=======
-
-                foreach ($availableQuarters as $quarter) {
-                    // Per ogni quarter Q1 → 1 → cerca "25Q21", "25Q22", "25Q23"
-                    for ($i = 1; $i <= 3; $i++) {
-                        $suffix = $yearSuffix.'Q'.$quarter.$i;
-                        if (str_contains($tagName, $suffix)) {
-                            Log::debug('Tag Included: match suffix', ['tag' => $tagName, 'matched' => $suffix]);
-
->>>>>>> origin/OC_5880
                             return true;
                         }
                     }
@@ -279,18 +243,18 @@ class ReportController extends Controller
                         $counts[] = $this->extractCount($cell);
                         $hours[] = $this->extractHours($cell);
                     }
-                    $row[] = array_sum($counts).' ('.round(array_sum($hours), 2).')';
+                    $row[] = array_sum($counts) . ' (' . round(array_sum($hours), 2) . ')';
                 } else {
                     $query = $cellQueryFn($indexRowObj, $indexColumnObj);
                     if ($quarter) {
-                        $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER.' = ?', [$quarter]);
+                        $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
                     }
                     if ($year !== self::ALL_TIME) {
                         $query->whereYear('created_at', $year);
                     }
                     $statusTotal = $query->count();
                     $statusHours = round($query->sum('hours'), 2);
-                    $row[] = $statusTotal.' ('.$statusHours.')';
+                    $row[] = $statusTotal . ' (' . $statusHours . ')';
 
                     // Aggiorna il totale della colonna corrente
                     $columnSums[$index] += $statusTotal;
@@ -310,9 +274,9 @@ class ReportController extends Controller
             if ($indexColumnObj === '') {
                 continue; // Salta la prima cella (già 'Totale')
             } elseif ($indexColumnObj === self::LAST_COLUMN_VALUE) {
-                $totalsRow[] = array_sum(array_slice($columnSums, 1)).' ('.round(array_sum(array_slice($columnHours, 1)), 2).')'; // Totale finale (somma delle somme delle colonne)
+                $totalsRow[] = array_sum(array_slice($columnSums, 1)) . ' (' . round(array_sum(array_slice($columnHours, 1)), 2) . ')'; // Totale finale (somma delle somme delle colonne)
             } else {
-                $totalsRow[] = $columnSums[$index].' ('.$columnHours[$index].')'; // Aggiungi la somma verticale della colonna
+                $totalsRow[] = $columnSums[$index] . ' (' . $columnHours[$index] . ')'; // Aggiungi la somma verticale della colonna
             }
         }
 
@@ -386,15 +350,15 @@ class ReportController extends Controller
 
             $tab1Type[] = [
                 'type' => $type->value,
-                'year_total' => $yearTotal.' ('.$totalHours.')',
+                'year_total' => $yearTotal . ' (' . $totalHours . ')',
                 'year_percentage' => $yearPercentage,
-                'q1' => $firstQuarter.' ('.$firstQuarterHours.')',
+                'q1' => $firstQuarter . ' (' . $firstQuarterHours . ')',
                 'q1_percentage' => $firstQuarterPercentage,
-                'q2' => $secondQuarter.' ('.$secondQuarterHours.')',
+                'q2' => $secondQuarter . ' (' . $secondQuarterHours . ')',
                 'q2_percentage' => $secondQuarterPercentage,
-                'q3' => $thirdQuarter.' ('.$thirdQuarterHours.')',
+                'q3' => $thirdQuarter . ' (' . $thirdQuarterHours . ')',
                 'q3_percentage' => $thirdQuarterPercentage,
-                'q4' => $fourthQuarter.' ('.$fourthQuarterHours.')',
+                'q4' => $fourthQuarter . ' (' . $fourthQuarterHours . ')',
                 'q4_percentage' => $fourthQuarterPercentage,
             ];
         }
@@ -457,24 +421,24 @@ class ReportController extends Controller
 
             $tab2Status[] = [
                 'status' => $status->value,
-                'year_total' => $yearTotal.' ('.$totalHours.')',
+                'year_total' => $yearTotal . ' (' . $totalHours . ')',
                 'year_percentage' => $yearPercentage,
-                'q1' => $firstQuarter.' ('.$firstQuarterHours.')',
+                'q1' => $firstQuarter . ' (' . $firstQuarterHours . ')',
                 'q1_percentage' => $firstQuarterPercentage,
-                'q2' => $secondQuarter.' ('.$secondQuarterHours.')',
+                'q2' => $secondQuarter . ' (' . $secondQuarterHours . ')',
                 'q2_percentage' => $secondQuarterPercentage,
-                'q3' => $thirdQuarter.' ('.$thirdQuarterHours.')',
+                'q3' => $thirdQuarter . ' (' . $thirdQuarterHours . ')',
                 'q3_percentage' => $thirdQuarterPercentage,
-                'q4' => $fourthQuarter.' ('.$fourthQuarterHours.')',
+                'q4' => $fourthQuarter . ' (' . $fourthQuarterHours . ')',
                 'q4_percentage' => $fourthQuarterPercentage,
             ];
         }
 
-        $totals['year_total'] = $totals['year_total'].' ('.$hoursTotals['year_total'].')';
-        $totals['q1'] = $totals['q1'].' ('.$hoursTotals['q1'].')';
-        $totals['q2'] = $totals['q2'].' ('.$hoursTotals['q2'].')';
-        $totals['q3'] = $totals['q3'].' ('.$hoursTotals['q3'].')';
-        $totals['q4'] = $totals['q4'].' ('.$hoursTotals['q4'].')';
+        $totals['year_total'] = $totals['year_total'] . ' (' . $hoursTotals['year_total'] . ')';
+        $totals['q1'] = $totals['q1'] . ' (' . $hoursTotals['q1'] . ')';
+        $totals['q2'] = $totals['q2'] . ' (' . $hoursTotals['q2'] . ')';
+        $totals['q3'] = $totals['q3'] . ' (' . $hoursTotals['q3'] . ')';
+        $totals['q4'] = $totals['q4'] . ' (' . $hoursTotals['q4'] . ')';
 
         return [$tab2Status, $totals]; // Restituisci anche i totali
     }
@@ -487,7 +451,7 @@ class ReportController extends Controller
             $query->whereYear('created_at', $year);
         }
         if ($quarter) {
-            $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER.' = ?', [$quarter]);
+            $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
         }
 
         return $query->count();
@@ -500,7 +464,7 @@ class ReportController extends Controller
             $query->whereYear('created_at', $year);
         }
         if ($quarter) {
-            $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER.' = ?', [$quarter]);
+            $query->whereRaw(self::SQL_PREFIX_FOR_EXTRACTING_QUARTER . ' = ?', [$quarter]);
         }
 
         return round($query->sum('hours'), 2);
@@ -647,17 +611,7 @@ class ReportController extends Controller
     {
         return $this->tab7TagCustomer($year, $availableQuarters, $tags, $developers);
     }
-<<<<<<< HEAD
     private function tab12QuarterTagType($year, $availableQuarters, $tags, $customers)
-=======
-
-    private function tab12QuarterCustomerTag($year, $availableQuarters, $tags, $customers)
-    {
-        return $this->tab8CustomerTag($year, $availableQuarters, $tags, $customers);
-    }
-
-    private function tab13QuarterTagType($year, $availableQuarters, $tags, $customers)
->>>>>>> origin/OC_5880
     {
         return $this->tab9TagType($year, $availableQuarters, $tags, $customers);
     }
