@@ -47,20 +47,19 @@ class ReportController extends Controller
         $tab8CustomerTag = $this->tab8CustomerTag($year, $availableQuarters, $tags, $customers);
         $tab9TagType = $this->tab9TagType($year, $availableQuarters, $tags, $customers);
         $tab10DevType = $this->tab10DevType($year, $availableQuarters, $developers);
-        $tab11QuarterTagCustomer = $this->tab11QuarterTagCustomer($year, $availableQuarters, $tagsQuarter, $customers);
-        $tab12QuarterCustomerTag = $this->tab12QuarterCustomerTag($year, $availableQuarters, $tagsQuarter, $customers);
-        $tab13QuarterTagType = $this->tab13QuarterTagType($year, $availableQuarters, $tagsQuarter, $customers);
+        $tab11QuarterTagDev = $this->tab11QuarterTagDev($year, $availableQuarters, $tagsQuarter, $developers);
+        $tab12QuarterTagType = $this->tab12QuarterTagType($year, $availableQuarters, $tagsQuarter, $customers);
 
-        return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType', 'tab10DevType', 'tab11QuarterTagCustomer', 'tab12QuarterCustomerTag', 'tab13QuarterTagType'));
+        return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType', 'tab10DevType', 'tab11QuarterTagDev', 'tab12QuarterTagType'));
     }
-    private function generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn)
+    private function generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn,)
     {
         $quarterReport = [];
         $quarterReport['thead'] = $thead;
         $quarterReport['tbody'] = [];
-        $tbody['year'] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
+        $tbody['year'] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, null, true);
         foreach ($availableQuarters as $quarter) {
-            $tbody['q' . $quarter] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter);
+            $tbody['q' . $quarter] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter, true);
         }
         $quarterReport['tbody'] =   $tbody;
 
@@ -171,7 +170,6 @@ class ReportController extends Controller
     private function getTagsQuarter($year, $availableQuarters)
     {
         $yearSuffix = substr((string) $year, -2);
-
         // Carica i tag con i tagged associati nel periodo selezionato
         $tags = Tag::with(['tagged' => function ($query) use ($year, $availableQuarters) {
             if ($year !== self::ALL_TIME) {
@@ -182,28 +180,26 @@ class ReportController extends Controller
             }
         }])
             ->get()
-            // Filtro: tag che iniziano con [25Q31], 25Q31, [25Q32], ecc.
+            // Filtro: tag che iniziano con "25Q31", "25Q32", ecc.
             ->filter(function ($tag) use ($yearSuffix, $availableQuarters) {
                 if ($tag->tagged->isEmpty()) {
                     return false;
                 }
                 $tagName = strtoupper($tag->name);
-
-                foreach ($availableQuarters as $quarter) {
-                    // Per ogni quarter Q1 → 1 → cerca "25Q21", "25Q22", "25Q23"
-                    for ($i = 1; $i <= 3; $i++) {
-                        $suffix = $yearSuffix . 'Q' . $quarter . $i;
-                        if (str_contains($tagName, $suffix)) {
-                            Log::debug('Tag Included: match suffix', ['tag' => $tagName, 'matched' => $suffix]);
+                $prefix = $yearSuffix . 'Q';
+                // Cerca "25Q" senza numero oppure "25Q1", "25Q2", ecc
+                if (str_contains($tagName, $prefix)) {
+                    foreach ($availableQuarters as $quarter) {
+                        if (str_contains($tagName, $prefix . $quarter)) {
                             return true;
                         }
                     }
+                    // Se nessun quarter trovato, ma c'è "25Q" senza numero, accetta
+                    return !preg_match('/' . preg_quote($prefix, '/') . '\d/', $tagName);
                 }
                 return false;
             })
-            ->sortByDesc(function ($tag) {
-                return $tag->tagged->count();
-            })
+            ->sortBy('name')
             ->take(30)
             ->values();
 
@@ -218,7 +214,7 @@ class ReportController extends Controller
         return $tags;
     }
 
-    private function calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter = null)
+    private function calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter = null, $sortByHours = false)
     {
         $rows = [];
         $columnSums = array_fill(0, count($thead), 0); // Inizializza array per i totali delle colonne
@@ -258,7 +254,9 @@ class ReportController extends Controller
             $rows[] = $row;
         }
 
-        $rows = $this->sortRowsByHours($rows);
+        if (!$sortByHours) {
+            $rows = $this->sortRowsByHours($rows);
+        }
 
         // Aggiungi la riga dei totali alla fine
         $totalsRow = [self::LAST_COLUMN_LABEL]; // La prima cella della riga è 'Totale'
@@ -595,15 +593,11 @@ class ReportController extends Controller
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
     }
 
-    private function tab11QuarterTagCustomer($year, $availableQuarters, $tags, $customers)
+    private function tab11QuarterTagDev($year, $availableQuarters, $tags, $developers)
     {
-        return $this->tab7TagCustomer($year, $availableQuarters, $tags, $customers);
+        return $this->tab7TagCustomer($year, $availableQuarters, $tags, $developers);
     }
-    private function tab12QuarterCustomerTag($year, $availableQuarters, $tags, $customers)
-    {
-        return $this->tab8CustomerTag($year, $availableQuarters, $tags, $customers);
-    }
-    private function tab13QuarterTagType($year, $availableQuarters, $tags, $customers)
+    private function tab12QuarterTagType($year, $availableQuarters, $tags, $customers)
     {
         return $this->tab9TagType($year, $availableQuarters, $tags, $customers);
     }

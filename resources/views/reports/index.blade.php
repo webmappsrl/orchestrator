@@ -29,9 +29,8 @@
             @include('reports.tab8-customer-tag')
             @include('reports.tab9-tag-type')
             @include('reports.tab10-dev-type')
-            @include('reports.tab11-quarter-tag-customer')
-            @include('reports.tab12-quarter-customer-tag')
-            @include('reports.tab13-quarter-tag-type')
+            @include('reports.tab11-quarter-tag-dev')
+            @include('reports.tab12-quarter-tag-type')
         @endif
     </div>
 
