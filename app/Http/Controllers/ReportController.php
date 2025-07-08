@@ -57,11 +57,51 @@ class ReportController extends Controller
         $quarterReport = [];
         $quarterReport['thead'] = $thead;
         $quarterReport['tbody'] = [];
+        $filteredTbody = [];
+
         $tbody['year'] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, null, true);
         foreach ($availableQuarters as $quarter) {
             $tbody['q' . $quarter] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter, true);
         }
-        $quarterReport['tbody'] = $tbody;
+        $columnsToKeep = [];
+        foreach ($thead as $i => $columnName) {
+            if ($columnName === '' || $columnName === self::LAST_COLUMN_VALUE) {
+                $columnsToKeep[] = $i;
+                continue;
+            }
+            $hasNonZero = false;
+            foreach ($tbody as $table) {
+                foreach ($table as $row) {
+                    if (!isset($row[$i])) {
+                        continue;
+                    }
+
+                    if (preg_match('/(\d+)\s+\(([\d.]+)\)/', $row[$i], $matches)) {
+                        $tickets = (int) $matches[1];   // estrae il numero prima delle parentesi
+                        $hours = (float) $matches[2];   // estrae il numero dentro le parentesi
+
+                        if ($tickets > 0 || $hours > 0) {
+                            $hasNonZero = true;
+                            break 2; // questa colonna ha dati significativi, la teniamo
+                        }
+                    }
+                }
+            }
+            if ($hasNonZero) {
+                $columnsToKeep[] = $i;
+            }
+        }
+        $filteredThead = array_intersect_key($thead, array_flip($columnsToKeep));
+        $quarterReport['thead'] = array_values($filteredThead);
+
+        foreach ($tbody as $key => $rows) {
+            $filteredRows = [];
+            foreach ($rows as $row) {
+                $filteredRows[] = array_values(array_intersect_key($row, array_flip($columnsToKeep)));
+            }
+            $filteredTbody[$key] = $filteredRows;
+        }
+        $quarterReport['tbody'] = $filteredTbody;
 
         return $quarterReport;
     }
