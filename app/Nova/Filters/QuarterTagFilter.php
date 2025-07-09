@@ -53,7 +53,7 @@ class QuarterTagFilter extends Filter
 
             $label = "{$suffixYear}Q{$currentQuarter}";
             $quarters[$label] = $label;
-            $currentQuarter = $currentQuarter - 1;
+            $currentQuarter--;
         }
 
         return $quarters;
