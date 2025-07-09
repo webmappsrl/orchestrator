@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
 use App\Enums\UserRole;
-use App\Http\Controllers\Controller;
 use App\Models\Story as Ticket;
 use App\Models\Tag;
 use App\Models\User;
@@ -16,13 +15,14 @@ use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
-    const ALL_TIME = "All Time";
+    const ALL_TIME = 'All Time';
     const NO_DATA = 'Nessun dato disponibile';
     const NOT_ASSIGNED = 'non assegnato';
     const LAST_COLUMN_VALUE = 'totale';
     const LAST_COLUMN_LABEL = 'Totale';
     const SQL_PREFIX_FOR_EXTRACTING_QUARTER = 'EXTRACT(QUARTER FROM created_at)';
     const REGEX_FOR_EXTRACTING_HOURS = '/(\d+)\s*\((\d+\.?\d*)\)/';
+
     public function index(Request $request, $year = null)
     {
         // Recupera l'anno e i quarter disponibili tramite una funzione separata
@@ -35,6 +35,7 @@ class ReportController extends Controller
         $developers = $this->getDevelopers();
         $customers = $this->getCustomers($year, $availableQuarters);
         $tags = $this->getTags($year, $availableQuarters);
+        $tagsQuarter = $this->getTagsQuarter($year, $availableQuarters);
 
         $tab1Type = $this->tab1Type($year, $availableQuarters);
         [$tab2Status, $tab2StatusTotals] = $this->tab2Status($year, $availableQuarters); // Ora include i totali
@@ -46,19 +47,61 @@ class ReportController extends Controller
         $tab8CustomerTag = $this->tab8CustomerTag($year, $availableQuarters, $tags, $customers);
         $tab9TagType = $this->tab9TagType($year, $availableQuarters, $tags, $customers);
         $tab10DevType = $this->tab10DevType($year, $availableQuarters, $developers);
+        $tab11QuarterTagDev = $this->tab11QuarterTagDev($year, $availableQuarters, $tagsQuarter, $developers);
+        $tab12QuarterTagType = $this->tab12QuarterTagType($year, $availableQuarters, $tagsQuarter, $customers);
 
-        return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType', 'tab10DevType'));
+        return view('reports.index', compact('tab1Type', 'tab2Status', 'tab2StatusTotals', 'year', 'availableQuarters', 'tab3DevStatus', 'developers', 'tab4StatusDev', 'tab5CustomerStatus', 'tab6StatusCustomer', 'tab7TagCustomer', 'tab8CustomerTag', 'tab9TagType', 'tab10DevType', 'tab11QuarterTagDev', 'tab12QuarterTagType'));
     }
     private function generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn)
     {
         $quarterReport = [];
         $quarterReport['thead'] = $thead;
         $quarterReport['tbody'] = [];
-        $tbody['year'] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
+        $filteredTbody = [];
+
+        $tbody['year'] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, null, true);
         foreach ($availableQuarters as $quarter) {
-            $tbody['q' . $quarter] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter);
+            $tbody['q' . $quarter] = $this->calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter, true);
         }
-        $quarterReport['tbody'] =   $tbody;
+        $columnsToKeep = [];
+        foreach ($thead as $i => $columnName) {
+            if ($columnName === '' || $columnName === self::LAST_COLUMN_VALUE) {
+                $columnsToKeep[] = $i;
+                continue;
+            }
+            $hasNonZero = false;
+            foreach ($tbody as $table) {
+                foreach ($table as $row) {
+                    if (!isset($row[$i])) {
+                        continue;
+                    }
+
+                    if (preg_match('/(\d+)\s+\(([\d.]+)\)/', $row[$i], $matches)) {
+                        $tickets = (int) $matches[1];   // estrae il numero prima delle parentesi
+                        $hours = (float) $matches[2];   // estrae il numero dentro le parentesi
+
+                        if ($tickets > 0 || $hours > 0) {
+                            $hasNonZero = true;
+                            break 2; // questa colonna ha dati significativi, la teniamo
+                        }
+                    }
+                }
+            }
+            if ($hasNonZero) {
+                $columnsToKeep[] = $i;
+            }
+        }
+        $filteredThead = array_intersect_key($thead, array_flip($columnsToKeep));
+        $quarterReport['thead'] = array_values($filteredThead);
+
+        foreach ($tbody as $key => $rows) {
+            $filteredRows = [];
+            foreach ($rows as $row) {
+                $filteredRows[] = array_values(array_intersect_key($row, array_flip($columnsToKeep)));
+            }
+            $filteredTbody[$key] = $filteredRows;
+        }
+        $quarterReport['tbody'] = $filteredTbody;
 
         return $quarterReport;
     }
@@ -156,14 +199,61 @@ class ReportController extends Controller
         Log::info('Top Tags in ordine:', $tags->map(function ($tag) {
             return [
                 'name' => $tag->name,
-                'count' => $tag->tagged->count()
+                'count' => $tag->tagged->count(),
             ];
         })->toArray());
 
         return $tags;
     }
 
-    private function calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter = null)
+    private function getTagsQuarter($year, $availableQuarters)
+    {
+        $yearSuffix = substr((string) $year, -2);
+        // Carica i tag con i tagged associati nel periodo selezionato
+        $tags = Tag::with(['tagged' => function ($query) use ($year, $availableQuarters) {
+            if ($year !== self::ALL_TIME) {
+                $query->whereYear('stories.created_at', $year);
+                if (!empty($availableQuarters)) {
+                    $query->whereIn(DB::raw('EXTRACT(QUARTER FROM stories.created_at)'), $availableQuarters);
+                }
+            }
+        }])
+            ->get()
+            // Filtro: tag che iniziano con "25Q31", "25Q32", ecc.
+            ->filter(function ($tag) use ($yearSuffix, $availableQuarters) {
+                if ($tag->tagged->isEmpty()) {
+                    return false;
+                }
+                $tagName = strtoupper($tag->name);
+                $prefix = $yearSuffix . 'Q';
+                // Cerca "25Q" senza numero oppure "25Q1", "25Q2", ecc
+                if (str_contains($tagName, $prefix)) {
+                    foreach ($availableQuarters as $quarter) {
+                        if (str_contains($tagName, $prefix . $quarter)) {
+                            return true;
+                        }
+                    }
+                    // Se nessun quarter trovato, ma c'è "25Q" senza numero, accetta
+                    return !preg_match('/' . preg_quote($prefix, '/') . '\d/', $tagName);
+                }
+                return false;
+            })
+            ->sortBy('name')
+            ->take(30)
+            ->values();
+
+        // Log per debug
+        Log::info('Top Tags per quarter:', $tags->map(function ($tag) {
+            return [
+                'name' => $tag->name,
+                'count' => $tag->tagged->count(),
+            ];
+        })->toArray());
+
+        return $tags;
+    }
+
+    private function calculateRowData($year, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn, $quarter = null, $sortByHours = false)
     {
         $rows = [];
         $columnSums = array_fill(0, count($thead), 0); // Inizializza array per i totali delle colonne
@@ -203,7 +293,9 @@ class ReportController extends Controller
             $rows[] = $row;
         }
 
-        $rows = $this->sortRowsByHours($rows);
+        if (!$sortByHours) {
+            $rows = $this->sortRowsByHours($rows);
+        }
 
         // Aggiungi la riga dei totali alla fine
         $totalsRow = [self::LAST_COLUMN_LABEL]; // La prima cella della riga è 'Totale'
@@ -405,7 +497,7 @@ class ReportController extends Controller
     private function tab3DevStatus($year, $availableQuarters, $developers)
     {
         $cellQueryFn = function ($indexRowObj, $indexColumnObj) {
-            return   Ticket::where('user_id', $indexRowObj->id)
+            return Ticket::where('user_id', $indexRowObj->id)
                 ->where('status', $indexColumnObj);
         };
         $firstColumnNameFn = function ($indexRowObj) {
@@ -420,7 +512,7 @@ class ReportController extends Controller
     private function tab4StatusDev($year, $availableQuarters, $developers)
     {
         $cellQueryFn = function ($indexRowObj, $indexColumnObj) {
-            return     Ticket::where('status', $indexRowObj)
+            return Ticket::where('status', $indexRowObj)
                 ->whereHas('user', function ($q) use ($indexColumnObj) {
                     $q->where('name', $indexColumnObj); // Filtra per il nome dell'utente nel campo 'column'
                 });
@@ -437,7 +529,7 @@ class ReportController extends Controller
     private function tab5CustomerStatus($year, $availableQuarters, $customers)
     {
         $cellQueryFn = function ($indexRowObj, $indexColumnObj) {
-            return   Ticket::where('creator_id', $indexRowObj->id)
+            return Ticket::where('creator_id', $indexRowObj->id)
                 ->where('status', $indexColumnObj);
         };
         $firstColumnNameFn = function ($indexRowObj) {
@@ -452,7 +544,7 @@ class ReportController extends Controller
     private function tab6StatusCustomer($year, $availableQuarters, $customer)
     {
         $cellQueryFn = function ($indexRowObj, $indexColumnObj) {
-            return     Ticket::where('status', $indexRowObj)
+            return Ticket::where('status', $indexRowObj)
                 ->whereHas('creator', function ($q) use ($indexColumnObj) {
                     $q->where('name', $indexColumnObj); // Filtra per il nome dell'utente nel campo 'column'
                 });
@@ -488,15 +580,14 @@ class ReportController extends Controller
 
     private function tab8CustomerTag($year, $availableQuarters, $tags, $customers)
     {
-        $cellQueryFn = function ($indexRowObj, $indexColumnObj) use ($year) {
+        $cellQueryFn = function ($indexRowObj, $indexColumnObj) {
             return Ticket::whereNotNull('creator_id')
-                ->whereHas('creator', function ($q) use ($indexRowObj, $indexColumnObj) {
+                ->whereHas('creator', function ($q) use ($indexRowObj) {
                     $q->where('name', $indexRowObj->name); // Filtra per il nome dell'utente nel campo 'column'
                 }) // Filtra per lo stato specifico
-                ->whereHas('tags', function ($query) use ($indexRowObj, $indexColumnObj) {
+                ->whereHas('tags', function ($query) use ($indexColumnObj) {
                     $query->where('tags.name', $indexColumnObj); // Filtra per il nome del tag
-                })
-            ;
+                });
         };
         $firstColumnNameFn = function ($indexRowObj, $indexColumnObj) {
             return $indexRowObj->name ?? self::NOT_ASSIGNED;
@@ -509,9 +600,9 @@ class ReportController extends Controller
 
     private function tab9TagType($year, $availableQuarters, $tags, $customers)
     {
-        $cellQueryFn = function ($indexRowObj, $indexColumnObj) use ($year) {
+        $cellQueryFn = function ($indexRowObj, $indexColumnObj) {
             return Ticket::whereNotNull('creator_id')
-                ->whereHas('tags', function ($query) use ($indexRowObj, $indexColumnObj) {
+                ->whereHas('tags', function ($query) use ($indexRowObj) {
                     $query->where('tags.name', $indexRowObj->name); // Filtra per il nome del tag
                 })
                 ->where('type', $indexColumnObj);
@@ -528,7 +619,7 @@ class ReportController extends Controller
     private function tab10DevType($year, $availableQuarters, $developers)
     {
         $cellQueryFn = function ($indexRowObj, $indexColumnObj) {
-            return   Ticket::where('user_id', $indexRowObj->id)
+            return Ticket::where('user_id', $indexRowObj->id)
                 ->where('type', $indexColumnObj);
         };
         $firstColumnNameFn = function ($indexRowObj) {
@@ -538,5 +629,14 @@ class ReportController extends Controller
         $firstColumnCells = $developers;
 
         return $this->generateQuarterReport($year, $availableQuarters, $firstColumnCells, $thead, $firstColumnNameFn, $cellQueryFn);
+    }
+
+    private function tab11QuarterTagDev($year, $availableQuarters, $tags, $developers)
+    {
+        return $this->tab7TagCustomer($year, $availableQuarters, $tags, $developers);
+    }
+    private function tab12QuarterTagType($year, $availableQuarters, $tags, $customers)
+    {
+        return $this->tab9TagType($year, $availableQuarters, $tags, $customers);
     }
 }
