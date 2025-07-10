@@ -12,6 +12,7 @@ use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Fields\MorphToMany;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Laravel\Nova\Fields\Boolean;
+use App\Nova\Filters\QuarterTagFilter;
 
 class Tag extends Resource
 {
@@ -119,7 +120,9 @@ class Tag extends Resource
      */
     public function filters(Request $request)
     {
-        return [];
+        return [
+            new QuarterTagFilter,
+        ];
     }
 
     /**
