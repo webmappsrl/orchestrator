@@ -304,7 +304,9 @@ class Story extends Resource
             }),
             (new HtmlCard())->width('full')->withMeta([
                 'content' => $this->holidayAlert,
-            ])->center(true),
+            ])->center(true)->canSee(function ($request) {
+                return false;
+            }),
         ];
     }
 
