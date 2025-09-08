@@ -405,6 +405,11 @@ class Story extends Resource
                 ->confirmText('Click on the "Confirm" button to save the status in Todo or "Cancel" to cancel.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
+
+            (new actions\PromoteTicketToTagAction)
+                ->confirmText(__('Do you want to promote the selected ticket to tag?'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')),
         ];
         if ($request->user()->hasRole(UserRole::Developer)) {
             array_push($actions, (new actions\CreateDocumentationFromStory())
