@@ -17,16 +17,9 @@ use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class PromoteTicketToTagAction extends Action
+class ConvertStoryToTagAction extends Action
 {
     use InteractsWithQueue, Queueable;
-
-    /**
-     * The displayable name of the action.
-     *
-     * @var string
-     */
-    public $name = 'Promote Ticket to Tag';
 
     /**
      * Perform the action on the given models.
@@ -69,7 +62,7 @@ class PromoteTicketToTagAction extends Action
             $tag = $createdTag[0];
 
             return Action::visit('/resources/tags/'.$tag->id)
-                ->message("Ticket promosso con successo a tag '{$tag->name}'");
+                ->message(__('Ticket converted to tag')."'{$tag->name}'");
         }
     }
 
@@ -123,7 +116,7 @@ class PromoteTicketToTagAction extends Action
      */
     public function name()
     {
-        return __('Promote Ticket to Tag');
+        return __('Convert Ticket to Tag');
     }
 
     /**

@@ -406,8 +406,8 @@ class Story extends Resource
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
 
-            (new actions\PromoteTicketToTagAction)
-                ->confirmText(__('Do you want to promote the selected ticket to tag?'))
+            (new actions\ConvertStoryToTagAction)
+                ->confirmText(__('Do you want to convert the selected ticket to tag?'))
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel')),
         ];
