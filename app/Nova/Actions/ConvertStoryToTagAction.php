@@ -28,7 +28,6 @@ class ConvertStoryToTagAction extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        $createdTag = [];
         try {
             foreach ($models as $story) {
                 $description = $fields['description'] ?: $story->description;
@@ -36,7 +35,7 @@ class ConvertStoryToTagAction extends Action
                     $description = $this->convertHtmlToMarkdown($description);
                 }
 
-                $tag = Tag::create([
+                $createdTag = Tag::create([
                     'name' => $fields['tag_name'] ?: $story->name,
                     'description' => $description,
                     'estimate' => $fields['estimate'] ?: $story->estimated_hours,
@@ -44,25 +43,21 @@ class ConvertStoryToTagAction extends Action
                     'taggable_id' => $story->project_id,
                 ]);
 
-                $story->tags()->syncWithoutDetaching([$tag->id]);
+                $story->tags()->syncWithoutDetaching([$createdTag->id]);
 
                 if ($story->status !== StoryStatus::Done->value) {
                     $story->update([
                         'status' => StoryStatus::Done->value,
                     ]);
                 }
-
-                $createdTag[] = $tag;
             }
         } catch (\Throwable $e) {
             return Action::danger('Errore: '.$e->getMessage());
         }
 
-        if (count($createdTag) === 1) {
-            $tag = $createdTag[0];
-
-            return Action::visit('/resources/tags/'.$tag->id)
-                ->message(__('Ticket converted to tag')."'{$tag->name}'");
+        if ($createdTag) {
+            return Action::visit('/resources/tags/'.$createdTag->id)
+                ->message(__('Ticket converted to tag ')."'{$createdTag->name}'");
         }
     }
 
