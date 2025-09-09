@@ -39,7 +39,7 @@ class ConvertStoryToTagAction extends Action
                 $tag = Tag::create([
                     'name' => $fields['tag_name'] ?: $story->name,
                     'description' => $description,
-                    'estimate' => $fields['estimate'] ?: $story->hours,
+                    'estimate' => $fields['estimate'] ?: $story->estimated_hours,
                     'taggable_type' => Project::class,
                     'taggable_id' => $story->project_id,
                 ]);
@@ -84,7 +84,8 @@ class ConvertStoryToTagAction extends Action
             $firstStory = Story::find($resourceId);
             if ($firstStory) {
                 $firstStoryName = $firstStory->name ?? '';
-                $firstStoryHours = $firstStory->hours ?? null;
+                $firstStoryHours = $firstStory->estimated_hours ?? null;
+
                 $firstStoryDescription = $firstStory->description ?? '';
             }
         }
