@@ -30,15 +30,15 @@ class ConvertStoryToTagAction extends Action
     {
         try {
             foreach ($models as $story) {
-                $description = $fields['description'] ?: $story->description;
-                if (! $fields['description'] && $description && $this->containsHtml($description)) {
+                $description = $fields['description'] ?? $story->description;
+                if (! isset($fields['description']) && $description && $this->containsHtml($description)) {
                     $description = $this->convertHtmlToMarkdown($description);
                 }
 
                 $createdTag = Tag::create([
                     'name' => $fields['tag_name'] ?: $story->name,
                     'description' => $description,
-                    'estimate' => $fields['estimate'] ?: $story->estimated_hours,
+                    'estimate' => $fields['estimate'] ?? $story->estimated_hours,
                     'taggable_type' => Project::class,
                     'taggable_id' => $story->project_id,
                 ]);
