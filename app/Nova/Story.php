@@ -407,6 +407,7 @@ class Story extends Resource
                 ->cancelButtonText('Cancel'),
 
             (new actions\ConvertStoryToTagAction)
+                ->onlyOnDetail()
                 ->confirmText(__('Do you want to convert the selected ticket to tag?'))
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel')),
