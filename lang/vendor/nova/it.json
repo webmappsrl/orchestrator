@@ -397,5 +397,13 @@
   "Below we indicate the costs of the service divided into activation costs and annual maintenance costs": "Di seguito indichiamo i costi del servizio suddivisi in costi di attivazione e costi di manutenzione annuale",
   "actual": "attuale",
   "estimated": "stimato",
-  "Empty": "Vuoto"
+  "Empty": "Vuoto",
+  "Tag Name": "Nome Tag",
+  "Modify the tag name if needed": "Modifica il nome del tag se necessario",
+  "Modify the description if needed.": "Modifica la descrizione se necessario.",  
+  "Estimate (hours)": "Stima (ore)",
+  "Modify the estimate (hours) if needed": "Modifica la stima (ore) se necessario",
+  "Convert Ticket to Tag": "Converti Ticket in Tag",
+  "Do you want to convert the selected ticket to tag?": "Vuoi convertire il ticket selezionato in tag?",
+  "Ticket converted to tag": "Ticket convertito in tag"
 }

@@ -9,7 +9,8 @@ use Illuminate\Support\Str;
 class Tag extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'taggable_type', 'taggable_id', 'estimate'];
+
+    protected $fillable = ['name', 'description', 'taggable_type', 'taggable_id', 'estimate', 'type'];
 
     public function taggable()
     {
@@ -25,14 +26,16 @@ class Tag extends Model
     {
         // Calcola la somma delle ore dalle story associate
         $totalHours = $this->getTotalHoursAttribute(); // Usa la relazione 'tagged' per ottenere le story
+
         return $this->estimate ? ($totalHours / $this->estimate) * 100 : 0; // Calcola la percentuale di avanzamento
     }
 
     public function getTotalHoursAttribute()
     {
-        if (!$this->tagged()->exists()) {
+        if (! $this->tagged()->exists()) {
             return null; // Se non ci sono storie associate
         }
+
         return round($this->tagged()->sum('hours'), 2); // Somma delle ore delle storie associate arrotondata a due cifre
     }
 
@@ -48,8 +51,6 @@ class Tag extends Model
         return $actual; // Restituisci solo il valore di actual se estimated non è presente
     }
 
-
-
     public function getTaggableTypeAttribute()
     {
         return isset($this->attributes['taggable_type'])
@@ -59,11 +60,11 @@ class Tag extends Model
 
     public function getResourceUrlAttribute()
     {
-        if (!$this->taggable_type || strtolower($this->taggable_type) === 'project') {
+        if (! $this->taggable_type || strtolower($this->taggable_type) === 'project') {
             return url("resources/tags/{$this->id}"); // Ritorna l'URL del tag se il tipo manca o è 'project'
         }
 
-        if (!$this->taggable_id) {
+        if (! $this->taggable_id) {
             return '#'; // Ritorna un link non cliccabile se non ci sono informazioni sufficienti.
         }
 
@@ -73,8 +74,9 @@ class Tag extends Model
 
         return url("resources/{$resourcePath}/{$this->taggable_id}");
     }
+
     public function isClosed()
     {
-        return !$this->tagged()->whereNotIn('status', ['released', 'done'])->exists();
+        return ! $this->tagged()->whereNotIn('status', ['released', 'done'])->exists();
     }
 }

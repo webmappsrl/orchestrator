@@ -598,5 +598,13 @@
   "Delivery time": "Delivery time",
   "Costs": "Costs",
   "Below we indicate the costs of the service divided into activation costs and annual maintenance costs": "Below we indicate the costs of the service divided into activation costs and annual maintenance costs",
-  "Empty": "Empty"
+  "Empty": "Empty",
+  "Tag Name": "Tag Name",
+  "Modify the tag name if needed": "Modify the tag name if needed",
+  "Modify the description if needed.": "Modify the description if needed.",
+  "Estimate (hours)": "Estimate (hours)",
+  "Modify the estimate (hours) if needed": "Modify the estimate (hours) if needed",
+  "Convert Ticket to Tag": "Convert Ticket to Tag",
+  "Do you want to convert the selected ticket to tag?": "Do you want to convert the selected ticket to tag?",
+  "Ticket converted to tag": "Ticket converted to tag"
 }
