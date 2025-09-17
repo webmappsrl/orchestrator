@@ -29,6 +29,8 @@ class Story extends Resource
 {
     use fieldTrait;
 
+    public static $trafficCop = false;
+
     public static function label()
     {
         return __('Stories');
