@@ -419,6 +419,11 @@ class Story extends Resource
                 ->confirmText(__('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.'))
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel')));
+            
+            array_push($actions, (new actions\ChangeStoryCreator())
+                ->confirmText(__('Click on the "Confirm" button to change the creator of the selected story or "Cancel" to cancel.'))
+                ->confirmButtonText(__('Confirm'))
+                ->cancelButtonText(__('Cancel')));
         }
         if ($request->viaResource == 'projects') {
             array_push($actions, (new moveStoriesFromProjectToEpicAction)
