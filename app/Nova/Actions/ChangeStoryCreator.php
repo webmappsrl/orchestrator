@@ -81,11 +81,11 @@ class ChangeStoryCreator extends Action
     /**
      * Determine if the action is executable for the given request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Http\Request  $request
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return bool
      */
-    public function authorizedToSee(NovaRequest $request)
+    public function authorizedToSee($request)
     {
         return $request->user()->hasRole(UserRole::Developer);
     }
