@@ -147,11 +147,16 @@ class InitializeDatabase extends Command
         }
 
         foreach ($developers as $developer) {
+            // Convert string roles to UserRole enum
+            $roles = array_map(function($role) {
+                return UserRole::from($role);
+            }, $developer['roles'] ?? ['developer']);
+
             User::create([
                 'name' => $developer['name'],
                 'email' => $developer['email'],
                 'password' => bcrypt('developer123'),
-                'roles' => $developer['roles'] ?? [UserRole::Developer]
+                'roles' => $roles
             ]);
         }
 
