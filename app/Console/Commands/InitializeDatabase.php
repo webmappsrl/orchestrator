@@ -170,23 +170,43 @@ class InitializeDatabase extends Command
     {
         $this->line('   Creating customer users...');
         
-        $customers = config('initialization.customers', []);
+        $customerFile = config_path('customer.list');
         
-        if (empty($customers)) {
-            $this->line('   ⚠️  No customers configured in config/initialization.php');
+        if (!file_exists($customerFile)) {
+            $this->line("   ⚠️  Customer file not found: {$customerFile}");
             return;
         }
-
-        foreach ($customers as $customer) {
+        
+        $lines = file($customerFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $customerCount = 0;
+        
+        foreach ($lines as $line) {
+            $parts = explode(';', trim($line));
+            
+            if (count($parts) !== 2) {
+                $this->warn("   ⚠️  Skipping invalid line: {$line}");
+                continue;
+            }
+            
+            $email = trim($parts[0]);
+            $name = trim($parts[1]);
+            
+            if (empty($email) || empty($name)) {
+                $this->warn("   ⚠️  Skipping line with empty email or name: {$line}");
+                continue;
+            }
+            
             User::create([
-                'name' => $customer['name'],
-                'email' => $customer['email'],
+                'name' => $name,
+                'email' => $email,
                 'password' => bcrypt('customer123'),
                 'roles' => [UserRole::Customer]
             ]);
+            
+            $customerCount++;
         }
-
-        $this->line('   ✅ Customer users created');
+        
+        $this->line("   ✅ Created {$customerCount} customer users");
     }
 
     /**
@@ -196,17 +216,39 @@ class InitializeDatabase extends Command
     {
         $this->line('   Creating tags...');
         
-        $tags = config('initialization.tags', []);
-        
-        if (empty($tags)) {
-            $this->line('   ⚠️  No tags configured in config/initialization.php');
-            return;
+        $tags = [
+            'SOA/Servizi di Amministrazione Ordinaria',
+            'SOAD/Servizi di segreteria a Distanza',
+            'SOAD/Verbalizzazione online',
+            'SOAD/Organizzazione Drive',
+            'SOAD/Controllo dei budget',
+            'SOAD/Invio Newsletter',
+            'SOAD/Raccolta dati moduli online',
+            'SOAD/Pagamenti online',
+            'SOAD/Inserimento contenuti digitali',
+            'SOAC/Servizi di consulenza a distanza',
+            'SOAC/Terzo Settore',
+            'SOAC/Commercialista',
+            'SOAC/Ufficio Legale',
+            'FS/Fundraising',
+            'FS/Monitoraggio',
+            'FS/Progettazione',
+            'FS/Accompagnamento',
+            'FS/Coordinamento',
+            'FS/Rendicontazione',
+            'MS/Montagna Servizi',
+            'MS/Amministrazione',
+            'MS/Formazione',
+            'MS/Investimenti',
+            'MS/Team Meeting',
+        ];
+
+        foreach ($tags as $tagName) {
+            Tag::create([
+                'name' => $tagName,
+            ]);
         }
 
-        foreach ($tags as $tag) {
-            Tag::create($tag);
-        }
-
-        $this->line('   ✅ Tags created');
+        $this->line("   ✅ Created " . count($tags) . " tags");
     }
 }

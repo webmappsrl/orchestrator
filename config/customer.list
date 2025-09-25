@@ -1,0 +1,556 @@
+gr_cai_sicilia@cai.it;GR Sicilia
+gr_cai_toscana@cai.it;GR Toscana
+gr_cai_umbria@cai.it;GR Umbria
+gr_cai_valledaosta@cai.it;GR Val d'Aosta
+gr_cai_veneto@cai.it;GR Veneto
+gr_cai_marche@cai.it;GR Marche
+gr_cai_molise@cai.it;GR Molise
+gr_cai_piemonte@cai.it;GR Piemonte
+gr_cai_puglia@cai.it;GR Puglia
+gr_cai_abruzzo@cai.it;GR Abruzzo
+presidente@caialtoadige.it;GR Alto Adige
+gr_cai_basilicata@cai.it;GR Basilicata
+gr_cai_lazio@cai.it;GR Lazio
+gr_cai_liguria@cai.it;GR Liguria
+gr_cai_lombardia@cai.it;GR Lombardia
+gr_cai_campania@cai.it;GR Campania
+gr_cai_emiliaromagna@cai.it;GR Emilia
+presidente@cai-fvg.it;GR Friuli Venezia Giulia
+csc@cai.it;OTCO/SO CSC
+cnsasa@cai.it;OTCO/SO CNSASA
+ccst@cai.it;OTCO/SO CCST
+ccag@cai.it;OTCO/SO CCAG
+cctam@cai.it;OTCO/SO CCTAM
+cce@cai.it;OTCO/SO CCE
+ccm@cai.it;OTCO/SO CCM
+csmt@cai.it;OTCO/SO CSMT
+svi@cai.it;OTCO/SO SVI
+sobn@cai.it;OTCO/SO Biblioteca Nazionale
+soroa@cai.it;OTCO/SO SOROA
+sosec@cai.it;OTCO/SO SOSEC
+cnc@cai.it;OTCO/SO CNC
+bossea@cai.it;OTCO/SO SOB - BOSSEA
+a.massena@cai.it;OTCO/SO CAI CULTURA
+sodas@cai.it;OTCO/SO SODAS
+caiscuola@cai.it;OTCO/SO CAI SCUOLA
+lagonegro@cai.it;C.A.I. SEZ. LAGONEGRO | Basilicata
+matera@cai.it;C.A.I. SEZ. MATERA | Basilicata
+melfi@cai.it;C.A.I. SEZ. MELFI | Basilicata
+potenza@cai.it;C.A.I. SEZ. POTENZA | Basilicata
+castrovillari@cai.it;C.A.I. SEZ. CASTROVILLARI | Calabria
+catanzaro@cai.it;C.A.I. SEZ. CATANZARO | Calabria
+cosenza@cai.it;C.A.I. SEZ. COSENZA | Calabria
+info@caireggio.it;C.A.I. SEZ. REGGIO CALABRIA | Calabria
+caiverbicaro2014@gmail.com;C.A.I. SEZ. VERBICARO | Calabria
+avellino@cai.it;C.A.I. SEZ. AVELLINO | Campania
+caserta@cai.it;C.A.I. SEZ. CASERTA | Campania
+castellammaredistabia@cai.it;C.A.I. SEZ. CASTELLAMMARE DI STABIA | Campania
+cavadeitirreni@cai.it;C.A.I. SEZ. CAVA DEI TIRRENI | Campania
+napoli@cai.it;C.A.I. SEZ. NAPOLI | Campania
+info@caisalerno.it;C.A.I. SEZ. SALERNO | Campania
+caiargenta@virgilio.it;C.A.I. SEZ. ARGENTA | Emilia-Romagna
+bologna@cai.it;C.A.I. SEZ. BOLOGNA | Emilia-Romagna
+carpi@cai.it;C.A.I. SEZ. CARPI | Emilia-Romagna
+castelfrancoemilia@cai.it;C.A.I. SEZ. CASTELFRANCO EMILIA | Emilia-Romagna
+castelnovonemonti@cai.it;C.A.I. SEZ. CASTELNOVO NE' MONTI | Emilia-Romagna
+cesena@cai.it;C.A.I. SEZ. CESENA | Emilia-Romagna
+faenza@cai.it;C.A.I. SEZ. FAENZA | Emilia-Romagna
+ferrara@cai.it;C.A.I. SEZ. FERRARA | Emilia-Romagna
+forli@cai.it;C.A.I. SEZ. FORLI' | Emilia-Romagna
+imola@cai.it;C.A.I. SEZ. IMOLA | Emilia-Romagna
+lugo@cai.it;C.A.I. SEZ. LUGO | Emilia-Romagna
+modena@cai.it;C.A.I. SEZ. MODENA | Emilia-Romagna
+parma@cai.it;C.A.I. SEZ. PARMA | Emilia-Romagna
+pavullonelfrignano@cai.it;C.A.I. SEZ. PAVULLO NEL FRIGNANO | Emilia-Romagna
+info@caipiacenza.it;C.A.I. SEZ. PIACENZA | Emilia-Romagna
+porrettaterme@cai.it;C.A.I. SEZ. PORRETTA TERME | Emilia-Romagna
+ravenna@cai.it;C.A.I. SEZ. RAVENNA | Emilia-Romagna
+reggioemilia@cai.it;C.A.I. SEZ. REGGIO EMILIA | Emilia-Romagna
+cairimini@cairimini.it;C.A.I. SEZ. RIMINI | Emilia-Romagna
+sassuolo@cai.it;C.A.I. SEZ. SASSUOLO | Emilia-Romagna
+cervignanodelfriuli@cai.it;C.A.I. SEZ. CERVIGNANO DEL FRIULI | Friuli-Venezia-Giulia
+cimolais@cai.it;C.A.I. SEZ. CIMOLAIS | Friuli-Venezia-Giulia
+cividaledelfriuli@cai.it;C.A.I. SEZ. CIVIDALE DEL FRIULI | Friuli-Venezia-Giulia
+claut@cai.it;C.A.I. SEZ. CLAUT | Friuli-Venezia-Giulia
+codroipo@cai.it;C.A.I. SEZ. CODROIPO | Friuli-Venezia-Giulia
+forniavoltri@cai.it;C.A.I. SEZ. FORNI AVOLTRI | Friuli-Venezia-Giulia
+fornidisopra@cai.it;C.A.I. SEZ. FORNI DI SOPRA | Friuli-Venezia-Giulia
+gemonadelfriuli@cai.it;C.A.I. SEZ. GEMONA DEL FRIULI | Friuli-Venezia-Giulia
+gorizia@cai.it;C.A.I. SEZ. GORIZIA | Friuli-Venezia-Giulia
+maniago@cai.it;C.A.I. SEZ. MANIAGO | Friuli-Venezia-Giulia
+manzano@cai.it;C.A.I. SEZ. MANZANO | Friuli-Venezia-Giulia
+moggioudinese@cai.it;C.A.I. SEZ. MOGGIO UDINESE | Friuli-Venezia-Giulia
+monfalcone@cai.it;C.A.I. SEZ. MONFALCONE | Friuli-Venezia-Giulia
+pontebba@cai.it;C.A.I. SEZ. PONTEBBA | Friuli-Venezia-Giulia
+info@cai.pordenone.it;C.A.I. SEZ. PORDENONE | Friuli-Venezia-Giulia
+ravascletto@cai.it;C.A.I. SEZ. RAVASCLETTO | Friuli-Venezia-Giulia
+udinesaf@cai.it;C.A.I. SEZ. S.A.F.- UDINE | Friuli-Venezia-Giulia
+triestesag@cai.it;C.A.I. SEZ. S.A.G.- TRIESTE | Friuli-Venezia-Giulia
+s.vitoaltagliamento@cai.it;C.A.I. SEZ. S.VITO AL TAGLIAMENTO | Friuli-Venezia-Giulia
+tarvisio@cai.it;C.A.I. SEZ. TARVISIO | Friuli-Venezia-Giulia
+tolmezzo@cai.it;C.A.I. SEZ. TOLMEZZO | Friuli-Venezia-Giulia
+tricesimo@cai.it;C.A.I. SEZ. TRICESIMO | Friuli-Venezia-Giulia
+cai.valnatisone@libero.it;C.A.I. SEZ. VAL NATISONE | Friuli-Venezia-Giulia
+xxxottobre@cai.it;C.A.I. SEZ. XXX OTTOBRE | Friuli-Venezia-Giulia
+amatrice@cai.it;C.A.I. SEZ. AMATRICE | Lazio
+antrodoco@cai.it;C.A.I. SEZ. ANTRODOCO | Lazio
+aprilia@cai.it;C.A.I. SEZ. APRILIA | Lazio
+cassino@cai.it;C.A.I. SEZ. CASSINO | Lazio
+colleferro@cai.it;C.A.I. SEZ. COLLEFERRO | Lazio
+esperia@cai.it;C.A.I. SEZ. ESPERIA | Lazio
+frosinone@cai.it;C.A.I. SEZ. FROSINONE | Lazio
+leonessa@cai.it;C.A.I. SEZ. LEONESSA | Lazio
+sanremo@cai.it;C.A.I. SEZ. SANREMO | Liguria
+sarzana@cai.it;C.A.I. SEZ. SARZANA | Liguria
+savona@cai.it;C.A.I. SEZ. SAVONA | Liguria
+u.l.e.genova@cai.it;C.A.I. SEZ. U.L.E. GENOVA | Liguria
+varazze@cai.it;C.A.I. SEZ. VARAZZE | Liguria
+ventimiglia@cai.it;C.A.I. SEZ. VENTIMIGLIA | Liguria
+gualdotadino@cai.it;C.A.I. SEZ. GUALDO TADINO | Umbria
+loretoaprutino@cai.it;C.A.I. SEZ. LORETO APRUTINO | Abruzzo
+ortona@cai.it;C.A.I. SEZ. ORTONA | Abruzzo
+popoli@cai.it;C.A.I. SEZ. POPOLI | Abruzzo
+pescara@cai.it;C.A.I. SEZ. PESCARA | Abruzzo
+farindola@cai.it;C.A.I. SEZ. FARINDOLA | Abruzzo
+arsita@cai.it;C.A.I. SEZ. ARSITA | Abruzzo
+guardiagrele@cai.it;C.A.I. SEZ. GUARDIAGRELE | Abruzzo
+carsoli@cai.it;C.A.I. SEZ. CARSOLI | Abruzzo
+casteldisangro@cai.it;C.A.I. SEZ. CASTEL DI SANGRO | Abruzzo
+atessa@cai.it;C.A.I. SEZ. ATESSA | Abruzzo
+farasanmartino@cai.it;C.A.I. SEZ. FARA S.MARTINO | Abruzzo
+avezzano@cai.it;C.A.I. SEZ. AVEZZANO | Abruzzo
+sulmona@cai.it;C.A.I. SEZ. SULMONA | Abruzzo
+vasto@cai.it;C.A.I. SEZ. VASTO | Abruzzo
+coppodellorso@cai.it;C.A.I. SEZ. VALLELONGA - COPPO DELL'ORSO | Abruzzo
+teramo@cai.it;C.A.I. SEZ. TERAMO | Abruzzo
+laquila@cai.it;C.A.I. SEZ. L'AQUILA | Abruzzo
+segreteria@caichieti.it;C.A.I. SEZ. CHIETI | Abruzzo
+castelli@cai.it;C.A.I. SEZ. CASTELLI | Abruzzo
+spilimbergo@cai.it;C.A.I. SEZ. SPILIMBERGO | Friuli-Venezia-Giulia
+sacile@cai.it;C.A.I. SEZ. SACILE | Friuli-Venezia-Giulia
+sappada@cai.it;C.A.I. SEZ. SAPPADA | Friuli-Venezia-Giulia
+info@caimonterotondo.it;C.A.I. SEZ. MONTEROTONDO | Lazio
+roma@cai.it;C.A.I. SEZ. ROMA | Lazio
+rieti@cai.it;C.A.I. SEZ. RIETI | Lazio
+sora@cai.it;C.A.I. SEZ. SORA | Lazio
+chiavari@cai.it;C.A.I. SEZ. CHIAVARI | Liguria
+imperia@cai.it;C.A.I. SEZ. IMPERIA | Liguria
+sampierdarena@cai.it;C.A.I. SEZ. SAMPIERDARENA | Liguria
+genovaligure@cai.it;C.A.I. SEZ. LIGURE-GENOVA | Liguria
+bolzaneto@cai.it;C.A.I. SEZ. BOLZANETO | Liguria
+bordighera@cai.it;C.A.I. SEZ. BORDIGHERA | Liguria
+cairapallo@libero.it;C.A.I. SEZ. RAPALLO | Liguria
+laspezia@cai.it;C.A.I. SEZ. LA SPEZIA | Liguria
+altare@cai.it;C.A.I. SEZ. ALTARE | Liguria
+finaleligure@cai.it;C.A.I. SEZ. FINALE LIGURE | Liguria
+albenga@cai.it;C.A.I. SEZ. ALBENGA | Liguria
+loano@cai.it;C.A.I. SEZ. LOANO | Liguria
+livigno@cai.it;C.A.I. SEZ. LIVIGNO | Lombardia
+abbiategrasso@cai.it;C.A.I. SEZ. ABBIATEGRASSO | Lombardia
+albiate@cai.it;C.A.I. SEZ. ALBIATE | Lombardia
+aprica@cai.it;C.A.I. SEZ. APRICA | Lombardia
+arsagoseprio@cai.it;C.A.I. SEZ. ARSAGO SEPRIO | Lombardia
+bovegno@cai.it;C.A.I. SEZ. BOVEGNO | Lombardia
+bozzolo@cai.it;C.A.I. SEZ. BOZZOLO | Lombardia
+cabiate@cai.it;C.A.I. SEZ. CABIATE | Lombardia
+calolziocorte@cai.it;C.A.I. SEZ. CALOLZIOCORTE | Lombardia
+canzo@cai.it;C.A.I. SEZ. CANZO | Lombardia
+carnago@cai.it;C.A.I. SEZ. CARNAGO | Lombardia
+castellanza@cai.it;C.A.I. SEZ. CASTELLANZA | Lombardia
+cedegolo@cai.it;C.A.I. SEZ. CEDEGOLO | Lombardia
+cermenate@cai.it;C.A.I. SEZ. CERMENATE | Lombardia
+chiari@cai.it;C.A.I. SEZ. CHIARI | Lombardia
+chiavenna@cai.it;C.A.I. SEZ. CHIAVENNA | Lombardia
+cinisellobalsamo@cai.it;C.A.I. SEZ. CINISELLO BALSAMO | Lombardia
+codogno@cai.it;C.A.I. SEZ. CODOGNO | Lombardia
+colico@cai.it;C.A.I. SEZ. COLICO | Lombardia
+collio@cai.it;C.A.I. SEZ. COLLIO | Lombardia
+cornaredo@cai.it;C.A.I. SEZ. CORNAREDO | Lombardia
+crema@cai.it;C.A.I. SEZ. CREMA | Lombardia
+dervio@cai.it;C.A.I. SEZ. DERVIO | Lombardia
+edolo@cai.it;C.A.I. SEZ. EDOLO | Lombardia
+finomornasco@cai.it;C.A.I. SEZ. FINO MORNASCO | Lombardia
+garbagnate@cai.it;C.A.I. SEZ. GARBAGNATE MILANESE | Lombardia
+gavardo@cai.it;C.A.I. SEZ. GAVARDO | Lombardia
+germignaga@cai.it;C.A.I. SEZ. GERMIGNAGA | Lombardia
+giussano@cai.it;C.A.I. SEZ. GIUSSANO | Lombardia
+gorgonzola@cai.it;C.A.I. SEZ. GORGONZOLA | Lombardia
+introbio@cai.it;C.A.I. SEZ. INTROBIO | Lombardia
+inverigo@cai.it;C.A.I. SEZ. INVERIGO | Lombardia
+inveruno@cai.it;C.A.I. SEZ. INVERUNO | Lombardia
+legnano@cai.it;C.A.I. SEZ. LEGNANO | Lombardia
+lissone@cai.it;C.A.I. SEZ. LISSONE | Lombardia
+luino@cai.it;C.A.I. SEZ. LUINO | Lombardia
+lumezzane@cai.it;C.A.I. SEZ. LUMEZZANE | Lombardia
+macherio@cai.it;C.A.I. SEZ. MACHERIO | Lombardia
+madesimo@cai.it;C.A.I. SEZ. MADESIMO | Lombardia
+magenta@cai.it;C.A.I. SEZ. MAGENTA | Lombardia
+mandellolario@cai.it;C.A.I. SEZ. MANDELLO LARIO | Lombardia
+marianocomense@cai.it;C.A.I. SEZ. MARIANO COMENSE | Lombardia
+melegnano@cai.it;C.A.I. SEZ. MELEGNANO | Lombardia
+melzo@cai.it;C.A.I. SEZ. MELZO | Lombardia
+merate@cai.it;C.A.I. SEZ. MERATE | Lombardia
+merone@cai.it;C.A.I. SEZ. MERONE | Lombardia
+molteno@cai.it;C.A.I. SEZ. MOLTENO | Lombardia
+moltrasio@cai.it;Moltrasio | Lombardia
+mortara@cai.it;C.A.I. SEZ. MORTARA | Lombardia
+nerviano@cai.it;C.A.I. SEZ. NERVIANO | Lombardia
+novatemezzola@cai.it;C.A.I. SEZ. NOVATE MEZZOLA | Lombardia
+olgiateolona@cai.it;C.A.I. SEZ. OLGIATE OLONA | Lombardia
+ostiglia@cai.it;C.A.I. SEZ. OSTIGLIA | Lombardia
+parabiago@cai.it;C.A.I. SEZ. PARABIAGO | Lombardia
+piazzabrembana@cai.it;C.A.I. SEZ. PIAZZA BREMBANA | Lombardia
+rho@cai.it;C.A.I. SEZ. RHO | Lombardia
+romanodilombardia@cai.it;C.A.I. SEZ. ROMANO DI LOMBARDIA | Lombardia
+rovagnate@cai.it;C.A.I. SEZ. ROVAGNATE | Lombardia
+rovato@cai.it;C.A.I. SEZ. ROVATO | Lombardia
+rovellasca@cai.it;C.A.I. SEZ. ROVELLASCA | Lombardia
+saronno@cai.it;C.A.I. SEZ. SARONNO | Lombardia
+sevesos.pietro@cai.it;C.A.I. SEZ. SEVESO S.PIETRO | Lombardia
+sovico@cai.it;C.A.I. SEZ. SOVICO | Lombardia
+valfurva@cai.it;C.A.I. SEZ. VALFURVA | Lombardia
+valleintelvi@cai.it;C.A.I. SEZ. VALLE INTELVI | Lombardia
+valmadrera@cai.it;C.A.I. SEZ. VALMADRERA | Lombardia
+valmalenco@cai.it;C.A.I. SEZ. VALMALENCO | Lombardia
+vedanoallambro@cai.it;C.A.I. SEZ. VEDANO AL LAMBRO | Lombardia
+vedanoolona@cai.it;C.A.I. SEZ. VEDANO OLONA | Lombardia
+veduggio@cai.it;C.A.I. SEZ. VEDUGGIO | Lombardia
+vestone@cai.it;C.A.I. SEZ. VESTONE | Lombardia
+villasanta@cai.it;C.A.I. SEZ. VILLASANTA | Lombardia
+vimodrone@cai.it;C.A.I. SEZ. VIMODRONE | Lombardia
+vittuone@cai.it;C.A.I. SEZ. VITTUONE | Lombardia
+voghera@cai.it;C.A.I. SEZ. VOGHERA | Lombardia
+segreteria@caisestosg.it;C.A.I. SEZ. SESTO S.GIOVANNI | Lombardia
+colognomonzese@cai.it;C.A.I. SEZ. COLOGNO MONZESE | Lombardia
+corsico@cai.it;C.A.I. SEZ. CORSICO | Lombardia
+s.e.m.milano@cai.it;C.A.I. SEZ. S.E.M. | Lombardia
+milano@cai.it;C.A.I. SEZ. MILANO | Lombardia
+trezzosulladda@cai.it;C.A.I. SEZ. TREZZO SULL'ADDA | Lombardia
+info@caicernuscosulnaviglio.com;C.A.I. SEZ. CERNUSCO SUL NAVIGLIO | Lombardia
+inzago@cai.it;C.A.I. SEZ. INZAGO | Lombardia
+boffaloraticino@cai.it;C.A.I. SEZ. BOFFALORA SOPRA TICINO | Lombardia
+padernodugnano@cai.it;C.A.I. SEZ. PADERNO DUGNANO | Lombardia
+brescia@cai.it;C.A.I. SEZ. BRESCIA | Lombardia
+gardonevaltrompia@cai.it;C.A.I. SEZ. GARDONE VAL TROMPIA | Lombardia
+info@caivillacarcina.it;C.A.I. SEZ. VILLA CARCINA | Lombardia
+desenzanodelgarda@cai.it;C.A.I. SEZ. DESENZANO | Lombardia
+como@cai.it;C.A.I. SEZ. COMO | Lombardia
+capiagointimiano@cai.it;C.A.I. SEZ. CAPIAGO INTIMIANO | Lombardia
+caslinoderba@cai.it;C.A.I. SEZ. CASLINO D'ERBA | Lombardia
+erba@cai.it;C.A.I. SEZ. ERBA | Lombardia
+asso@cai.it;C.A.I. SEZ. ASSO | Lombardia
+segreteria@caicantu.it;C.A.I. SEZ. CANTU' | Lombardia
+gallarate@cai.it;C.A.I. SEZ. GALLARATE | Lombardia
+bustoarsizio@cai.it;C.A.I. SEZ. BUSTO ARSIZIO | Lombardia
+varese@cai.it;C.A.I. SEZ. VARESE | Lombardia
+lavenomombello@cai.it;C.A.I. SEZ. LAVENO MOMBELLO | Lombardia
+oggiono@cai.it;C.A.I. SEZ. OGGIONO | Lombardia
+segreteria@cai.lecco.it;C.A.I. SEZ. LECCO | Lombardia
+valtellinesesondrio@cai.it;C.A.I. SEZ. VALTELLINESE-SONDRIO | Lombardia
+morbegno@cai.it;C.A.I. SEZ. MORBEGNO | Lombardia
+sondalo@cai.it;C.A.I. SEZ. SONDALO | Lombardia
+bormio@cai.it;C.A.I. SEZ. BORMIO | Lombardia
+dongo@cai.it;C.A.I. SEZ. DONGO | Lombardia
+clusone@cai.it;C.A.I. SEZ. CLUSONE | Lombardia
+bergamo@cai.it;C.A.I. SEZ. BERGAMO | Lombardia
+lovere@cai.it;C.A.I. SEZ. LOVERE | Lombardia
+meda@cai.it;C.A.I. SEZ. MEDA | Lombardia
+barlassina@cai.it;C.A.I. SEZ. BARLASSINA | Lombardia
+bovisiomasciago@cai.it;C.A.I. SEZ. BOVISIO MASCIAGO | Lombardia
+desio@cai.it;C.A.I. SEZ. DESIO | Lombardia
+seregno@cai.it;C.A.I. SEZ. SEREGNO | Lombardia
+caratebrianza@cai.it;C.A.I. SEZ. CARATE BRIANZA | Lombardia
+besanabrianza@cai.it;C.A.I. SEZ. BESANA BRIANZA | Lombardia
+treviglio@cai.it;C.A.I. SEZ. TREVIGLIO | Lombardia
+breno@cai.it;C.A.I. SEZ. BRENO | Lombardia
+pezzopontedilegno@cai.it;C.A.I. SEZ. PEZZO PONTEDILEGNO | Lombardia
+salo@cai.it;C.A.I. SEZ. SALO' | Lombardia
+lodi@cai.it;C.A.I. SEZ. LODI | Lombardia
+cremona@cai.it;C.A.I. SEZ. CREMONA | Lombardia
+mantova@cai.it;C.A.I. SEZ. MANTOVA | Lombardia
+vigevano@cai.it;C.A.I. SEZ. VIGEVANO | Lombardia
+pavia@cai.it;C.A.I. SEZ. PAVIA | Lombardia
+concorezzo@cai.it;C.A.I. SEZ. CONCOREZZO | Lombardia
+vimercate@cai.it;C.A.I. SEZ. VIMERCATE | Lombardia
+muggio@cai.it;C.A.I. SEZ. MUGGIO' | Lombardia
+brugherio@cai.it;C.A.I. SEZ. BRUGHERIO | Lombardia
+barzano@cai.it;C.A.I. SEZ. BARZANO' | Lombardia
+missaglia@cai.it;C.A.I. SEZ. MISSAGLIA | Lombardia
+calco@cai.it;C.A.I. SEZ. CALCO | Lombardia
+montevecchia@cai.it;C.A.I. SEZ. MONTEVECCHIA | Lombardia
+premana@cai.it;C.A.I. SEZ. PREMANA | Lombardia
+malnate@cai.it;C.A.I. SEZ. MALNATE | Lombardia
+monza@cai.it;C.A.I. SEZ. MONZA | Lombardia
+bellano@cai.it;C.A.I. SEZ. BELLANO | Lombardia
+gavirate@cai.it;C.A.I. SEZ. GAVIRATE | Lombardia
+sommalombardo@cai.it;C.A.I. SEZ. SOMMA LOMBARDO | Lombardia
+bollate@cai.it;C.A.I. SEZ. BOLLATE | Lombardia
+novatemilanese@cai.it;C.A.I. SEZ. NOVATE MILANESE | Lombardia
+borno@cai.it;C.A.I. SEZ. BORNO | Lombardia
+cassanodadda@cai.it;C.A.I. SEZ. CASSANO D'ADDA | Lombardia
+coccaglio@cai.it;C.A.I. SEZ. COCCAGLIO | Lombardia
+sestocalende@cai.it;C.A.I. SEZ. SESTO CALENDE | Lombardia
+besozzosuperiore@cai.it;C.A.I. SEZ. BESOZZO SUPERIORE | Lombardia
+menaggio@cai.it;C.A.I. SEZ. MENAGGIO | Lombardia
+castiglionestiviere@cai.it;C.A.I. SEZ. CASTIGLIONE STIVIERE | Lombardia
+palazzolosulloglio@cai.it;C.A.I. SEZ. PALAZZOLO SULL'OGLIO | Lombardia
+gazzadaschianno@cai.it;C.A.I. SEZ. GAZZADA SCHIANNO | Lombardia
+tradate@cai.it;C.A.I. SEZ. TRADATE | Lombardia
+amandola@cai.it;C.A.I. SEZ. AMANDOLA | Marche
+camerino@cai.it;C.A.I. SEZ. CAMERINO | Marche
+fabriano@cai.it;C.A.I. SEZ. FABRIANO | Marche
+fermo@cai.it;C.A.I. SEZ. FERMO | Marche
+jesi@cai.it;C.A.I. SEZ. JESI | Marche
+potenzapicena@cai.it;C.A.I. SEZ. POTENZA PICENA | Marche
+s.benedettodeltronto@cai.it;C.A.I. SEZ. S.BENEDETTO DEL TRONTO | Marche
+s.severinomarche@cai.it;C.A.I. SEZ. S.SEVERINO MARCHE | Marche
+sarnano@cai.it;C.A.I. SEZ. SARNANO | Marche
+senigallia@cai.it;C.A.I. SEZ. SENIGALLIA | Marche
+ancona@cai.it;C.A.I. SEZ. ANCONA | Marche
+macerata@cai.it;C.A.I. SEZ. MACERATA | Marche
+ascolipiceno@cai.it;C.A.I. SEZ. ASCOLI PICENO | Marche
+montefeltro@cai.it;C.A.I. SEZ. MONTEFELTRO | Marche
+pesaro@cai.it;C.A.I. SEZ. PESARO | Marche
+isernia@cai.it;C.A.I. SEZ. ISERNIA | Molise
+aladistura@cai.it;C.A.I. SEZ. ALA DI STURA | Piemonte
+alessandria@cai.it;C.A.I. SEZ. ALESSANDRIA | Piemonte
+almese@cai.it;C.A.I. SEZ. ALMESE | Piemonte
+alpignano@cai.it;C.A.I. SEZ. ALPIGNANO | Piemonte
+asti@cai.it;C.A.I. SEZ. ASTI | Piemonte
+bardonecchia@cai.it;C.A.I. SEZ. BARDONECCHIA | Piemonte
+barge@cai.it;C.A.I. SEZ. BARGE | Piemonte
+baveno@cai.it;C.A.I. SEZ. BAVENO | Piemonte
+borgomanero@cai.it;C.A.I. SEZ. BORGOMANERO | Piemonte
+bussoleno@cai.it;C.A.I. SEZ. BUSSOLENO | Piemonte
+cameri@cai.it;C.A.I. SEZ. CAMERI | Piemonte
+carmagnola@cai.it;C.A.I. SEZ. CARMAGNOLA | Piemonte
+caselletorinese@cai.it;C.A.I. SEZ. CASELLE TORINESE | Piemonte
+cavour@cai.it;C.A.I. SEZ. CAVOUR | Piemonte
+cervasca@cai.it;C.A.I. SEZ. CERVASCA | Piemonte
+ceva@cai.it;C.A.I. SEZ. CEVA | Piemonte
+chieri@cai.it;C.A.I. SEZ. CHIERI | Piemonte
+chiomonte@cai.it;C.A.I. SEZ. CHIOMONTE | Piemonte
+cirie@cai.it;C.A.I. SEZ. CIRIE' | Piemonte
+cumiana@cai.it;C.A.I. SEZ. CUMIANA | Piemonte
+cuorgne@cai.it;C.A.I. SEZ. CUORGNE' | Piemonte
+formazza@cai.it;C.A.I. SEZ. FORMAZZA | Piemonte
+fornocanavese@cai.it;C.A.I. SEZ. FORNO CANAVESE | Piemonte
+garessio@cai.it;C.A.I. SEZ. GARESSIO | Piemonte
+giaveno@cai.it;C.A.I. SEZ. GIAVENO | Piemonte
+gozzano@cai.it;C.A.I. SEZ. GOZZANO | Piemonte
+lanzotorinese@cai.it;C.A.I. SEZ. LANZO TORINESE | Piemonte
+moncalieri@cai.it;C.A.I. SEZ. MONCALIERI | Piemonte
+omegna@cai.it;C.A.I. SEZ. OMEGNA | Piemonte
+orbassano@cai.it;C.A.I. SEZ. ORBASSANO | Piemonte
+ormea@cai.it;C.A.I. SEZ. ORMEA | Piemonte
+ovada@cai.it;C.A.I. SEZ. OVADA | Piemonte
+peveragno@cai.it;C.A.I. SEZ. PEVERAGNO | Piemonte
+pianezza@cai.it;C.A.I. SEZ. PIANEZZA | Piemonte
+piedimulera@cai.it;C.A.I. SEZ. PIEDIMULERA | Piemonte
+pinasca@cai.it;C.A.I. SEZ. PINASCA | Piemonte
+pinerolo@cai.it;C.A.I. SEZ. PINEROLO | Piemonte
+racconigi@cai.it;C.A.I. SEZ. RACCONIGI | Piemonte
+rivarolocanavese@cai.it;C.A.I. SEZ. RIVAROLO CANAVESE | Piemonte
+rivoli@cai.it;C.A.I. SEZ. RIVOLI | Piemonte
+s.salvatoremonferrato@cai.it;C.A.I. SEZ. S.SALVATORE MONFERRATO | Piemonte
+saluzzo@cai.it;C.A.I. SEZ. SALUZZO | Piemonte
+savigliano@cai.it;C.A.I. SEZ. SAVIGLIANO | Piemonte
+torino@cai.it;C.A.I. SEZ. TORINO | Piemonte
+torrepellice@cai.it;C.A.I. SEZ. UGET VALPELLICE - TORRE PELLICE | Piemonte
+tortona@cai.it;C.A.I. SEZ. TORTONA | Piemonte
+trivero@cai.it;C.A.I. SEZ. TRIVERO | Piemonte
+valdellatorre@cai.it;C.A.I. SEZ. VAL DELLA TORRE | Piemonte
+valenza@cai.it;C.A.I. SEZ. VALENZA | Piemonte
+valgermanasca@cai.it;C.A.I. SEZ. VALGERMANASCA | Piemonte
+vallevigezzo@cai.it;C.A.I. SEZ. VALLE VIGEZZO | Piemonte
+varzo@cai.it;C.A.I. SEZ. VARZO | Piemonte
+vigone@cai.it;C.A.I. SEZ. VIGONE | Piemonte
+volpiano@cai.it;C.A.I. SEZ. VOLPIANO | Piemonte
+venariareale@cai.it;C.A.I. SEZ. VENARIA REALE | Piemonte
+u.g.e.t.torino@cai.it;C.A.I. SEZ. UGET TORINO | Piemonte
+chivasso@cai.it;C.A.I. SEZ. CHIVASSO | Piemonte
+coazze@cai.it;C.A.I. SEZ. COAZZE | Piemonte
+leini@cai.it;C.A.I. SEZ. LEINI' | Piemonte
+ivrea@cai.it;C.A.I. SEZ. IVREA | Piemonte
+casalemonferrato@cai.it;C.A.I. SEZ. CASALE MONFERRATO | Piemonte
+acquiterme@cai.it;C.A.I. SEZ. ACQUI TERME | Piemonte
+biella@cai.it;C.A.I. SEZ. BIELLA | Piemonte
+valsessera@cai.it;C.A.I. SEZ. VALSESSERA | Piemonte
+vercelli@cai.it;C.A.I. SEZ. VERCELLI | Piemonte
+varallo@cai.it;C.A.I. SEZ. VARALLO SESIA | Piemonte
+cuneo@cai.it;C.A.I. SEZ. CUNEO | Piemonte
+fossano@cai.it;C.A.I. SEZ. FOSSANO | Piemonte
+alba@cai.it;C.A.I. SEZ. ALBA | Piemonte
+mondovi@cai.it;C.A.I. SEZ. MONDOVI' | Piemonte
+novara@cai.it;C.A.I. SEZ. NOVARA | Piemonte
+arona@cai.it;C.A.I. SEZ. ARONA | Piemonte
+verbano-intra@cai.it;C.A.I. SEZ. VERBANO-VERBANIA | Piemonte
+pallanza@cai.it;C.A.I. SEZ. PALLANZA | Piemonte
+gravellonatoce@cai.it;C.A.I. SEZ. GRAVELLONA TOCE | Piemonte
+domodossola@cai.it;C.A.I. SEZ. DOMODOSSOLA | Piemonte
+villadossola@cai.it;C.A.I. SEZ. VILLADOSSOLA | Piemonte
+macugnaga@cai.it;C.A.I. SEZ. MACUGNAGA | Piemonte
+noviligure@cai.it;C.A.I. SEZ. NOVI LIGURE | Piemonte
+bra@cai.it;C.A.I. SEZ. BRA | Piemonte
+susa@cai.it;C.A.I. SEZ. SUSA | Piemonte
+stresa@cai.it;C.A.I. SEZ. STRESA | Piemonte
+pinotorinese@cai.it;C.A.I. SEZ. PINO TORINESE | Piemonte
+lecce@cai.it;C.A.I. SEZ. LECCE | Puglia
+bari@cai.it;C.A.I. SEZ. BARI | Puglia
+gioiadelcolle@cai.it;C.A.I. SEZ. GIOIA DEL COLLE | Puglia
+foggia@cai.it;C.A.I. SEZ. FOGGIA | Puglia
+grottaglie@cai.it;C.A.I. SEZ. GROTTAGLIE | Puglia
+oristano@cai.it;C.A.I. SEZ. ORISTANO | Sardegna
+cagliari@cai.it;C.A.I. SEZ. CAGLIARI | Sardegna
+cainuoro@gmail.com;C.A.I. SEZ. NUORO | Sardegna
+sassari@cai.it;C.A.I. SEZ. SASSARI | Sardegna
+acireale@cai.it;C.A.I. SEZ. ACIREALE | Sicilia
+belpasso@cai.it;C.A.I. SEZ. BELPASSO | Sicilia
+bronte@cai.it;C.A.I. SEZ. BRONTE | Sicilia
+caccamo@cai.it;C.A.I. SEZ. CACCAMO | Sicilia
+cefalu@cai.it;C.A.I. SEZ. CEFALU' | Sicilia
+erice@cai.it;C.A.I. SEZ. ERICE | Sicilia
+messina@cai.it;C.A.I. SEZ. MESSINA | Sicilia
+novaradisicilia@cai.it;C.A.I. SEZ. NOVARA DI SICILIA | Sicilia
+palermo@cai.it;C.A.I. SEZ. PALERMO | Sicilia
+pedara@cai.it;C.A.I. SEZ. PEDARA | Sicilia
+petraliasottana@cai.it;C.A.I. SEZ. PETRALIA SOTTANA | Sicilia
+polizzigenerosa@cai.it;C.A.I. SEZ. POLIZZI GENEROSA | Sicilia
+presidenza@caicatania.it;C.A.I. SEZ. CATANIA | Sicilia
+ragusa@cai.it;C.A.I. SEZ. RAGUSA | Sicilia
+siracusa@cai.it;C.A.I. SEZ. SIRACUSA | Sicilia
+giarre@cai.it;C.A.I. SEZ. GIARRE | Sicilia
+linguaglossa@cai.it;C.A.I. SEZ. LINGUAGLOSSA | Sicilia
+barga@cai.it;C.A.I. SEZ. BARGA | Toscana
+carrara@cai.it;C.A.I. SEZ. CARRARA | Toscana
+fivizzano@cai.it;C.A.I. SEZ. FIVIZZANO | Toscana
+fortedeimarmi@cai.it;C.A.I. SEZ. FORTE DEI MARMI | Toscana
+grosseto@cai.it;C.A.I. SEZ. GROSSETO | Toscana
+livorno@cai.it;C.A.I. SEZ. LIVORNO | Toscana
+lucca@cai.it;C.A.I. SEZ. LUCCA | Toscana
+maresca@cai.it;C.A.I. SEZ. MONTAGNA PISTOIESE-MARESCA | Toscana
+massa@cai.it;C.A.I. SEZ. MASSA | Toscana
+pietrasanta@cai.it;C.A.I. SEZ. PIETRASANTA | Toscana
+pisa@cai.it;C.A.I. SEZ. PISA | Toscana
+pontedera@cai.it;C.A.I. SEZ. PONTEDERA | Toscana
+pontremoli@cai.it;C.A.I. SEZ. PONTREMOLI | Toscana
+sansepolcro@cai.it;C.A.I. SEZ. SANSEPOLCRO | Toscana
+scandicci@cai.it;C.A.I. SEZ. SCANDICCI | Toscana
+stia@cai.it;C.A.I. SEZ. STIA | Toscana
+valdarnoinferiore@cai.it;C.A.I. SEZ. VALDARNO INFERIORE | Toscana
+valdarnosuperiore@cai.it;C.A.I. SEZ. VALDARNO SUPERIORE | Toscana
+viareggio@cai.it;C.A.I. SEZ. VIAREGGIO | Toscana
+sestofiorentino@cai.it;C.A.I. SEZ. SESTO FIORENTINO | Toscana
+firenze@cai.it;C.A.I. SEZ. FIRENZE | Toscana
+pistoia@cai.it;C.A.I. SEZ. PISTOIA | Toscana
+emiliobertini-prato@cai.it;C.A.I. SEZ. EMILIO BERTINI-PRATO | Toscana
+arezzo@cai.it;C.A.I. SEZ. AREZZO | Toscana
+siena@cai.it;C.A.I. SEZ. SIENA | Toscana
+castelnuovogarfagnana@cai.it;C.A.I. SEZ. CASTELNUOVO GARFAGNANA | Toscana
+pescia@cai.it;C.A.I. SEZ. PESCIA | Toscana
+spoleto@cai.it;C.A.I. SEZ. SPOLETO | Umbria
+terni@cai.it;C.A.I. SEZ. TERNI | Umbria
+perugia@cai.it;C.A.I. SEZ. PERUGIA | Umbria
+cittadicastello@cai.it;C.A.I. SEZ. CITTA' DI CASTELLO | Umbria
+gubbio@cai.it;C.A.I. SEZ. GUBBIO | Umbria
+appiano.a.a@cai.it;SEZ. APPIANO C.A.I. A.A. | TRENTINO-ALTO ADIGE
+brennero@cai.it;SEZ. BRENNERO C.A.I. A.A. | TRENTINO-ALTO ADIGE
+bressanone@cai.it;SEZ. BRESSANONE C.A.I. A.A. | TRENTINO-ALTO ADIGE
+bronzolo@cai.it;SEZ. BRONZOLO C.A.I. A.A. | TRENTINO-ALTO ADIGE
+brunico@cai.it;SEZ. BRUNICO C.A.I. A.A. | TRENTINO-ALTO ADIGE
+chiusa@cai.it;SEZ. CHIUSA C.A.I A.A. | TRENTINO-ALTO ADIGE
+egna@cai.it;SEZ. EGNA C.A.I. A.A. | TRENTINO-ALTO ADIGE
+info@caibolzano.it;SEZ. BOLZANO | TRENTINO-ALTO ADIGE
+laives@cai.it;SEZ. LAIVES | TRENTINO-ALTO ADIGE
+merano@cai.it;SEZ. MERANO C.A.I. A.A. | TRENTINO-ALTO ADIGE
+s.a.t@cai.it;SEZ. S.A.T. | TRENTINO-ALTO ADIGE
+salorno@cai.it;SEZ. SALORNO C.A.I. A.A. | TRENTINO-ALTO ADIGE
+valbadia@cai.it;SEZ. VAL BADIA C.A.I. A.A. | TRENTINO-ALTO ADIGE
+valgardena@cai.it;SEZ. VAL GARDENA C.A.I.A.A. | TRENTINO-ALTO ADIGE
+vipiteno@cai.it;SEZ. VIPITENO C.A.I. A.A. | TRENTINO-ALTO ADIGE
+aosta@cai.it;SEZ. AOSTA | VALLE D'AOSTA
+chatillon@cai.it;SEZ. CHATILLON | VALLE D'AOSTA
+gressoney@cai.it;SEZ. GRESSONEY | VALLE D'AOSTA
+verres@cai.it;SEZ. VERRES | VALLE D'AOSTA
+agordo@cai.it;SEZ. AGORDO | VENETO
+alpago@cai.it;SEZ. ALPAGO | VENETO
+arzignano@cai.it;SEZ. ARZIGNANO | VENETO
+asiago@cai.it;SEZ. ASIAGO | VENETO
+auronzo@cai.it;SEZ. AURONZO DI CADORE | VENETO
+bassanodelgrappa@cai.it;SEZ. BASSANO DEL GRAPPA | VENETO
+belluno@cai.it;SEZ. BELLUNO | VENETO
+boscochiesanuova@cai.it;SEZ. BOSCO CHIESANUOVA | VENETO
+calalzodicadore@cai.it;SEZ. CALALZO DI CADORE | VENETO
+camposampiero@cai.it;SEZ. CAMPOSAMPIERO | VENETO
+caprile@cai.it;SEZ. CAPRILE | VENETO
+caprinoveronese@cai.it;SEZ. CAPRINO VERONESE | VENETO
+castelfrancoveneto@cai.it;SEZ. CASTELFRANCO VENETO | VENETO
+cesarebattisti@cai.it;SEZ. CESARE BATTISTI | VENETO
+chioggia@cai.it;SEZ. CHIOGGIA | VENETO
+cittadella@cai.it;SEZ. CITTADELLA | VENETO
+cortinadampezzo@cai.it;SEZ. CORTINA D'AMPEZZO | VENETO
+dolo@cai.it;SEZ. DOLO | VENETO
+domeggedicadore@cai.it;SEZ. DOMEGGE DI CADORE | VENETO
+dueville@cai.it;SEZ. DUEVILLE | VENETO
+este@cai.it;SEZ. ESTE | VENETO
+feltre@cai.it;SEZ. FELTRE | VENETO
+fiammegialle@cai.it;SEZ. FIAMME GIALLE | VENETO
+fiume@cai.it;SEZ. FIUME | VENETO
+info@cailonigo.it;SEZ. LONIGO | VENETO
+info@caimontecchiomaggiore.it;SEZ. MONTECCHIO MAGGIORE | VENETO
+info@caisandona.it;SEZ. S.DONA' DI PIAVE | VENETO
+info@caithiene.it;SEZ. THIENE | VENETO
+legnago@cai.it;SEZ. LEGNAGO | VENETO
+lendinara@cai.it;SEZ. LENDINARA | VENETO
+livinallongo-colle@cai.it;SEZ. LIVINALLONGO - COLLE | VENETO
+longarone@cai.it;SEZ. LONGARONE | VENETO
+lorenzago@cai.it;SEZ. LORENZAGO | VENETO
+lozzodicadore@cai.it;SEZ. LOZZO DI CADORE | VENETO
+malo@cai.it;SEZ. MALO | VENETO
+marostica@cai.it;SEZ. MAROSTICA | VENETO
+mestre@cai.it;SEZ. MESTRE | VENETO
+mirano@cai.it;SEZ. MIRANO | VENETO
+montebellovicentino@cai.it;SEZ. MONTEBELLO VICENTINO | VENETO
+montebelluna@cai.it;SEZ. MONTEBELLUNA | VENETO
+mottadilivenza@cai.it;SEZ. MOTTA DI LIVENZA | VENETO
+oderzo@cai.it;SEZ. ODERZO | VENETO
+padova@cai.it;SEZ. PADOVA | VENETO
+pievedicadore@cai.it;SEZ. PIEVE DI CADORE | VENETO
+pievedisoligo@cai.it;SEZ. PIEVE DI SOLIGO | VENETO
+pontedipiavesalgareda@cai.it;SEZ. PONTE PIAVE SALGAREDA | VENETO
+portogruaro@cai.it;SEZ. PORTOGRUARO | VENETO
+posta@caiconegliano.it;SEZ. CONEGLIANO | VENETO
+recoaroterme@cai.it;SEZ. RECOARO TERME | VENETO
+rovigo@cai.it;SEZ. ROVIGO | VENETO
+s.bonifacio@cai.it;SEZ. S.BONIFACIO | VENETO
+s.pietroincariano@cai.it;SEZ. S.PIETRO IN CARIANO | VENETO
+s.vitodicadore@cai.it;SEZ. S.VITO DI CADORE | VENETO
+schio@cai.it;SEZ. SCHIO | VENETO
+spresiano@cai.it;SEZ. SPRESIANO | VENETO
+tregnago@cai.it;SEZ. TREGNAGO | VENETO
+treviso@cai.it;SEZ. TREVISO | VENETO
+valcomelico@cai.it;SEZ. VALCOMELICO | VENETO
+valdagno@cai.it;SEZ. VALDAGNO | VENETO
+vallezoldana@cai.it;SEZ. VAL DI ZOLDO | VENETO
+venezia@cai.it;SEZ. VENEZIA | VENETO
+verona@cai.it;SEZ. VERONA | VENETO
+vicenza@cai.it;SEZ. VICENZA | VENETO
+vigodicadore@cai.it;SEZ. VIGO DI CADORE | VENETO
+vittorioveneto@cai.it;SEZ. VITTORIO VENETO | VENETO
+campobasso@cai.it;Campobasso | Molise
+foligno@cai.it;Foligno | Umbria
+orvieto@cai.it;Orvieto |
+piedimontematese@cai.it;Piedimonte Matese | Campania
+benevento@cai.it;Benevento | Campania
+latina@cai.it;Latina | Lazio
+alatri@cai.it;Alatri | Lazio
+palestrina@cai.it;Palestrina | Lazio
+frascati@cai.it;Frascati | Lazio
+tivoli@cai.it;Tivoli | Lazio
+viterbo@cai.it;Viterbo | Lazio
+gallinaroinvalcomino@cai.it;Gallinaro | Lazio
+penne@cai.it;Penne | Abruzzo
+isoladelgransasso@cai.it;Isola Del Gran Sasso | Abruzzo
+valvibrata@cai.it;Val Vibrata | Abruzzo
+valleroveto@cai.it;Valle Roveto | Abruzzo
+lanciano@cai.it;Lanciano | Abruzzo
