@@ -123,13 +123,13 @@ class InitializeDatabase extends Command
         $this->line('   Creating admin user...');
         
         User::create([
-            'name' => 'Admin Webmapp',
-            'email' => 'admin@webmapp.it',
-            'password' => bcrypt('admin123'),
+            'name' => 'Montagna Servizi',
+            'email' => 'info@montagnaservizi.com',
+            'password' => bcrypt('M0ntagn@S3rviz!'),
             'roles' => [UserRole::Admin]
         ]);
 
-        $this->line('   ✅ Admin user created: admin@webmapp.it (password: admin123)');
+        $this->line('   ✅ Admin user created: info@montagnaservizi.com (password: M0ntagn@S3rviz!)');
     }
 
     /**

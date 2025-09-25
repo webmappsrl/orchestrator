@@ -67,7 +67,7 @@ I dati vengono letti dal file `config/initialization.php`. Aggiorna questo file 
 
 ## Credenziali di default
 
-- **Admin**: `admin@webmapp.it` / `admin123`
+- **Admin**: `info@montagnaservizi.com` / `M0ntagn@S3rviz!`
 - **Developer**: `developer123` (per tutti i developer)
 - **Customer**: `customer123` (per tutti i customer)
 
