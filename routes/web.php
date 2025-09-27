@@ -115,3 +115,4 @@ Route::post('/set-dashboard-developer', function () {
 
     return redirect('/dashboards/kanban');
 })->middleware(['auth'])->name('dashboard.set.developer');
+

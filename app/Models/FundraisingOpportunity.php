@@ -109,6 +109,23 @@ class FundraisingOpportunity extends Model
     }
 
     /**
+     * Get the territorial scope label.
+     */
+    public function getTerritorialScopeLabelAttribute(): string
+    {
+        $labels = [
+            'cooperation' => 'Cooperazione',
+            'european' => 'Europeo',
+            'national' => 'Nazionale',
+            'regional' => 'Regionale',
+            'territorial' => 'Territoriale',
+            'municipalities' => 'Comuni',
+        ];
+
+        return $labels[$this->territorial_scope] ?? $this->territorial_scope;
+    }
+
+    /**
      * Get the territorial scope options.
      */
     public static function getTerritorialScopeOptions(): array
@@ -123,11 +140,4 @@ class FundraisingOpportunity extends Model
         ];
     }
 
-    /**
-     * Get the territorial scope label.
-     */
-    public function getTerritorialScopeLabelAttribute(): string
-    {
-        return self::getTerritorialScopeOptions()[$this->territorial_scope] ?? $this->territorial_scope;
-    }
 }
