@@ -142,7 +142,6 @@ class FundraisingProject extends Resource
     {
         return [
             new \App\Nova\Filters\ProjectStatusFilter,
-            new \App\Nova\Filters\ResponsibleUserFilter,
         ];
     }
 
