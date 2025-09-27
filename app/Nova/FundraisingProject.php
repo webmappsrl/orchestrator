@@ -171,4 +171,12 @@ class FundraisingProject extends Resource
     {
         return [];
     }
+
+    /**
+     * Get the URI key for the resource.
+     */
+    public static function uriKey(): string
+    {
+        return 'fundraising-projects';
+    }
 }

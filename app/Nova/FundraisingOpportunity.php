@@ -141,7 +141,9 @@ class FundraisingOpportunity extends Resource
                 return $this->isExpired();
             })->exceptOnForms(),
 
-            HasMany::make('Progetti', 'projects', FundraisingProject::class),
+            HasMany::make('Progetti', 'projects', \App\Nova\FundraisingProject::class)
+                ->showOnDetail()
+                ->showOnIndex(false),
         ];
     }
 
@@ -236,5 +238,13 @@ class FundraisingOpportunity extends Resource
         return [
             new \App\Nova\Actions\ExportFundraisingOpportunityPdf,
         ];
+    }
+
+    /**
+     * Get the URI key for the resource.
+     */
+    public static function uriKey(): string
+    {
+        return 'fundraising-opportunities';
     }
 }
