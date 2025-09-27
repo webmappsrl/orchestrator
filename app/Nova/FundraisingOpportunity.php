@@ -147,12 +147,15 @@ class FundraisingOpportunity extends Resource
                     return 'Nessun progetto associato';
                 }
                 
-                $projectList = $projects->map(function ($project) {
-                    return $project->title . ' (' . ucfirst($project->status) . ')';
+                $projectLinks = $projects->map(function ($project) {
+                    $url = '/resources/fundraising-projects/' . $project->id;
+                    $title = htmlspecialchars($project->title);
+                    $status = ucfirst($project->status);
+                    return '<a href="' . $url . '" class="link-default">' . $title . '</a> (' . $status . ')';
                 })->toArray();
                 
-                return implode(', ', $projectList);
-            })->onlyOnDetail(),
+                return implode(', ', $projectLinks);
+            })->onlyOnDetail()->asHtml(),
         ];
     }
 
