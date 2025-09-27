@@ -61,7 +61,10 @@ class FundraisingProject extends Resource
             BelongsTo::make('Capofila', 'leadUser', User::class)
                 ->rules('required')
                 ->searchable()
-                ->help('Utente con ruolo customer'),
+                ->help('Utente con ruolo customer')
+                ->relatableQueryUsing(function (NovaRequest $request, $query) {
+                    return $query->whereJsonContains('roles', 'customer');
+                }),
 
             BelongsToMany::make('Partner', 'partners', User::class)
                 ->searchable()
@@ -79,9 +82,10 @@ class FundraisingProject extends Resource
                     return $query->whereJsonContains('roles', 'fundraising');
                 }),
 
-            Textarea::make('Descrizione', 'description')
+            Textarea::make('Idea Progettuale', 'description')
                 ->nullable()
-                ->rows(4),
+                ->rows(4)
+                ->help('Inserisci un abstract del progetto che descriva gli obiettivi, le attività principali e i risultati attesi del progetto di fundraising'),
 
             Select::make('Stato', 'status')
                 ->options([
@@ -140,7 +144,10 @@ class FundraisingProject extends Resource
                 ->searchable(),
 
             BelongsTo::make('Capofila', 'leadUser', User::class)
-                ->searchable(),
+                ->searchable()
+                ->relatableQueryUsing(function (NovaRequest $request, $query) {
+                    return $query->whereJsonContains('roles', 'customer');
+                }),
 
             Select::make('Stato', 'status')
                 ->options([
