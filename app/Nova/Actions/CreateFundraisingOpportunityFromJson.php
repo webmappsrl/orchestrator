@@ -3,19 +3,19 @@
 namespace App\Nova\Actions;
 
 use App\Models\FundraisingOpportunity;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
+// use Illuminate\Bus\Queueable;
+// use Illuminate\Contracts\Queue\ShouldQueue;
+// use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class CreateFundraisingOpportunityFromJson extends Action
 {
-    use InteractsWithQueue, Queueable;
+    // use InteractsWithQueue, Queueable;
 
     /**
      * The displayable name of the action.
@@ -43,6 +43,7 @@ class CreateFundraisingOpportunityFromJson extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         $jsonData = $fields->json_data;
+        $territorialScope = $fields->territorial_scope ?? null;
         
         try {
             // Decodifica il JSON
@@ -60,7 +61,7 @@ class CreateFundraisingOpportunityFromJson extends Action
                 }
             }
 
-            // Mappa i campi del JSON ai campi del modello
+            // Mappa i campi del JSON ai campi del modello, sovrascrivendo con i campi del form
             $mappedData = [
                 'name' => $data['name'],
                 'official_url' => $data['official_url'] ?? null,
@@ -70,7 +71,7 @@ class CreateFundraisingOpportunityFromJson extends Action
                 'sponsor' => $data['sponsor'] ?? null,
                 'cofinancing_quota' => isset($data['cofinancing_quota']) ? (float)$data['cofinancing_quota'] : null,
                 'max_contribution' => isset($data['max_contribution']) ? (float)$data['max_contribution'] : null,
-                'territorial_scope' => $data['territorial_scope'] ?? 'national',
+                'territorial_scope' => $territorialScope ?: ($data['territorial_scope'] ?? 'national'),
                 'beneficiary_requirements' => $data['beneficiary_requirements'] ?? null,
                 'lead_requirements' => $data['lead_requirements'] ?? null,
                 'created_by' => auth()->id(),
@@ -96,7 +97,7 @@ class CreateFundraisingOpportunityFromJson extends Action
         return [
             Code::make('JSON Data', 'json_data')
                 ->language('json')
-                ->height(300)
+                ->height(250)
                 ->help('Incolla il JSON con i dati della FRO da creare')
                 ->rules('required')
                 ->placeholder('{
@@ -109,6 +110,19 @@ class CreateFundraisingOpportunityFromJson extends Action
   "cofinancing_quota": 20,
   "max_contribution": 500000.00
 }'),
+
+            Select::make('Scope Territoriale', 'territorial_scope')
+                ->options([
+                    'cooperation' => 'Cooperazione',
+                    'european' => 'Europeo',
+                    'national' => 'Nazionale',
+                    'regional' => 'Regionale',
+                    'territorial' => 'Territoriale',
+                    'municipalities' => 'Comuni',
+                ])
+                ->help('Ambito territoriale del bando (sovrascrive quello del JSON se presente)')
+                ->default('national'),
+
         ];
     }
 }
