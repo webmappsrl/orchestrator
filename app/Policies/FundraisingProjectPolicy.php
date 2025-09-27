@@ -1,0 +1,82 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\FundraisingProject;
+use App\Models\User;
+use App\Enums\UserRole;
+use Illuminate\Auth\Access\Response;
+
+class FundraisingProjectPolicy
+{
+    /**
+     * Determine whether the user can view any models.
+     * Tutti gli utenti possono vedere i progetti di fundraising.
+     */
+    public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * Determine whether the user can view the model.
+     * Gli utenti possono vedere i progetti se sono coinvolti o hanno ruolo appropriato.
+     */
+    public function view(User $user, FundraisingProject $fundraisingProject): bool
+    {
+        return $user->hasRole(UserRole::Admin) ||
+               $user->hasRole(UserRole::Fundraising) ||
+               $user->id === $fundraisingProject->lead_user_id ||
+               $fundraisingProject->partners()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Determine whether the user can create models.
+     * Solo utenti con ruolo fundraising o admin possono creare progetti.
+     */
+    public function create(User $user): bool
+    {
+        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Determine whether the user can update the model.
+     * Solo il creatore, il responsabile, il capofila, o admin possono modificare.
+     */
+    public function update(User $user, FundraisingProject $fundraisingProject): bool
+    {
+        return $user->hasRole(UserRole::Admin) ||
+               $user->id === $fundraisingProject->created_by ||
+               $user->id === $fundraisingProject->responsible_user_id ||
+               $user->id === $fundraisingProject->lead_user_id ||
+               $user->hasRole(UserRole::Fundraising);
+    }
+
+    /**
+     * Determine whether the user can delete the model.
+     * Solo admin o il creatore possono eliminare.
+     */
+    public function delete(User $user, FundraisingProject $fundraisingProject): bool
+    {
+        return $user->hasRole(UserRole::Admin) ||
+               $user->id === $fundraisingProject->created_by;
+    }
+
+    /**
+     * Determine whether the user can restore the model.
+     * Solo admin possono ripristinare.
+     */
+    public function restore(User $user, FundraisingProject $fundraisingProject): bool
+    {
+        return $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Determine whether the user can permanently delete the model.
+     * Solo admin possono eliminare definitivamente.
+     */
+    public function forceDelete(User $user, FundraisingProject $fundraisingProject): bool
+    {
+        return $user->hasRole(UserRole::Admin);
+    }
+}
