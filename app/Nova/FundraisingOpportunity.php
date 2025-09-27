@@ -49,7 +49,7 @@ class FundraisingOpportunity extends Resource
     public function fields(NovaRequest $request)
     {
         // Se siamo nella vista index, usa i campi ridotti
-        if ($request->isResourceIndexRequest()) {
+        if ($request->isResourceIndexRequest() && !$request->isCreateOrAttachRequest() && !$request->isUpdateOrUpdateAttachedRequest()) {
             return $this->fieldsForIndex($request);
         }
 
