@@ -48,6 +48,12 @@ class FundraisingOpportunity extends Resource
      */
     public function fields(NovaRequest $request)
     {
+        // Se siamo nella vista index, usa i campi ridotti
+        if ($request->isResourceIndexRequest()) {
+            return $this->fieldsForIndex($request);
+        }
+
+        // Per dettaglio, creazione e modifica usa tutti i campi
         return [
             ID::make()->sortable(),
 
@@ -131,6 +137,50 @@ class FundraisingOpportunity extends Resource
             })->exceptOnForms(),
 
             HasMany::make('Progetti', 'projects', FundraisingProject::class),
+        ];
+    }
+
+    /**
+     * Get the fields for the index view.
+     */
+    public function fieldsForIndex(NovaRequest $request)
+    {
+        return [
+            ID::make()->sortable(),
+
+            Text::make('Nome del Bando', 'name')
+                ->rules('required', 'max:255')
+                ->sortable(),
+
+            Date::make('Data di Scadenza', 'deadline')
+                ->rules('required')
+                ->sortable()
+                ->displayUsing(function ($date) {
+                    return $date ? $date->format('d/m/Y') : null;
+                }),
+
+            Text::make('Sponsor', 'sponsor')
+                ->nullable()
+                ->sortable(),
+
+            Select::make('Scope Territoriale', 'territorial_scope')
+                ->options([
+                    'cooperation' => 'Cooperazione',
+                    'european' => 'Europeo',
+                    'national' => 'Nazionale',
+                    'regional' => 'Regionale',
+                    'territorial' => 'Territoriale',
+                    'municipalities' => 'Comuni',
+                ])
+                ->rules('required')
+                ->sortable(),
+
+            BelongsTo::make('Responsabile', 'responsibleUser', User::class)
+                ->searchable(),
+
+            Boolean::make('Scaduto', function () {
+                return $this->isExpired();
+            }),
         ];
     }
 
