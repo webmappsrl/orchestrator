@@ -141,9 +141,18 @@ class FundraisingOpportunity extends Resource
                 return $this->isExpired();
             })->exceptOnForms(),
 
-            HasMany::make('Progetti', 'projects', \App\Nova\FundraisingProject::class)
-                ->showOnDetail()
-                ->showOnIndex(false),
+            Text::make('Progetti Associati', function () {
+                $projects = $this->projects;
+                if ($projects->isEmpty()) {
+                    return 'Nessun progetto associato';
+                }
+                
+                $projectList = $projects->map(function ($project) {
+                    return $project->title . ' (' . ucfirst($project->status) . ')';
+                })->toArray();
+                
+                return implode(', ', $projectList);
+            })->onlyOnDetail(),
         ];
     }
 
