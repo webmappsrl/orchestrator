@@ -131,4 +131,44 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(App::class, 'user_app', 'user_id', 'app_id');
     }
+
+    /**
+     * Get the fundraising opportunities created by this user.
+     */
+    public function createdFundraisingOpportunities()
+    {
+        return $this->hasMany(FundraisingOpportunity::class, 'created_by');
+    }
+
+    /**
+     * Get the fundraising opportunities this user is responsible for.
+     */
+    public function responsibleFundraisingOpportunities()
+    {
+        return $this->hasMany(FundraisingOpportunity::class, 'responsible_user_id');
+    }
+
+    /**
+     * Get the fundraising projects created by this user.
+     */
+    public function createdFundraisingProjects()
+    {
+        return $this->hasMany(FundraisingProject::class, 'created_by');
+    }
+
+    /**
+     * Get the fundraising projects this user is responsible for.
+     */
+    public function responsibleFundraisingProjects()
+    {
+        return $this->hasMany(FundraisingProject::class, 'responsible_user_id');
+    }
+
+    /**
+     * Check if user has fundraising role.
+     */
+    public function isFundraising(): bool
+    {
+        return $this->hasRole(UserRole::Fundraising);
+    }
 }

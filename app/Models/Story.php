@@ -35,6 +35,7 @@ class Story extends Model implements HasMedia
         'user_id',
         'type',
         'parent_id',
+        'fundraising_project_id',
     ];
 
     public static function boot()
@@ -393,6 +394,14 @@ class Story extends Model implements HasMedia
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the fundraising project this story belongs to.
+     */
+    public function fundraisingProject()
+    {
+        return $this->belongsTo(FundraisingProject::class);
     }
 
     // Metodo per aggiungere un partecipante

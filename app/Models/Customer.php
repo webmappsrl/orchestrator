@@ -54,6 +54,35 @@ class Customer extends Model
     {
         return $this->hasMany(Deadline::class);
     }
+
+    /**
+     * Get the fundraising projects where this customer is the lead.
+     */
+    public function leadFundraisingProjects()
+    {
+        return $this->hasMany(FundraisingProject::class, 'lead_customer_id');
+    }
+
+    /**
+     * Get the fundraising projects where this customer is a partner.
+     */
+    public function partnerFundraisingProjects()
+    {
+        return $this->belongsToMany(FundraisingProject::class, 'fundraising_project_partners');
+    }
+
+    /**
+     * Get all fundraising projects where this customer is involved (lead or partner).
+     */
+    public function involvedFundraisingProjects()
+    {
+        return FundraisingProject::where(function ($query) {
+            $query->where('lead_customer_id', $this->id)
+                  ->orWhereHas('partners', function ($subQuery) {
+                      $subQuery->where('customer_id', $this->id);
+                  });
+        });
+    }
     /**
      * Get all the tags for the project.
      */
