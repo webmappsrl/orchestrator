@@ -132,7 +132,10 @@ class FundraisingOpportunity extends Resource
 
             BelongsTo::make('Responsabile', 'responsibleUser', User::class)
                 ->rules('required')
-                ->help('Solo utenti con ruolo fundraising'),
+                ->help('Solo utenti con ruolo fundraising')
+                ->relatableQueryUsing(function (NovaRequest $request, $query) {
+                    return $query->whereJsonContains('roles', 'fundraising');
+                }),
 
             Boolean::make('Scaduto', function () {
                 return $this->isExpired();
