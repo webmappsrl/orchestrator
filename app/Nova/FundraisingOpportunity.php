@@ -126,7 +126,9 @@ class FundraisingOpportunity extends Resource
                 ->rows(3),
 
             BelongsTo::make('Creato da', 'creator', User::class)
-                ->exceptOnForms(),
+                ->exceptOnForms()
+                ->showOnDetail()
+                ->showOnIndex(false),
 
             BelongsTo::make('Responsabile', 'responsibleUser', User::class)
                 ->rules('required')
