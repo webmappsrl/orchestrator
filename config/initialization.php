@@ -35,7 +35,7 @@ return [
         [
             'name' => 'Sara Mariani',
             'email' => 'sara.mariani@montagnaservizi.com',
-            'roles' => ['developer']
+            'roles' => ['developer', 'fundraising']
         ],
         [
             'name' => 'Lorena Sava',
@@ -65,6 +65,10 @@ return [
     ],
 
     'customers' => [
+        [
+            'name' => 'Roberto Manfredi',
+            'email' => 'roberto.manfredi@example.com'
+        ],
         [
             'name' => 'GR Sicilia',
             'email' => 'gr_cai_sicilia@cai.it'
