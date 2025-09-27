@@ -18,7 +18,7 @@ class FundraisingProject extends Model
     protected $fillable = [
         'title',
         'fundraising_opportunity_id',
-        'lead_customer_id',
+        'lead_user_id',
         'created_by',
         'responsible_user_id',
         'description',
@@ -48,11 +48,19 @@ class FundraisingProject extends Model
     }
 
     /**
-     * Get the lead customer for this project.
+     * Get the lead user (customer) for this project.
+     */
+    public function leadUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'lead_user_id');
+    }
+
+    /**
+     * Get the lead user (customer) for this project - alias for clarity.
      */
     public function leadCustomer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class, 'lead_customer_id');
+        return $this->leadUser();
     }
 
     /**
@@ -72,11 +80,21 @@ class FundraisingProject extends Model
     }
 
     /**
-     * Get the partner customers for this project.
+     * Get the partner users (customers) for this project.
      */
     public function partners(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class, 'fundraising_project_partners');
+        return $this->belongsToMany(User::class, 'fundraising_project_partners', 'fundraising_project_id', 'user_id');
+    }
+
+    /**
+     * Get the partner customers for this project - alias for clarity.
+     */
+    public function partnerCustomers(): BelongsToMany
+    {
+        return $this->partners()->whereHas('roles', function ($query) {
+            $query->where('name', 'customer');
+        });
     }
 
     /**
@@ -98,30 +116,30 @@ class FundraisingProject extends Model
     /**
      * Scope to filter projects where user is lead customer.
      */
-    public function scopeWhereLeadCustomer($query, $customerId)
+    public function scopeWhereLeadCustomer($query, $userId)
     {
-        return $query->where('lead_customer_id', $customerId);
+        return $query->where('lead_user_id', $userId);
     }
 
     /**
      * Scope to filter projects where user is partner.
      */
-    public function scopeWherePartner($query, $customerId)
+    public function scopeWherePartner($query, $userId)
     {
-        return $query->whereHas('partners', function ($q) use ($customerId) {
-            $q->where('customer_id', $customerId);
+        return $query->whereHas('partners', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
         });
     }
 
     /**
      * Scope to filter projects where user is involved (lead or partner).
      */
-    public function scopeWhereInvolved($query, $customerId)
+    public function scopeWhereInvolved($query, $userId)
     {
-        return $query->where(function ($q) use ($customerId) {
-            $q->where('lead_customer_id', $customerId)
-              ->orWhereHas('partners', function ($subQ) use ($customerId) {
-                  $subQ->where('customer_id', $customerId);
+        return $query->where(function ($q) use ($userId) {
+            $q->where('lead_user_id', $userId)
+              ->orWhereHas('partners', function ($subQ) use ($userId) {
+                  $subQ->where('user_id', $userId);
               });
         });
     }

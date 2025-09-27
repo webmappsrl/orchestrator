@@ -165,10 +165,47 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the fundraising projects where this user is the lead.
+     */
+    public function leadFundraisingProjects()
+    {
+        return $this->hasMany(FundraisingProject::class, 'lead_user_id');
+    }
+
+    /**
+     * Get the fundraising projects where this user is a partner.
+     */
+    public function partnerFundraisingProjects()
+    {
+        return $this->belongsToMany(FundraisingProject::class, 'fundraising_project_partners', 'user_id', 'fundraising_project_id');
+    }
+
+    /**
+     * Get all fundraising projects where this user is involved (lead or partner).
+     */
+    public function involvedFundraisingProjects()
+    {
+        return FundraisingProject::where(function ($query) {
+            $query->where('lead_user_id', $this->id)
+                  ->orWhereHas('partners', function ($subQuery) {
+                      $subQuery->where('user_id', $this->id);
+                  });
+        });
+    }
+
+    /**
      * Check if user has fundraising role.
      */
     public function isFundraising(): bool
     {
         return $this->hasRole(UserRole::Fundraising);
+    }
+
+    /**
+     * Check if user has customer role.
+     */
+    public function isCustomer(): bool
+    {
+        return $this->hasRole(UserRole::Customer);
     }
 }
