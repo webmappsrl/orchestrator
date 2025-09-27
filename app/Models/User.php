@@ -121,7 +121,9 @@ class User extends Authenticatable
     public function initialPath(): string
     {
         if ($this->hasRole(UserRole::Customer)) {
-            return '/resources/story-showed-by-customers';
+            return '/dashboards/customer-dashboard';
+        } elseif ($this->hasRole(UserRole::Fundraising)) {
+            return '/resources/fundraising-opportunities';
         } else {
             return '/dashboards/kanban';
         }

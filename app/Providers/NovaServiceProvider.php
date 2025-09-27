@@ -11,10 +11,15 @@ use App\Nova\ArchivedStoryShowedByCustomer;
 use App\Nova\AssignedToMeStory;
 use App\Nova\BacklogStory;
 use App\Nova\Customer;
+use App\Nova\CustomerFundraisingOpportunity;
+use App\Nova\CustomerFundraisingProject;
 use App\Nova\CustomerStory;
 use App\Nova\CustomerTickets;
 use App\Nova\Dashboards\Kanban;
+use App\Nova\Dashboards\CustomerDashboard;
 use App\Nova\Documentation;
+use App\Nova\FundraisingOpportunity;
+use App\Nova\FundraisingProject;
 use App\Nova\Layer;
 use App\Nova\Product;
 use App\Nova\Project;
@@ -128,10 +133,26 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
 
+                MenuSection::make('FUNDRAISING', [
+                    MenuItem::resource(FundraisingOpportunity::class),
+                    MenuItem::resource(FundraisingProject::class),
+                ])->icon('currency-dollar')->collapsable()->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Fundraising);
+                }),
+
                 MenuSection::make(__('CUSTOMER'), [
+                    MenuItem::dashboard(CustomerDashboard::class),
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(ArchivedStoryShowedByCustomer::class),
                     MenuItem::resource(StoryShowedByCustomer::class),
+                    MenuGroup::make(__('FundRaising'), [
+                        MenuItem::resource(CustomerFundraisingOpportunity::class),
+                        MenuItem::resource(CustomerFundraisingProject::class),
+                    ])->collapsedByDefault(),
                 ])->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
@@ -187,10 +208,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             $userIsDeveloper = $user->hasRole(UserRole::Developer);
             $userIsManager = $user->hasRole(UserRole::Manager);
             $userIsCustomer = $user->hasRole(UserRole::Customer);
+            $userIsFundraising = $user->hasRole(UserRole::Fundraising);
             $debug = config('services.app_environment');
 
             if (config('services.app_environment') == 'production' || config('services.app_environment') == 'develop') {
-                return $userIsAdmin || $userIsEditor || $userIsDeveloper || $userIsManager || $userIsCustomer;
+                return $userIsAdmin || $userIsEditor || $userIsDeveloper || $userIsManager || $userIsCustomer || $userIsFundraising;
             }
 
             return true;
@@ -206,6 +228,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         return [
             new \App\Nova\Dashboards\Kanban,
+            new \App\Nova\Dashboards\CustomerDashboard,
         ];
     }
 
@@ -232,6 +255,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             if (! $request->user() == null) {
                 $user = $request->user();
                 if ($user->hasRole(UserRole::Customer)) {
+                    return $user->initialPath();
+                }
+
+                // Per utenti fundraising, reindirizza alle opportunità
+                if ($user->hasRole(UserRole::Fundraising)) {
                     return $user->initialPath();
                 }
 
