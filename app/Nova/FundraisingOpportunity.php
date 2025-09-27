@@ -248,6 +248,7 @@ class FundraisingOpportunity extends Resource
     public function actions(NovaRequest $request)
     {
         return [
+            new \App\Nova\Actions\CreateFundraisingOpportunityFromJson,
             new \App\Nova\Actions\ExportFundraisingOpportunityPdf,
         ];
     }
