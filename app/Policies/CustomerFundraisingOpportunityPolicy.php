@@ -7,72 +7,68 @@ use App\Models\User;
 use App\Enums\UserRole;
 use Illuminate\Auth\Access\Response;
 
-class FundraisingOpportunityPolicy
+class CustomerFundraisingOpportunityPolicy
 {
     /**
      * Determine whether the user can view any models.
-     * Solo utenti con ruolo fundraising o admin possono vedere la risorsa originale.
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+        // Solo utenti customer possono vedere questa risorsa
+        return $user->hasRole(UserRole::Customer);
     }
 
     /**
      * Determine whether the user can view the model.
-     * Solo utenti con ruolo fundraising o admin possono vedere i dettagli.
      */
     public function view(User $user, FundraisingOpportunity $fundraisingOpportunity): bool
     {
-        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+        // Solo utenti customer possono vedere questa risorsa
+        return $user->hasRole(UserRole::Customer);
     }
 
     /**
      * Determine whether the user can create models.
-     * Solo utenti con ruolo fundraising o admin possono creare opportunità.
      */
     public function create(User $user): bool
     {
-        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+        // I customer non possono creare, solo visualizzare
+        return false;
     }
 
     /**
      * Determine whether the user can update the model.
-     * Solo il creatore, il responsabile, o admin possono modificare.
      */
     public function update(User $user, FundraisingOpportunity $fundraisingOpportunity): bool
     {
-        return $user->hasRole(UserRole::Admin) ||
-               $user->id === $fundraisingOpportunity->created_by ||
-               $user->id === $fundraisingOpportunity->responsible_user_id ||
-               $user->hasRole(UserRole::Fundraising);
+        // I customer non possono modificare, solo visualizzare
+        return false;
     }
 
     /**
      * Determine whether the user can delete the model.
-     * Solo admin o il creatore possono eliminare.
      */
     public function delete(User $user, FundraisingOpportunity $fundraisingOpportunity): bool
     {
-        return $user->hasRole(UserRole::Admin) ||
-               $user->id === $fundraisingOpportunity->created_by;
+        // I customer non possono eliminare
+        return false;
     }
 
     /**
      * Determine whether the user can restore the model.
-     * Solo admin possono ripristinare.
      */
     public function restore(User $user, FundraisingOpportunity $fundraisingOpportunity): bool
     {
-        return $user->hasRole(UserRole::Admin);
+        // I customer non possono ripristinare
+        return false;
     }
 
     /**
      * Determine whether the user can permanently delete the model.
-     * Solo admin possono eliminare definitivamente.
      */
     public function forceDelete(User $user, FundraisingOpportunity $fundraisingOpportunity): bool
     {
-        return $user->hasRole(UserRole::Admin);
+        // I customer non possono eliminare definitivamente
+        return false;
     }
 }

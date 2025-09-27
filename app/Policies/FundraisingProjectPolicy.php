@@ -11,23 +11,20 @@ class FundraisingProjectPolicy
 {
     /**
      * Determine whether the user can view any models.
-     * Tutti gli utenti possono vedere i progetti di fundraising.
+     * Solo utenti con ruolo fundraising o admin possono vedere la risorsa originale.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
     }
 
     /**
      * Determine whether the user can view the model.
-     * Gli utenti possono vedere i progetti se sono coinvolti o hanno ruolo appropriato.
+     * Solo utenti con ruolo fundraising o admin possono vedere i dettagli.
      */
     public function view(User $user, FundraisingProject $fundraisingProject): bool
     {
-        return $user->hasRole(UserRole::Admin) ||
-               $user->hasRole(UserRole::Fundraising) ||
-               $user->id === $fundraisingProject->lead_user_id ||
-               $fundraisingProject->partners()->where('user_id', $user->id)->exists();
+        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
     }
 
     /**

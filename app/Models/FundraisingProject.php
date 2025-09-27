@@ -197,4 +197,13 @@ class FundraisingProject extends Model
     {
         return $this->status === 'completed';
     }
+
+    /**
+     * Check if a user is involved in this project (as lead or partner).
+     */
+    public function isUserInvolved(int $userId): bool
+    {
+        return $this->lead_user_id === $userId || 
+               $this->partners()->where('user_id', $userId)->exists();
+    }
 }
