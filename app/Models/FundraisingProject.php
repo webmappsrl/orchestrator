@@ -13,6 +13,18 @@ class FundraisingProject extends Model
     use HasFactory;
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (FundraisingProject $fundraisingProject) {
+            if (!$fundraisingProject->created_by && auth()->check()) {
+                $fundraisingProject->created_by = auth()->id();
+            }
+        });
+    }
+
+    /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [

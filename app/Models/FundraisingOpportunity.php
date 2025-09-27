@@ -12,6 +12,18 @@ class FundraisingOpportunity extends Model
     use HasFactory;
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (FundraisingOpportunity $fundraisingOpportunity) {
+            if (!$fundraisingOpportunity->created_by && auth()->check()) {
+                $fundraisingOpportunity->created_by = auth()->id();
+            }
+        });
+    }
+
+    /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
