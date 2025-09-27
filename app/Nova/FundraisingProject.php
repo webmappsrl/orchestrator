@@ -40,12 +40,12 @@ class FundraisingProject extends Resource
     ];
 
     /**
-     * Get the fields displayed by the resource.
+     * Get the fields for the detail view.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
-    public function fields(NovaRequest $request)
+    public function fieldsForDetail(NovaRequest $request)
     {
         return [
             ID::make()->sortable(),
@@ -127,6 +127,59 @@ class FundraisingProject extends Resource
     }
 
     /**
+     * Get the fields for the index view.
+     */
+    public function fieldsForIndex(NovaRequest $request)
+    {
+        return [
+            ID::make()->sortable(),
+
+            Text::make('Titolo del Progetto', 'title')
+                ->rules('required', 'max:255')
+                ->sortable(),
+
+            BelongsTo::make('Opportunità di Finanziamento', 'fundraisingOpportunity', FundraisingOpportunity::class)
+                ->searchable(),
+
+            BelongsTo::make('Capofila', 'leadUser', User::class)
+                ->searchable(),
+
+            Select::make('Stato', 'status')
+                ->options([
+                    'draft' => 'Bozza',
+                    'submitted' => 'Presentato',
+                    'approved' => 'Approvato',
+                    'rejected' => 'Respinto',
+                    'completed' => 'Completato',
+                ])
+                ->rules('required')
+                ->sortable(),
+
+            Number::make('Importo Richiesto', 'requested_amount')
+                ->step(0.01)
+                ->nullable()
+                ->displayUsing(function ($value) {
+                    return $value ? '€ ' . number_format($value, 2) : null;
+                })
+                ->sortable(),
+
+            BelongsTo::make('Responsabile', 'responsibleUser', User::class)
+                ->searchable(),
+        ];
+    }
+
+    public function fields(NovaRequest $request)
+    {
+        // Se siamo nella vista index, usa i campi ridotti
+        if ($request->isResourceIndexRequest() && !$request->isCreateOrAttachRequest() && !$request->isUpdateOrUpdateAttachedRequest()) {
+            return $this->fieldsForIndex($request);
+        }
+
+        // Per dettaglio, creazione e modifica usa tutti i campi
+        return $this->fieldsForDetail($request);
+    }
+
+    /**
      * Get the cards available for the request.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
@@ -170,6 +223,14 @@ class FundraisingProject extends Resource
     public function actions(NovaRequest $request)
     {
         return [];
+    }
+
+    /**
+     * Determine if the current user can create new resources.
+     */
+    public static function authorizedToCreate(Request $request): bool
+    {
+        return false;
     }
 
     /**
