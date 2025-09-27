@@ -121,8 +121,6 @@ class FundraisingProject extends Resource
                 ->displayUsing(function ($date) {
                     return $date ? $date->format('d/m/Y') : null;
                 }),
-
-            HasMany::make('Storie/Ticket', 'stories', Story::class),
         ];
     }
 
