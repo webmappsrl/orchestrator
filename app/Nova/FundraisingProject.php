@@ -68,7 +68,12 @@ class FundraisingProject extends Resource
 
             BelongsToMany::make('Partner', 'partners', User::class)
                 ->searchable()
-                ->help('Utenti con ruolo customer'),
+                ->showOnDetail()
+                ->showOnIndex()
+                ->showOnCreating()
+                ->showOnUpdating()
+                ->nullable()
+                ->help('Clicca su "Attach" per aggiungere partner o "Detach" per rimuoverli'),
 
             BelongsTo::make('Creato da', 'creator', User::class)
                 ->exceptOnForms()
@@ -85,6 +90,7 @@ class FundraisingProject extends Resource
             Textarea::make('Idea Progettuale', 'description')
                 ->nullable()
                 ->rows(4)
+                ->alwaysShow()
                 ->help('Inserisci un abstract del progetto che descriva gli obiettivi, le attività principali e i risultati attesi del progetto di fundraising'),
 
             Select::make('Stato', 'status')
@@ -236,6 +242,16 @@ class FundraisingProject extends Resource
     public static function authorizedToCreate(Request $request): bool
     {
         return false;
+    }
+
+    /**
+     * Determine if the current user can update the given resource.
+     */
+    public function authorizedToUpdate(Request $request): bool
+    {
+        $user = $request->user();
+        return $user->hasRole(\App\Enums\UserRole::Fundraising) || 
+               $user->hasRole(\App\Enums\UserRole::Admin);
     }
 
     /**

@@ -11,9 +11,30 @@ class UserPolicy
 {
     use HandlesAuthorization;
 
-    public function before(User $user)
+    public function before(User $user, $ability, $arguments = [])
     {
-        return $user->hasRole(UserRole::Admin);
+        // Se l'utente è admin, permettere tutto
+        if ($user->hasRole(UserRole::Admin)) {
+            return true;
+        }
+        
+        // Se l'utente è fundraising, permettere solo le operazioni sui partner
+        if ($user->hasRole(UserRole::Fundraising)) {
+            // Permettere tutte le operazioni sui partner
+            if (str_contains($ability, 'Partner') || str_contains($ability, 'partner')) {
+                return true;
+            }
+            // Permettere anche le operazioni di attach/detach generiche
+            if (str_contains($ability, 'attach') || str_contains($ability, 'detach')) {
+                return true;
+            }
+            // Permettere anche le operazioni di view per i partner
+            if (str_contains($ability, 'view')) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**
@@ -24,20 +45,74 @@ class UserPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        return $user->hasRole(UserRole::Admin);
     }
 
     /**
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Story  $story
+     * @param  \App\Models\User  $model
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Story $story)
+    public function view(User $user, User $model)
     {
-        //
+        return $user->hasRole(UserRole::Admin);
     }
+
+    /**
+     * Determine whether the user can attach any partners to fundraising projects.
+     * Questo permette agli utenti fundraising di vedere gli utenti solo quando aggiungono partner.
+     */
+    public function attachAnyPartner(User $user, $model)
+    {
+        // Se il modello è un FundraisingProject, permettere agli utenti fundraising
+        if ($model instanceof \App\Models\FundraisingProject) {
+            return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+        }
+        
+        return $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Determine whether the user can attach a specific partner to fundraising projects.
+     */
+    public function attachPartner(User $user, $model, User $partner)
+    {
+        // Se il modello è un FundraisingProject, permettere agli utenti fundraising
+        if ($model instanceof \App\Models\FundraisingProject) {
+            return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+        }
+        
+        return $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Determine whether the user can detach any partners from fundraising projects.
+     */
+    public function detachAnyPartner(User $user, $model)
+    {
+        // Se il modello è un FundraisingProject, permettere agli utenti fundraising
+        if ($model instanceof \App\Models\FundraisingProject) {
+            return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+        }
+        
+        return $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Determine whether the user can detach a specific partner from fundraising projects.
+     */
+    public function detachPartner(User $user, $model, User $partner)
+    {
+        // Se il modello è un FundraisingProject, permettere agli utenti fundraising
+        if ($model instanceof \App\Models\FundraisingProject) {
+            return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+        }
+        
+        return $user->hasRole(UserRole::Admin);
+    }
+
 
     /**
      * Determine whether the user can create models.

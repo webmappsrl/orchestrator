@@ -76,4 +76,40 @@ class FundraisingProjectPolicy
     {
         return $user->hasRole(UserRole::Admin);
     }
+
+    /**
+     * Determine whether the user can attach any partners to the model.
+     * Solo utenti con ruolo fundraising o admin possono aggiungere partner.
+     */
+    public function attachAnyPartner(User $user, FundraisingProject $fundraisingProject): bool
+    {
+        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Determine whether the user can attach a specific partner to the model.
+     * Solo utenti con ruolo fundraising o admin possono aggiungere partner specifici.
+     */
+    public function attachPartner(User $user, FundraisingProject $fundraisingProject, User $partner): bool
+    {
+        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Determine whether the user can detach any partners from the model.
+     * Solo utenti con ruolo fundraising o admin possono rimuovere partner.
+     */
+    public function detachAnyPartner(User $user, FundraisingProject $fundraisingProject): bool
+    {
+        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Determine whether the user can detach a specific partner from the model.
+     * Solo utenti con ruolo fundraising o admin possono rimuovere partner specifici.
+     */
+    public function detachPartner(User $user, FundraisingProject $fundraisingProject, User $partner): bool
+    {
+        return $user->hasRole(UserRole::Fundraising) || $user->hasRole(UserRole::Admin);
+    }
 }

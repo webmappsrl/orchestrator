@@ -249,6 +249,7 @@ class FundraisingOpportunity extends Resource
     {
         return [
             new \App\Nova\Actions\CreateFundraisingOpportunityFromJson,
+            new \App\Nova\Actions\CreateProjectFromOpportunity,
         ];
     }
 
