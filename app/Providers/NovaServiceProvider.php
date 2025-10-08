@@ -53,11 +53,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 $newStoryUrl = '/resources/story-showed-by-customers/new';
             }
 
+            $scrumMeetCode = env('SCRUM_MEET_CODE');
+
             return [
-                MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => 'qcz-incv-dem']))->openInNewTab()->canSee(function ($request) {
+                MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => $scrumMeetCode]))->openInNewTab()->canSee(function ($request) {
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
-                MenuItem::externalLink('MEET', 'https://meet.google.com/qcz-incv-dem')->openInNewTab()->canSee(function ($request) {
+                MenuItem::externalLink('MEET', 'https://meet.google.com/'.$scrumMeetCode)->openInNewTab()->canSee(function ($request) {
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
                 MenuSection::dashboard(Kanban::class)->icon('chart-bar')->canSee(function ($request) {
