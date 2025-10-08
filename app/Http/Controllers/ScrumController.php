@@ -10,13 +10,13 @@ use Illuminate\Http\Request;
 
 class ScrumController extends Controller
 {
-    public function createOrUpdateScrumStory(Request $request, $meetCode = null)
+    public function createOrUpdateScrumStory(Request $request)
     {
         $user = auth()->user();
         $today = Carbon::now();
         $title = "{$today->format('d-m-y')}";
 
-        $meetCode = env('SCRUM_MEET_CODE');
+        $meetCode = config('app.SCRUM_MEET_CODE');
         // Cerca se esiste già una storia con questo titolo
         $scrumTicket = Story::where('name', $title)->where('creator_id', $user->id)->first();
 

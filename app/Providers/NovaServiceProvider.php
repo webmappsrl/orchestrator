@@ -53,7 +53,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 $newStoryUrl = '/resources/story-showed-by-customers/new';
             }
 
-            $scrumMeetCode = env('SCRUM_MEET_CODE');
+            $scrumMeetCode = config('app.SCRUM_MEET_CODE');
 
             return [
                 MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => $scrumMeetCode]))->openInNewTab()->canSee(function ($request) {
