@@ -2,24 +2,22 @@
 
 namespace App\Models;
 
-use App\Models\Tag;
-use App\Models\Epic;
-use App\Enums\UserRole;
-use App\Enums\StoryType;
 use App\Enums\StoryStatus;
-use Spatie\MediaLibrary\HasMedia;
+use App\Enums\StoryType;
+use App\Enums\UserRole;
+use App\Jobs\SendStatusUpdateMailJob;
+use App\Mail\CustomerNewStoryCreated;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Jobs\SendStatusUpdateMailJob;
-use App\Mail\CustomerNewStoryCreated;
-use Illuminate\Database\Eloquent\Model;
-use Spatie\MediaLibrary\InteractsWithMedia;
 use Laravel\Nova\Notifications\NovaNotification;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Support\Facades\Auth;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Story extends Model implements HasMedia
 {
@@ -62,7 +60,7 @@ class Story extends Model implements HasMedia
             if (isset($story->creator_id) && $story->creator->hasRole($customerRole) && $story->status === $releasedStatus) {
                 $story->sendStatusUpdatedEmail($story, $story->creator_id);
             }
-            if (!empty($story->epic)) {
+            if (! empty($story->epic)) {
                 $epic = $story->epic;
                 $epic->status = $epic->getStatusFromStories()->value;
                 $epic->save();
@@ -85,7 +83,7 @@ class Story extends Model implements HasMedia
             $user = auth()->user();
             if ($user) {
                 $story->creator_id = $user->id;
-                if (!isset($story->type)) {
+                if (! isset($story->type)) {
                     $story->type = StoryType::Helpdesk->value;
                 }
 
@@ -120,17 +118,17 @@ class Story extends Model implements HasMedia
                         if (isset($story->parent_id)) {
                             $exists = DB::table('story_story')
                                 ->where('parent_id', $story->parent_id)
-                                ->where('child_id',  $story->id)
+                                ->where('child_id', $story->id)
                                 ->exists();
                             if (is_null($originalParentStoryId)) {
                                 if ($exists === false) {
                                     $tablePivot
                                         ->insert([
                                             'parent_id' => $story->parent_id,
-                                            'child_id' => $story->id
+                                            'child_id' => $story->id,
                                         ]);
                                 }
-                            } else if ($story->parent_id != $originalParentStoryId) {
+                            } elseif ($story->parent_id != $originalParentStoryId) {
                                 $tablePivot
                                     ->where('parent_id', $originalParentStoryId)
                                     ->where('child_id', $story->id)
@@ -138,7 +136,7 @@ class Story extends Model implements HasMedia
                                 $tablePivot
                                     ->insert([
                                         'parent_id' => $story->parent_id,
-                                        'child_id' => $story->id
+                                        'child_id' => $story->id,
                                     ]);
                             }
                         } else {
@@ -150,7 +148,7 @@ class Story extends Model implements HasMedia
                             }
                         }
                     } catch (\Exception $e) {
-                        $e;
+
                     }
                 }
                 $storyHasDeveloper = isset($story->user_id);
@@ -174,8 +172,8 @@ class Story extends Model implements HasMedia
 
                     $story->tester->notify(NovaNotification::make()
                         ->type('info')
-                        ->message('The status of the story ' . $story->id . ' has been updated to ' . $status . ' by ' . auth()->user()->name)
-                        ->action('View story', url('/nova/resources/stories/' . $story->id))
+                        ->message('The status of the story '.$story->id.' has been updated to '.$status.' by '.auth()->user()->name)
+                        ->action('View story', url('/nova/resources/stories/'.$story->id))
                         ->icon('star'));
                 }
 
@@ -184,8 +182,8 @@ class Story extends Model implements HasMedia
 
                     $story->developer->notify(NovaNotification::make()
                         ->type('info')
-                        ->message('The status of the story ' . $story->id . ' has been updated to ' . $status . ' by ' . auth()->user()->name)
-                        ->action('View story', url('/nova/resources/stories/' . $story->id))
+                        ->message('The status of the story '.$story->id.' has been updated to '.$status.' by '.auth()->user()->name)
+                        ->action('View story', url('/nova/resources/stories/'.$story->id))
                         ->icon('star'));
                 }
             }
@@ -197,6 +195,7 @@ class Story extends Model implements HasMedia
             }
         });
     }
+
     public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable');
@@ -212,12 +211,12 @@ class Story extends Model implements HasMedia
         return $this->hasMany(StoryLog::class);
     }
 
-
     public function sendStatusUpdatedEmail(Story $story, $userId)
     {
         $user = User::find($userId);
         SendStatusUpdateMailJob::dispatch($story, $user);
     }
+
     public function projects()
     {
         return $this->belongsToMany(Project::class, 'story_project');
@@ -227,15 +226,16 @@ class Story extends Model implements HasMedia
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'creator_id');
     }
+
     public function tester()
     {
         return $this->belongsTo(User::class, 'tester_id');
     }
-
 
     public function project()
     {
@@ -244,8 +244,6 @@ class Story extends Model implements HasMedia
 
     /**
      * It returns the corresponding EPIC
-     *
-     * @return BelongsTo
      */
     public function epic(): BelongsTo
     {
@@ -269,10 +267,9 @@ class Story extends Model implements HasMedia
         return $this->belongsToMany(Story::class, 'story_story', 'parent_id', 'child_id')->using(StoryPivot::class);
     }
 
-
     /**
      * Register a spatie media collection
-     * @return void
+     *
      * @link https://spatie.be/docs/laravel-medialibrary/v9/working-with-media-collections/defining-media-collections
      */
     public function registerMediaCollections(): void
@@ -286,6 +283,7 @@ class Story extends Model implements HasMedia
 
     /**
      * Add a response to the story customer_request field
+     *
      * @return void
      */
     public function addResponse($response)
@@ -298,10 +296,10 @@ class Story extends Model implements HasMedia
         if (array_search(UserRole::Developer, $senderRoles) !== false) {
             $senderType = 'developer';
             $style = "style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 10px 20px;'";
-        } else if ($sender->id == $this->tester_id) {
+        } elseif ($sender->id == $this->tester_id) {
             $senderType = 'tester';
             $style = "style='background-color: #e6f7ff; border-left: 4px solid #1890ff; padding: 10px 20px;'";
-        } else if (array_search(UserRole::Customer, $senderRoles) !== false) {
+        } elseif (array_search(UserRole::Customer, $senderRoles) !== false) {
             $senderType = 'customer';
             $style = "style='background-color: #fff7e6; border-left: 4px solid #ffa940; padding: 10px 20px;'";
         } else {
@@ -309,13 +307,20 @@ class Story extends Model implements HasMedia
             $style = "style='background-color: #d7f7de; border-left: 4px solid #6c757d; padding: 10px 20px;'";
             $string = '';
             foreach ($senderRoles as $role) {
-                $string .= $role->value . ', ';
+                $string .= $role->value.', ';
             }
-            Log::info('Sender answering to story with id: ' . $this->id .  ' has roles: ' . $string);
+            Log::info('Sender answering to story with id: '.$this->id.' has roles: '.$string);
         }
 
-        $formattedResponse = $sender->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <div $style> <p>" . $response . " </p> </div>" . $divider;
-        $this->customer_request = $formattedResponse . $this->customer_request;
+        $formattedResponse = $sender->name.' ha risposto il: '.now()->format('d-m-Y H:i')."\n <div $style> <p>".$response.' </p> </div>'.$divider;
+        $this->customer_request = $formattedResponse.$this->customer_request;
+
+        // Log activity before saving
+        log_story_activity('response_added', $this, $sender, [
+            'sender_type' => $senderType,
+            'response_preview' => substr(strip_tags($response), 0, 100),
+        ]);
+
         $this->save();
 
         // Add sender as participant
@@ -323,13 +328,13 @@ class Story extends Model implements HasMedia
 
         // Collect all unique recipients
         $recipients = $this->participants->pluck('id')->toArray();
-        if ($this->creator_id && !in_array($this->creator_id, $recipients)) {
+        if ($this->creator_id && ! in_array($this->creator_id, $recipients)) {
             $recipients[] = $this->creator_id;
         }
-        if ($this->user_id && !in_array($this->user_id, $recipients)) {
+        if ($this->user_id && ! in_array($this->user_id, $recipients)) {
             $recipients[] = $this->user_id;
         }
-        if ($this->tester_id && !in_array($this->tester_id, $recipients)) {
+        if ($this->tester_id && ! in_array($this->tester_id, $recipients)) {
             $recipients[] = $this->tester_id;
         }
 
@@ -390,6 +395,7 @@ class Story extends Model implements HasMedia
             ->groupBy('type')
             ->get();
     }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -399,7 +405,7 @@ class Story extends Model implements HasMedia
     protected function addParticipant($userId)
     {
         $participants = $this->participants ?? [];
-        if (!in_array($userId, $participants)) {
+        if (! in_array($userId, $participants)) {
             $participants[] = $userId;
             $this->participants = $participants;
             $this->save();
