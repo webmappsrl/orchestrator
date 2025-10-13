@@ -52,10 +52,9 @@ return [
 
     'channels' => [
         'activity' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/activity.log'),
+            'driver' => 'single',
+            'path' => storage_path('logs/user-activity.log'),
             'level' => 'info',
-            'days' => 30,
         ],
         'process_inbound_emails' => [
             'driver' => 'single',

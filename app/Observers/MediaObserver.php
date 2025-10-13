@@ -26,7 +26,18 @@ class MediaObserver
 
             if ($user && $story) {
                 // Log activity to activity.log file
-                Log::channel('activity')->info('Story attachment added', [
+                $message = sprintf(
+                    '%s (%s) added attachment "%s" (%s) to story #%d "%s" on %s',
+                    $user->name,
+                    $user->email,
+                    $media->file_name,
+                    $media->mime_type,
+                    $story->id,
+                    $story->name,
+                    now()->format('d-m-Y H:i:s')
+                );
+
+                $context = [
                     'story_id' => $story->id,
                     'story_name' => $story->name,
                     'user_id' => $user->id,
@@ -37,7 +48,9 @@ class MediaObserver
                     'attachment_size' => $media->size,
                     'collection_name' => $media->collection_name,
                     'timestamp' => now()->format('Y-m-d H:i:s'),
-                ]);
+                ];
+
+                Log::channel('activity')->info($message, $context);
             }
         }
     }
@@ -57,7 +70,17 @@ class MediaObserver
 
             if ($user) {
                 // Log activity to activity.log file
-                Log::channel('activity')->warning('Story attachment deleted', [
+                $message = sprintf(
+                    '%s (%s) deleted attachment "%s" (%s) from story #%d on %s',
+                    $user->name,
+                    $user->email,
+                    $media->file_name,
+                    $media->mime_type,
+                    $media->model_id,
+                    now()->format('d-m-Y H:i:s')
+                );
+
+                $context = [
                     'story_id' => $media->model_id,
                     'user_id' => $user->id,
                     'user_name' => $user->name,
@@ -67,7 +90,9 @@ class MediaObserver
                     'attachment_size' => $media->size,
                     'collection_name' => $media->collection_name,
                     'timestamp' => now()->format('Y-m-d H:i:s'),
-                ]);
+                ];
+
+                Log::channel('activity')->warning($message, $context);
             }
         }
     }

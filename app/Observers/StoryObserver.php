@@ -15,11 +15,16 @@ use Illuminate\Support\Facades\Log;
 
 class StoryObserver
 {
+    private static $createdStories = [];
+
     /**
      * Handle the Story "created" event.
      */
     public function created(Story $story): void
     {
+        // Mark this story as newly created
+        self::$createdStories[$story->id] = true;
+
         $user = Auth::user();
         if (is_null($user)) {
             $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
@@ -27,7 +32,16 @@ class StoryObserver
 
         if ($user) {
             // Log activity to activity.log file
-            Log::channel('activity')->info('Story created', [
+            $message = sprintf(
+                '%s (%s) created story #%d "%s" on %s',
+                $user->name,
+                $user->email,
+                $story->id,
+                $story->name,
+                now()->format('d-m-Y H:i:s')
+            );
+
+            $context = [
                 'story_id' => $story->id,
                 'story_name' => $story->name,
                 'story_status' => $story->status,
@@ -36,7 +50,9 @@ class StoryObserver
                 'user_name' => $user->name,
                 'user_email' => $user->email,
                 'timestamp' => now()->format('Y-m-d H:i:s'),
-            ]);
+            ];
+
+            Log::channel('activity')->info($message, $context);
         }
     }
 
@@ -108,8 +124,11 @@ class StoryObserver
 
     private function createStoryLog(Story $story): void
     {
-        // Don't log as "updated" if the story was just created
-        if ($story->wasRecentlyCreated) {
+        // Don't log as "updated" if the story was just created in this request
+        if ($story->wasRecentlyCreated || isset(self::$createdStories[$story->id])) {
+            // Clean up the flag after checking
+            unset(self::$createdStories[$story->id]);
+
             return;
         }
 
@@ -139,15 +158,33 @@ class StoryObserver
             ]);
 
             // Log activity to activity.log file
-            Log::channel('activity')->info('Story updated', [
+            $changesText = implode(', ', array_map(
+                fn ($key, $value) => "{$key}: ".(is_string($value) ? $value : json_encode($value)),
+                array_keys($jsonChanges),
+                $jsonChanges
+            ));
+
+            $message = sprintf(
+                '%s (%s) updated story #%d "%s" on %s - Changes: %s',
+                $user->name,
+                $user->email,
+                $story->id,
+                $story->name,
+                now()->format('d-m-Y H:i:s'),
+                $changesText
+            );
+
+            $context = [
                 'story_id' => $story->id,
                 'story_name' => $story->name,
                 'user_id' => $user->id,
                 'user_name' => $user->name,
                 'user_email' => $user->email,
                 'changes' => $jsonChanges,
-                'timestamp' => $timestamp,
-            ]);
+                'timestamp' => now()->format('Y-m-d H:i:s'),
+            ];
+
+            Log::channel('activity')->info($message, $context);
 
             $story->saveQuietly();
             StoryTimeService::run($storyLog->story);
@@ -196,7 +233,16 @@ class StoryObserver
 
         if ($user) {
             // Log activity to activity.log file
-            Log::channel('activity')->warning('Story deleted', [
+            $message = sprintf(
+                '%s (%s) deleted story #%d "%s" on %s',
+                $user->name,
+                $user->email,
+                $story->id,
+                $story->name,
+                now()->format('d-m-Y H:i:s')
+            );
+
+            $context = [
                 'story_id' => $story->id,
                 'story_name' => $story->name,
                 'story_status' => $story->status,
@@ -204,7 +250,9 @@ class StoryObserver
                 'user_name' => $user->name,
                 'user_email' => $user->email,
                 'timestamp' => now()->format('Y-m-d H:i:s'),
-            ]);
+            ];
+
+            Log::channel('activity')->warning($message, $context);
         }
     }
 

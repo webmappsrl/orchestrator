@@ -31,7 +31,33 @@ if (! function_exists('log_story_activity')) {
         }
 
         if ($user) {
-            $logData = array_merge([
+            // Format additional data as readable text
+            $additionalText = '';
+            if (! empty($additionalData)) {
+                $formattedData = [];
+                foreach ($additionalData as $key => $value) {
+                    if (is_string($value) || is_numeric($value)) {
+                        $formattedData[] = "{$key}: {$value}";
+                    } else {
+                        $formattedData[] = "{$key}: ".json_encode($value);
+                    }
+                }
+                $additionalText = ' - '.implode(', ', $formattedData);
+            }
+
+            $message = sprintf(
+                '%s (%s) %s story #%d "%s" on %s%s',
+                $user->name,
+                $user->email,
+                $action,
+                $story->id,
+                $story->name,
+                now()->format('d-m-Y H:i:s'),
+                $additionalText
+            );
+
+            // Build context with all data for JSON
+            $context = array_merge([
                 'action' => $action,
                 'story_id' => $story->id,
                 'story_name' => $story->name,
@@ -41,7 +67,7 @@ if (! function_exists('log_story_activity')) {
                 'timestamp' => now()->format('Y-m-d H:i:s'),
             ], $additionalData);
 
-            \Illuminate\Support\Facades\Log::channel('activity')->{$level}("Story {$action}", $logData);
+            \Illuminate\Support\Facades\Log::channel('activity')->{$level}($message, $context);
         }
     }
 }
