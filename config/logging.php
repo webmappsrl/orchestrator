@@ -51,6 +51,11 @@ return [
     */
 
     'channels' => [
+        'user-activity' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/user-activity.log'),
+            'level' => 'info',
+        ],
         'process_inbound_emails' => [
             'driver' => 'single',
             'path' => storage_path('logs/process_inbound_emails.log'),
@@ -90,7 +95,7 @@ return [
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
             ],
         ],
 
