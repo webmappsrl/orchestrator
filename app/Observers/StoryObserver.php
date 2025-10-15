@@ -52,7 +52,7 @@ class StoryObserver
                 'timestamp' => now()->format('Y-m-d H:i:s'),
             ];
 
-            Log::channel('activity')->info($message, $context);
+            Log::channel('user-activity')->info($message, $context);
         }
     }
 
@@ -184,7 +184,7 @@ class StoryObserver
                 'timestamp' => now()->format('Y-m-d H:i:s'),
             ];
 
-            Log::channel('activity')->info($message, $context);
+            Log::channel('user-activity')->info($message, $context);
 
             $story->saveQuietly();
             StoryTimeService::run($storyLog->story);
@@ -252,7 +252,7 @@ class StoryObserver
                 'timestamp' => now()->format('Y-m-d H:i:s'),
             ];
 
-            Log::channel('activity')->warning($message, $context);
+            Log::channel('user-activity')->warning($message, $context);
         }
     }
 

@@ -67,7 +67,7 @@ if (! function_exists('log_story_activity')) {
                 'timestamp' => now()->format('Y-m-d H:i:s'),
             ], $additionalData);
 
-            \Illuminate\Support\Facades\Log::channel('activity')->{$level}($message, $context);
+            \Illuminate\Support\Facades\Log::channel('user-activity')->{$level}($message, $context);
         }
     }
 }

@@ -50,7 +50,7 @@ class MediaObserver
                     'timestamp' => now()->format('Y-m-d H:i:s'),
                 ];
 
-                Log::channel('activity')->info($message, $context);
+                Log::channel('user-activity')->info($message, $context);
             }
         }
     }
@@ -92,7 +92,7 @@ class MediaObserver
                     'timestamp' => now()->format('Y-m-d H:i:s'),
                 ];
 
-                Log::channel('activity')->warning($message, $context);
+                Log::channel('user-activity')->warning($message, $context);
             }
         }
     }

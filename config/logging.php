@@ -51,7 +51,7 @@ return [
     */
 
     'channels' => [
-        'activity' => [
+        'user-activity' => [
             'driver' => 'single',
             'path' => storage_path('logs/user-activity.log'),
             'level' => 'info',
