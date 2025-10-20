@@ -93,7 +93,7 @@ class StoryObserver
     {
         $user = auth()->user();
         if (
-            ! $story->wasRecentlyCreated
+            !$story->wasRecentlyCreated
             && $story->isDirty('customer_request')
             && $user && $story->user
             && $user->id != $story->user->id
@@ -184,7 +184,7 @@ class StoryObserver
                 'timestamp' => now()->format('Y-m-d H:i:s'),
             ];
 
-            Log::channel('user-activity')->info($message, $context);
+            Log::channel('activity')->info($message, $context);
 
             $story->saveQuietly();
             StoryTimeService::run($storyLog->story);
@@ -194,7 +194,7 @@ class StoryObserver
     private function notifyDeveloperIfIdle(Story $story): void
     {
         $developer = $story->user;
-        if (! $developer) {
+        if (!$developer) {
             return;
         }
 
@@ -207,7 +207,7 @@ class StoryObserver
         $hasScrum = \App\Models\Story::where('user_id', $developer->id)
             ->where('type', 'scrum')
             ->exists();
-        if (! $hasScrum) {
+        if (!$hasScrum) {
             return;
         }
 
@@ -216,7 +216,7 @@ class StoryObserver
             ->where('status', \App\Enums\StoryStatus::Progress->value)
             ->exists();
 
-        if (! $hasProgress) {
+        if (!$hasProgress) {
             \App\Jobs\CheckDeveloperProgressJob::dispatch($developer->id)->delay(now()->addMinutes(30));
         }
     }
