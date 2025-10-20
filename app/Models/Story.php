@@ -314,8 +314,15 @@ class Story extends Model implements HasMedia
             Log::info('Sender answering to story with id: ' . $this->id .  ' has roles: ' . $string);
         }
 
-        $formattedResponse = $sender->name . " ha risposto il: " . now()->format('d-m-Y H:i') . "\n <div $style> <p>" . $response . " </p> </div>" . $divider;
-        $this->customer_request = $formattedResponse . $this->customer_request;
+        $formattedResponse = $sender->name.' ha risposto il: '.now()->format('d-m-Y H:i')."\n <div $style> <p>".$response.' </p> </div>'.$divider;
+        $this->customer_request = $formattedResponse.$this->customer_request;
+
+        // Log activity before saving
+        log_story_activity('response_added', $this, $sender, [
+            'sender_type' => $senderType,
+            'response_preview' => substr(strip_tags($response), 0, 100),
+        ]);
+
         $this->save();
 
         // Add sender as participant
