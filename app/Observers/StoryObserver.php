@@ -2,15 +2,15 @@
 
 namespace App\Observers;
 
-use App\Actions\StoryTimeService;
-use App\Enums\StoryStatus;
-use App\Enums\UserRole;
 use App\Models\Story;
 use App\Models\StoryLog;
+use App\Enums\StoryStatus;
+use App\Actions\StoryTimeService;
 use App\Models\User;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
+use App\Enums\UserRole;
 use Illuminate\Support\Facades\Log;
 
 class StoryObserver

@@ -1,6 +1,6 @@
 <?php
 
-if (! function_exists('wrap_and_format_name')) {
+if (!function_exists('wrap_and_format_name')) {
     function wrap_and_format_name($name)
     {
         $wrappedName = wordwrap($name, config('orchestrator.utility.word-wrap-length'), "\n", true);
@@ -10,7 +10,7 @@ if (! function_exists('wrap_and_format_name')) {
     }
 }
 
-if (! function_exists('log_story_activity')) {
+if (!function_exists('log_story_activity')) {
     /**
      * Log story activity to activity.log file
      *

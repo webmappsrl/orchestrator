@@ -21,7 +21,7 @@ class AppObserver
     public function updated(App $app): void
     {
         $app->BuildConfJson();
-        Log::info('updated');
+        Log::info("updated");
     }
 
     /**
