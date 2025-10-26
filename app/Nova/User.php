@@ -143,7 +143,9 @@ class User extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new filters\UserRoleFilter(),
+        ];
     }
 
     /**
