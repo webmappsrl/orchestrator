@@ -11,16 +11,49 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
 use App\Enums\UserRole;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class StoryObserver
 {
+    private static $createdStories = [];
+
     /**
      * Handle the Story "created" event.
      */
     public function created(Story $story): void
     {
-        //
+        // Mark this story as newly created
+        self::$createdStories[$story->id] = true;
+
+        $user = Auth::user();
+        if (is_null($user)) {
+            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
+        }
+
+        if ($user) {
+            // Log activity to activity.log file
+            $message = sprintf(
+                '%s (%s) created story #%d "%s" on %s',
+                $user->name,
+                $user->email,
+                $story->id,
+                $story->name,
+                now()->format('d-m-Y H:i:s')
+            );
+
+            $context = [
+                'story_id' => $story->id,
+                'story_name' => $story->name,
+                'story_status' => $story->status,
+                'story_type' => $story->type,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'user_email' => $user->email,
+                'timestamp' => now()->format('Y-m-d H:i:s'),
+            ];
+
+            Log::channel('user-activity')->info($message, $context);
+        }
     }
 
     /**
@@ -70,8 +103,6 @@ class StoryObserver
         }
     }
 
-
-
     private function syncStoryCalendarIfStatusChanged(Story $story): void
     {
         if ($story->isDirty('status')) {
@@ -93,11 +124,20 @@ class StoryObserver
 
     private function createStoryLog(Story $story): void
     {
+        // Don't log as "updated" if the story was just created in this request
+        if ($story->wasRecentlyCreated || isset(self::$createdStories[$story->id])) {
+            // Clean up the flag after checking
+            unset(self::$createdStories[$story->id]);
+
+            return;
+        }
+
         $dirtyFields = $story->getDirty();
 
         $user = Auth::user();
-        if (is_null($user))
-            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first(); //there is a seeder for this user (PhpArtisanUserSeeder)
+        if (is_null($user)) {
+            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
+        } //there is a seeder for this user (PhpArtisanUserSeeder)
 
         $jsonChanges = [];
 
@@ -116,6 +156,36 @@ class StoryObserver
                 'viewed_at' => $timestamp,
                 'changes' => $jsonChanges,
             ]);
+
+            // Log activity to activity.log file
+            $changesText = implode(', ', array_map(
+                fn ($key, $value) => "{$key}: ".(is_string($value) ? $value : json_encode($value)),
+                array_keys($jsonChanges),
+                $jsonChanges
+            ));
+
+            $message = sprintf(
+                '%s (%s) updated story #%d "%s" on %s - Changes: %s',
+                $user->name,
+                $user->email,
+                $story->id,
+                $story->name,
+                now()->format('d-m-Y H:i:s'),
+                $changesText
+            );
+
+            $context = [
+                'story_id' => $story->id,
+                'story_name' => $story->name,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'user_email' => $user->email,
+                'changes' => $jsonChanges,
+                'timestamp' => now()->format('Y-m-d H:i:s'),
+            ];
+
+            Log::channel('activity')->info($message, $context);
+
             $story->saveQuietly();
             StoryTimeService::run($storyLog->story);
         }
@@ -156,7 +226,34 @@ class StoryObserver
      */
     public function deleted(Story $story): void
     {
-        //
+        $user = Auth::user();
+        if (is_null($user)) {
+            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
+        }
+
+        if ($user) {
+            // Log activity to activity.log file
+            $message = sprintf(
+                '%s (%s) deleted story #%d "%s" on %s',
+                $user->name,
+                $user->email,
+                $story->id,
+                $story->name,
+                now()->format('d-m-Y H:i:s')
+            );
+
+            $context = [
+                'story_id' => $story->id,
+                'story_name' => $story->name,
+                'story_status' => $story->status,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'user_email' => $user->email,
+                'timestamp' => now()->format('Y-m-d H:i:s'),
+            ];
+
+            Log::channel('user-activity')->warning($message, $context);
+        }
     }
 
     /**

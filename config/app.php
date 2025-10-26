@@ -17,7 +17,6 @@ return [
     'release' => 'MS-1.16.2',
     'release_date' => '30/09/2025',
 
-
     /*
     |--------------------------------------------------------------------------
     | Application Name
@@ -137,6 +136,18 @@ return [
     */
 
     'faker_locale' => 'it_IT',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scrum Meet Code
+    |--------------------------------------------------------------------------
+    |
+    | This value is the Google Meet code used for SCRUM meetings.
+    | The full URL will be: https://meet.google.com/{SCRUM_MEET_CODE}
+    |
+    */
+
+    'SCRUM_MEET_CODE' => env('SCRUM_MEET_CODE', 'rst-ukpg-hfz'),
 
     /*
     |--------------------------------------------------------------------------
