@@ -87,7 +87,7 @@ class ChangeStoryCreator extends Action
      */
     public function authorizedToSee($request)
     {
-        return $request->user()->hasRole(UserRole::Developer);
+        return $request->user()->hasRole(UserRole::Developer) || $request->user()->hasRole(UserRole::Admin);
     }
 
     /**
@@ -99,6 +99,6 @@ class ChangeStoryCreator extends Action
      */
     public function authorizedToRun($request, $model)
     {
-        return $request->user()->hasRole(UserRole::Developer);
+        return $request->user()->hasRole(UserRole::Developer) || $request->user()->hasRole(UserRole::Admin);
     }
 }

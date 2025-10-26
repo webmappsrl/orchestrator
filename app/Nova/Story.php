@@ -414,7 +414,7 @@ class Story extends Resource
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel')),
         ];
-        if ($request->user()->hasRole(UserRole::Developer)) {
+        if ($request->user()->hasRole(UserRole::Developer) || $request->user()->hasRole(UserRole::Admin)) {
             array_push($actions, (new actions\CreateDocumentationFromStory())
                 ->confirmText(__('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.'))
                 ->confirmButtonText(__('Confirm'))
