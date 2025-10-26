@@ -108,3 +108,5 @@ Questa release non richiede migrazioni del database. Tutte le funzionalità util
 
 **Note:** Questa release migliora significativamente la gestione dei progetti FRP e dei partner, mantenendo la sicurezza e le autorizzazioni appropriate per ogni ruolo utente.
 
+
+
