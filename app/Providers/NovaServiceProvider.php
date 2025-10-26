@@ -10,6 +10,7 @@ use App\Nova\ArchivedStories;
 use App\Nova\ArchivedStoryShowedByCustomer;
 use App\Nova\AssignedToMeStory;
 use App\Nova\BacklogStory;
+use App\Nova\InProgressStory;
 use App\Nova\Customer;
 use App\Nova\CustomerFundraisingOpportunity;
 use App\Nova\CustomerFundraisingProject;
@@ -123,6 +124,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(AssignedToMeStory::class),
                         MenuItem::resource(ToBeTestedStory::class),
                     ])->collapsedByDefault(),
+                    MenuItem::resource(InProgressStory::class),
                     MenuItem::resource(Tag::class),
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(BacklogStory::class),
