@@ -25,6 +25,11 @@ class StoryToTestStatusAction extends Action
     public function handle(ActionFields $fields, Collection $models)
     {
         foreach ($models as $model) {
+            // Verifica che il tester sia assegnato prima di passare a "testing"
+            if (empty($model->tester_id)) {
+                return Action::danger('Impossibile cambiare lo stato a "Da testare" senza avere assegnato un tester.');
+            }
+            
             $model->update([
                 'status' => StoryStatus::Test->value,
             ]);

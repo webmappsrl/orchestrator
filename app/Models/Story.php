@@ -50,6 +50,11 @@ class Story extends Model implements HasMedia
             if ($story->status == StoryStatus::New->value && $story->isDirty('status')) {
                 $story->user_id = null;
             }
+            
+            // Verifica che il tester sia assegnato prima di passare a "testing"
+            if ($story->isDirty('status') && $story->status == StoryStatus::Test->value && empty($story->tester_id)) {
+                throw new \Exception('Impossibile cambiare lo stato a "Da testare" senza avere assegnato un tester.');
+            }
         });
     }
 
