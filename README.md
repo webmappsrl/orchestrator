@@ -72,3 +72,88 @@ docker exec -u 0 -it php81_$nomeApp bash scripts/deploy_dev.sh
 Xdebug potrebbe non trovare il file di log configurato nel .ini, quindi generare vari warnings
 
 -   creare un file in `/var/log/xdebug.log` all'interno del container phpfpm. Eseguire un `chown www-data /var/log/xdebug.log`. Creare questo file solo se si ha esigenze di debug errori xdebug (impossibile analizzare il codice tramite breakpoint) visto che potrebbe crescere esponenzialmente nel tempo
+
+## Scheduled Tasks Configuration
+
+The orchestrator includes several scheduled tasks that can be enabled or disabled via environment variables in your `.env` file.
+
+### Available Tasks
+
+| Variable | Task | Schedule | Description |
+|----------|------|----------|-------------|
+| `ENABLE_STORY_PROGRESS_TO_TODO` | Story progress to todo | Daily at 18:00 | Moves stories from progress to todo status |
+| `ENABLE_STORY_SCRUM_TO_DONE` | Story scrum to done | Daily at 16:00 | Processes scrum meetings stories |
+| `ENABLE_SYNC_STORIES_CALENDAR` | Sync stories calendar | Daily at 07:45 | Syncs stories with Google Calendar |
+| `ENABLE_STORY_AUTO_UPDATE_STATUS` | Story auto update status | Daily at 07:45 | Automatically updates story status |
+| `ENABLE_PROCESS_INBOUND_EMAILS` | Process inbound emails | Every 5 minutes | Processes incoming emails and creates tickets |
+
+### How to Enable Tasks
+
+By default, all scheduled tasks are **disabled** (`false`). To enable a task:
+
+1. Open your `.env` file
+2. Add the corresponding environment variable with value `true`:
+
+```bash
+# Enable email processing (creates tickets from incoming emails)
+ENABLE_PROCESS_INBOUND_EMAILS=true
+
+# Enable story progress automation
+ENABLE_STORY_PROGRESS_TO_TODO=true
+
+# Enable scrum story processing
+ENABLE_STORY_SCRUM_TO_DONE=true
+
+# Enable calendar sync
+ENABLE_SYNC_STORIES_CALENDAR=true
+
+# Enable auto status update
+ENABLE_STORY_AUTO_UPDATE_STATUS=true
+```
+
+3. Clear and rebuild the configuration cache:
+
+```bash
+docker-compose exec phpfpm php artisan config:cache
+```
+
+4. Verify the scheduled tasks:
+
+```bash
+docker-compose exec phpfpm php artisan schedule:list
+```
+
+### Running Tasks Manually
+
+You can run any scheduled task manually using:
+
+```bash
+# Process inbound emails
+docker-compose exec phpfpm php artisan orchestrator:process-inbound-emails
+
+# Story progress to todo
+docker-compose exec phpfpm php artisan story:progress-to-todo
+
+# Story scrum to done
+docker-compose exec phpfpm php artisan story:scrum-to-done
+
+# Sync stories calendar
+docker-compose exec phpfpm php artisan sync:stories-calendar
+
+# Story auto update status
+docker-compose exec phpfpm php artisan story:auto-update-status
+```
+
+### Cron Job Configuration
+
+For scheduled tasks to run automatically, ensure Laravel's scheduler is configured in your crontab:
+
+```bash
+* * * * * php /path/to/artisan schedule:run >> /dev/null 2>&1
+```
+
+Or run the scheduler manually:
+
+```bash
+docker-compose exec phpfpm php artisan schedule:run
+```
