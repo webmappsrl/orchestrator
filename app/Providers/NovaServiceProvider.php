@@ -17,6 +17,7 @@ use App\Nova\CustomerFundraisingProject;
 use App\Nova\CustomerStory;
 use App\Nova\CustomerTickets;
 use App\Nova\Dashboards\Kanban;
+use App\Nova\Dashboards\Kanban2;
 use App\Nova\Dashboards\CustomerDashboard;
 use App\Nova\Documentation;
 use App\Nova\FundraisingOpportunity;
@@ -68,7 +69,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuItem::externalLink('MEET', 'https://meet.google.com/'.$scrumMeetCode)->openInNewTab()->canSee(function ($request) {
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
-                MenuSection::dashboard(Kanban::class)->icon('chart-bar')->canSee(function ($request) {
+                MenuSection::make('KANBAN', [
+                    MenuItem::dashboard(Kanban::class),
+                    MenuItem::dashboard(Kanban2::class),
+                ])->icon('chart-bar')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
                     }
@@ -232,6 +236,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         return [
             new \App\Nova\Dashboards\Kanban,
+            new \App\Nova\Dashboards\Kanban2,
             new \App\Nova\Dashboards\CustomerDashboard,
         ];
     }
