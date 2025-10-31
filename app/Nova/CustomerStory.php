@@ -7,6 +7,7 @@ use App\Enums\StoryStatus;
 use App\Enums\StoryType;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Query\Search\SearchableRelation;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class CustomerStory extends Story
 {
@@ -58,7 +59,7 @@ class CustomerStory extends Story
     public function filters(NovaRequest $request)
     {
         return [
-            new filters\CreatorStoryFilter(),
+            (new NovaSearchableBelongsToFilter(__('Creator')))->fieldAttribute('creator')->filterBy('creator_id'),
             new filters\UserFilter(),
             new filters\TesterFilter(),
             new filters\StoryStatusFilter(),
