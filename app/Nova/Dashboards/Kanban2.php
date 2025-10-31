@@ -38,9 +38,24 @@ class Kanban2 extends Dashboard
             ->get();
     }
 
-    protected function storyCard(string $status, string $label, $user, $width = 'full', $customTitle = null)
+    protected function byStatusAndUserAsDeveloper(string $status, Authenticatable $user)
     {
-        $stories = $this->byStatusAndUser($status, $user);
+        return Story::query()
+            ->where('status', $status)
+            ->where('user_id', $user->id)
+            ->whereNotNull('type')
+            ->where('type', '!=', StoryType::Scrum->value)
+            ->with(['creator', 'tags'])
+            ->get();
+    }
+
+    protected function storyCard(string $status, string $label, $user, $width = 'full', $customTitle = null, $filterByDeveloper = false)
+    {
+        if ($filterByDeveloper) {
+            $stories = $this->byStatusAndUserAsDeveloper($status, $user);
+        } else {
+            $stories = $this->byStatusAndUser($status, $user);
+        }
 
         return (new HtmlCard)
             ->width($width)
@@ -127,6 +142,9 @@ class Kanban2 extends Dashboard
 
         // Aggiungi la tabella Test (ticket assegnati come tester)
         $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'Cosa devo verificare (da testare)');
+
+        // Aggiungi la tabella Test assegnate come developer (in attesa di verifica)
+        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'In attesa di verifica (da testare)', true);
 
         return $cards;
     }
