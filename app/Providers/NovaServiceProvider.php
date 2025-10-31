@@ -262,17 +262,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     return $user->initialPath();
                 }
 
-                // Per utenti fundraising, reindirizza alle opportunità
-                if ($user->hasRole(UserRole::Fundraising)) {
-                    return $user->initialPath();
-                }
 
-                // Per tutti gli altri utenti (Admin, Manager, Developer),
-                // reindirizza alla dashboard Kanban
+                // Per tutti gli altri utenti (Admin, Manager, Developer, Fundraising),
                 if ($user->hasRole(UserRole::Admin) ||
-                    $user->hasRole(UserRole::Manager) ||
-                    $user->hasRole(UserRole::Developer)) {
-                    return '/dashboards/kanban';
+                $user->hasRole(UserRole::Manager) ||
+                $user->hasRole(UserRole::Fundraising) ||
+                $user->hasRole(UserRole::Developer)) {
+                    return 'resources/customer-stories';
                 }
             }
         });
