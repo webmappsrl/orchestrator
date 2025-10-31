@@ -1,79 +1,93 @@
-# 🚀 Release MS-1.17.1 - Sistema Task Schedulati Configurabile
+# 🚀 Release MS-1.17.1 - Aggiornamento Piattaforma
 
-**Ciao Team!** 👋
+**Ciao!** 👋
 
-Annunciamo la **Release MS-1.17.1** - una versione che introduce un **sistema di configurazione flessibile** per i task schedulati e migliora la gestione delle email tramite Mailpit.
+Siamo lieti di comunicarvi l'aggiornamento **MS-1.17.1** della piattaforma Orchestrator che introduce miglioramenti significativi nell'automazione e nella gestione delle comunicazioni.
 
 ---
 
 ## 🎯 **COSA C'È DI NUOVO**
 
-### **⚙️ Sistema Task Schedulati Configurabile**
-- **Configurazione basata su file** con nuove variabili di ambiente
-- **Controllo granulare** su ogni task schedulato
-- **Default sicuro** - tutti i task disabilitati di default
-- **Abilitazione per produzione** tramite file `.env`
-
-### **📧 Miglioramenti Sistema Email**
-- **Mailpit** al posto di Mailhog per gestione email
-- **Dashboard web** disponibile su http://localhost:8025
-- **Visualizzazione semplice** delle email catturate
-- **Debug email** più efficiente
-
-### **📋 Task Schedulati Disponibili**
-
-| Task | Schedule | Variabile |
-|------|----------|-----------|
-| 📧 Processa email in arrivo | Ogni 5 minuti | `ENABLE_PROCESS_INBOUND_EMAILS` |
-| 📊 Story progress to todo | 18:00 | `ENABLE_STORY_PROGRESS_TO_TODO` |
-| 🎯 Story scrum to done | 16:00 | `ENABLE_STORY_SCRUM_TO_DONE` |
-| 📅 Sync stories calendar | 07:45 | `ENABLE_SYNC_STORIES_CALENDAR` |
-| 🔄 Auto update status | 07:45 | `ENABLE_STORY_AUTO_UPDATE_STATUS` |
+Questa release migliora l'esperienza di utilizzo della piattaforma attraverso l'automazione di processi che prima richiedevano interventi manuali, garantendo maggiore efficienza e affidabilità.
 
 ---
 
-## 🔧 **CONFIGURAZIONE RICHIESTA**
+## 🌟 **FEATURE PER TUTTI I RUOLI**
 
-### ⚠️ **IMPORTANTE: Configurazione Necessaria**
+### **📧 Processamento Email Automatico**
+- **Email processate ogni 5 minuti** - Le email in arrivo vengono ora processate automaticamente ogni 5 minuti, invece di richiedere interventi manuali
+- **Maggiore velocità** - Le vostre richieste e comunicazioni vengono elaborate più rapidamente
+- **Affidabilità migliorata** - Sistema più robusto per garantire che tutte le email vengano gestite correttamente
 
-Per abilitare i task schedulati in produzione, è necessario aggiungere al file `.env` le variabili corrispondenti:
-
-```bash
-# Esempio: abilitare il processamento delle email
-ENABLE_PROCESS_INBOUND_EMAILS=true
-
-# Esempio: abilitare tutti i task
-ENABLE_STORY_PROGRESS_TO_TODO=true
-ENABLE_STORY_SCRUM_TO_DONE=true
-ENABLE_SYNC_STORIES_CALENDAR=true
-ENABLE_STORY_AUTO_UPDATE_STATUS=true
-ENABLE_PROCESS_INBOUND_EMAILS=true
-```
-
-### 📝 **Dopo la Configurazione**
-1. Eseguire: `php artisan config:cache`
-2. Verificare: `php artisan schedule:list`
-3. I task abilitati appariranno nell'elenco
+### **📊 Aggiornamenti Automatici**
+- **Sincronizzazione automatica** - I task vengono aggiornati e sincronizzati automaticamente durante la giornata
+- **Meno lavoro manuale** - Le attività di routine vengono gestite dalla piattaforma, permettendovi di concentrarvi sul lavoro importante
+- **Consistenza migliorata** - Gli aggiornamenti automatici garantiscono maggiore coerenza nei dati
 
 ---
 
-## 🎛️ **MIGLIORAMENTI PER SVILUPPATORI**
+## 👨‍💼 **FEATURE SPECIFICHE PER ADMIN**
 
-### **Configurazione Centralizzata**
-- File `config/orchestrator.php` per gestione centralizzata
-- Variabili di ambiente per controllo granulare
-- Documentazione completa nel README.md
+### **⚙️ Configurazione Task Schedulati**
+- **Controllo granulare** - Possibilità di configurare quali task automatici abilitare tramite variabili di ambiente nel file `.env`
+- **Sicurezza migliorata** - Tutti i task sono disabilitati di default, richiedendo una configurazione esplicita per essere attivati
+- **Configurazione centralizzata** - Gestione di tutti i task schedulati tramite file di configurazione dedicato
 
-### **Dashboard Mailpit**
-- Accesso web: http://localhost:8025
-- Visualizzazione email in tempo reale
-- Cattura tutte le email inviate dall'applicazione
-- Log completo delle email
+### **📧 Dashboard Mailpit**
+- **Monitoraggio email** - Nuova dashboard web disponibile su http://localhost:8025 per visualizzare tutte le email inviate dall'applicazione
+- **Debug migliorato** - Interfaccia semplice per testare e monitorare le email
+- **Log completo** - Storia completa delle email per analisi e troubleshooting
 
-### **Kernel.php Aggiornato**
-- Lettura configurazioni dinamiche
-- Condizioni di abilitazione per ogni task
-- Logging migliorato di avvio e fine task
+### **🔧 Gestione Avanzata**
+- **Configurazione flessibile** - Possibilità di abilitare/disabilitare singoli task in base alle necessità dell'ambiente
+- **Monitoraggio task** - Verifica dello stato dei task schedulati tramite comandi dedicati
+
+---
+
+## 👨‍💻 **FEATURE SPECIFICHE PER DEVELOPER**
+
+### **📋 Gestione Ticket Automatica**
+- **Story Progress to Todo** - Le story in stato "Progress" vengono automaticamente spostate a "Todo" alle 18:00
+- **Story Scrum to Done** - Le story di tipo "Scrum" vengono processate automaticamente alle 16:00
+- **Auto Update Status** - Lo stato delle story viene aggiornato automaticamente alle 07:45 in base alle condizioni configurate
+
+### **📅 Sincronizzazione Calendario**
+- **Sync Google Calendar** - Sincronizzazione automatica con Google Calendar ogni mattina alle 07:45
+- **Gestione eventi** - I ticket vengono automaticamente aggiunti al calendario con le informazioni corrette
+- **Aggiornamenti in tempo reale** - Le modifiche ai ticket vengono riflesse nel calendario
+
+### **💼 Workflow Ottimizzato**
+- **Meno interruzioni** - I task di routine vengono gestiti automaticamente, permettendo di concentrarsi sullo sviluppo
+- **Tracking migliorato** - Migliore visibilità sullo stato dei ticket e sulle attività
+- **Automazione intelligente** - La piattaforma gestisce automaticamente le transizioni di stato dei ticket
+
+---
+
+## 💰 **FEATURE PER FUNDRAISING**
+
+### **📧 Comunicazioni Progetti**
+- **Processamento email migliorato** - Le email relative ai progetti di fundraising vengono processate ogni 5 minuti
+- **Comunicazione più efficiente** - Sistema più affidabile per tutte le comunicazioni relative ai progetti
+- **Tracking migliorato** - Migliore visibilità sulle comunicazioni e aggiornamenti dei progetti
+
+### **📊 Gestione Progetti Automatica**
+- **Aggiornamenti automatici** - Lo stato dei progetti viene aggiornato automaticamente
+- **Sincronizzazione calendario** - I progetti vengono sincronizzati automaticamente con il calendario per una migliore pianificazione
+- **Meno attività manuali** - Le attività di routine vengono gestite automaticamente
+
+---
+
+## 🏢 **FEATURE PER CUSTOMER**
+
+### **📧 Comunicazioni Migliorate**
+- **Risposte più rapide** - Le vostre email vengono processate automaticamente ogni 5 minuti, garantendo risposte più veloci alle vostre richieste
+- **Affidabilità** - Sistema migliorato per garantire che tutte le vostre richieste vengano gestite correttamente
+- **Comunicazione trasparente** - Migliore visibilità sullo stato delle comunicazioni
+
+### **📊 Tracking Ticket Migliorato**
+- **Aggiornamenti automatici** - I vostri ticket vengono aggiornati automaticamente durante la giornata
+- **Maggiore trasparenza** - Migliore visibilità sullo stato dei vostri progetti e richieste
+- **Informazioni in tempo reale** - Aggiornamenti automatici sui progressi dei vostri progetti
 
 ---
 
@@ -81,63 +95,25 @@ ENABLE_PROCESS_INBOUND_EMAILS=true
 
 - **Versione:** MS-1.17.1
 - **Data:** 29 Ottobre 2025
-- **Branch:** montagna-servizi
-- **Tag:** MS-1.17.1
-
----
-
-## 🚀 **PROSSIMI PASSI**
-
-1. **Aggiornare** il file `.env` con le variabili necessarie
-2. **Abilitare** i task desiderati impostando `true`
-3. **Ricarica** la configurazione: `php artisan config:cache`
-4. **Verificare** i task: `php artisan schedule:list`
-5. **Monitorare** le email tramite dashboard Mailpit
-
----
-
-## 📖 **DOCUMENTAZIONE**
-
-### Per Maggiori Dettagli
-- **CHANGELOG completo:** `changelog/CHANGELOG-MS-1.17.1.md`
-- **README sezione scheduler:** `/README.md` - "Scheduled Tasks Configuration"
-- **Esempi di configurazione** disponibili nella documentazione
-
-### Comandi Utili
-```bash
-# Lista task schedulati
-php artisan schedule:list
-
-# Esegui tutti i task in attesa
-php artisan schedule:run
-
-# Processa email manualmente
-php artisan orchestrator:process-inbound-emails
-```
+- **Stato:** Disponibile
 
 ---
 
 ## ⚠️ **NOTA IMPORTANTE**
 
-**Tutti i task schedulati sono ora DISABILITATI di default.** Questo garantisce:
-- ✅ Sicurezza in produzione
-- ✅ Controllo esplicito delle funzionalità attive
-- ✅ Prevenzione di esecuzioni indesiderate
-
-Per attivarli, è necessario configurare le variabili nel file `.env`.
+Le nuove funzionalità automatiche devono essere configurate dall'amministratore di sistema. Se notate che alcune funzionalità automatiche non sono attive, contattate il team tecnico per verificare la configurazione.
 
 ---
 
 ## 🎉 **GRAZIE!**
 
-Grazie a tutto il team per il continuo supporto e feedback. Questa release migliora significativamente la gestione e il controllo dei task schedulati.
+Questo aggiornamento migliora l'esperienza di utilizzo della piattaforma per tutti gli utenti. Continuiamo a lavorare per rendere Orchestrator sempre più efficiente e facile da usare.
 
-**Buon lavoro a tutti!** 🙌
+**Buon lavoro!** 🙌
 
 ---
 
 **Team Orchestrator**  
 *Webmapp S.r.l.*
 
-*Per dettagli tecnici completi, consultare il CHANGELOG-MS-1.17.1.md*
-
+*Per domande o assistenza, contattate il team tecnico.*
