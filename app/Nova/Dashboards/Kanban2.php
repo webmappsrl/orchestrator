@@ -57,11 +57,15 @@ class Kanban2 extends Dashboard
             $stories = $this->byStatusAndUser($status, $user);
         }
 
+        // Aggiungi il conteggio al titolo
+        $count = $stories->count();
+        $title = ($customTitle ?? $label) . ': [' . $count . '] ticket';
+
         return (new HtmlCard)
             ->width($width)
             ->view('story-viewer-kanban2', [
                 'stories' => $stories,
-                'statusLabel' => $customTitle ?? $label,
+                'statusLabel' => $title,
             ])
             ->canSee(function ($request) {
                 /** @var User $user */
@@ -134,17 +138,17 @@ class Kanban2 extends Dashboard
             $cards[] = $this->developerSelectorCard();
         }
 
-        // Aggiungi la tabella TODO
-        $cards[] = $this->storyCard('todo', __('To Do'), $user, 'full', 'Cosa devo fare oggi (todo)');
+        // Aggiungi la tabella Test assegnate come developer (in attesa di verifica)
+        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'In attesa di verifica (da testare)', true);
 
         // Aggiungi la tabella Waiting
         $cards[] = $this->storyCard('waiting', __('Waiting'), $user, 'full', 'Che problemi ho incontrato (in attesa)');
 
+        // Aggiungi la tabella TODO
+        $cards[] = $this->storyCard('todo', __('To Do'), $user, 'full', 'Cosa devo fare oggi (todo)');
+
         // Aggiungi la tabella Test (ticket assegnati come tester)
         $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'Cosa devo verificare (da testare)');
-
-        // Aggiungi la tabella Test assegnate come developer (in attesa di verifica)
-        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'In attesa di verifica (da testare)', true);
 
         return $cards;
     }
