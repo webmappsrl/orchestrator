@@ -125,6 +125,9 @@ class Kanban2 extends Dashboard
         // Aggiungi la tabella Waiting
         $cards[] = $this->storyCard('waiting', __('Waiting'), $user, 'full', 'Che problemi ho incontrato (in attesa)');
 
+        // Aggiungi la tabella Test (ticket assegnati come tester)
+        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'Cosa devo verificare (da testare)');
+
         return $cards;
     }
 
