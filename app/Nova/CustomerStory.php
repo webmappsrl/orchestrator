@@ -48,4 +48,22 @@ class CustomerStory extends Story
 
         return array_merge($childCards, $parentCards);
     }
+
+    /**
+     * Get the filters available for the resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function filters(NovaRequest $request)
+    {
+        return [
+            new filters\CreatorStoryFilter(),
+            new filters\UserFilter(),
+            new filters\TesterFilter(),
+            new filters\StoryStatusFilter(),
+            new Filters\TaggableTypeFilter(),
+            new filters\StoryTypeFilter(),
+        ];
+    }
 }
