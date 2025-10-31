@@ -65,7 +65,7 @@
 
 <body>
 
-    <h1>Cosa devo fare oggi (todo)</h1>
+    <h1>{{ $statusLabel }}</h1>
 
     <table>
         <colgroup>

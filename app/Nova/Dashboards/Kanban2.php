@@ -38,7 +38,7 @@ class Kanban2 extends Dashboard
             ->get();
     }
 
-    protected function storyCard(string $status, string $label, $user, $width = 'full')
+    protected function storyCard(string $status, string $label, $user, $width = 'full', $customTitle = null)
     {
         $stories = $this->byStatusAndUser($status, $user);
 
@@ -46,7 +46,7 @@ class Kanban2 extends Dashboard
             ->width($width)
             ->view('story-viewer-kanban2', [
                 'stories' => $stories,
-                'statusLabel' => $label,
+                'statusLabel' => $customTitle ?? $label,
             ])
             ->canSee(function ($request) {
                 /** @var User $user */
@@ -119,8 +119,11 @@ class Kanban2 extends Dashboard
             $cards[] = $this->developerSelectorCard();
         }
 
-        // Aggiungi solo la colonna TODO
-        $cards[] = $this->storyCard('todo', __('To Do'), $user);
+        // Aggiungi la tabella TODO
+        $cards[] = $this->storyCard('todo', __('To Do'), $user, 'full', 'Cosa devo fare oggi (todo)');
+
+        // Aggiungi la tabella Waiting
+        $cards[] = $this->storyCard('waiting', __('Waiting'), $user, 'full', 'Che problemi ho incontrato (in attesa)');
 
         return $cards;
     }
