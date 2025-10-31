@@ -59,6 +59,10 @@ class TaggableTypeFilter extends Filter
                 ->distinct()
                 ->pluck('tags.id', 'tags.name')
                 ->toArray();
+            
+            // Sort tags alphabetically by name
+            ksort($tags);
+            
             return $tags;
         }
     }
