@@ -12,6 +12,7 @@ enum StoryStatus: string
     case Test = 'testing';
     case Tested = 'tested';
     case Waiting = 'waiting';
+    case Problem = 'problem';
     case Done = 'done';
     case Rejected = 'rejected';
     case Released = 'released';
