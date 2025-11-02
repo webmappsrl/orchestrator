@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Enums\UserRole;
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
+use Illuminate\Http\Request;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Query\Search\SearchableRelation;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;

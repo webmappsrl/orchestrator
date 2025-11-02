@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Enums\UserRole;
 use App\Enums\StoryStatus;
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Query\Search\SearchableRelation;
@@ -36,6 +37,11 @@ class InProgressStory extends Story
     {
         return $query->where('status', StoryStatus::Progress->value)
             ->whereNotNull('creator_id');
+    }
+
+    public static function authorizedToCreate(Request $request)
+    {
+        return false;
     }
 
     /**

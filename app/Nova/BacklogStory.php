@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Enums\UserRole;
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
+use Illuminate\Http\Request;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Query\Search\SearchableRelation;
 
@@ -32,6 +33,11 @@ class BacklogStory extends Story
     {
         return $query->whereNotNull('creator_id')
             ->where('status', StoryStatus::Backlog->value);
+    }
+
+    public static function authorizedToCreate(Request $request)
+    {
+        return false;
     }
 
     public function cards(NovaRequest $request)
