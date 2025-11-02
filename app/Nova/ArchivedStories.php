@@ -11,7 +11,7 @@ class ArchivedStories extends Story
 {
     public static function label()
     {
-        return __('Archived stories');
+        return __('Ticket archiviati');
     }
 
     public static function indexQuery(NovaRequest $request, $query)
@@ -50,13 +50,8 @@ class ArchivedStories extends Story
 
     public function cards(NovaRequest $request)
     {
-        $query = $this->indexQuery($request,  Story::query());
-        return [
-            ...parent::cards($request),
-            (new Metrics\StoriesByField('type', 'Type', $query))->width('1/3'),
-            (new Metrics\StoriesByUser('creator_id', 'Customer', $query))->width('1/3'),
-            (new Metrics\StoriesByUser('user_id', 'Assigned',  $query))->width('1/3'),
-        ];
+        // Return empty array to remove all cards
+        return [];
     }
 
     public function actions(NovaRequest $request)

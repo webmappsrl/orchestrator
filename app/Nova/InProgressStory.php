@@ -15,7 +15,7 @@ class InProgressStory extends Story
 
     public static function label()
     {
-        return __('In Progress Stories');
+        return __('Ticket in progress');
     }
 
     public static function singularLabel()
@@ -59,16 +59,8 @@ class InProgressStory extends Story
 
     public function cards(NovaRequest $request)
     {
-        $query = $this->indexQuery($request, Story::query());
-        $parentCards = parent::cards($request);
-        $childCards = [
-            (new Metrics\StoriesByField('type', 'Type', $query))->width('1/2'),
-            (new Metrics\StoriesByField('status', 'Status', $query))->width('1/2'),
-            (new Metrics\StoriesByUser('creator_id', 'Creator', $query))->width('1/2'),
-            (new Metrics\StoriesByUser('user_id', 'Assigned',  $query))->width('1/2'),
-        ];
-
-        return array_merge($childCards, $parentCards);
+        // Return empty array to remove all cards
+        return [];
     }
 
     /**

@@ -11,7 +11,7 @@ class ToBeTestedStory extends Story
 
     public static function label()
     {
-        return __('To be tested stories');
+        return __('Ticket che devo testare');
     }
 
     public static function indexQuery(NovaRequest $request, $query)
@@ -42,5 +42,11 @@ class ToBeTestedStory extends Story
             new filters\StoryTypeFilter(),
             new filters\CustomerStoryWithDeadlineFilter(),
         ];
+    }
+
+    public function cards(NovaRequest $request)
+    {
+        // Return empty array to remove all cards
+        return [];
     }
 }

@@ -15,7 +15,7 @@ class BacklogStory extends Story
 
     public static function label()
     {
-        return __('Backlog stories');
+        return __('Ticket in Backlog');
     }
 
 
@@ -36,12 +36,7 @@ class BacklogStory extends Story
 
     public function cards(NovaRequest $request)
     {
-        $query = $this->indexQuery($request,  Story::query());
-        return [
-            ...parent::cards($request),
-            (new Metrics\StoriesByField('status', 'Status', $query))->width('1/3'),
-            (new Metrics\StoriesByUser('creator_id', 'Creator', $query))->width('1/3'),
-            (new Metrics\StoriesByUser('user_id', 'Assigned',  $query))->width('1/3'),
-        ];
+        // Return empty array to remove all cards
+        return [];
     }
 }

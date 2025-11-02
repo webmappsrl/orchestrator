@@ -11,7 +11,7 @@ class AssignedToMeStory extends Story
     public $hideFields = ['answer_to_ticket', 'updated_at'];
     public static function label()
     {
-        return __('Assigned to me stories');
+        return __('Ticket assegnati a me');
     }
 
     public static function indexQuery(NovaRequest $request, $query)
@@ -44,12 +44,7 @@ class AssignedToMeStory extends Story
 
     public function cards(NovaRequest $request)
     {
-        $query = $this->indexQuery($request,  Story::query());
-        return [
-            ...parent::cards($request),
-            (new Metrics\StoriesByField('type', 'Type', $query))->width('1/3'),
-            (new Metrics\StoriesByField('status', 'Status', $query))->width('1/3'),
-            (new Metrics\StoriesByUser('creator_id', 'Customer', $query))->width('1/3'),
-        ];
+        // Return empty array to remove all cards
+        return [];
     }
 }

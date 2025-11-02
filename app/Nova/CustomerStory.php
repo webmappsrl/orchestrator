@@ -16,7 +16,7 @@ class CustomerStory extends Story
 
     public static function label()
     {
-        return __('Stories');
+        return __('Ticket dei clienti');
     }
 
 
