@@ -309,22 +309,25 @@ trait fieldTrait
                     return $request->user()->hasRole(UserRole::Customer) && $this->resource->status !== StoryStatus::Released->value;
                 });
         } else {
-            return Status::make(__('Status'), 'status')
-                ->loadingWhen([
-                    StoryStatus::Assigned->value,
-                    StoryStatus::Todo->value,
-                    StoryStatus::Progress->value,
-                    StoryStatus::Tested->value,
-                    StoryStatus::Backlog->value,
-                    StoryStatus::Test->value
-                ])
-                ->failedWhen([
-                    StoryStatus::New->value,
-                    StoryStatus::Rejected->value,
-                    StoryStatus::Waiting->value,
-                    StoryStatus::Problem->value
-                ])
-                ->displayUsing(fn($status) => __(ucfirst($status)));  // Visualizza lo stato tradotto;
+            return Text::make(__('Status'), 'status', function () {
+                $status = $this->status;
+                $color = $this->getStatusColor($status);
+                $label = strtoupper(__(ucfirst($status)));
+                
+                return <<<HTML
+                    <span style="
+                        background-color: {$color}80;
+                        color: {$color};
+                        font-weight: bold;
+                        padding: 4px 12px;
+                        border-radius: 12px;
+                        display: inline-block;
+                        border: 1px solid {$color};
+                        text-transform: uppercase;
+                    ">{$label}</span>
+                HTML;
+            })
+            ->asHtml();
         }
     }
 
