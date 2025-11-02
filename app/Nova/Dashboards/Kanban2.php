@@ -34,7 +34,7 @@ class Kanban2 extends Dashboard
             ]), function ($q) use ($user) {
                 return $q->where('tester_id', $user->id);
             })
-            ->with(['creator', 'tags']) // Eager load relationships to avoid N+1 queries
+            ->with(['creator', 'tags', 'tester', 'user']) // Eager load relationships to avoid N+1 queries
             ->get();
     }
 
@@ -45,11 +45,11 @@ class Kanban2 extends Dashboard
             ->where('user_id', $user->id)
             ->whereNotNull('type')
             ->where('type', '!=', StoryType::Scrum->value)
-            ->with(['creator', 'tags'])
+            ->with(['creator', 'tags', 'tester', 'user'])
             ->get();
     }
 
-    protected function storyCard(string $status, string $label, $user, $width = 'full', $customTitle = null, $filterByDeveloper = false)
+    protected function storyCard(string $status, string $label, $user, $width = 'full', $customTitle = null, $filterByDeveloper = false, $showTester = false, $showAssignedTo = false)
     {
         if ($filterByDeveloper) {
             $stories = $this->byStatusAndUserAsDeveloper($status, $user);
@@ -66,6 +66,8 @@ class Kanban2 extends Dashboard
             ->view('story-viewer-kanban2', [
                 'stories' => $stories,
                 'statusLabel' => $title,
+                'showTester' => $showTester,
+                'showAssignedTo' => $showAssignedTo,
             ])
             ->canSee(function ($request) {
                 /** @var User $user */
@@ -139,7 +141,7 @@ class Kanban2 extends Dashboard
         }
 
         // Aggiungi la tabella Test assegnate come developer (in attesa di verifica)
-        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'In attesa di verifica (da testare)', true);
+        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'In attesa di verifica (da testare)', true, true);
 
         // Aggiungi la tabella Waiting
         $cards[] = $this->storyCard('waiting', __('Waiting'), $user, 'full', 'Che problemi ho incontrato (in attesa)');
@@ -148,7 +150,7 @@ class Kanban2 extends Dashboard
         $cards[] = $this->storyCard('todo', __('To Do'), $user, 'full', 'Cosa devo fare oggi (todo)');
 
         // Aggiungi la tabella Test (ticket assegnati come tester)
-        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'Cosa devo verificare (da testare)');
+        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'Cosa devo verificare (da testare)', false, false, true);
 
         return $cards;
     }

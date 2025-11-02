@@ -69,18 +69,39 @@
 
     <table>
         <colgroup>
-            <col style="width: 5%;">
-            <col style="width: 15%;">
-            <col style="width: 18%;">
-            <col style="width: 22%;">
-            <col style="width: 12%;">
-            <col style="width: 12%;">
+            @if ((isset($showTester) && $showTester) || (isset($showAssignedTo) && $showAssignedTo))
+                <col style="width: 4%;">
+                <col style="width: 12%;">
+                <col style="width: 15%;">
+                <col style="width: 15%;">
+                <col style="width: 20%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+            @else
+                <col style="width: 5%;">
+                <col style="width: 15%;">
+                <col style="width: 18%;">
+                <col style="width: 22%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+            @endif
         </colgroup>
         <thead>
             <tr>
                 <th>{{ __('ID') }}</th>
                 <th>{{ __('Tags') }}</th>
-                <th>{{ __('Creator') }}</th>
+                @if ((isset($showTester) && $showTester) || (isset($showAssignedTo) && $showAssignedTo))
+                    <th>{{ __('Creator') }}</th>
+                    <th>
+                        @if (isset($showAssignedTo) && $showAssignedTo)
+                            {{ __('Assigned To') }}
+                        @else
+                            {{ __('Tester') }}
+                        @endif
+                    </th>
+                @else
+                    <th>{{ __('Creator') }}</th>
+                @endif
                 <th>{{ __('Ticket') }}</th>
                 <th>{{ __('Created At') }}</th>
                 <th>{{ __('Last Update') }}</th>
@@ -112,6 +133,28 @@
                             <span class="text-gray-400 italic">{{ __('No Creator') }}</span>
                         @endif
                     </td>
+                    @if (isset($showTester) && $showTester)
+                        <td>
+                            @if ($story->tester)
+                                <div class="text-purple-500 font-bold">
+                                    {{ $story->tester->name }}
+                                </div>
+                            @else
+                                <span class="text-gray-400 italic">{{ __('No Tester') }}</span>
+                            @endif
+                        </td>
+                    @endif
+                    @if (isset($showAssignedTo) && $showAssignedTo)
+                        <td>
+                            @if ($story->user)
+                                <div class="text-green-500 font-bold">
+                                    {{ $story->user->name }}
+                                </div>
+                            @else
+                                <span class="text-gray-400 italic">{{ __('No Assignee') }}</span>
+                            @endif
+                        </td>
+                    @endif
                     @php
                         $typeColors = [
                             'Bug' => 'color:red',
@@ -146,7 +189,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6"> {{ __('No Ticket Available') }}</td>
+                    <td colspan="{{ (isset($showTester) && $showTester) ? 7 : 6 }}"> {{ __('No Ticket Available') }}</td>
                 </tr>
             @endforelse
         </tbody>
