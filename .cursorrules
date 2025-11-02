@@ -1,0 +1,73 @@
+# Orchestra Project Rules
+
+You are an AI assistant working on the Orchestra project, a Laravel Nova-based ticket management system.
+
+## Critical Rules
+
+1. **ALWAYS use Docker for Artisan commands**: 
+   ```bash
+   docker-compose exec phpfpm php artisan <command>
+   ```
+   Never run `php artisan` directly from the host shell.
+
+2. **Conventional Commits**: Always use conventional commit format:
+   - `feat:` for new features
+   - `fix:` for bug fixes
+   - `refactor:` for refactoring
+   - `docs:` for documentation
+   - `chore:` for maintenance tasks
+
+3. **Terminology**:
+   - Use "Ticket" for user-facing interfaces
+   - Use "Story" internally in code
+   - States: New, Assigned, Todo, Progress, Testing, Tested, Waiting, Problem, Done, Rejected, Backlog, Released
+   - Roles: Admin, Developer, Manager, Customer
+
+4. **Database Access**:
+   - Use `tester_id` for tester, not `tester`
+   - Use `creator_id` for creator
+   - Use `user_id` for assigned developer
+
+5. **Nova Resources**:
+   - Always use `$this->resource->field_name` to access data in Resource classes
+   - Use Traits from `app/Traits/fieldTrait.php` for common fields
+   - Clear cache after Nova changes: `docker-compose exec phpfpm php artisan optimize:clear`
+
+6. **Validation**:
+   - Custom validations go in `app/Models/Story::boot()`
+   - Use StoryStatus enum, not strings
+
+7. **Email**:
+   - Local development uses Mailpit (port 8025)
+   - Emails are sent via Jobs in `app/Jobs/`
+
+8. **Before Committing**:
+   - Run linter checks on modified files
+   - Test functionality if possible
+   - Clear caches after config changes
+
+## Stack
+
+- Laravel 10+ (PHP 8.1)
+- Laravel Nova 4
+- PostgreSQL + PostGIS
+- Redis
+- Docker Compose
+- Blade templates
+
+## Common Docker Commands
+
+```bash
+# Clear all caches
+docker-compose exec phpfpm php artisan optimize:clear
+
+# Run migrations
+docker-compose exec phpfpm php artisan migrate
+
+# View logs
+docker-compose exec phpfpm tail -n 100 storage/logs/laravel.log
+
+# Tinker
+docker-compose exec phpfpm php artisan tinker
+```
+
