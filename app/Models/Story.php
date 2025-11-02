@@ -36,6 +36,8 @@ class Story extends Model implements HasMedia
         'type',
         'parent_id',
         'fundraising_project_id',
+        'waiting_reason',
+        'problem_reason',
     ];
 
     public static function boot()
@@ -54,6 +56,16 @@ class Story extends Model implements HasMedia
             // Verifica che il tester sia assegnato prima di passare a "testing"
             if ($story->isDirty('status') && $story->status == StoryStatus::Test->value && empty($story->tester_id)) {
                 throw new \Exception('Impossibile cambiare lo stato a "Da testare" senza avere assegnato un tester.');
+            }
+
+            // Verifica che waiting_reason sia valorizzato quando lo stato è "waiting"
+            if ($story->isDirty('status') && $story->status == StoryStatus::Waiting->value && empty($story->waiting_reason)) {
+                throw new \Exception('Impossibile cambiare lo stato a "In attesa" senza specificare il motivo dell\'attesa.');
+            }
+
+            // Verifica che problem_reason sia valorizzato quando lo stato è "problem"
+            if ($story->isDirty('status') && $story->status == StoryStatus::Problem->value && empty($story->problem_reason)) {
+                throw new \Exception('Impossibile cambiare lo stato a "Problema" senza specificare la descrizione del problema.');
             }
         });
     }
