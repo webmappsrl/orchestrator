@@ -16,7 +16,6 @@ use App\Nova\CustomerFundraisingOpportunity;
 use App\Nova\CustomerFundraisingProject;
 use App\Nova\CustomerStory;
 use App\Nova\CustomerTickets;
-use App\Nova\Dashboards\Kanban;
 use App\Nova\Dashboards\Kanban2;
 use App\Nova\Dashboards\CustomerDashboard;
 use App\Nova\Documentation;
@@ -63,76 +62,23 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             $scrumMeetCode = config('app.SCRUM_MEET_CODE');
 
             return [
-                MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => $scrumMeetCode]))->openInNewTab()->canSee(function ($request) {
-                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
-                }),
-                MenuItem::externalLink('MEET', 'https://meet.google.com/'.$scrumMeetCode)->openInNewTab()->canSee(function ($request) {
-                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
-                }),
-                MenuSection::make('KANBAN', [
-                    MenuItem::dashboard(Kanban::class),
+                MenuSection::make('AGILE', [
                     MenuItem::dashboard(Kanban2::class),
-                ])->icon('chart-bar')->collapsable()->canSee(function ($request) {
-                    if ($request->user() == null) {
-                        return false;
-                    }
-
-                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
-                }),
-                MenuSection::make('ADMIN', [
-                    MenuItem::resource(User::class),
-                    MenuGroup::make(__('Reports'), [
-                        MenuItem::externalLink('all times', url('/report'))->openInNewTab()->canSee(function ($request) {
-                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
-                        }),
-                        ...collect(range(now()->year, 2023))->map(function ($year) {
-                            return MenuItem::externalLink((string) $year, url("/report/{$year}"))->openInNewTab()
-                                ->canSee(function ($request) {
-                                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
-                                });
-                        }),
-                    ])->collapsedByDefault(),
-
-                ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
-
-                MenuSection::make('APP', [
-                    MenuItem::resource(App::class),
-                    MenuItem::resource(Layer::class),
-                ])->icon('document-text')->collapsedByDefault()->collapsedByDefault(),
-
-                MenuSection::make('CRM', [
-                    MenuGroup::make(__('Archived'), [
-                        MenuItem::resource(ArchivedQuotes::class),
-                    ])->collapsedByDefault(),
-                    MenuItem::resource(Customer::class),
-                    MenuItem::resource(CustomerTickets::class)->canSee(function ($request) {
-                        if ($request->user() == null) {
-                            return false;
-                        }
-
+                    MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => $scrumMeetCode]))->openInNewTab()->canSee(function ($request) {
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
-                    MenuItem::resource(Project::class),
-                    MenuItem::resource(Product::class),
-                    MenuItem::resource(RecurringProduct::class),
-                    MenuItem::resource(Quote::class),
-                ])->icon('users')->collapsedByDefault(),
-
-                MenuSection::make('DEV', [
-                    MenuGroup::make(__('Archived'), [
-                        MenuItem::resource(ArchivedDeadlines::class),
-                        MenuItem::resource(ArchivedStories::class),
-
-                    ])->collapsedByDefault(),
-                    MenuGroup::make(__('my work'), [
+                    MenuItem::externalLink('MEET', 'https://meet.google.com/'.$scrumMeetCode)->openInNewTab()->canSee(function ($request) {
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                    }),
+                    MenuItem::resource(Documentation::class),
+                    MenuGroup::make(__('Tickets'), [
+                        MenuItem::resource(CustomerStory::class),
+                        MenuItem::resource(InProgressStory::class),
                         MenuItem::resource(AssignedToMeStory::class),
                         MenuItem::resource(ToBeTestedStory::class),
+                        MenuItem::resource(BacklogStory::class),
+                        MenuItem::resource(ArchivedStories::class),
                     ])->collapsedByDefault(),
-                    MenuItem::resource(InProgressStory::class),
-                    MenuItem::resource(Tag::class),
-                    MenuItem::resource(Documentation::class),
-                    MenuItem::resource(BacklogStory::class),
-                    MenuItem::resource(CustomerStory::class),
                 ])->icon('code')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
@@ -152,6 +98,24 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Fundraising);
                 }),
 
+                MenuSection::make('CRM', [
+                    MenuGroup::make(__('Archived'), [
+                        MenuItem::resource(ArchivedQuotes::class),
+                    ])->collapsedByDefault(),
+                    MenuItem::resource(Customer::class),
+                    MenuItem::resource(CustomerTickets::class)->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
+
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                    }),
+                    MenuItem::resource(Project::class),
+                    MenuItem::resource(Product::class),
+                    MenuItem::resource(RecurringProduct::class),
+                    MenuItem::resource(Quote::class),
+                ])->icon('users')->collapsedByDefault(),
+
                 MenuSection::make(__('CUSTOMER'), [
                     MenuItem::dashboard(CustomerDashboard::class),
                     MenuItem::resource(Documentation::class),
@@ -169,7 +133,20 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     return $request->user()->hasRole(UserRole::Customer);
                 })->icon('at-symbol')->collapsable(),
 
-                MenuSection::make(__('ACTIONS'), [
+                MenuSection::make('ADMIN', [
+                    MenuItem::resource(Tag::class),
+                    MenuItem::resource(User::class),
+                    MenuGroup::make(__('Reports'), [
+                        MenuItem::externalLink('all times', url('/report'))->openInNewTab()->canSee(function ($request) {
+                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                        }),
+                        ...collect(range(now()->year, 2023))->map(function ($year) {
+                            return MenuItem::externalLink((string) $year, url("/report/{$year}"))->openInNewTab()
+                                ->canSee(function ($request) {
+                                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                                });
+                        }),
+                    ])->collapsedByDefault(),
                     MenuItem::link('Create a new story', $newStoryUrl),
                     MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab()->canSee(function ($request) {
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
@@ -180,7 +157,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink('Google Calendar', 'https://calendar.google.com/calendar/u/0/r')->openInNewTab()->canSee(function ($request) {
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
-                ])->icon('pencil')->collapsedByDefault(),
+                ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
+
+                MenuSection::make('APP', [
+                    MenuItem::resource(App::class),
+                    MenuItem::resource(Layer::class),
+                ])->icon('document-text')->collapsedByDefault()->collapsedByDefault(),
 
             ];
         });
