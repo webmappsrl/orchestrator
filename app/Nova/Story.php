@@ -319,12 +319,7 @@ class Story extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [
-            new StoriesByQuarter('1'),
-            new StoriesByQuarter('2'),
-            new StoriesByQuarter('3'),
-            new StoriesByQuarter('4'),
-        ];
+        return [];
     }
 
     /**
