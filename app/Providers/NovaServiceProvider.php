@@ -63,6 +63,17 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             $scrumMeetCode = config('app.SCRUM_MEET_CODE');
 
             return [
+                MenuSection::make('HELP', [
+                    MenuItem::resource(Documentation::class),
+                    MenuItem::dashboard(TicketStatus::class),
+                ])->icon('question-mark-circle')->collapsable()->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                }),
+
                 MenuSection::make('AGILE', [
                     MenuItem::dashboard(Kanban2::class),
                     MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => $scrumMeetCode]))->openInNewTab()->canSee(function ($request) {
@@ -71,8 +82,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink('MEET', 'https://meet.google.com/'.$scrumMeetCode)->openInNewTab()->canSee(function ($request) {
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
-                    MenuItem::resource(Documentation::class),
-                    MenuItem::dashboard(TicketStatus::class),
                     MenuGroup::make(__('Tickets'), [
                         MenuItem::link(__('Customers'), '/resources/customer-stories'),
                         MenuItem::link(__('In progress'), '/resources/in-progress-stories'),

@@ -108,7 +108,7 @@ class TicketStatus extends Dashboard
      */
     public function name()
     {
-        return __('Documentazione Stati Ticket');
+        return __('Stati ticket');
     }
 
     /**
