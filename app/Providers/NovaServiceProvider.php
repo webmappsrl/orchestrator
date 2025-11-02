@@ -18,6 +18,7 @@ use App\Nova\CustomerStory;
 use App\Nova\CustomerTickets;
 use App\Nova\Dashboards\Kanban2;
 use App\Nova\Dashboards\CustomerDashboard;
+use App\Nova\Dashboards\TicketStatus;
 use App\Nova\Documentation;
 use App\Nova\FundraisingOpportunity;
 use App\Nova\FundraisingProject;
@@ -71,6 +72,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
                     MenuItem::resource(Documentation::class),
+                    MenuItem::dashboard(TicketStatus::class),
                     MenuGroup::make(__('Tickets'), [
                         MenuItem::link(__('Customers'), '/resources/customer-stories'),
                         MenuItem::link(__('In progress'), '/resources/in-progress-stories'),
@@ -246,6 +248,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new \App\Nova\Dashboards\Kanban,
             new \App\Nova\Dashboards\Kanban2,
             new \App\Nova\Dashboards\CustomerDashboard,
+            new \App\Nova\Dashboards\TicketStatus,
         ];
     }
 
