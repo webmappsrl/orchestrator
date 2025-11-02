@@ -315,12 +315,13 @@ trait fieldTrait
                     StoryStatus::Progress->value,
                     StoryStatus::Tested->value,
                     StoryStatus::Backlog->value,
-                    storyStatus::Test->value
+                    StoryStatus::Test->value
                 ])
                 ->failedWhen([
                     StoryStatus::New->value,
                     StoryStatus::Rejected->value,
-                    StoryStatus::Waiting->value
+                    StoryStatus::Waiting->value,
+                    StoryStatus::Problem->value
                 ])
                 ->displayUsing(fn($status) => __(ucfirst($status)));  // Visualizza lo stato tradotto;
         }
@@ -601,8 +602,12 @@ trait fieldTrait
 
     private function getStatusColor($status)
     {
-        $mapping = config('orchestrator.story.status.color-mapping');
-        return $mapping[$status] ?? 'black';
+        try {
+            $statusEnum = StoryStatus::from($status);
+            return $statusEnum->color();
+        } catch (\ValueError $e) {
+            return 'black';
+        }
     }
 
     /**

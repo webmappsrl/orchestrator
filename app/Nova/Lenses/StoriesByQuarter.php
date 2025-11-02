@@ -176,4 +176,14 @@ class StoriesByQuarter extends Lens
             (new StoryTime())->refreshWhenFiltersChange()
         ];
     }
+
+    private function getStatusColor($status)
+    {
+        try {
+            $statusEnum = \App\Enums\StoryStatus::from($status);
+            return $statusEnum->color();
+        } catch (\ValueError $e) {
+            return 'black';
+        }
+    }
 }
