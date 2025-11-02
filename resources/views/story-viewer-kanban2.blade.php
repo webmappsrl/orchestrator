@@ -77,6 +77,14 @@
                 <col style="width: 20%;">
                 <col style="width: 12%;">
                 <col style="width: 12%;">
+            @elseif(isset($status) && ($status === 'waiting' || $status === 'problem'))
+                <col style="width: 5%;">
+                <col style="width: 15%;">
+                <col style="width: 18%;">
+                <col style="width: 18%;">
+                <col style="width: 15%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
             @else
                 <col style="width: 5%;">
                 <col style="width: 15%;">
@@ -101,6 +109,12 @@
                     </th>
                 @else
                     <th>{{ __('Creator') }}</th>
+                    @if(isset($status) && $status === 'waiting')
+                        <th>{{ __('Motivo attesa') }}</th>
+                    @endif
+                    @if(isset($status) && $status === 'problem')
+                        <th>{{ __('Descrizione problema') }}</th>
+                    @endif
                 @endif
                 <th>{{ __('Ticket') }}</th>
                 <th>{{ __('Created At') }}</th>
@@ -155,6 +169,28 @@
                             @endif
                         </td>
                     @endif
+                    @if(isset($status) && $status === 'waiting')
+                        <td>
+                            @if ($story->waiting_reason)
+                                <div class="text-gray-500" style="font-size: 11px;">
+                                    {{ Str::limit($story->waiting_reason, 100) }}
+                                </div>
+                            @else
+                                <span class="text-gray-400 italic" style="font-size: 11px;">{{ __('No reason') }}</span>
+                            @endif
+                        </td>
+                    @endif
+                    @if(isset($status) && $status === 'problem')
+                        <td>
+                            @if ($story->problem_reason)
+                                <div class="text-gray-500" style="font-size: 11px;">
+                                    {{ Str::limit($story->problem_reason, 100) }}
+                                </div>
+                            @else
+                                <span class="text-gray-400 italic" style="font-size: 11px;">{{ __('No reason') }}</span>
+                            @endif
+                        </td>
+                    @endif
                     @php
                         $typeColors = [
                             'Bug' => 'color:red',
@@ -189,7 +225,15 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="{{ (isset($showTester) && $showTester) ? 7 : 6 }}"> {{ __('No Ticket Available') }}</td>
+                    <td colspan="
+                        @if ((isset($showTester) && $showTester) || (isset($showAssignedTo) && $showAssignedTo))
+                            7
+                        @elseif(isset($status) && ($status === 'waiting' || $status === 'problem'))
+                            7
+                        @else
+                            6
+                        @endif
+                    "> {{ __('No Ticket Available') }}</td>
                 </tr>
             @endforelse
         </tbody>

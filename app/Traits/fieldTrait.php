@@ -21,6 +21,7 @@ use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Trix;
 use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Textarea;
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Fields\Tag;
@@ -315,12 +316,13 @@ trait fieldTrait
                     StoryStatus::Progress->value,
                     StoryStatus::Tested->value,
                     StoryStatus::Backlog->value,
-                    storyStatus::Test->value
+                    StoryStatus::Test->value
                 ])
                 ->failedWhen([
                     StoryStatus::New->value,
                     StoryStatus::Rejected->value,
-                    StoryStatus::Waiting->value
+                    StoryStatus::Waiting->value,
+                    StoryStatus::Problem->value
                 ])
                 ->displayUsing(fn($status) => __(ucfirst($status)));  // Visualizza lo stato tradotto;
         }
@@ -430,6 +432,48 @@ trait fieldTrait
                 $model->addResponse($request[$requestAttribute]);
             })
             ->buttons($this->tiptapAllButtons);
+    }
+
+    public function waitingReasonField()
+    {
+        // In edit, usa Textarea
+        return Textarea::make(__('Waiting Reason'), 'waiting_reason')
+            ->rows(3)
+            ->alwaysShow()
+            ->canSee(function ($request) {
+                return $request->isUpdateOrUpdateAttachedRequest() || 
+                       (($request->isResourceDetailRequest() || $request->isResourceIndexRequest()) && 
+                        $this->status === StoryStatus::Waiting->value && !empty($this->waiting_reason));
+            })
+            ->dependsOn(['status'], function (Textarea $field, NovaRequest $request, $formData) {
+                // Solo in edit nascondi se lo status non è waiting
+                if ($request->isUpdateOrUpdateAttachedRequest() && $formData->status !== StoryStatus::Waiting->value) {
+                    $field->hide();
+                }
+            })
+            ->help(__('Specify what you are waiting for.'))
+            ->nullable();
+    }
+
+    public function problemReasonField()
+    {
+        // In edit, usa Textarea
+        return Textarea::make(__('Problem Reason'), 'problem_reason')
+            ->rows(3)
+            ->alwaysShow()
+            ->canSee(function ($request) {
+                return $request->isUpdateOrUpdateAttachedRequest() || 
+                       (($request->isResourceDetailRequest() || $request->isResourceIndexRequest()) && 
+                        $this->status === StoryStatus::Problem->value && !empty($this->problem_reason));
+            })
+            ->dependsOn(['status'], function (Textarea $field, NovaRequest $request, $formData) {
+                // Solo in edit nascondi se lo status non è problem
+                if ($request->isUpdateOrUpdateAttachedRequest() && $formData->status !== StoryStatus::Problem->value) {
+                    $field->hide();
+                }
+            })
+            ->help(__('Specify what problem you encountered.'))
+            ->nullable();
     }
 
     public function descriptionField()
@@ -601,8 +645,12 @@ trait fieldTrait
 
     private function getStatusColor($status)
     {
-        $mapping = config('orchestrator.story.status.color-mapping');
-        return $mapping[$status] ?? 'black';
+        try {
+            $statusEnum = StoryStatus::from($status);
+            return $statusEnum->color();
+        } catch (\ValueError $e) {
+            return 'black';
+        }
     }
 
     /**

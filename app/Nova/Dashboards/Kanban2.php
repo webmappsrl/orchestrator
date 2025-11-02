@@ -26,6 +26,7 @@ class Kanban2 extends Dashboard
                 StoryStatus::Progress->value,
                 StoryStatus::Tested->value,
                 StoryStatus::Waiting->value,
+                StoryStatus::Problem->value,
             ]), function ($q) use ($user) {
                 return $q->where('user_id', $user->id);
             })
@@ -68,6 +69,7 @@ class Kanban2 extends Dashboard
                 'statusLabel' => $title,
                 'showTester' => $showTester,
                 'showAssignedTo' => $showAssignedTo,
+                'status' => $status,
             ])
             ->canSee(function ($request) {
                 /** @var User $user */
@@ -143,8 +145,11 @@ class Kanban2 extends Dashboard
         // Aggiungi la tabella Test assegnate come developer (in attesa di verifica)
         $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'In attesa di verifica (da testare)', true, true);
 
+        // Aggiungi la tabella Problem
+        $cards[] = $this->storyCard('problem', __('Problem'), $user, 'full', 'Che problemi ho incontrato (problemi)');
+
         // Aggiungi la tabella Waiting
-        $cards[] = $this->storyCard('waiting', __('Waiting'), $user, 'full', 'Che problemi ho incontrato (in attesa)');
+        $cards[] = $this->storyCard('waiting', __('Waiting'), $user, 'full', 'Cosa sto aspettando (in attesa)');
 
         // Aggiungi la tabella TODO
         $cards[] = $this->storyCard('todo', __('To Do'), $user, 'full', 'Cosa devo fare oggi (todo)');
