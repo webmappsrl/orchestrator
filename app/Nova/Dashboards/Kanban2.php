@@ -81,6 +81,74 @@ class Kanban2 extends Dashboard
     }
 
     /**
+     * Get recent activities for a user (last 2 days with activity)
+     */
+    protected function getRecentActivities(Authenticatable $user)
+    {
+        // Find the most recent date with activity for this user
+        $mostRecentActivity = \App\Models\UsersStoriesLog::where('user_id', $user->id)
+            ->where('elapsed_minutes', '>', 0)
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->first();
+        
+        if (!$mostRecentActivity) {
+            return collect();
+        }
+        
+        // Get all distinct dates with activity, ordered by date descending
+        $uniqueDates = \App\Models\UsersStoriesLog::where('user_id', $user->id)
+            ->where('elapsed_minutes', '>', 0)
+            ->distinct()
+            ->orderBy('date', 'desc')
+            ->pluck('date')
+            ->take(2); // Take the last 2 days
+        
+        if ($uniqueDates->isEmpty()) {
+            return collect();
+        }
+        
+        // Get all activities from those dates
+        return \App\Models\UsersStoriesLog::where('user_id', $user->id)
+            ->whereIn('date', $uniqueDates)
+            ->where('elapsed_minutes', '>', 0)
+            ->with(['story.tags', 'story.creator'])
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('story_id')
+            ->map(function ($group) {
+                // Get the most recent entry for each story
+                return $group->first();
+            })
+            ->values();
+    }
+
+    /**
+     * Create a card for recent activities
+     */
+    protected function recentActivitiesCard(Authenticatable $user)
+    {
+        $activities = $this->getRecentActivities($user);
+        $count = $activities->count();
+        $title = 'Cosa ho fatto ieri?: [' . $count . '] ticket';
+
+        return (new HtmlCard)
+            ->width('full')
+            ->view('story-viewer-recent-activities', [
+                'activities' => $activities,
+                'statusLabel' => $title,
+            ])
+            ->canSee(function ($request) {
+                /** @var User $user */
+                $user = $request->user();
+
+                return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
+            })
+            ->center(true);
+    }
+
+    /**
      * Create a developer selector card for admins and developers
      */
     protected function developerSelectorCard()
@@ -141,6 +209,9 @@ class Kanban2 extends Dashboard
         if ($currentUser->hasRole(UserRole::Admin) || $currentUser->hasRole(UserRole::Developer)) {
             $cards[] = $this->developerSelectorCard();
         }
+
+        // Aggiungi la tabella attività recenti
+        $cards[] = $this->recentActivitiesCard($user);
 
         // Aggiungi la tabella Test assegnate come developer (in attesa di verifica)
         $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'In attesa di verifica (da testare)', true, true);
