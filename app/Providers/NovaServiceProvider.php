@@ -24,6 +24,7 @@ use App\Nova\Dashboards\ActivityCustomer;
 use App\Nova\Dashboards\ActivityOrganizations;
 use App\Nova\Dashboards\ActivityTagsDetails;
 use App\Nova\Dashboards\ActivityCustomerDetails;
+use App\Nova\Dashboards\ActivityOrganizationsDetails;
 use App\Nova\Dashboards\CustomerDashboard;
 use App\Nova\Dashboards\TicketStatus;
 use App\Nova\Dashboards\Changelog;
@@ -204,6 +205,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuGroup::make(__('Details'), [
                         MenuItem::dashboard(ActivityTagsDetails::class),
                         MenuItem::dashboard(ActivityCustomerDetails::class),
+                        MenuItem::dashboard(ActivityOrganizationsDetails::class),
                     ])->collapsedByDefault(),
                 ])->icon('cog')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
@@ -306,6 +308,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new \App\Nova\Dashboards\ActivityOrganizations,
             new \App\Nova\Dashboards\ActivityTagsDetails,
             new \App\Nova\Dashboards\ActivityCustomerDetails,
+            new \App\Nova\Dashboards\ActivityOrganizationsDetails,
             new \App\Nova\Dashboards\CustomerDashboard,
             new \App\Nova\Dashboards\TicketStatus,
             new \App\Nova\Dashboards\Changelog,
