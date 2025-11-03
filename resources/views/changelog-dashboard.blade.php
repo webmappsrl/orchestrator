@@ -178,6 +178,221 @@
         </div>
 
         <div class="release-list">
+            <!-- MS-1.18.0 -->
+            <div class="release-card">
+                <div class="release-header">
+                    <h2 class="release-version">MS-1.18.0</h2>
+                    <span class="release-date">03 Novembre 2025</span>
+                </div>
+                <div class="release-content">
+                    <div class="release-html-content">
+                        <h1>🚀 Release MS-1.18.0 - Nuova Interfaccia Agile</h1>
+
+                        <p><strong>Ciao Team!</strong> 👋</p>
+
+                        <p>Siamo lieti di comunicarvi l'aggiornamento <strong>MS-1.18.0</strong> della piattaforma Orchestrator che introduce una revisione completa dell'interfaccia utente con nuove dashboard personalizzate, un sistema di tracciamento attività avanzato e miglioramenti significativi nell'organizzazione del workflow agile.</p>
+
+                        <hr>
+
+                        <h2>🎯 COSA C'È DI NUOVO</h2>
+
+                        <p>Questa release migliora l'esperienza di utilizzo della piattaforma attraverso nuove dashboard personalizzate, un migliore tracking delle attività e un'interfaccia più intuitiva per la gestione dei ticket. Le modifiche sono mirate a rendere il lavoro quotidiano più efficiente e organizzato.</p>
+
+                        <h3>📊 Dashboard Kanban-2</h3>
+
+                        <p>Introduciamo una nuova dashboard completamente rinnovata per la visualizzazione dei vostri ticket in modo organizzato e chiaro:</p>
+
+                        <ul>
+                        <li><strong>Quattro tabelle dedicate</strong> per diversi aspetti del workflow:
+                        <ul>
+                        <li><strong>In attesa di verifica (da testare)</strong> - Ticket che avete completato e aspettano verifica</li>
+                        <li><strong>Che problemi ho incontrato (in attesa)</strong> - Ticket in cui avete problemi tecnici o siete in attesa di informazioni</li>
+                        <li><strong>Cosa devo fare oggi (todo)</strong> - Lavoro da completare oggi</li>
+                        <li><strong>Cosa devo verificare (da testare)</strong> - Ticket assegnati per testing</li>
+                        </ul>
+                        </li>
+                        </ul>
+
+                        <ul>
+                        <li><strong>Visualizzazione attività recenti</strong> "Cosa ho fatto ieri?" per tracciare le ultime 2 giornate lavorative con dettagli delle ore spese</li>
+                        <li><strong>Selettore utente</strong> per Admin e Developer per visualizzare il lavoro di qualsiasi membro del team</li>
+                        <li><strong>Contatore ticket dinamico</strong> in ogni tabella per avere sempre presente il carico di lavoro</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>🏗️ FEATURE PRINCIPALI</h2>
+
+                        <h3>📈 Sistema di Tracking Attività</h3>
+
+                        <p>Un nuovo sistema avanzato per tracciare automaticamente le attività su ogni ticket:</p>
+
+                        <ul>
+                        <li><strong>Tracciamento automatico</strong> delle ore giornaliere spese su ciascun ticket</li>
+                        <li><strong>Calcolo intelligente</strong> basato sugli orari lavorativi (9-18, Lun-Ven)</li>
+                        <li><strong>Aggiornamento in tempo reale</strong> per tutte le modifiche ai ticket</li>
+                        <li><strong>Visualizzazione dettagliata</strong> nella vista dettaglio di ogni ticket</li>
+                        </ul>
+
+                        <p>Questa funzionalità vi permetterà di avere sempre una visibilità chiara su come state gestendo il vostro tempo e vi aiuterà nella pianificazione delle attività future.</p>
+
+                        <h3>🎨 Stati Ticket Ridisegnati</h3>
+
+                        <p>Gli stati dei ticket sono stati completamente ridisegnati con badge colorati e icone intuitive:</p>
+
+                        <ul>
+                        <li><strong>Badge colorati</strong> con icone emoji per identificazione immediata</li>
+                        <li><strong>Colori semantici</strong> organizzati per logica:
+                        <ul>
+                        <li><strong>Arancioni</strong>: assigned → todo → progress → testing (flusso di lavoro)</li>
+                        <li><strong>Verde</strong>: tested → released → done (completamento)</li>
+                        <li><strong>Giallo</strong>: waiting (attesa)</li>
+                        <li><strong>Rosso</strong>: problem, rejected (blocchi)</li>
+                        </ul>
+                        </li>
+                        <li><strong>Dashboard documentazione</strong> con spiegazioni dettagliate del significato di ogni stato</li>
+                        </ul>
+
+                        <h3>📝 Distinzione Problemi/Attese</h3>
+
+                        <p>Ora potete distinguere chiaramente tra un problema tecnico e un'attesa di informazioni:</p>
+
+                        <ul>
+                        <li><strong>Nuovo stato "Problem"</strong> per blocchi tecnici</li>
+                        <li><strong>Campi dedicati</strong> per specificare:
+                        <ul>
+                        <li>Motivo dell'attesa quando un ticket è "in attesa"</li>
+                        <li>Descrizione del problema quando un ticket è in "problem"</li>
+                        </ul>
+                        </li>
+                        <li><strong>Validazione automatica</strong> che richiede di compilare questi campi quando si selezionano gli stati corrispondenti</li>
+                        <li><strong>Tabelle separate</strong> in Kanban-2 per una gestione ottimale di entrambi i casi</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>👥 PER CHI È QUESTA RELEASE</h2>
+
+                        <h3>👨‍💼 Admin</h3>
+
+                        <ul>
+                        <li><strong>Dashboard Kanban-2 completa</strong> per visualizzazione workload di tutto il team</li>
+                        <li><strong>Tracking attività dettagliato</strong> per analisi performance e pianificazione</li>
+                        <li><strong>Configurazione accessi granulare</strong> per menu e funzionalità</li>
+                        <li><strong>Dashboard Changelog</strong> per overview di tutte le release</li>
+                        <li><strong>Gestione stati</strong> con documentazione completa</li>
+                        </ul>
+
+                        <h3>👨‍💻 Developer</h3>
+
+                        <ul>
+                        <li><strong>Dashboard Kanban-2 personalizzata</strong> con focus sul proprio lavoro quotidiano</li>
+                        <li><strong>Visualizzazione "Cosa ho fatto ieri?"</strong> per tracciare automaticamente le proprie attività</li>
+                        <li><strong>Distinzione problemi/attese</strong> per una gestione del workflow più efficace</li>
+                        <li><strong>Stati visualizzati</strong> con badge colorati immediatamente comprensibili</li>
+                        <li><strong>Menu AGILE organizzato</strong> per accesso rapido alle funzionalità principali</li>
+                        <li><strong>Comando dedicato</strong> per elaborare dati storici di attività</li>
+                        </ul>
+
+                        <h3>🏢 Customer</h3>
+
+                        <ul>
+                        <li><strong>Interfaccia semplificata</strong> con rimozione di elementi non essenziali</li>
+                        <li><strong>Menu ottimizzato</strong> per accesso veloce alle funzionalità rilevanti</li>
+                        <li><strong>Visualizzazione ticket migliorata</strong> senza distrazioni</li>
+                        </ul>
+
+                        <h3>👥 Manager</h3>
+
+                        <ul>
+                        <li><strong>Accesso completo a blocco CRM</strong> per gestione clienti</li>
+                        <li><strong>Dashboard Kanban-2</strong> per overview team</li>
+                        <li><strong>Tracking attività</strong> per analisi performance e resource planning</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>🗂️ MIGLIORAMENTI INTERFACCIA</h2>
+
+                        <h3>Menu Riorganizzato</h3>
+
+                        <p>Il menu principale è stato completamente riorganizzato per una navigazione più intuitiva:</p>
+
+                        <ul>
+                        <li><strong>Nuovo blocco "NEW"</strong> in prima posizione per creazione rapida: Ticket, FundRaising, Tag</li>
+                        <li><strong>Rinominato "DEV" in "AGILE"</strong> con sottomenu "Tickets" organizzato</li>
+                        <li><strong>Nuovo blocco "HELP"</strong> in prima posizione con:
+                        <ul>
+                        <li>Documentazione generale</li>
+                        <li>Stati Ticket (nuova dashboard)</li>
+                        <li>Changelog (nuova dashboard)</li>
+                        </ul>
+                        </li>
+                        </ul>
+
+                        <h3>Ottimizzazioni Spazio</h3>
+
+                        <ul>
+                        <li><strong>Rimosse card</strong> dalle pagine principali per dare più spazio alla visualizzazione ticket</li>
+                        <li><strong>Viste semplificate</strong> per focus sul contenuto essenziale</li>
+                        <li><strong>Layout ottimizzato</strong> per lavoro efficiente</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>📋 DETTAGLI RILASCIO</h2>
+
+                        <ul>
+                        <li><strong>Versione:</strong> MS-1.18.0</li>
+                        <li><strong>Data:</strong> 03 Novembre 2025</li>
+                        <li><strong>Stato:</strong> Disponibile</li>
+                        <li><strong>Branch:</strong> montagna-servizi</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>⚠️ NOTA IMPORTANTE</h2>
+
+                        <h3>Per gli Amministratori</h3>
+
+                        <p>Al primo accesso dopo il deployment:</p>
+
+                        <ol>
+                        <li><strong>Eseguire le migrazioni</strong>:
+                        <pre><code>docker-compose exec phpfpm php artisan migrate
+</code></pre>
+                        </li>
+                        <li><strong>Elaborare dati storici</strong> (consigliato per visualizzare attività passate):
+                        <pre><code>docker-compose exec phpfpm php artisan users-stories-log:dispatch
+</code></pre>
+                        </li>
+                        <li><strong>Pulire cache</strong>:
+                        <pre><code>docker-compose exec phpfpm php artisan optimize:clear
+</code></pre>
+                        </li>
+                        </ol>
+
+                        <p>Il tracking attività partirà automaticamente per tutte le modifiche future ai ticket. Per i dati storici, è consigliato eseguire il comando sopra indicato.</p>
+
+                        <hr>
+
+                        <h2>🎉 GRAZIE!</h2>
+
+                        <p>Questo aggiornamento migliora significativamente l'esperienza di utilizzo della piattaforma per tutti gli utenti. Continuiamo a lavorare per rendere Orchestrator sempre più efficiente e intuitivo.</p>
+
+                        <p>Il feedback di tutti voi è fondamentale per migliorare costantemente la piattaforma. Non esitate a condividere i vostri commenti e suggerimenti!</p>
+
+                        <p><strong>Buon lavoro a tutti!</strong> 🙌</p>
+
+                        <hr>
+
+                        <p><strong>Team Orchestrator</strong><br><em>Webmapp S.r.l.</em></p>
+
+                        <p><em>Per domande o assistenza, contattate il team tecnico.</em></p>
+                    </div>
+                </div>
+            </div>
+
             <!-- MS-1.17.1 -->
             <div class="release-card">
                 <div class="release-header">
