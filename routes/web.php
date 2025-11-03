@@ -272,3 +272,30 @@ Route::post('/set-activity-tags-details-filters', function () {
     return back();
 })->middleware(['auth'])->name('activity.tags.details.set.filters');
 
+// Rotta per gestire i filtri activity-customer-details (date range e customer_id)
+Route::post('/set-activity-customer-details-filters', function () {
+    $startDate = request('start_date');
+    $endDate = request('end_date');
+    $customerId = request('customer_id');
+
+    if ($startDate) {
+        session(['activity_customer_details_start_date' => $startDate]);
+    } else {
+        session()->forget('activity_customer_details_start_date');
+    }
+
+    if ($endDate) {
+        session(['activity_customer_details_end_date' => $endDate]);
+    } else {
+        session()->forget('activity_customer_details_end_date');
+    }
+
+    if ($customerId) {
+        session(['activity_customer_details_customer_id' => $customerId]);
+    } else {
+        session()->forget('activity_customer_details_customer_id');
+    }
+
+    return back();
+})->middleware(['auth'])->name('activity.customer.details.set.filters');
+
