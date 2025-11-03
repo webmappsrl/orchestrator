@@ -194,9 +194,11 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('MANAGEMENT', [
                     MenuItem::dashboard(ActivityUser::class),
-                    MenuItem::dashboard(ActivityTags::class),
-                    MenuItem::dashboard(ActivityCustomer::class),
-                    MenuItem::dashboard(ActivityOrganizations::class),
+                    MenuGroup::make(__('Statistics'), [
+                        MenuItem::dashboard(ActivityTags::class),
+                        MenuItem::dashboard(ActivityCustomer::class),
+                        MenuItem::dashboard(ActivityOrganizations::class),
+                    ])->collapsedByDefault(),
                 ])->icon('cog')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;

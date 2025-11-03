@@ -151,7 +151,7 @@ class ActivityUser extends Dashboard
      */
     public function name()
     {
-        return __('Activity User');
+        return __('Timetable');
     }
 
     /**
