@@ -218,3 +218,30 @@ Route::post('/set-activity-customer-filters', function () {
     return back();
 })->middleware(['auth'])->name('activity.customer.set.filters');
 
+// Rotta per gestire i filtri activity-organizations (date range e organization)
+Route::post('/set-activity-organizations-filters', function () {
+    $startDate = request('start_date');
+    $endDate = request('end_date');
+    $organizationFilter = request('organization_filter');
+
+    if ($startDate) {
+        session(['activity_organizations_start_date' => $startDate]);
+    } else {
+        session()->forget('activity_organizations_start_date');
+    }
+
+    if ($endDate) {
+        session(['activity_organizations_end_date' => $endDate]);
+    } else {
+        session()->forget('activity_organizations_end_date');
+    }
+
+    if ($organizationFilter) {
+        session(['activity_organizations_organization_filter' => $organizationFilter]);
+    } else {
+        session()->forget('activity_organizations_organization_filter');
+    }
+
+    return back();
+})->middleware(['auth'])->name('activity.organizations.set.filters');
+
