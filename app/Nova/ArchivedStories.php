@@ -46,6 +46,7 @@ class ArchivedStories extends Story
             new filters\StoryTypeFilter(),
             new filters\CustomerStoryWithDeadlineFilter(),
             new filters\StoryWithoutTagsFilter(),
+            new filters\StoryWithMultipleTagsFilter(),
         ];
     }
 

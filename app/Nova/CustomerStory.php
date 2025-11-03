@@ -59,6 +59,7 @@ class CustomerStory extends Story
             new Filters\TaggableTypeFilter(),
             new filters\StoryTypeFilter(),
             new filters\StoryWithoutTagsFilter(),
+            new filters\StoryWithMultipleTagsFilter(),
         ];
     }
 }

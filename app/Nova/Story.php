@@ -500,6 +500,7 @@ class Story extends Resource
             new Filters\TaggableTypeFilter(),
             new filters\StoryTypeFilter(),
             new filters\StoryWithoutTagsFilter(),
+            new filters\StoryWithMultipleTagsFilter(),
         ];
     }
 }
