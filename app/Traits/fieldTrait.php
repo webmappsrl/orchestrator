@@ -312,19 +312,25 @@ trait fieldTrait
             return Text::make(__('Status'), 'status', function () {
                 $status = $this->status;
                 $color = $this->getStatusColor($status);
+                $icon = $this->getStatusIcon($status);
                 $label = strtoupper(__(ucfirst($status)));
                 
                 return <<<HTML
                     <span style="
                         background-color: {$color}80;
-                        color: {$color};
+                        color: #374151;
                         font-weight: bold;
                         padding: 4px 12px;
                         border-radius: 12px;
-                        display: inline-block;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
                         border: 1px solid {$color};
                         text-transform: uppercase;
-                    ">{$label}</span>
+                    ">
+                        <span>{$icon}</span>
+                        <span>{$label}</span>
+                    </span>
                 HTML;
             })
             ->asHtml();
@@ -653,6 +659,16 @@ trait fieldTrait
             return $statusEnum->color();
         } catch (\ValueError $e) {
             return 'black';
+        }
+    }
+
+    private function getStatusIcon($status)
+    {
+        try {
+            $statusEnum = StoryStatus::from($status);
+            return $statusEnum->icon();
+        } catch (\ValueError $e) {
+            return 'question-mark-circle';
         }
     }
 

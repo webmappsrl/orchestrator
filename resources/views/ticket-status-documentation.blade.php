@@ -68,6 +68,10 @@
             border-radius: 8px;
             margin-right: 15px;
             border: 2px solid rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
         }
 
         .status-name {
@@ -154,7 +158,9 @@
             @foreach($statuses as $status)
                 <div class="status-card">
                     <div class="status-header">
-                        <div class="status-color" style="background-color: {{ $status['color'] }};"></div>
+                        <div class="status-color" style="background-color: {{ $status['color'] }}80;">
+                            {{ $status['icon'] ?? '' }}
+                        </div>
                         <h3 class="status-name">{{ $status['label'] }}</h3>
                     </div>
                     <div class="status-description">

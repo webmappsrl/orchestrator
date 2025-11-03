@@ -41,4 +41,23 @@ enum StoryStatus: string
             self::Rejected => '#dc2626', // Red 600
         };
     }
+
+    // Metodo per ottenere l'icona associata allo stato
+    public function icon(): string
+    {
+        return match($this) {
+            self::New => '✨', // Nuovo
+            self::Backlog => '⏱️', // In coda
+            self::Assigned => '👤', // Assegnato
+            self::Todo => '📋', // Da fare
+            self::Progress => '⚡', // In corso
+            self::Test => '🧪', // In test
+            self::Tested => '✅', // Testato
+            self::Released => '🌐', // Rilasciato
+            self::Done => '✔️', // Completato
+            self::Problem => '⚠️', // Problema
+            self::Waiting => '⏸️', // In attesa
+            self::Rejected => '❌', // Respinto
+        };
+    }
 }
