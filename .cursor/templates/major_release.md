@@ -190,11 +190,44 @@ Modifica in `config/app.php`:
 - `version` → nuova versione
 - `release_date` → data release
 
-## ✅ Step 5: Commit e Tag
+## 📊 Step 5: Aggiorna la Dashboard Changelog
+
+La dashboard Changelog è statica, quindi devi aggiungere manualmente il nuovo blocco release.
+
+Modifica `resources/views/changelog-dashboard.blade.php`:
+
+1. Aggiungi un nuovo `<div class="release-card">` all'inizio della `<div class="release-list">`
+2. Copia la struttura HTML completa dal file EMAIL della release
+3. Ordina le release dalla più recente alla meno recente
+
+Esempio di struttura:
+```html
+<div class="release-list">
+    <!-- MS-X.Y.Z (NUOVO - PIÙ RECENTE) -->
+    <div class="release-card">
+        <div class="release-header">
+            <h2 class="release-version">MS-X.Y.Z</h2>
+            <span class="release-date">DD Mese YYYY</span>
+        </div>
+        <div class="release-content">
+            <div class="release-html-content">
+                <!-- Contenuto HTML completo dell'email -->
+                <h1>🚀 Release MS-X.Y.Z - Titolo</h1>
+                <!-- ... resto del contenuto ... -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MS-previous-versions (PIÙ VECCHIE) -->
+    <!-- ... -->
+</div>
+```
+
+## ✅ Step 6: Commit e Tag
 
 ```bash
-# Aggiungi i file del changelog
-git add changelog/CHANGELOG-MS-X.Y.Z.md changelog/email/EMAIL-RELEASE-MS-X.Y.Z.md config/app.php
+# Aggiungi i file del changelog e dashboard
+git add changelog/CHANGELOG-MS-X.Y.Z.md changelog/email/EMAIL-RELEASE-MS-X.Y.Z.md config/app.php resources/views/changelog-dashboard.blade.php
 
 # Commit
 git commit -m "chore: prepare release MS-X.Y.Z"
@@ -207,7 +240,7 @@ git push origin montagna-servizi
 git push origin MS-X.Y.Z
 ```
 
-## 📦 Step 6: Verifica e Deploy
+## 📦 Step 7: Verifica e Deploy
 
 ```bash
 # Verifica che tutto sia pronto per il deploy
@@ -220,9 +253,8 @@ docker-compose exec phpfpm php artisan config:cache
 # Verifica delle dashboard
 ```
 
-## 📌 Step 7: Post-Release
+## 📌 Step 8: Post-Release
 
-- Aggiorna la dashboard Changelog (se necessaria)
 - Invia email al team
 - Documenta eventuali note di deployment
 - Aggiorna documentazione utente
@@ -235,9 +267,10 @@ Per MS-1.18.0:
 2. Crea `changelog/CHANGELOG-MS-1.18.0.md`
 3. Crea `changelog/email/EMAIL-RELEASE-MS-1.18.0.md`
 4. Aggiorna `config/app.php`: version='MS-1.18.0', release_date='2025-11-15'
-5. Commit, tag e push
-6. Deploy su staging/produzione
-7. Comunicazione al team
+5. Aggiorna `resources/views/changelog-dashboard.blade.php` aggiungendo il blocco MS-1.18.0
+6. Commit, tag e push
+7. Deploy su staging/produzione
+8. Comunicazione al team
 
 ## 📚 Risorse
 
