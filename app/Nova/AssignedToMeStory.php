@@ -39,6 +39,7 @@ class AssignedToMeStory extends Story
             new filters\CreatorStoryFilter(),
             new filters\StoryTypeFilter(),
             new filters\CustomerStoryWithDeadlineFilter(),
+            new filters\StoryWithoutTagsFilter(),
         ];
     }
 

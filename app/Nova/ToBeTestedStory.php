@@ -41,6 +41,7 @@ class ToBeTestedStory extends Story
             new filters\UserFilter(),
             new filters\StoryTypeFilter(),
             new filters\CustomerStoryWithDeadlineFilter(),
+            new filters\StoryWithoutTagsFilter(),
         ];
     }
 
