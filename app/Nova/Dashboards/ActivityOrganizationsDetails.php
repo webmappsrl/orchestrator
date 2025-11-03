@@ -201,7 +201,7 @@ class ActivityOrganizationsDetails extends Dashboard
      */
     public function name()
     {
-        return __('Activity Organizations Details');
+        return __('Organizations');
     }
 
     /**

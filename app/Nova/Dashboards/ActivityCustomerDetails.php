@@ -194,7 +194,7 @@ class ActivityCustomerDetails extends Dashboard
      */
     public function name()
     {
-        return __('Activity Customer Details');
+        return __('Customer');
     }
 
     /**

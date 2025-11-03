@@ -226,7 +226,7 @@ class ActivityTags extends Dashboard
      */
     public function name()
     {
-        return __('Activity Tags');
+        return __('Tags');
     }
 
     /**

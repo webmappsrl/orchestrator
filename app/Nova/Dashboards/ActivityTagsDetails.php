@@ -194,7 +194,7 @@ class ActivityTagsDetails extends Dashboard
      */
     public function name()
     {
-        return __('Activity Tags Details');
+        return __('Tags');
     }
 
     /**
