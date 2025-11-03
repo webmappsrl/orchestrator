@@ -422,6 +422,50 @@ trait fieldTrait
         }
     }
 
+    public function userActivityField()
+    {
+        return Text::make(__('User Activity'), function () {
+            $activityLogs = \App\Models\UsersStoriesLog::where('story_id', $this->resource->id)
+                ->with('user')
+                ->orderBy('date', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($activityLogs->isEmpty()) {
+                return '<p>No activity logged yet.</p>';
+            }
+
+            $html = '<div style="max-height: 400px; overflow-y: auto;">';
+            $html .= '<table style="width: 100%; border-collapse: collapse;">';
+            $html .= '<thead>';
+            $html .= '<tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">';
+            $html .= '<th style="padding: 8px; text-align: left; font-weight: bold;">Date</th>';
+            $html .= '<th style="padding: 8px; text-align: left; font-weight: bold;">User</th>';
+            $html .= '<th style="padding: 8px; text-align: left; font-weight: bold;">Time Spent</th>';
+            $html .= '</tr>';
+            $html .= '</thead>';
+            $html .= '<tbody>';
+
+            foreach ($activityLogs as $log) {
+                $hours = floor($log->elapsed_minutes / 60);
+                $minutes = $log->elapsed_minutes % 60;
+                $timeDisplay = $hours > 0 ? "{$hours}h {$minutes}m" : "{$minutes}m";
+                
+                $html .= '<tr style="border-bottom: 1px solid #dee2e6;">';
+                $html .= '<td style="padding: 8px;">' . $log->date->format('d/m/Y') . '</td>';
+                $html .= '<td style="padding: 8px;">' . ($log->user ? $log->user->name : 'N/A') . '</td>';
+                $html .= '<td style="padding: 8px;">' . $timeDisplay . '</td>';
+                $html .= '</tr>';
+            }
+
+            $html .= '</tbody>';
+            $html .= '</table>';
+            $html .= '</div>';
+
+            return $html;
+        })->onlyOnDetail()->asHtml();
+    }
+
     public function answerToTicketField($fieldName = 'answer_to_ticket')
     {
         //TODO make it readonly when the package will be fixed( opened issue on github: https://github.com/manogi/nova-tiptap/issues/76 )

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\UpdateUsersStoriesLogJob;
 
 class StoryObserver
 {
@@ -188,6 +189,9 @@ class StoryObserver
 
             $story->saveQuietly();
             StoryTimeService::run($storyLog->story);
+            
+            // Dispatch job to update users_stories_log
+            UpdateUsersStoriesLogJob::dispatch($story->id, null);
         }
     }
 

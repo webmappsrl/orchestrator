@@ -207,6 +207,9 @@ class Story extends Resource
             $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
+            $this->userActivityField()->canSee(function ($request) {
+                return ! $request->user()->hasRole(UserRole::Customer);
+            }),
             HasMany::make(__('Logs'), 'views', StoryLog::class)->canSee(function ($request) {
                 return ! $request->user()->hasRole(UserRole::Customer);
             }),
