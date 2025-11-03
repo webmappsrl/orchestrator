@@ -81,6 +81,55 @@ class Kanban2 extends Dashboard
     }
 
     /**
+     * Get stories with status 'todo' and 'assigned' for a user, ordered by status (todo first, then assigned)
+     */
+    protected function getTodoAndAssignedStories(Authenticatable $user)
+    {
+        $stories = Story::query()
+            ->whereIn('status', [StoryStatus::Todo->value, StoryStatus::Assigned->value])
+            ->where('user_id', $user->id)
+            ->whereNotNull('type')
+            ->where('type', '!=', StoryType::Scrum->value)
+            ->with(['creator', 'tags', 'tester', 'user'])
+            ->get()
+            ->sortBy(function ($story) {
+                // Sort: todo first (value 1), then assigned (value 2)
+                return $story->status === StoryStatus::Todo->value ? 1 : 2;
+            })
+            ->values();
+
+        return $stories;
+    }
+
+    /**
+     * Create a card for TODO table with both todo and assigned statuses
+     */
+    protected function todoAndAssignedCard($user, $width = 'full')
+    {
+        $stories = $this->getTodoAndAssignedStories($user);
+        $count = $stories->count();
+        $title = 'Cosa devo fare (todo/assigned): [' . $count . '] ticket';
+
+        return (new HtmlCard)
+            ->width($width)
+            ->view('story-viewer-kanban2', [
+                'stories' => $stories,
+                'statusLabel' => $title,
+                'showTester' => false,
+                'showAssignedTo' => false,
+                'status' => 'todo-assigned', // Special status to indicate multiple statuses
+                'showStatusColumn' => true, // Flag to show status column
+            ])
+            ->canSee(function ($request) {
+                /** @var User $user */
+                $user = $request->user();
+
+                return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer);
+            })
+            ->center(true);
+    }
+
+    /**
      * Get recent activities for a user (last 2 days with activity)
      */
     protected function getRecentActivities(Authenticatable $user)
@@ -222,8 +271,8 @@ class Kanban2 extends Dashboard
         // Aggiungi la tabella Waiting
         $cards[] = $this->storyCard('waiting', __('Waiting'), $user, 'full', 'Cosa sto aspettando (in attesa)');
 
-        // Aggiungi la tabella TODO
-        $cards[] = $this->storyCard('todo', __('To Do'), $user, 'full', 'Cosa devo fare oggi (todo)');
+        // Aggiungi la tabella TODO (con todo e assigned)
+        $cards[] = $this->todoAndAssignedCard($user);
 
         // Aggiungi la tabella Test (ticket assegnati come tester)
         $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'Cosa devo verificare (da testare)', false, false, true);

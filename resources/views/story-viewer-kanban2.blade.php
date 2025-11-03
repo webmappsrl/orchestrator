@@ -85,6 +85,14 @@
                 <col style="width: 15%;">
                 <col style="width: 12%;">
                 <col style="width: 12%;">
+            @elseif(isset($showStatusColumn) && $showStatusColumn)
+                <col style="width: 4%;">
+                <col style="width: 10%;">
+                <col style="width: 13%;">
+                <col style="width: 15%;">
+                <col style="width: 20%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
             @else
                 <col style="width: 5%;">
                 <col style="width: 15%;">
@@ -97,6 +105,9 @@
         <thead>
             <tr>
                 <th>{{ __('ID') }}</th>
+                @if(isset($showStatusColumn) && $showStatusColumn)
+                    <th>{{ __('Status') }}</th>
+                @endif
                 <th>{{ __('Tags') }}</th>
                 @if ((isset($showTester) && $showTester) || (isset($showAssignedTo) && $showAssignedTo))
                     <th>{{ __('Creator') }}</th>
@@ -127,6 +138,38 @@
                     <td>
                         <div class="text-500 font-bold" style="color:#2FBDA5;">{{ $story->id }}</div>
                     </td>
+                    @if(isset($showStatusColumn) && $showStatusColumn)
+                        <td>
+                            @php
+                                try {
+                                    $statusEnum = \App\Enums\StoryStatus::from($story->status);
+                                    $statusColor = $statusEnum->color();
+                                    $statusIcon = $statusEnum->icon();
+                                    $statusLabel = strtoupper(__(ucfirst($story->status)));
+                                } catch (\ValueError $e) {
+                                    $statusColor = '#000000';
+                                    $statusIcon = '❓';
+                                    $statusLabel = strtoupper($story->status);
+                                }
+                            @endphp
+                            <span style="
+                                background-color: {{ $statusColor }}80;
+                                color: #374151;
+                                font-weight: bold;
+                                padding: 4px 12px;
+                                border-radius: 12px;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                border: 1px solid {{ $statusColor }};
+                                text-transform: uppercase;
+                                font-size: 11px;
+                            ">
+                                <span>{{ $statusIcon }}</span>
+                                <span>{{ $statusLabel }}</span>
+                            </span>
+                        </td>
+                    @endif
                     <td>
                         <div class="text-gray-500">
                             @forelse ($story->tags as $tag)
@@ -229,6 +272,8 @@
                         @if ((isset($showTester) && $showTester) || (isset($showAssignedTo) && $showAssignedTo))
                             7
                         @elseif(isset($status) && ($status === 'waiting' || $status === 'problem'))
+                            7
+                        @elseif(isset($showStatusColumn) && $showStatusColumn)
                             7
                         @else
                             6
