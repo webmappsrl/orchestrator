@@ -245,3 +245,30 @@ Route::post('/set-activity-organizations-filters', function () {
     return back();
 })->middleware(['auth'])->name('activity.organizations.set.filters');
 
+// Rotta per gestire i filtri activity-tags-details (date range e tag_id)
+Route::post('/set-activity-tags-details-filters', function () {
+    $startDate = request('start_date');
+    $endDate = request('end_date');
+    $tagId = request('tag_id');
+
+    if ($startDate) {
+        session(['activity_tags_details_start_date' => $startDate]);
+    } else {
+        session()->forget('activity_tags_details_start_date');
+    }
+
+    if ($endDate) {
+        session(['activity_tags_details_end_date' => $endDate]);
+    } else {
+        session()->forget('activity_tags_details_end_date');
+    }
+
+    if ($tagId) {
+        session(['activity_tags_details_tag_id' => $tagId]);
+    } else {
+        session()->forget('activity_tags_details_tag_id');
+    }
+
+    return back();
+})->middleware(['auth'])->name('activity.tags.details.set.filters');
+
