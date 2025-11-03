@@ -85,6 +85,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
                     MenuGroup::make(__('Tickets'), [
+                        MenuItem::link(__('Nuovi'), '/resources/new-stories'),
                         MenuItem::link(__('Customers'), '/resources/customer-stories'),
                         MenuItem::link(__('In progress'), '/resources/in-progress-stories'),
                         MenuItem::link(__('Da svolgere'), '/resources/assigned-to-me-stories'),
