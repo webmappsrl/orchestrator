@@ -70,22 +70,22 @@
     <table>
         <colgroup>
             <col style="width: 5%;">
+            <col style="width: 12%;">
             <col style="width: 15%;">
             <col style="width: 18%;">
             <col style="width: 20%;">
             <col style="width: 12%;">
-            <col style="width: 15%;">
-            <col style="width: 15%;">
+            <col style="width: 18%;">
         </colgroup>
         <thead>
             <tr>
                 <th>{{ __('ID') }}</th>
+                <th>{{ __('Status') }}</th>
                 <th>{{ __('Tags') }}</th>
                 <th>{{ __('Creator') }}</th>
                 <th>{{ __('Ticket') }}</th>
                 <th>{{ __('Tempo Speso') }}</th>
                 <th>{{ __('Data') }}</th>
-                <th>{{ __('Last Update') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -96,6 +96,36 @@
                 <tr onclick="window.open('{{ $urlNova . '/' . $story->id }}', '_blank');" style="cursor: pointer;">
                     <td>
                         <div class="text-500 font-bold" style="color:#2FBDA5;">{{ $story->id }}</div>
+                    </td>
+                    <td>
+                        @php
+                            try {
+                                $statusEnum = \App\Enums\StoryStatus::from($story->status);
+                                $statusColor = $statusEnum->color();
+                                $statusIcon = $statusEnum->icon();
+                                $statusLabel = strtoupper(__(ucfirst($story->status)));
+                            } catch (\ValueError $e) {
+                                $statusColor = '#000000';
+                                $statusIcon = '❓';
+                                $statusLabel = strtoupper($story->status);
+                            }
+                        @endphp
+                        <span style="
+                            background-color: {{ $statusColor }}80;
+                            color: #374151;
+                            font-weight: bold;
+                            padding: 4px 12px;
+                            border-radius: 12px;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 6px;
+                            border: 1px solid {{ $statusColor }};
+                            text-transform: uppercase;
+                            font-size: 11px;
+                        ">
+                            <span>{{ $statusIcon }}</span>
+                            <span>{{ $statusLabel }}</span>
+                        </span>
                     </td>
                     <td>
                         <div class="text-gray-500">
@@ -153,13 +183,6 @@
                                     {{ $activity->date->locale('it')->dayName }}
                                 </span>
                             </div>
-                        @else
-                            <span class="text-gray-400">-</span>
-                        @endif
-                    </td>
-                    <td>
-                        @if ($story->updated_at)
-                            <div class="text-gray-500">{{ $story->updated_at->format('d/m/y') }}</div>
                         @else
                             <span class="text-gray-400">-</span>
                         @endif
