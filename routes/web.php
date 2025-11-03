@@ -144,3 +144,23 @@ Route::post('/set-activity-filters', function () {
     return back();
 })->middleware(['auth'])->name('activity.set.filters');
 
+// Rotta per gestire i filtri activity-user (date range)
+Route::post('/set-activity-user-filters', function () {
+    $startDate = request('start_date');
+    $endDate = request('end_date');
+
+    if ($startDate) {
+        session(['activity_user_start_date' => $startDate]);
+    } else {
+        session()->forget('activity_user_start_date');
+    }
+
+    if ($endDate) {
+        session(['activity_user_end_date' => $endDate]);
+    } else {
+        session()->forget('activity_user_end_date');
+    }
+
+    return back();
+})->middleware(['auth'])->name('activity.user.set.filters');
+
