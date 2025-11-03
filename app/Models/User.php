@@ -210,4 +210,12 @@ class User extends Authenticatable
     {
         return $this->hasRole(UserRole::Customer);
     }
+
+    /**
+     * Get the organizations that this user belongs to.
+     */
+    public function organizations()
+    {
+        return $this->belongsToMany(Organization::class, 'organization_user');
+    }
 }

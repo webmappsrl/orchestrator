@@ -36,6 +36,7 @@ use App\Nova\StoryShowedByCustomer;
 use App\Nova\Tag;
 use App\Nova\ToBeTestedStory;
 use App\Nova\User;
+use App\Nova\Organization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
@@ -131,6 +132,18 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         }
                         return $request->user()->hasRole(UserRole::Admin);
                     }),
+                    MenuItem::link(__('User'), '/resources/users/new')->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
+                        return $request->user()->hasRole(UserRole::Admin);
+                    }),
+                    MenuItem::link(__('Organization'), '/resources/organizations/new')->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
+                        return $request->user()->hasRole(UserRole::Admin);
+                    }),
                 ])->icon('plus-circle')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
@@ -191,6 +204,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('ADMIN', [
                     MenuItem::resource(Tag::class),
+                    MenuItem::resource(Organization::class),
                     MenuItem::resource(User::class),
                     MenuGroup::make(__('Reports'), [
                         MenuItem::externalLink('all times', url('/report'))->openInNewTab()->canSee(function ($request) {

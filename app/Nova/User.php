@@ -22,7 +22,9 @@ use App\Nova\Actions\AdminRemoveFavoriteProjects;
 use App\Nova\Actions\AdminAddFavoriteProjectsAction;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Nova\Actions\AdminRemoveFavoriteProjectsAction;
+use App\Nova\Actions\UpdateOrganizations;
 use Laravel\Nova\Fields\FormData;
+use App\Nova\Filters\OrganizationFilter;
 
 class User extends Resource
 {
@@ -82,6 +84,10 @@ class User extends Resource
                 ->updateRules('nullable', Rules\Password::defaults()),
 
             BelongsToMany::make('Apps'),
+            BelongsToMany::make('Organizations'),
+            Text::make(__('Organizations'), function () {
+                return $this->organizations->pluck('name')->join(', ');
+            })->onlyOnIndex(),
             HasMany::make('Epics'),
             HasMany::make('Stories'),
             HasMany::make('Quotes', 'quotes', Quote::class),
@@ -145,6 +151,7 @@ class User extends Resource
     {
         return [
             new filters\UserRoleFilter(),
+            new OrganizationFilter(),
         ];
     }
 
@@ -187,6 +194,15 @@ class User extends Resource
                 ->confirmText('Are you sure you want to remove this project from the user\'s favorites?')
                 ->confirmButtonText('Remove')
                 ->cancelButtonText("Don't remove"),
+
+            (new UpdateOrganizations)->canSee(
+                function ($request) {
+                    return $request->user()->hasRole(UserRole::Admin);
+                }
+            )
+                ->confirmText('Are you sure you want to update organizations for the selected users?')
+                ->confirmButtonText('Update')
+                ->cancelButtonText("Cancel"),
         ];
     }
 }
