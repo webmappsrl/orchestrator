@@ -164,3 +164,30 @@ Route::post('/set-activity-user-filters', function () {
     return back();
 })->middleware(['auth'])->name('activity.user.set.filters');
 
+// Rotta per gestire i filtri activity-tags (date range e tag)
+Route::post('/set-activity-tags-filters', function () {
+    $startDate = request('start_date');
+    $endDate = request('end_date');
+    $tagFilter = request('tag_filter');
+
+    if ($startDate) {
+        session(['activity_tags_start_date' => $startDate]);
+    } else {
+        session()->forget('activity_tags_start_date');
+    }
+
+    if ($endDate) {
+        session(['activity_tags_end_date' => $endDate]);
+    } else {
+        session()->forget('activity_tags_end_date');
+    }
+
+    if ($tagFilter) {
+        session(['activity_tags_tag_filter' => $tagFilter]);
+    } else {
+        session()->forget('activity_tags_tag_filter');
+    }
+
+    return back();
+})->middleware(['auth'])->name('activity.tags.set.filters');
+

@@ -19,6 +19,7 @@ use App\Nova\CustomerTickets;
 use App\Nova\Dashboards\Kanban2;
 use App\Nova\Dashboards\Activity;
 use App\Nova\Dashboards\ActivityUser;
+use App\Nova\Dashboards\ActivityTags;
 use App\Nova\Dashboards\CustomerDashboard;
 use App\Nova\Dashboards\TicketStatus;
 use App\Nova\Dashboards\Changelog;
@@ -178,6 +179,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('MANAGEMENT', [
                     MenuItem::dashboard(ActivityUser::class),
+                    MenuItem::dashboard(ActivityTags::class),
                 ])->icon('cog')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
@@ -273,6 +275,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new \App\Nova\Dashboards\Kanban2,
             new \App\Nova\Dashboards\Activity,
             new \App\Nova\Dashboards\ActivityUser,
+            new \App\Nova\Dashboards\ActivityTags,
             new \App\Nova\Dashboards\CustomerDashboard,
             new \App\Nova\Dashboards\TicketStatus,
             new \App\Nova\Dashboards\Changelog,
