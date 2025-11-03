@@ -19,6 +19,7 @@ use App\Nova\CustomerTickets;
 use App\Nova\Dashboards\Kanban2;
 use App\Nova\Dashboards\CustomerDashboard;
 use App\Nova\Dashboards\TicketStatus;
+use App\Nova\Dashboards\Changelog;
 use App\Nova\Documentation;
 use App\Nova\FundraisingOpportunity;
 use App\Nova\FundraisingProject;
@@ -66,6 +67,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('HELP', [
                     MenuItem::resource(Documentation::class),
                     MenuItem::dashboard(TicketStatus::class),
+                    MenuItem::dashboard(Changelog::class),
                 ])->icon('question-mark-circle')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
@@ -258,6 +260,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new \App\Nova\Dashboards\Kanban2,
             new \App\Nova\Dashboards\CustomerDashboard,
             new \App\Nova\Dashboards\TicketStatus,
+            new \App\Nova\Dashboards\Changelog,
         ];
     }
 
