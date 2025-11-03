@@ -117,3 +117,30 @@ Route::post('/set-dashboard-developer', function () {
     return back();
 })->middleware(['auth'])->name('dashboard.set.developer');
 
+// Rotta per gestire i filtri activity (utente e date range)
+Route::post('/set-activity-filters', function () {
+    $userId = request('user_id');
+    $startDate = request('start_date');
+    $endDate = request('end_date');
+
+    if ($userId) {
+        session(['activity_selected_user_id' => $userId]);
+    } else {
+        session()->forget('activity_selected_user_id');
+    }
+
+    if ($startDate) {
+        session(['activity_start_date' => $startDate]);
+    } else {
+        session()->forget('activity_start_date');
+    }
+
+    if ($endDate) {
+        session(['activity_end_date' => $endDate]);
+    } else {
+        session()->forget('activity_end_date');
+    }
+
+    return back();
+})->middleware(['auth'])->name('activity.set.filters');
+
