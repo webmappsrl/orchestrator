@@ -178,6 +178,119 @@
         </div>
 
         <div class="release-list">
+            <!-- MS-1.19.0 -->
+            <div class="release-card">
+                <div class="release-header">
+                    <h2 class="release-version">MS-1.19.0</h2>
+                    <span class="release-date">04 Novembre 2025</span>
+                </div>
+                <div class="release-content">
+                    <div class="release-html-content">
+                        <h1>🚀 Release MS-1.19.0 - Filtri Avanzati e Dashboard Activity</h1>
+
+                        <p><strong>Ciao!</strong> 👋</p>
+
+                        <p>Eccoci con la <strong>Release MS-1.19.0</strong>, una versione che introduce potenti filtri per i ticket, un sistema completo di gestione organizzazioni e dashboard avanzate per il tracking delle attività del team.</p>
+
+                        <hr>
+
+                        <h2>🎯 COSA C'È DI NUOVO</h2>
+
+                        <h3>🔍 Filtri Avanzati per Ticket</h3>
+
+                        <ul>
+                        <li><strong>Filtro "Senza Tag"</strong> - Trova rapidamente tutti i ticket senza tag assegnati</li>
+                        <li><strong>Filtro "Con Più Tag"</strong> - Identifica i ticket con più tag per una migliore categorizzazione</li>
+                        <li><strong>Disponibili ovunque</strong> - Entrambi i filtri disponibili in tutte le interfacce dei ticket (Nuovi, Customers, In progress, Da svolgere, Test, Backlog, Archiviati)</li>
+                        </ul>
+
+                        <h3>🏢 Sistema Organizzazioni</h3>
+
+                        <ul>
+                        <li><strong>Gestione organizzazioni</strong> - Nuovo sistema per raggruppare gli utenti in organizzazioni</li>
+                        <li><strong>Relazioni flessibili</strong> - Gli utenti possono appartenere a più organizzazioni</li>
+                        <li><strong>Gestione completa</strong> - Interfaccia Nova dedicata per creare e gestire organizzazioni (solo Admin)</li>
+                        <li><strong>Bulk update</strong> - Possibilità di aggiornare le organizzazioni di più utenti contemporaneamente</li>
+                        <li><strong>Tracking attività</strong> - Dashboard per visualizzare attività per organizzazione</li>
+                        </ul>
+
+                        <h3>📊 Dashboard Activity Management</h3>
+
+                        <ul>
+                        <li><strong>Timetable</strong> - Visualizza attività giornaliera aggregata per tutti gli utenti con statistiche complete</li>
+                        <li><strong>Activity per Tag</strong> - Analizza tempo speso per tag con filtri e statistiche</li>
+                        <li><strong>Activity per Cliente</strong> - Monitora attività per cliente con dettagli completi</li>
+                        <li><strong>Activity per Organizzazione</strong> - Dashboard dedicata per attività per organizzazione</li>
+                        <li><strong>Intervalli temporali</strong> - Selezione personalizzata del periodo di analisi (default: ultimi 30 giorni)</li>
+                        <li><strong>Statistiche avanzate</strong> - Total tickets, tempo totale, media, durata min/max</li>
+                        </ul>
+
+                        <h3>📋 Dashboard Activity Details</h3>
+
+                        <ul>
+                        <li><strong>Details per Tag</strong> - Vista dettagliata di tutti i ticket per un tag specifico</li>
+                        <li><strong>Details per Cliente</strong> - Lista completa dei ticket per cliente con statistiche</li>
+                        <li><strong>Details per Organizzazione</strong> - Dettaglio attività per organizzazione</li>
+                        <li><strong>Ordinamento temporale</strong> - Ticket ordinati dalla più recente attività alla meno recente</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>👥 PER CHI È QUESTA RELEASE</h2>
+
+                        <h3>👨‍💼 Admin</h3>
+
+                        <ul>
+                        <li>Gestione completa organizzazioni</li>
+                        <li>Dashboard Activity per monitorare produttività team</li>
+                        <li>Filtri avanzati per analisi ticket</li>
+                        <li>Bulk update organizzazioni utenti</li>
+                        </ul>
+
+                        <h3>👨‍💻 Developer</h3>
+
+                        <ul>
+                        <li>Filtri tag per organizzare meglio il lavoro</li>
+                        <li>Dashboard Activity per tracciare tempo speso</li>
+                        <li>Vista dettagliata attività per tag/cliente</li>
+                        <li>Migliore organizzazione ticket con nuovi filtri</li>
+                        </ul>
+
+                        <h3>👨‍💼 Manager</h3>
+
+                        <ul>
+                        <li>Dashboard Activity per monitorare team</li>
+                        <li>Statistiche per organizzazione</li>
+                        <li>Analisi tempo speso per tag e cliente</li>
+                        <li>Vista completa attività del team</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>📋 DETTAGLI RILASCIO</h2>
+
+                        <ul>
+                        <li><strong>Versione:</strong> MS-1.19.0</li>
+                        <li><strong>Data:</strong> 04/11/2025</li>
+                        <li><strong>Stato:</strong> Disponibile</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>🎉 GRAZIE!</h2>
+
+                        <p>Buon lavoro! 🙌</p>
+
+                        <hr>
+
+                        <p><strong>Team Orchestrator</strong><br>
+                        <em>Webmapp S.r.l.</em></p>
+
+                        <p><em>Per domande o assistenza, contattate il team tecnico.</em></p>
+                    </div>
+                </div>
+            </div>
+
             <!-- MS-1.18.0 -->
             <div class="release-card">
                 <div class="release-header">
