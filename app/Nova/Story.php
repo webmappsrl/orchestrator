@@ -152,7 +152,7 @@ class Story extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        if ($request->user()->hasRole(UserRole::Customer)) {
+        if ($request->user() != null && $request->user()->hasRole(UserRole::Customer)) {
             return $query->where('creator_id', $request->user()->id)->where('status', '!=', StoryStatus::Done);
         }
     }
@@ -208,21 +208,33 @@ class Story extends Resource
             $this->titleField(),
             $this->customerRequestField($request),
             $this->userActivityField()->canSee(function ($request) {
+                if ($request->user() == null) {
+                    return false;
+                }
                 return ! $request->user()->hasRole(UserRole::Customer);
             }),
             HasMany::make(__('Logs'), 'views', StoryLog::class)->canSee(function ($request) {
+                if ($request->user() == null) {
+                    return false;
+                }
                 return ! $request->user()->hasRole(UserRole::Customer);
             }),
             BelongsToMany::make(__('Child Stories'), 'childStories', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
                     return empty($this->parent_id) && ! $request->user()->hasRole(UserRole::Customer);
                 })->filterable(),
             BelongsTo::make(__('Parent Story'), 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
                     return ! $request->user()->hasRole(UserRole::Customer);
                 }),
             MorphToMany::make(__('Deadlines'), 'deadlines', novaDeadline::class)
@@ -269,6 +281,9 @@ class Story extends Resource
                 ->nullable()
                 ->searchable()
                 ->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
                     return ! $request->user()->hasRole(UserRole::Customer);
                 })
                 ->help(__('Here you can attach the ticket that has the same issue. If multiple tickets share the same issue, attach the main ticket to all related tickets. You can find the main ticket by searching for its title. It is important to note that when the main ticket status changes, the status of all related tickets will also be updated.')),
@@ -306,9 +321,15 @@ class Story extends Resource
     {
         return [
             (new StoryTime)->refreshWhenFiltersChange()->canSee(function ($request) {
+                if ($request->user() == null) {
+                    return false;
+                }
                 return ! $request->user()->hasRole(UserRole::Customer);
             }),
             (new StoryTime)->onlyOnDetail()->canSee(function ($request) {
+                if ($request->user() == null) {
+                    return false;
+                }
                 return ! $request->user()->hasRole(UserRole::Customer);
             }),
             (new HtmlCard())->width('full')->withMeta([
@@ -336,7 +357,7 @@ class Story extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        if ($request->user()->hasRole(UserRole::Customer)) {
+        if ($request->user() != null && $request->user()->hasRole(UserRole::Customer)) {
             return [
                 (new actions\RespondToStoryRequest())
                     ->showInline()
@@ -416,7 +437,7 @@ class Story extends Resource
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel')),
         ];
-        if ($request->user()->hasRole(UserRole::Developer) || $request->user()->hasRole(UserRole::Admin)) {
+        if ($request->user() != null && ($request->user()->hasRole(UserRole::Developer) || $request->user()->hasRole(UserRole::Admin))) {
             array_push($actions, (new actions\CreateDocumentationFromStory())
                 ->confirmText(__('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.'))
                 ->confirmButtonText(__('Confirm'))
@@ -481,6 +502,9 @@ class Story extends Resource
                     return $previousLink.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nextLink;
                 }
             })->canSee(function ($request) {
+                if ($request->user() == null) {
+                    return false;
+                }
                 return ! $request->user()->hasRole(UserRole::Customer);
             }),
         ];

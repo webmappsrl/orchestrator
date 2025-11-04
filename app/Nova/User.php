@@ -102,6 +102,9 @@ class User extends Resource
             Boolean::make('Help Desk Chat', 'help_desk_chat')
                 ->onlyOnForms()
                 ->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
                     return $request->user()->hasRole(UserRole::Admin);
                 }),
             Boolean::make('Help Desk Chat', 'help_desk_chat')
@@ -177,6 +180,9 @@ class User extends Resource
         return [
             (new AdminAddFavoriteProjectsAction($request->resourceId))->canSee(
                 function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
                     return $request->user()->hasRole(UserRole::Admin);
                 }
             )
@@ -187,6 +193,9 @@ class User extends Resource
 
             (new AdminRemoveFavoriteProjectsAction($request->resourceId))->canSee(
                 function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
                     return $request->user()->hasRole(UserRole::Admin);
                 }
             )
@@ -197,6 +206,9 @@ class User extends Resource
 
             (new UpdateOrganizations)->canSee(
                 function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
                     return $request->user()->hasRole(UserRole::Admin);
                 }
             )

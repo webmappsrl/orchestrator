@@ -250,6 +250,9 @@ class FundraisingProject extends Resource
     public function authorizedToUpdate(Request $request): bool
     {
         $user = $request->user();
+        if ($user == null) {
+            return false;
+        }
         return $user->hasRole(\App\Enums\UserRole::Fundraising) || 
                $user->hasRole(\App\Enums\UserRole::Admin);
     }

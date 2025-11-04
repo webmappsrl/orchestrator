@@ -88,9 +88,15 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('AGILE', [
                     MenuItem::dashboard(Kanban2::class),
                     MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => $scrumMeetCode]))->openInNewTab()->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
                     MenuItem::externalLink('MEET', 'https://meet.google.com/'.$scrumMeetCode)->openInNewTab()->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
                     MenuItem::dashboard(Activity::class),
@@ -220,23 +226,38 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(User::class),
                     MenuGroup::make(__('Reports'), [
                         MenuItem::externalLink('all times', url('/report'))->openInNewTab()->canSee(function ($request) {
+                            if ($request->user() == null) {
+                                return false;
+                            }
                             return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
                         }),
                         ...collect(range(now()->year, 2023))->map(function ($year) {
                             return MenuItem::externalLink((string) $year, url("/report/{$year}"))->openInNewTab()
                                 ->canSee(function ($request) {
+                                    if ($request->user() == null) {
+                                        return false;
+                                    }
                                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
                                 });
                         }),
                     ])->collapsedByDefault(),
                     MenuItem::link('Create a new story', $newStoryUrl),
                     MenuItem::externalLink('Horizon', url('/horizon'))->openInNewTab()->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
                     }),
                     MenuItem::externalLink('logs', url('logs'))->openInNewTab()->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
                     }),
                     MenuItem::externalLink('Google Calendar', 'https://calendar.google.com/calendar/u/0/r')->openInNewTab()->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
                 ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
@@ -335,7 +356,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function register()
     {
         Nova::initialPath(function (Request $request) {
-            if (! $request->user() == null) {
+            if ($request->user() != null) {
                 $user = $request->user();
                 if ($user->hasRole(UserRole::Customer)) {
                     return $user->initialPath();

@@ -52,6 +52,9 @@ class ActivityTags extends Dashboard
             ->canSee(function ($request) {
                 /** @var User $user */
                 $user = $request->user();
+                if ($user == null) {
+                    return false;
+                }
 
                 return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
             })
@@ -198,6 +201,9 @@ class ActivityTags extends Dashboard
             ->canSee(function ($request) {
                 /** @var User $user */
                 $user = $request->user();
+                if ($user == null) {
+                    return false;
+                }
 
                 return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
             })

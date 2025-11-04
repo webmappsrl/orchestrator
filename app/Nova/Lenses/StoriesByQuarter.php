@@ -85,7 +85,7 @@ class StoriesByQuarter extends Lens
     public function infoField(NovaRequest $request, $fieldName = 'info')
     {
         return Text::make(__('Info'), $fieldName, function () use ($request) {
-            if ($request->user()->hasRole(UserRole::Customer)) {
+            if ($request->user() != null && $request->user()->hasRole(UserRole::Customer)) {
                 return $this->getCustomerInfo();
             } else {
                 return $this->getNonCustomerInfo();

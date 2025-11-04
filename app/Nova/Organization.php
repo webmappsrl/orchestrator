@@ -62,6 +62,9 @@ class Organization extends Resource
      */
     public static function availableForNavigation(Request $request)
     {
+        if ($request->user() == null) {
+            return false;
+        }
         return $request->user()->hasRole(UserRole::Admin);
     }
 
@@ -73,6 +76,9 @@ class Organization extends Resource
      */
     public static function authorizedToCreate(Request $request)
     {
+        if ($request->user() == null) {
+            return false;
+        }
         return $request->user()->hasRole(UserRole::Admin);
     }
 
@@ -84,6 +90,9 @@ class Organization extends Resource
      */
     public function authorizedToUpdate(Request $request)
     {
+        if ($request->user() == null) {
+            return false;
+        }
         return $request->user()->hasRole(UserRole::Admin);
     }
 
@@ -95,6 +104,9 @@ class Organization extends Resource
      */
     public function authorizedToDelete(Request $request)
     {
+        if ($request->user() == null) {
+            return false;
+        }
         return $request->user()->hasRole(UserRole::Admin);
     }
 
