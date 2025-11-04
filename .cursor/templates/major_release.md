@@ -111,6 +111,10 @@ Ringraziamenti al team.
 
 ## 📧 Step 3: Crea l'Email
 
+Crea due file: uno in formato Markdown e uno in formato TXT per l'invio via email.
+
+### 3.1: File Markdown
+
 Crea il file in `changelog/email/EMAIL-RELEASE-MS-X.Y.Z.md` con la seguente struttura:
 
 ```markdown
@@ -178,6 +182,79 @@ Ringraziamenti e call-to-action.
 *Per domande o assistenza, contattate il team tecnico.*
 ```
 
+### 3.2: File Testo (TXT)
+
+Crea anche il file in `changelog/email/EMAIL-RELEASE-MS-X.Y.Z.txt` con la versione in testo semplice per l'invio via email:
+
+```text
+🚀 Release MS-X.Y.Z - Titolo Breve
+
+Ciao!
+
+Introduzione amichevole alla release.
+
+---
+
+🎯 COSA C'È DI NUOVO
+
+🌟 Feature Per Tutti
+- Punto principale
+- Beneficio
+
+⚙️ Feature Specifiche
+- Punto principale
+- Beneficio
+
+---
+
+👥 PER CHI È QUESTA RELEASE
+
+👨‍💼 Admin
+- Feature admin rilevante
+- Beneficio
+
+👨‍💻 Developer
+- Feature dev rilevante
+- Beneficio
+
+🏢 Customer
+- Feature customer rilevante
+- Beneficio
+
+---
+
+📋 DETTAGLI RILASCIO
+
+- Versione: MS-X.Y.Z
+- Data: DD Mese YYYY
+- Stato: Disponibile
+
+---
+
+⚠️ NOTA IMPORTANTE (se necessaria)
+
+Note importanti per gli utenti.
+
+---
+
+🎉 GRAZIE!
+
+Ringraziamenti e call-to-action.
+
+Buon lavoro!
+
+---
+
+Team Orchestrator
+Webmapp S.r.l.
+
+Per domande o assistenza, contattate il team tecnico.
+```
+
+**Nota**: 
+- Il file `.txt` è la versione in testo semplice senza formattazione markdown, adatta per l'invio via client email.
+- Il file `.md` serve per documentazione e riferimento.
+
 ## 🔢 Step 4: Aggiorna config/app.php
 
 ```bash
@@ -227,7 +304,7 @@ Esempio di struttura:
 
 ```bash
 # Aggiungi i file del changelog e dashboard
-git add changelog/CHANGELOG-MS-X.Y.Z.md changelog/email/EMAIL-RELEASE-MS-X.Y.Z.md config/app.php resources/views/changelog-dashboard.blade.php
+git add changelog/CHANGELOG-MS-X.Y.Z.md changelog/email/EMAIL-RELEASE-MS-X.Y.Z.md changelog/email/EMAIL-RELEASE-MS-X.Y.Z.txt config/app.php resources/views/changelog-dashboard.blade.php
 
 # Commit
 git commit -m "chore: prepare release MS-X.Y.Z"
@@ -265,7 +342,7 @@ Per MS-1.18.0:
 
 1. Determina: è una minor release con nuove feature significative
 2. Crea `changelog/CHANGELOG-MS-1.18.0.md`
-3. Crea `changelog/email/EMAIL-RELEASE-MS-1.18.0.md`
+3. Crea `changelog/email/EMAIL-RELEASE-MS-1.18.0.md` e `EMAIL-RELEASE-MS-1.18.0.txt`
 4. Aggiorna `config/app.php`: version='MS-1.18.0', release_date='2025-11-15'
 5. Aggiorna `resources/views/changelog-dashboard.blade.php` aggiungendo il blocco MS-1.18.0
 6. Commit, tag e push

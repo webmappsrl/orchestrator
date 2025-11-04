@@ -76,6 +76,10 @@ Crea il file in `changelog/CHANGELOG-MS-X.Y.Z.md` con la seguente struttura:
 
 ## 📧 Step 3: Crea l'Email
 
+Crea due file: uno in formato Markdown e uno in formato TXT per l'invio via email.
+
+### 3.1: File Markdown
+
 Crea il file in `changelog/email/EMAIL-RELEASE-MS-X.Y.Z.md` con la seguente struttura:
 
 ```markdown
@@ -147,6 +151,83 @@ Ringraziamenti e call-to-action.
 *Per domande o assistenza, contattate il team tecnico.*
 ```
 
+### 3.2: File Testo (TXT)
+
+Crea anche il file in `changelog/email/EMAIL-RELEASE-MS-X.Y.Z.txt` con la versione in testo semplice per l'invio via email:
+
+```text
+🚀 Release MS-X.Y.Z - Titolo Breve
+
+Ciao!
+
+Introduzione amichevole alla release (1-2 righe).
+
+---
+
+🎯 COSA C'È DI NUOVO
+
+🌟 Feature Principali
+- Punto principale con beneficio
+- Punto principale con beneficio
+
+⚙️ Miglioramenti
+- Miglioramento descritto
+- Miglioramento descritto
+
+🐛 Bug Fix
+- Bug fixato con impatto
+- Bug fixato con impatto
+
+---
+
+👥 PER CHI È QUESTA RELEASE
+
+👨‍💼 Admin (se applicabile)
+- Feature/miglioramento admin rilevante
+- Beneficio
+
+👨‍💻 Developer (se applicabile)
+- Feature/miglioramento dev rilevante
+- Beneficio
+
+🏢 Customer (se applicabile)
+- Feature/miglioramento customer rilevante
+- Beneficio
+
+---
+
+📋 DETTAGLI RILASCIO
+
+- Versione: MS-X.Y.Z
+- Data: DD/MM/YYYY
+- Stato: Disponibile
+
+---
+
+⚠️ NOTA IMPORTANTE (opzionale, solo se necessaria)
+
+Note importanti per gli utenti (es. migrazioni richieste, configurazioni da aggiornare, ecc.)
+
+---
+
+🎉 GRAZIE!
+
+Ringraziamenti e call-to-action.
+
+Buon lavoro!
+
+---
+
+Team Orchestrator
+Webmapp S.r.l.
+
+Per domande o assistenza, contattate il team tecnico.
+```
+
+**Nota**: 
+- Il file `.txt` è la versione in testo semplice senza formattazione markdown, adatta per l'invio via client email.
+- Il file `.md` serve per documentazione e riferimento.
+
 ## 🔢 Step 4: Aggiorna config/app.php
 
 ```bash
@@ -196,7 +277,7 @@ Esempio di struttura:
 
 ```bash
 # Aggiungi i file del changelog e dashboard
-git add changelog/CHANGELOG-MS-X.Y.Z.md changelog/email/EMAIL-RELEASE-MS-X.Y.Z.md config/app.php resources/views/changelog-dashboard.blade.php
+git add changelog/CHANGELOG-MS-X.Y.Z.md changelog/email/EMAIL-RELEASE-MS-X.Y.Z.md changelog/email/EMAIL-RELEASE-MS-X.Y.Z.txt config/app.php resources/views/changelog-dashboard.blade.php
 
 # Commit
 git commit -m "chore: prepare release MS-X.Y.Z"
@@ -234,7 +315,7 @@ Per MS-1.17.1:
 
 1. Determina: è una minor release con nuove feature e miglioramenti
 2. Crea `changelog/CHANGELOG-MS-1.17.1.md`
-3. Crea `changelog/email/EMAIL-RELEASE-MS-1.17.1.md`
+3. Crea `changelog/email/EMAIL-RELEASE-MS-1.17.1.md` e `EMAIL-RELEASE-MS-1.17.1.txt`
 4. Aggiorna `config/app.php`: version='MS-1.17.1', release_date='2025-10-29'
 5. Aggiorna `resources/views/changelog-dashboard.blade.php` aggiungendo il blocco MS-1.17.1
 6. Commit, tag e push
