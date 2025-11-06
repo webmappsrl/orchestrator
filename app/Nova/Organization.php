@@ -5,6 +5,7 @@ namespace App\Nova;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Enums\UserRole;
@@ -50,8 +51,38 @@ class Organization extends Resource
                 ->sortable()
                 ->rules('required', 'max:255'),
 
-            BelongsToMany::make('Users'),
+            Number::make('Utenti', 'users_count')
+                ->sortable()
+                ->showOnIndex()
+                ->showOnDetail(),
+
+            BelongsToMany::make('Users')
+                ->showOnDetail(),
         ];
+    }
+
+    /**
+     * Build an "index" query for the given resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        return $query->withCount('users');
+    }
+
+    /**
+     * Build a "detail" query for the given resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function detailQuery(NovaRequest $request, $query)
+    {
+        return $query->withCount('users');
     }
 
     /**

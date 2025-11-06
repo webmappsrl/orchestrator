@@ -54,6 +54,13 @@ class User extends Resource
     ];
 
     /**
+     * The number of resources to show per page via relationships.
+     *
+     * @var int
+     */
+    public static $perPageViaRelationship = 200;
+
+    /**
      * Get the fields displayed by the resource.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
