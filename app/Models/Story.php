@@ -214,6 +214,11 @@ class Story extends Model implements HasMedia
                 throw new \Exception('Una storia che è figlia non può avere figli.');
             }
         });
+
+        static::deleting(function ($story) {
+            // Elimina i record dalla tabella pivot story_participants prima di eliminare la story
+            $story->participants()->detach();
+        });
     }
     public function tags(): MorphToMany
     {
