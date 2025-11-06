@@ -21,3 +21,4 @@
 - Nessuna migrazione richiesta
 - Utilizza tabelle esistenti: `organizations`, `organization_user`
 
+
