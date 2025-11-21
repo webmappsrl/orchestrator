@@ -42,17 +42,15 @@ class ArchivedStories extends Story
         $fields = [
             \Laravel\Nova\Fields\ID::make()->sortable(),
             $this->statusField($request),
-            \Laravel\Nova\Fields\Stack::make(__('Title'), [
+            \Laravel\Nova\Fields\Stack::make(__('Ticket Info'), [
                 $this->typeField($request),
                 $this->titleField(),
                 $this->relationshipField($request),
-            ]),
-            \Laravel\Nova\Fields\Stack::make(__('ASSIGNED/HOURS'), [
                 $this->assignedToField(),
                 $this->estimatedHoursField($request),
                 $this->effectiveHoursField($request),
+                $this->infoField($request),
             ]),
-            $this->infoField($request),
             $this->createdAtField(),
             \Laravel\Nova\Fields\DateTime::make(__('Updated At'), 'updated_at')
                 ->sortable()
@@ -61,6 +59,22 @@ class ArchivedStories extends Story
                         return '-';
                     }
                     return \Carbon\Carbon::parse($updatedAt)->format('d/m/Y');
+                }),
+            \Laravel\Nova\Fields\DateTime::make(__('Released At'), 'released_at')
+                ->sortable()
+                ->displayUsing(function ($releasedAt) {
+                    if (!$releasedAt) {
+                        return '-';
+                    }
+                    return \Carbon\Carbon::parse($releasedAt)->format('d/m/Y');
+                }),
+            \Laravel\Nova\Fields\DateTime::make(__('Done At'), 'done_at')
+                ->sortable()
+                ->displayUsing(function ($doneAt) {
+                    if (!$doneAt) {
+                        return '-';
+                    }
+                    return \Carbon\Carbon::parse($doneAt)->format('d/m/Y');
                 }),
         ];
 
