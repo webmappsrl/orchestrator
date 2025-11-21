@@ -300,11 +300,20 @@ class Story extends Model implements HasMedia
      */
     public function registerMediaCollections(): void
     {
+        $config = config('orchestrator.story_allowed_mime_types', []);
+        
+        $allowedMimeTypes = array_merge(
+            config('services.media-library.allowed_document_formats', []),
+            config('services.media-library.allowed_image_formats', []),
+            $config['documents'] ?? [],
+            $config['images'] ?? [],
+            $config['audio'] ?? []
+        );
 
-        $this->addMediaCollection('documents')->acceptsMimeTypes(array_merge(
-            config('services.media-library.allowed_document_formats'),
-            config('services.media-library.allowed_image_formats')
-        ));
+        // Rimuove duplicati mantenendo le chiavi numeriche
+        $allowedMimeTypes = array_values(array_unique($allowedMimeTypes));
+
+        $this->addMediaCollection('documents')->acceptsMimeTypes($allowedMimeTypes);
     }
 
     /**

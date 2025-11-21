@@ -201,8 +201,8 @@ class Story extends Resource
             $this->deadlineField($request),
             $this->tagsField(),
             Files::make(__('Documents'), 'documents')
-                ->singleMediaRules('mimes:pdf,doc,docx,json,geojson,txt,csv,jpeg,png,gif,bmp,webp,svg,tiff,heic,jpg,jpeg,png')
-                ->help(__('Only specific document types are allowed').'(PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV, JPEG, PNG, GIF, BMP, WEBP, SVG, TIFF, HEIC, JPG, JPEG, PNG).')
+                ->singleMediaRules(static::getDocumentsMimetypesRule())
+                ->help(static::getDocumentsHelpText())
                 ->onlyOnDetail(),
             $this->descriptionField(),
             $this->titleField(),
@@ -262,8 +262,8 @@ class Story extends Resource
             $this->typeField($request),
             $this->descriptionField(),
             Files::make('Documents', 'documents')
-                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
-                ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).')),
+                ->singleMediaRules(static::getDocumentsMimetypesRule())
+                ->help(static::getDocumentsHelpText()),
             $this->estimatedHoursField($request),
             $this->customerRequestField($request)
                 ->help(
@@ -526,5 +526,134 @@ class Story extends Resource
             new filters\StoryWithoutTagsFilter(),
             new filters\StoryWithMultipleTagsFilter(),
         ];
+    }
+
+    /**
+     * Get all allowed file extensions from configuration.
+     *
+     * @return array
+     */
+    public static function getAllowedFileExtensions()
+    {
+        $config = config('orchestrator.story_allowed_file_types', []);
+        return array_merge(
+            $config['documents'] ?? [],
+            $config['images'] ?? [],
+            $config['audio'] ?? []
+        );
+    }
+
+    /**
+     * Get all allowed MIME types from configuration.
+     *
+     * @return array
+     */
+    public static function getAllowedMimeTypes()
+    {
+        $config = config('orchestrator.story_allowed_mime_types', []);
+        return array_merge(
+            $config['documents'] ?? [],
+            $config['images'] ?? [],
+            $config['audio'] ?? []
+        );
+    }
+
+    /**
+     * Get the effective maximum file size considering PHP ini limits.
+     * Returns the minimum between configured size and PHP ini limits.
+     *
+     * @return int Size in bytes
+     */
+    public static function getEffectiveMaxFileSize()
+    {
+        $configuredSize = config('orchestrator.story_max_file_size', 10 * 1024 * 1024);
+        
+        // Get PHP ini limits
+        $uploadMaxFilesize = static::parsePhpIniSize(ini_get('upload_max_filesize'));
+        $postMaxSize = static::parsePhpIniSize(ini_get('post_max_size'));
+        
+        // Use the minimum of all three values
+        return min($configuredSize, $uploadMaxFilesize, $postMaxSize);
+    }
+
+    /**
+     * Parse PHP ini size string (e.g., "10M", "1024K") to bytes.
+     *
+     * @param string $size
+     * @return int Size in bytes
+     */
+    private static function parsePhpIniSize($size)
+    {
+        if (empty($size)) {
+            return PHP_INT_MAX; // No limit
+        }
+
+        $size = trim($size);
+        $last = strtolower($size[strlen($size) - 1]);
+        $value = (int) $size;
+
+        switch ($last) {
+            case 'g':
+                $value *= 1024;
+                // no break
+            case 'm':
+                $value *= 1024;
+                // no break
+            case 'k':
+                $value *= 1024;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Generate mimetypes validation rule string.
+     *
+     * @return string
+     */
+    public static function getDocumentsMimetypesRule()
+    {
+        $mimeTypes = static::getAllowedMimeTypes();
+        $maxFileSize = static::getEffectiveMaxFileSize();
+        $maxFileSizeKB = round($maxFileSize / 1024);
+        
+        return 'mimetypes:' . implode(',', $mimeTypes) . '|max:' . $maxFileSizeKB;
+    }
+
+    /**
+     * Generate dynamic help text for file uploads.
+     *
+     * @return string
+     */
+    public static function getDocumentsHelpText()
+    {
+        $config = config('orchestrator.story_allowed_file_types', []);
+        $maxFileSize = static::getEffectiveMaxFileSize();
+        
+        $parts = [];
+        
+        if (!empty($config['documents'])) {
+            $docExtensions = array_map('strtoupper', $config['documents']);
+            $parts[] = '**Documenti:** ' . implode(', ', $docExtensions);
+        }
+        
+        if (!empty($config['images'])) {
+            $imgExtensions = array_map('strtoupper', $config['images']);
+            $parts[] = '**Immagini:** ' . implode(', ', $imgExtensions);
+        }
+        
+        if (!empty($config['audio'])) {
+            $audioExtensions = array_map('strtoupper', $config['audio']);
+            $parts[] = '**Audio:** ' . implode(', ', $audioExtensions) . ' (per verbalizzazione)';
+        }
+        
+        // Convert bytes to human-readable format
+        $maxSizeMB = round($maxFileSize / (1024 * 1024), 1);
+        $sizeText = $maxSizeMB >= 1 ? $maxSizeMB . ' MB' : round($maxFileSize / 1024, 1) . ' KB';
+        
+        $helpText = __('Sono consentiti solo i seguenti tipi di file:') . "\n\n" . implode("\n", $parts);
+        $helpText .= "\n\n**Dimensione massima:** " . $sizeText;
+        
+        return $helpText;
     }
 }

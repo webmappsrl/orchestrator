@@ -68,4 +68,57 @@ return [
 
     'pdf_logo_path' => env('PDF_LOGO_PATH', storage_path('app/pdf-logo/logo.png')),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Story Allowed File Types Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This configuration defines which file types are allowed for upload
+    | in Story documents. You can customize this by setting the corresponding
+    | environment variables in your .env file.
+    |
+    | File types are organized by category:
+    | - documents: PDF, DOC, DOCX, etc.
+    | - images: JPEG, PNG, GIF, etc.
+    | - audio: MP3, M4A, WAV, etc. (for verbalization)
+    |
+    */
+
+    'story_allowed_file_types' => [
+        'documents' => explode(',', env('STORY_ALLOWED_DOCUMENT_TYPES', 'pdf,doc,docx,json,geojson,txt,csv')),
+        'images' => explode(',', env('STORY_ALLOWED_IMAGE_TYPES', 'jpg,jpeg,png,gif,bmp,webp,svg,tiff,heic')),
+        'audio' => explode(',', env('STORY_ALLOWED_AUDIO_TYPES', 'mp3,m4a,wav,ogg,aac,flac,mp4')),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Story Allowed MIME Types Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This configuration defines which MIME types are allowed for upload
+    | in Story documents. This maps to the file extensions above.
+    | You can customize this by setting the corresponding environment variables.
+    |
+    */
+
+    'story_allowed_mime_types' => [
+        'documents' => explode(',', env('STORY_ALLOWED_DOCUMENT_MIMES', 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')),
+        'images' => explode(',', env('STORY_ALLOWED_IMAGE_MIMES', 'image/jpeg,image/jpg,image/png,image/gif,image/bmp,image/webp,image/svg+xml,image/tiff,image/heic')),
+        'audio' => explode(',', env('STORY_ALLOWED_AUDIO_MIMES', 'audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/ogg,audio/aac,audio/flac,audio/x-ms-wma,video/mp4')),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Story Maximum File Size Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This configuration defines the maximum file size allowed for upload
+    | in Story documents. The value is in bytes. You can customize it by
+    | setting STORY_MAX_FILE_SIZE in your .env file (value in MB).
+    | Default: 10 MB (matching media-library configuration)
+    |
+    */
+
+    'story_max_file_size' => env('STORY_MAX_FILE_SIZE', 10) * 1024 * 1024, // Convert MB to bytes
+
 ];
