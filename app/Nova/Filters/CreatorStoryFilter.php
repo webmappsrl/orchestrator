@@ -50,10 +50,14 @@ class CreatorStoryFilter extends Filter
             $query = CustomerStory::indexQuery($request,  Story::query());
         }
         if ($query != null) {
-
-
             // Get distinct creator_ids from the filtered index query
-            $creatorIds = $query->distinct()->pluck('creator_id');
+            // Remove orderBy before using distinct to avoid PostgreSQL error
+            // Use select to ensure creator_id is in the select list when using distinct
+            $creatorIds = $query->withoutGlobalScopes()
+                ->reorder() // Remove any existing orderBy clauses
+                ->select('creator_id')
+                ->distinct()
+                ->pluck('creator_id');
 
             // Filter users to only those who are creators in the current index view
             return User::whereIn('id', $creatorIds)

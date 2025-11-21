@@ -38,6 +38,7 @@ use App\Nova\Quote;
 use App\Nova\RecurringProduct;
 use App\Nova\StoryShowedByCustomer;
 use App\Nova\Tag;
+use App\Nova\TicketReport;
 use App\Nova\ToBeTestedStory;
 use App\Nova\User;
 use App\Nova\Organization;
@@ -225,6 +226,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Organization::class),
                     MenuItem::resource(User::class),
                     MenuGroup::make(__('Reports'), [
+                        MenuItem::resource(TicketReport::class)->canSee(function ($request) {
+                            if ($request->user() == null) {
+                                return false;
+                            }
+                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                        }),
                         MenuItem::externalLink('all times', url('/report'))->openInNewTab()->canSee(function ($request) {
                             if ($request->user() == null) {
                                 return false;

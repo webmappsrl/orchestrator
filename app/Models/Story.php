@@ -38,6 +38,13 @@ class Story extends Model implements HasMedia
         'fundraising_project_id',
         'waiting_reason',
         'problem_reason',
+        'released_at',
+        'done_at',
+    ];
+
+    protected $casts = [
+        'released_at' => 'datetime',
+        'done_at' => 'datetime',
     ];
 
     public static function boot()

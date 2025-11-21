@@ -6,6 +6,7 @@ use App\Models\Story;
 use App\Models\StoryLog;
 use App\Enums\StoryStatus;
 use App\Actions\StoryTimeService;
+use App\Services\StoryDateService;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -64,6 +65,7 @@ class StoryObserver
     {
         $this->syncStoryCalendarIfStatusChanged($story);
         $this->createStoryLog($story);
+        $this->updateReleaseAndDoneDates($story);
         $this->notifyDeveloperIfIdle($story);
     }
 
@@ -119,6 +121,47 @@ class StoryObserver
                 if ($tester && $tester->email) {
                     Artisan::call('sync:stories-calendar', ['developerEmail' => $tester->email]);
                 }
+            }
+        }
+    }
+
+    /**
+     * Update released_at and done_at dates based on current status or from logs
+     * If status is Done but no done_at date found, use released_at as done_at
+     */
+    private function updateReleaseAndDoneDates(Story $story): void
+    {
+        $dateService = app(StoryDateService::class);
+        $statusChanged = $story->isDirty('status');
+
+        // If status changed to Released, set released_at to current time
+        if ($statusChanged && $story->status === StoryStatus::Released->value && !$story->released_at) {
+            $story->released_at = now();
+            $story->saveQuietly();
+        }
+
+        // If status changed to Done, try to get done_at from logs first
+        // If not found, use released_at if available
+        if ($statusChanged && $story->status === StoryStatus::Done->value && !$story->done_at) {
+            // Recalculate dates from logs first
+            $dateService->updateDates($story);
+            
+            // If done_at is still null after recalculation, use released_at
+            if (!$story->done_at && $story->released_at) {
+                $story->done_at = $story->released_at;
+            } else if (!$story->done_at) {
+                // If neither done_at nor released_at, set done_at to current time
+                $story->done_at = now();
+            }
+            
+            $story->saveQuietly();
+        }
+
+        // Recalculate dates from logs if they are not set
+        if (!$story->released_at || (!$story->done_at && $story->status === StoryStatus::Done->value)) {
+            $dateService->updateDates($story);
+            if ($story->isDirty(['released_at', 'done_at'])) {
+                $story->saveQuietly();
             }
         }
     }
