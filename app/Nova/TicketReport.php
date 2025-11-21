@@ -3,13 +3,16 @@
 namespace App\Nova;
 
 use App\Enums\StoryStatus;
+use App\Enums\StoryType;
 use App\Enums\UserRole;
 use App\Nova\User;
+use App\Nova\Organization;
 use App\Traits\fieldTrait;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Stack;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
 
@@ -76,7 +79,8 @@ class TicketReport extends Resource
         $query = $query->whereIn('status', [
             StoryStatus::Released->value,
             StoryStatus::Done->value,
-        ]);
+        ])
+        ->where('type', '!=', StoryType::Scrum->value);
 
         // Support for date range filtering via query parameters
         $startDate = $request->get('start_date');
@@ -155,6 +159,17 @@ class TicketReport extends Resource
             BelongsTo::make(__('Creator'), 'creator', User::class)
                 ->sortable()
                 ->searchable(),
+
+            Text::make(__('Organization'), function () {
+                if (!$this->creator || !$this->creator->organizations) {
+                    return '-';
+                }
+                $organizations = $this->creator->organizations;
+                if ($organizations->isEmpty()) {
+                    return '-';
+                }
+                return $organizations->pluck('name')->join(', ');
+            }),
         ];
     }
 
@@ -178,7 +193,9 @@ class TicketReport extends Resource
     public function filters(NovaRequest $request)
     {
         return [
+            new Filters\TicketReportStatusFilter(),
             new Filters\CreatorStoryFilter(),
+            new Filters\TicketReportOrganizationFilter(),
         ];
     }
 
