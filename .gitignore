@@ -18,6 +18,7 @@ docker-compose.yml
 .phpunit.result.cache
 /storage/backups
 /storage/app/database
+/storage/app/pdf-logo
 /storage/json
 /storage/json/conf
 settings.json

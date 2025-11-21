@@ -40,4 +40,32 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | PDF Footer Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This value is used as the footer text in PDF documents generated for
+    | documentation. You can customize it by setting PDF_FOOTER in your .env file.
+    | Use <br> tags for line breaks in the footer text.
+    |
+    */
+
+    'pdf_footer' => env('PDF_FOOTER', 'Webmapp S.r.l. - Via Antonio Cei, 2 - 56123 Pisa <br>C.F. / P. IVA: 02266770508 - Tel. +39 328 5360803 <br>www.webmapp.it | info@webmapp.it'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | PDF Logo Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This value is used as the logo path for the header in PDF documents.
+    | The logo should be placed in a directory that is not part of the repository.
+    | Default location: storage/app/pdf-logo/logo.png
+    | You can customize it by setting PDF_LOGO_PATH in your .env file.
+    | If the logo doesn't exist, the header will be generated without the logo.
+    |
+    */
+
+    'pdf_logo_path' => env('PDF_LOGO_PATH', storage_path('app/pdf-logo/logo.png')),
+
 ];
