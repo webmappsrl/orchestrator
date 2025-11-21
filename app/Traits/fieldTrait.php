@@ -111,7 +111,7 @@ trait fieldTrait
         return DateTime::make(__('Updated At'), $fieldName)
             ->sortable()
             ->displayUsing(function ($createdAt) {
-                return Carbon::parse($createdAt)->format('d/m/Y, H:i');
+                return Carbon::parse($createdAt)->format('d/m/Y H:i');
             })
             ->canSee($this->canSee($fieldName));
     }

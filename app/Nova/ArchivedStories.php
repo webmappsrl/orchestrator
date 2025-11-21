@@ -31,6 +31,45 @@ class ArchivedStories extends Story
     }
 
     /**
+     * Get the fields for the index view.
+     * Remove deadline field and add updated_at sortable field
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function fieldsInIndex(NovaRequest $request)
+    {
+        $fields = [
+            \Laravel\Nova\Fields\ID::make()->sortable(),
+            $this->statusField($request),
+            \Laravel\Nova\Fields\Stack::make(__('Title'), [
+                $this->typeField($request),
+                $this->titleField(),
+                $this->relationshipField($request),
+            ]),
+            \Laravel\Nova\Fields\Stack::make(__('ASSIGNED/HOURS'), [
+                $this->assignedToField(),
+                $this->estimatedHoursField($request),
+                $this->effectiveHoursField($request),
+            ]),
+            $this->infoField($request),
+            $this->createdAtField(),
+            \Laravel\Nova\Fields\DateTime::make(__('Updated At'), 'updated_at')
+                ->sortable()
+                ->displayUsing(function ($updatedAt) {
+                    if (!$updatedAt) {
+                        return '-';
+                    }
+                    return \Carbon\Carbon::parse($updatedAt)->format('d/m/Y');
+                }),
+        ];
+
+        return array_map(function ($field) {
+            return $field->onlyOnIndex();
+        }, $fields);
+    }
+
+    /**
      * Get the filters available for the resource.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
