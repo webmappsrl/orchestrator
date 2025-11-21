@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -145,5 +146,19 @@ class Tag extends Resource
     public function actions(Request $request)
     {
         return [];
+    }
+
+    /**
+     * Determine if the current user can create new resources.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public static function authorizedToCreate(Request $request)
+    {
+        if ($request->user() == null) {
+            return false;
+        }
+        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager);
     }
 }

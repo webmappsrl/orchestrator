@@ -363,11 +363,21 @@ trait fieldTrait
 
     public function tagsField($fieldLabel = 'Tags', $fieldName = 'tags')
     {
-        return
-            Tag::make($fieldLabel, $fieldName, novaTag::class)
+        $field = Tag::make($fieldLabel, $fieldName, novaTag::class)
             ->withPreview()
             ->help(__('Tags are used both to categorize a ticket and to display documentation in the "Info" section of the customer ticket view.'))
             ->canSee($this->canSee($fieldName));
+
+        // Abilita la creazione inline solo per admin/manager
+        // Il bottone viene mostrato solo se l'utente ha il permesso di creare tag
+        $field->showCreateRelationButton(function (NovaRequest $request) {
+            if ($request->user() == null) {
+                return false;
+            }
+            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager);
+        });
+
+        return $field;
     }
 
     public function projectField($fieldName = 'project')
