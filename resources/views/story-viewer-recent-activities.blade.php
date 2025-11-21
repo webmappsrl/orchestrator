@@ -1,5 +1,5 @@
 @php
-    $urlNova = url('/resources/assigned-to-me-stories');
+    $urlNova = url('/resources/customer-stories');
 @endphp
 
 <!DOCTYPE html>
