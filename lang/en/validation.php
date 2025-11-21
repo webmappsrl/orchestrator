@@ -162,6 +162,12 @@ return [
             'mimetypes' => 'Il file caricato non è di un tipo supportato. Sono consentiti solo documenti (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV), immagini (JPEG, PNG, GIF, BMP, WEBP, SVG, TIFF, HEIC) e file audio (MP3, M4A, WAV, OGG, AAC, FLAC, MP4) per la verbalizzazione. Tipi di file consentiti: :values.',
             'max' => 'Il file caricato supera la dimensione massima consentita. La dimensione massima consentita è :max KB. Verifica le dimensioni del file e riprova.',
         ],
+        'waiting_reason' => [
+            'required' => 'Il campo :attribute è obbligatorio quando lo stato del ticket è "In attesa". Specifica il motivo dell\'attesa prima di salvare.',
+        ],
+        'problem_reason' => [
+            'required' => 'Il campo :attribute è obbligatorio quando lo stato del ticket è "Problema". Specifica la descrizione del problema prima di salvare.',
+        ],
     ],
 
     /*
@@ -175,6 +181,9 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'waiting_reason' => __('Waiting Reason'),
+        'problem_reason' => __('Problem Reason'),
+    ],
 
 ];

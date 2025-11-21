@@ -405,5 +405,11 @@
   "Modify the estimate (hours) if needed": "Modifica la stima (ore) se necessario",
   "Convert Ticket to Tag": "Converti Ticket in Tag",
   "Do you want to convert the selected ticket to tag?": "Vuoi convertire il ticket selezionato in tag?",
-  "Ticket converted to tag": "Ticket convertito in tag"
+  "Ticket converted to tag": "Ticket convertito in tag",
+  "Waiting Reason": "Motivo dell'attesa",
+  "Problem Reason": "Motivo del problema",
+  "Specify the reason why this ticket is on hold. For example: waiting for customer response, waiting for external information, waiting for third-party system, etc.": "Specifica il motivo per cui questo ticket è in attesa. Ad esempio: in attesa di risposta del cliente, in attesa di informazioni esterne, in attesa di sistema di terze parti, ecc.",
+  "Specify the problem encountered while working on this ticket. Describe the technical issue, blocker, or error that prevents progress.": "Specifica il problema riscontrato durante lo sviluppo di questo ticket. Descrivi il problema tecnico, il blocco o l'errore che impedisce di procedere.",
+  "The :attribute field is required when status is Waiting.": "Il campo :attribute è obbligatorio quando lo stato è In attesa.",
+  "The :attribute field is required when status is Problem.": "Il campo :attribute è obbligatorio quando lo stato è Problema."
 }

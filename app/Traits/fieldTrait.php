@@ -514,7 +514,14 @@ trait fieldTrait
                     $field->hide();
                 }
             })
-            ->help(__('Specify what you are waiting for.'))
+            ->rules(function (NovaRequest $request) {
+                // Rendi obbligatorio se lo status è "waiting"
+                if ($request->input('status') === StoryStatus::Waiting->value) {
+                    return ['required'];
+                }
+                return [];
+            })
+            ->help(__('Specify the reason why this ticket is on hold. For example: waiting for customer response, waiting for external information, waiting for third-party system, etc.'))
             ->nullable();
     }
 
@@ -535,7 +542,14 @@ trait fieldTrait
                     $field->hide();
                 }
             })
-            ->help(__('Specify what problem you encountered.'))
+            ->rules(function (NovaRequest $request) {
+                // Rendi obbligatorio se lo status è "problem"
+                if ($request->input('status') === StoryStatus::Problem->value) {
+                    return ['required'];
+                }
+                return [];
+            })
+            ->help(__('Specify the problem encountered while working on this ticket. Describe the technical issue, blocker, or error that prevents progress.'))
             ->nullable();
     }
 
