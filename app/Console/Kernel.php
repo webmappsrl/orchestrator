@@ -76,6 +76,20 @@ class Kernel extends ConsoleKernel
                     Log::info('orchestrator:process-inbound-emails command finished');
                 });
         }
+
+        // Generate monthly activity reports (runs on the 1st of each month at 12:00 for the previous month)
+        if (config('orchestrator.tasks.generate_monthly_activity_reports')) {
+            $schedule
+                ->command('orchestrator:activity-report-generate')
+                ->timezone('Europe/Rome')
+                ->monthlyOn(1, '12:00')
+                ->before(function () {
+                    Log::info('orchestrator:activity-report-generate command starting');
+                })
+                ->after(function () {
+                    Log::info('orchestrator:activity-report-generate command finished');
+                });
+        }
     }
 
     /**
