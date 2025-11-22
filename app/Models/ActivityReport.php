@@ -97,6 +97,19 @@ class ActivityReport extends Model
     }
 
     /**
+     * Get the period as a formatted string.
+     */
+    public function getPeriodAttribute(): string
+    {
+        if ($this->report_type === ReportType::Annual) {
+            return (string) $this->year;
+        } elseif ($this->report_type === ReportType::Monthly && $this->month) {
+            return Carbon::createFromDate($this->year, $this->month)->format('F Y');
+        }
+        return '';
+    }
+
+    /**
      * Scope to filter by owner type.
      */
     public function scopeForOwnerType($query, OwnerType $ownerType)

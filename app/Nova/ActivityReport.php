@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Enums\OwnerType;
 use App\Enums\ReportType;
 use App\Enums\UserRole;
+use App\Nova\Actions\GenerateActivityReportPdf;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
@@ -209,7 +210,9 @@ class ActivityReport extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            new GenerateActivityReportPdf(),
+        ];
     }
 }
 
