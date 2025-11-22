@@ -1,0 +1,100 @@
+🚀 Release MS-1.20.0 - Sistema Report Attività
+
+Ciao Team!
+
+Siamo orgogliosi di annunciare la Release MS-1.20.0 - una versione importante che introduce il nuovo sistema di Report Attività per clienti e organizzazioni, con generazione automatica di report mensili e annuali.
+
+---
+
+🎯 COSA C'È DI NUOVO
+
+📊 Sistema Report Attività Completo
+- Generazione Report Mensili e Annuali - Nuovo sistema per generare automaticamente report attività per ogni cliente o organizzazione
+- PDF Professionali - Report PDF con logo, footer personalizzato e tabella dettagliata di tutti i ticket completati nel periodo
+- Traduzione Automatica - I report vengono generati nella lingua preferita del cliente/organizzazione (Italiano o Inglese)
+- Generazione Automatica - Possibilità di schedulare la generazione automatica dei report mensili il 1° di ogni mese
+
+📅 Tracciamento Date Ticket
+- Date Rilascio e Completamento - Nuovo sistema per tracciare automaticamente le date di rilascio e completamento dei ticket
+- Calcolo Automatico - Le date vengono calcolate automaticamente dai log delle modifiche di stato
+- Comando Artisan - Nuovo comando story:calculate-dates per ricalcolare le date per tutti i ticket esistenti
+
+🔧 Miglioramenti Interfaccia
+- Duplicazione Ticket Migliorata - I ticket duplicati ora preservano correttamente i campi "Problem Reason" e "Waiting Reason"
+- Interfaccia Ticket Archiviati - Aggiunte nuove colonne per visualizzare date di rilascio e completamento
+- Storico Ticket Collassabile - Il pannello "Storico e attività del ticket" è ora collassabile per una migliore esperienza utente
+
+---
+
+👥 PER CHI È QUESTA RELEASE
+
+👨‍💼 Admin
+- Gestione Report - Interfaccia Nova completa per visualizzare tutti i report generati
+- Controllo Qualità - Possibilità di rigenerare report manualmente se necessario
+- Monitoraggio - Filtri avanzati per cercare report per periodo, cliente, organizzazione
+
+🏢 Clienti e Organizzazioni
+- Dashboard Report - Nuovo menu "Report Attività" per visualizzare i propri report disponibili
+- Download PDF - Download diretto dei report PDF con tutti i dettagli delle attività completate
+- Lingua Preferita - Configurazione della lingua preferita per i report (Italiano o Inglese)
+
+👨‍💻 Developer
+- Nuovi Comandi Artisan - Comandi per calcolo date ticket e generazione report
+- Documentazione Completa - Documentazione dettagliata di tutti i comandi Artisan disponibili
+- Job Asincroni - Generazione PDF tramite job queue (Horizon) per performance migliorate
+
+---
+
+📋 DETTAGLI RILASCIO
+
+- Versione: MS-1.20.0
+- Data: 22/11/2025
+- Stato: Disponibile
+
+---
+
+⚠️ NOTA IMPORTANTE
+
+Variabili Ambiente
+Per il corretto funzionamento in produzione, è necessario aggiungere le seguenti variabili al file .env:
+
+# MS-1.20.0 - Activity Reports Feature
+ENABLE_GENERATE_MONTHLY_ACTIVITY_REPORTS=false
+PLATFORM_NAME="Centro Servizi Montagna"
+PLATFORM_ACRONYM=CSM
+PDF_FOOTER="MONTAGNA SERVIZI S.C.P.A.<br>Via Errico Petrella 19 - 20124 - Milano (MI)<br>PEC montagnaserviziscpa@legalmail.it - email info@montagnaservizi.com<br>C.F./P.IVA: 11790660960"
+
+Per i dettagli completi, vedere changelog/MS-1.20.0-ENV-CHANGES.md.
+
+Post-Deployment
+Dopo il deployment, eseguire i seguenti comandi:
+
+1. Calcolare date ticket esistenti:
+   php artisan story:calculate-dates
+
+2. Generare report iniziali (opzionale):
+   php artisan orchestrator:activity-report-generate
+
+3. Verificare Horizon - Assicurarsi che Horizon sia attivo per l'elaborazione asincrona dei PDF
+
+Migrations
+Eseguire tutte le migrations per creare le nuove tabelle e colonne:
+- activity_reports - Tabella per i report attività
+- stories.released_at e stories.done_at - Nuovi campi per le date
+- users.activity_report_language e organizations.activity_report_language - Campi per lingua preferita
+
+---
+
+🎉 GRAZIE!
+
+Grazie per il vostro supporto e feedback continuo! Questa release rappresenta un importante passo avanti nella gestione e comunicazione delle attività completate con i nostri clienti.
+
+Buon lavoro!
+
+---
+
+Team Orchestrator
+Webmapp S.r.l.
+
+Per domande o assistenza, contattate il team tecnico.
+
