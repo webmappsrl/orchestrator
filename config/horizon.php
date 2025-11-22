@@ -88,6 +88,7 @@ return [
     */
 
     'waits' => [
+        'database:default' => 60,
         'redis:default' => 60,
     ],
 
@@ -185,7 +186,7 @@ return [
 
     'defaults' => [
         'supervisor-1' => [
-            'connection' => 'redis',
+            'connection' => 'database',
             'queue' => ['default'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
