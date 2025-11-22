@@ -28,6 +28,19 @@ php artisan optimize
 mkdir -p storage/app/dompdf/fonts storage/app/dompdf/tmp
 chmod -R 755 storage/app/dompdf
 
+# Create activity reports directory for PDF storage
+mkdir -p storage/app/public/activity-reports
+chmod -R 755 storage/app/public/activity-reports
+
+# Create PDF logo directory if it doesn't exist
+mkdir -p storage/app/pdf-logo
+chmod -R 755 storage/app/pdf-logo
+
+# Create symbolic link for storage if it doesn't exist
+if [ ! -L public/storage ] && [ ! -d public/storage ]; then
+    php artisan storage:link
+fi
+
 #initializes null scores for the customers (one time needed for score sorting)
 php artisan orchestrator:initialize-scores
 
