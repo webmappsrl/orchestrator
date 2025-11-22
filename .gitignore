@@ -20,6 +20,7 @@ docker-compose.yml
 /storage/app/database
 /storage/app/pdf-logo
 /storage/app/dompdf
+/storage/app/public/activity-reports
 /storage/json
 /storage/json/conf
 settings.json

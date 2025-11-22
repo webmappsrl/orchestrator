@@ -40,6 +40,7 @@ use App\Nova\StoryShowedByCustomer;
 use App\Nova\Tag;
 use App\Nova\TicketReport;
 use App\Nova\ActivityReport;
+use App\Nova\CustomerActivityReport;
 use App\Nova\ToBeTestedStory;
 use App\Nova\User;
 use App\Nova\Organization;
@@ -205,6 +206,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(ArchivedStoryShowedByCustomer::class),
                     MenuItem::resource(StoryShowedByCustomer::class),
+                    MenuItem::resource(CustomerActivityReport::class),
                     MenuGroup::make(__('FundRaising'), [
                         MenuItem::resource(CustomerFundraisingOpportunity::class),
                         MenuItem::resource(CustomerFundraisingProject::class),
