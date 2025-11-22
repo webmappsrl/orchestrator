@@ -261,10 +261,11 @@ class ActivityReportPdfController extends Controller
 
         // Generate table rows
         $tableRows = '';
+        $baseUrl = config('app.url', 'http://localhost:8099');
         $stories = $activityReport->stories()->orderBy('created_at', 'asc')->get();
         foreach ($stories as $story) {
-            $createdAt = $story->created_at ? $story->created_at->format('d/m/Y') : '-';
-            $releasedAt = $story->released_at ? $story->released_at->format('d/m/Y') : '-';
+            $storyId = $story->id;
+            $storyUrl = $baseUrl . '/resources/archived-story-showed-by-customers/' . $storyId;
             $doneAt = $story->done_at ? $story->done_at->format('d/m/Y') : '-';
             $title = htmlspecialchars($story->name ?? '-');
             $description = htmlspecialchars(strip_tags($story->customer_request ?? '-'));
@@ -272,8 +273,7 @@ class ActivityReportPdfController extends Controller
 
             $tableRows .= '
             <tr>
-                <td>' . $createdAt . '</td>
-                <td>' . $releasedAt . '</td>
+                <td><a href="' . $storyUrl . '" style="color: #2FBDA5; text-decoration: none; font-weight: bold;">#' . $storyId . '</a></td>
                 <td>' . $doneAt . '</td>
                 <td>' . $title . '</td>
                 <td class="description">' . $description . '</td>
@@ -296,8 +296,7 @@ class ActivityReportPdfController extends Controller
                 <table>
                     <thead>
                         <tr>
-                            <th>' . __('Created At') . '</th>
-                            <th>' . __('Released At') . '</th>
+                            <th>' . __('ID') . '</th>
                             <th>' . __('Done At') . '</th>
                             <th>' . __('Title') . '</th>
                             <th>' . __('Request') . '</th>
