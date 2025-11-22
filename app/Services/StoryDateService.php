@@ -11,6 +11,7 @@ class StoryDateService
 {
     /**
      * Calculate and return the released_at date from story logs
+     * Returns the most recent release date if multiple releases exist
      *
      * @param Story $story
      * @return \Carbon\Carbon|null
@@ -18,7 +19,7 @@ class StoryDateService
     public function calculateReleasedAt(Story $story): ?\Carbon\Carbon
     {
         $logs = $story->storyLogs()
-            ->orderBy('viewed_at', 'asc')
+            ->orderBy('viewed_at', 'desc')
             ->get();
 
         foreach ($logs as $log) {
@@ -33,6 +34,7 @@ class StoryDateService
 
     /**
      * Calculate and return the done_at date from story logs
+     * Returns the most recent done date if multiple done status changes exist
      * If status is Done but no done_at date is found in logs, use released_at as done_at
      *
      * @param Story $story
@@ -41,7 +43,7 @@ class StoryDateService
     public function calculateDoneAt(Story $story): ?\Carbon\Carbon
     {
         $logs = $story->storyLogs()
-            ->orderBy('viewed_at', 'asc')
+            ->orderBy('viewed_at', 'desc')
             ->get();
 
         foreach ($logs as $log) {
