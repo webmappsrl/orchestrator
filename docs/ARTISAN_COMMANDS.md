@@ -18,6 +18,7 @@ Questo documento elenca tutti i comandi Artisan definiti nell'applicazione Orche
    - 3.2. [orchestrator:import-products](#32-orchestratorimport-products)
    - 3.3. [orchestrator:process-inbound-emails](#33-orchestratorprocess-inbound-emails)
    - 3.4. [orchestrator:initialize-scores](#34-orchestratorinitialize-scores)
+   - 3.5. [orchestrator:activity-report-generate](#35-orchestratoractivity-report-generate)
 4. [Database Commands](#database-commands)
    - 4.1. [app:initialize-database](#41-appinitialize-database)
 5. [User Commands](#user-commands)
@@ -444,6 +445,61 @@ php artisan orchestrator:initialize-scores
 
 ---
 
+### 3.5. orchestrator:activity-report-generate
+
+↑ [Torna all'indice](#indice)
+
+**File:** `app/Console/Commands/GenerateMonthlyActivityReports.php`
+
+**Signature:**
+```bash
+orchestrator:activity-report-generate 
+    {--year= : The year for the report (defaults to previous month)}
+    {--month= : The month for the report (defaults to previous month)}
+```
+
+**Description:**
+Generate monthly activity reports for all customers and organizations with at least one ticket in the specified month.
+
+**Opzioni:**
+- `--year=` - L'anno per il report (default: mese precedente)
+- `--month=` - Il mese per il report (default: mese precedente)
+
+**Comportamento:**
+1. Determina anno e mese (default: mese precedente se non specificati)
+2. Itera su tutti i customers con ruolo `Customer`
+3. Verifica se il customer ha almeno un ticket con `done_at` nel periodo specificato
+4. Se sì, dispatcha un job `GenerateActivityReportPdfJob` per quel customer
+5. Itera su tutte le organizzazioni
+6. Verifica se l'organizzazione ha almeno un ticket con `done_at` nel periodo (ticket creati da utenti appartenenti all'organizzazione)
+7. Se sì, dispatcha un job `GenerateActivityReportPdfJob` per quell'organizzazione
+8. I job vengono processati in coda e generano i PDF automaticamente
+
+**Job Dispatched:**
+- Il job `GenerateActivityReportPdfJob` crea un `ActivityReport`, sincronizza i ticket associati e genera il PDF
+
+**Schedule:**
+- Eseguito il 1° di ogni mese alle 12:00 (timezone: Europe/Rome) per il mese precedente
+- Configurabile via `config('orchestrator.tasks.generate_monthly_activity_reports')`
+- Abilitabile/disabilitabile via `ENABLE_GENERATE_MONTHLY_ACTIVITY_REPORTS` in `.env` (default: `false`)
+
+**Esempio:**
+```bash
+# Genera report per il mese precedente (default)
+php artisan orchestrator:activity-report-generate
+
+# Genera report per un mese specifico
+php artisan orchestrator:activity-report-generate --year=2025 --month=11
+```
+
+**Note:**
+- Questo comando è schedulato automaticamente (vedi `app/Console/Kernel.php`)
+- I job vengono processati in coda (vedi `config/queue.php`)
+- I PDF vengono salvati in `storage/app/public/activity-reports/`
+- I report vengono creati solo per customers/organizzazioni che hanno almeno un ticket completato nel periodo
+
+---
+
 ## Database Commands
 
 ↑ [Torna all'indice](#indice)
@@ -627,6 +683,7 @@ php artisan tag:projects
 | `orchestrator:import-products` | `ImportProducts.php` | Manuale | `path` (required) |
 | `orchestrator:process-inbound-emails` | `ProcessInboundEmailsCommand.php` | Ogni 5 min | - |
 | `orchestrator:initialize-scores` | `InitializeNullCustomersScore.php` | Manuale | - |
+| `orchestrator:activity-report-generate` | `GenerateMonthlyActivityReports.php` | 1° del mese 12:00 | `--year`, `--month` |
 | **Database Commands** |
 | `app:initialize-database` | `InitializeDatabase.php` | Manuale | `--force` |
 | **User Commands** |
@@ -657,6 +714,6 @@ php artisan tag:projects
 
 ---
 
-**Ultimo aggiornamento:** Gennaio 2025  
+**Ultimo aggiornamento:** Novembre 2025  
 **Versione:** MS-1.20.0
 
