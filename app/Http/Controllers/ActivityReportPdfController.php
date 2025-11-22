@@ -58,8 +58,10 @@ class ActivityReportPdfController extends Controller
             // Generate PDF HTML
             $html = $this->generatePdfHtml($activityReport, $language);
 
-            // Generate PDF
-            $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
+            // Generate PDF with PHP enabled for inline scripts
+            $pdf = Pdf::loadHTML($html)
+                ->setPaper('a4', 'portrait')
+                ->setOption('enable_php', true);
 
             // Generate filename: [platform_acronym]_YYYY_MM_[translated_report_type]_[owner_name].pdf
             $platformAcronym = config('orchestrator.platform_acronym', 'CSM');
@@ -166,7 +168,7 @@ class ActivityReportPdfController extends Controller
         $style = '
         <style>
             @page {
-                margin: 120px 50px 80px 50px;
+                margin: 120px 50px 100px 50px;
             }
 
             .header {
@@ -183,12 +185,20 @@ class ActivityReportPdfController extends Controller
 
             .footer {
                 position: fixed;
-                bottom: -50px;
+                bottom: -60px;
                 left: 0;
                 right: 0;
                 text-align: center;
                 font-size: 12px;
                 color: #777;
+            }
+            
+            .footer-pagination {
+                text-align: right;
+                font-size: 9px;
+                color: #777;
+                margin-top: 5px;
+                padding-right: 20px;
             }
 
             .content {
@@ -243,17 +253,57 @@ class ActivityReportPdfController extends Controller
             }
         </style>';
 
+        // Generate filename for pagination
+        $platformAcronym = config('orchestrator.platform_acronym', 'CSM');
+        $ownerNameForFilename = $activityReport->owner_name ?? 'Unknown';
+        $cleanOwnerName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $ownerNameForFilename);
+        $cleanOwnerName = preg_replace('/_+/', '_', $cleanOwnerName);
+        $cleanOwnerName = trim($cleanOwnerName, '_');
+        $cleanOwnerName = mb_substr($cleanOwnerName, 0, 50);
+        $reportTypeText = $this->getTranslatedReportTypeText($activityReport->report_type, $language);
+        
+        if ($activityReport->report_type === \App\Enums\ReportType::Monthly) {
+            $monthFormatted = str_pad($activityReport->month, 2, '0', STR_PAD_LEFT);
+            $filenameForPagination = $platformAcronym . '_' . $activityReport->year . '_' . $monthFormatted . '_' . $reportTypeText . '_' . $cleanOwnerName . '.pdf';
+        } else {
+            $filenameForPagination = $platformAcronym . '_' . $activityReport->year . '_' . $reportTypeText . '_' . $cleanOwnerName . '.pdf';
+        }
+        
         $header = '<div class="header">' . $logoHtml . '</div>';
-        // Footer with HTML support (not escaped)
-        $footer = '<div class="footer"><p>' . $footerText . '</p></div>';
+        // Footer with HTML support (not escaped) and pagination via inline PHP script
+        $pageText = __('page');
+        $footer = '<div class="footer"><p>' . $footerText . '</p>
+            <script type="text/php">
+            if (isset($pdf)) {
+                $font = $fontMetrics->get_font("Helvetica", "normal");
+                $fontSize = 9;
+                $text = "' . htmlspecialchars($filenameForPagination) . ' : ' . htmlspecialchars($pageText) . ' {PAGE_NUM} / {PAGE_COUNT}";
+                $textWidth = $fontMetrics->get_text_width($text, $font, $fontSize);
+                $pageWidth = $pdf->get_width();
+                $pageHeight = $pdf->get_height();
+                $x = $pageWidth - $textWidth - 20; // Right aligned with 20px margin
+                $y = $pageHeight - 15; // Bottom with 15px margin
+                $pdf->page_text($x, $y, $text, $font, $fontSize, array(0.5, 0.5, 0.5));
+            }
+            </script></div>';
 
         // Generate summary page
         $ownerName = $activityReport->owner_name ?? '-';
         
+        // Get owner type label (Customer or Organization) with translation
+        $ownerTypeLabel = '';
+        if ($activityReport->owner_type === \App\Enums\OwnerType::Customer) {
+            $ownerTypeLabel = __('Customer');
+        } elseif ($activityReport->owner_type === \App\Enums\OwnerType::Organization) {
+            $ownerTypeLabel = __('Organization');
+        }
+        
         // Generate period with translated month name
         $period = '-';
+        $periodForTitle = '-';
         if ($activityReport->report_type === \App\Enums\ReportType::Annual) {
             $period = (string) $activityReport->year;
+            $periodForTitle = (string) $activityReport->year;
         } elseif ($activityReport->report_type === \App\Enums\ReportType::Monthly && $activityReport->month) {
             // Set locale for Carbon to translate month name
             $originalLocale = Carbon::getLocale();
@@ -261,6 +311,7 @@ class ActivityReportPdfController extends Controller
             $periodDate = Carbon::createFromDate($activityReport->year, $activityReport->month);
             $monthName = $periodDate->translatedFormat('F'); // Gets translated month name
             $period = $monthName . ' ' . $activityReport->year;
+            $periodForTitle = $monthName . ' / ' . $activityReport->year;
             Carbon::setLocale($originalLocale); // Restore original locale
         }
         
@@ -269,7 +320,7 @@ class ActivityReportPdfController extends Controller
         $summaryHtml = '
         <div class="summary">
             <h2>' . __('Report Summary') . '</h2>
-            <p><strong>' . __('Owner') . ':</strong> ' . htmlspecialchars($ownerName) . '</p>
+            <p><strong>' . __('Owner') . ':</strong> ' . htmlspecialchars($ownerName) . ($ownerTypeLabel ? ' (' . $ownerTypeLabel . ')' : '') . '</p>
             <p><strong>' . __('Period') . ':</strong> ' . htmlspecialchars($period) . '</p>
             <p><strong>' . __('Report Type') . ':</strong> ' . ($activityReport->report_type->value === 'monthly' ? __('Monthly') : __('Annual')) . '</p>
             <p><strong>' . __('Number of Tickets') . ':</strong> ' . $storiesCount . '</p>
@@ -308,8 +359,8 @@ class ActivityReportPdfController extends Controller
         <body>
             ' . $header . '
             ' . $footer . '
-            <h1>' . __('Activity Report') . '</h1>
-            <p style="text-align: center; font-size: 14px; color: #666; margin-top: -10px; margin-bottom: 20px;">' . htmlspecialchars(config('orchestrator.platform_name', 'Centro Servizi Montagna')) . '</p>
+            <h1>' . htmlspecialchars($platformAcronym) . ' - ' . __('Activity Report') . ' - ' . htmlspecialchars($periodForTitle) . '</h1>
+            <p style="text-align: center; font-size: 14px; color: #666; margin-top: -10px; margin-bottom: 20px;">' . __('Owner') . ': ' . htmlspecialchars($ownerName) . '</p>
             ' . $summaryHtml . '
             <h2>' . __('Tickets List') . '</h2>
             <div class="content">

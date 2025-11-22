@@ -615,5 +615,7 @@
   "Monthly": "Monthly",
   "Annual": "Annual",
   "Number of Tickets": "Number of Tickets",
-  "Creator": "Creator"
+  "Creator": "Creator",
+  "Organization": "Organization",
+  "page": "page"
 }
