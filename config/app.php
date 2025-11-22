@@ -13,8 +13,8 @@ return [
     |
     */
 
-    'version' => 'MS-1.20.0',
-    'release' => 'MS-1.20.0',
+    'version' => 'MS-1.20.1',
+    'release' => 'MS-1.20.1',
     'release_date' => '22/11/2025',
 
     /*
