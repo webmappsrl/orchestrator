@@ -18,12 +18,14 @@ use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\Fields\Stack;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
+use Illuminate\Support\Str;
 
 class Story extends Resource
 {
@@ -187,7 +189,6 @@ class Story extends Resource
     {
         $fields = [
             ID::make()->sortable(),
-            $this->createdAtField(),
             $this->typeField($request),
             $this->statusField($request),
             $this->waitingReasonField(),
@@ -197,7 +198,6 @@ class Story extends Resource
             $this->testedByField(),
             $this->infoField($request),
             $this->estimatedHoursField($request),
-            $this->updatedAtField(),
             $this->deadlineField($request),
             $this->tagsField(),
             Files::make(__('Documents'), 'documents')
@@ -207,18 +207,104 @@ class Story extends Resource
             $this->descriptionField(),
             $this->titleField(),
             $this->customerRequestField($request),
-            $this->userActivityField()->canSee(function ($request) {
-                if ($request->user() == null) {
-                    return false;
-                }
-                return ! $request->user()->hasRole(UserRole::Customer);
-            }),
-            HasMany::make(__('Logs'), 'views', StoryLog::class)->canSee(function ($request) {
-                if ($request->user() == null) {
-                    return false;
-                }
-                return ! $request->user()->hasRole(UserRole::Customer);
-            }),
+            
+            // Ticket history and activities panel
+            new Panel(__('Ticket history and activities'), [
+                DateTime::make(__('Created At'), 'created_at')
+                    ->displayUsing(function ($date) {
+                        return $date ? $date->format('d/m/Y H:i') : '-';
+                    })
+                    ->hideWhenCreating()
+                    ->hideWhenUpdating(),
+                
+                DateTime::make(__('Updated At'), 'updated_at')
+                    ->displayUsing(function ($date) {
+                        return $date ? $date->format('d/m/Y H:i') : '-';
+                    })
+                    ->hideWhenCreating()
+                    ->hideWhenUpdating(),
+                
+                DateTime::make(__('Released At'), 'released_at')
+                    ->displayUsing(function ($date) {
+                        return $date ? $date->format('d/m/Y H:i') : '-';
+                    })
+                    ->hideWhenCreating()
+                    ->hideWhenUpdating(),
+                
+                DateTime::make(__('Done At'), 'done_at')
+                    ->displayUsing(function ($date) {
+                        return $date ? $date->format('d/m/Y H:i') : '-';
+                    })
+                    ->hideWhenCreating()
+                    ->hideWhenUpdating(),
+                
+                Text::make(__('Story Log'), function () {
+                    $logs = $this->storyLogs()->with('user')->orderBy('viewed_at', 'desc')->get();
+                    
+                    if ($logs->isEmpty()) {
+                        return __('No log entries found.');
+                    }
+                    
+                    $logEntries = [];
+                    foreach ($logs as $log) {
+                        $userName = $log->user ? $log->user->name : __('Unknown User');
+                        $date = $log->viewed_at ? $log->viewed_at->format('d/m/Y H:i') : '-';
+                        
+                        $changes = $log->changes ?? [];
+                        $statusChange = null;
+                        $otherChanges = [];
+                        
+                        foreach ($changes as $key => $value) {
+                            if ($key === 'watch' || $key === 'updated_at') {
+                                continue; // Skip watch and updated_at entries
+                            }
+                            
+                            if ($key === 'status') {
+                                $statusValue = is_array($value) ? json_encode($value) : (string)$value;
+                                $statusChange = 'status: <strong>' . $statusValue . '</strong>';
+                            } elseif ($key === 'description') {
+                                $otherChanges[] = __('Description') . ': ' . __('changed');
+                            } elseif (is_array($value)) {
+                                $otherChanges[] = $key . ': ' . json_encode($value);
+                            } else {
+                                $displayValue = Str::limit((string)$value, 100, '...');
+                                $otherChanges[] = $key . ': ' . $displayValue;
+                            }
+                        }
+                        
+                        $changeParts = [];
+                        if ($statusChange) {
+                            $changeParts[] = $statusChange;
+                        }
+                        if (!empty($otherChanges)) {
+                            $changeParts = array_merge($changeParts, $otherChanges);
+                        }
+                        
+                        if (!empty($changeParts)) {
+                            $logEntries[] = '[' . $date . '] ' . $userName . ' / ' . implode(' / ', $changeParts);
+                        }
+                    }
+                    
+                    return implode('<br>', $logEntries);
+                })
+                    ->asHtml()
+                    ->hideWhenCreating()
+                    ->hideWhenUpdating()
+                    ->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
+                        return ! $request->user()->hasRole(UserRole::Customer);
+                    }),
+                
+                $this->userActivityField()->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+                    return ! $request->user()->hasRole(UserRole::Customer);
+                }),
+            ]),
+            
             BelongsToMany::make(__('Child Stories'), 'childStories', Story::class)
                 ->nullable()
                 ->searchable()
@@ -243,6 +329,10 @@ class Story extends Resource
         ];
 
         return array_map(function ($field) {
+            // Panel doesn't support onlyOnDetail(), so skip it
+            if ($field instanceof Panel) {
+                return $field;
+            }
             return $field->onlyOnDetail();
         }, $fields);
     }
