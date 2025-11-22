@@ -87,18 +87,44 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             }
 
             // Get the language preference from customer or organization
+            // Reload activity report with relationships to ensure we have fresh data
+            $activityReport->refresh();
+            $activityReport->load(['customer', 'organization']);
+            
             $language = 'it'; // Default to Italian
+            
+            Log::info('Activity report PDF generation - checking language', [
+                'activity_report_id' => $activityReport->id,
+                'owner_type' => $this->ownerType->value,
+                'customer_id' => $this->customerId,
+                'organization_id' => $this->organizationId,
+                'activity_report_customer_id' => $activityReport->customer_id,
+                'activity_report_organization_id' => $activityReport->organization_id,
+                'customer_loaded' => $activityReport->customer ? 'yes' : 'no',
+                'organization_loaded' => $activityReport->organization ? 'yes' : 'no',
+            ]);
+            
             if ($this->ownerType === OwnerType::Customer && $this->customerId) {
+                // Reload customer to ensure we have fresh data
                 $customer = User::find($this->customerId);
                 if ($customer && $customer->activity_report_language) {
                     $language = $customer->activity_report_language;
                 }
             } elseif ($this->ownerType === OwnerType::Organization && $this->organizationId) {
+                // Reload organization to ensure we have fresh data
                 $organization = Organization::find($this->organizationId);
                 if ($organization && $organization->activity_report_language) {
                     $language = $organization->activity_report_language;
                 }
             }
+            
+            Log::info('Activity report PDF generation language', [
+                'activity_report_id' => $activityReport->id,
+                'owner_type' => $this->ownerType->value,
+                'customer_id' => $this->customerId,
+                'organization_id' => $this->organizationId,
+                'language' => $language,
+            ]);
 
             // Set the locale for PDF generation
             App::setLocale($language);
@@ -109,7 +135,7 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             // Generate PDF
             $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
 
-            // Generate filename: [APP_NAME]_[name]_Activity_monthly_report_YYYY_MM.pdf
+            // Generate filename with translated text: [APP_NAME]_[name]_[translated_report_name]_YYYY_MM.pdf
             $appName = config('app.name', 'Orchestrator');
             $ownerName = $activityReport->owner_name ?? 'Unknown';
             
@@ -119,15 +145,53 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             $cleanOwnerName = trim($cleanOwnerName, '_'); // Remove leading/trailing underscores
             $cleanOwnerName = mb_substr($cleanOwnerName, 0, 50); // Limit length
             
-            // Format month with leading zero
-            $monthFormatted = str_pad($this->month, 2, '0', STR_PAD_LEFT);
+            // Get translated report type name
+            if ($activityReport->report_type === ReportType::Monthly) {
+                $reportTypeName = $this->getTranslatedReportTypeName($language, 'monthly');
+                // Format month with leading zero
+                $monthFormatted = str_pad($this->month, 2, '0', STR_PAD_LEFT);
+                $period = $this->year . '_' . $monthFormatted;
+            } else {
+                $reportTypeName = $this->getTranslatedReportTypeName($language, 'annual');
+                $period = (string) $this->year;
+            }
             
-            $filename = $appName . '_' . $cleanOwnerName . '_Activity_monthly_report_' . $this->year . '_' . $monthFormatted . '.pdf';
+            Log::info('Activity report PDF filename generation', [
+                'activity_report_id' => $activityReport->id,
+                'language' => $language,
+                'report_type' => $activityReport->report_type->value,
+                'report_type_name' => $reportTypeName,
+            ]);
+            
+            // Clean translated report type name
+            $cleanReportTypeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $reportTypeName);
+            $cleanReportTypeName = preg_replace('/_+/', '_', $cleanReportTypeName);
+            $cleanReportTypeName = trim($cleanReportTypeName, '_');
+            
+            $filename = $appName . '_' . $cleanOwnerName . '_' . $cleanReportTypeName . '_' . $period . '.pdf';
+            
+            Log::info('Activity report PDF filename final', [
+                'activity_report_id' => $activityReport->id,
+                'filename' => $filename,
+            ]);
 
             // Ensure storage/app/public/activity-reports directory exists
             $storagePath = storage_path('app/public/activity-reports');
             if (!File::exists($storagePath)) {
                 File::makeDirectory($storagePath, 0755, true);
+            }
+
+            // Delete old PDF file if it exists and has a different name
+            if ($activityReport->pdf_url) {
+                $oldFilename = basename(parse_url($activityReport->pdf_url, PHP_URL_PATH));
+                $oldPdfPath = $storagePath . '/' . $oldFilename;
+                if ($oldFilename !== $filename && File::exists($oldPdfPath)) {
+                    File::delete($oldPdfPath);
+                    Log::info('Deleted old PDF file', [
+                        'old_filename' => $oldFilename,
+                        'new_filename' => $filename,
+                    ]);
+                }
             }
 
             // Save PDF to storage
@@ -332,6 +396,49 @@ class GenerateActivityReportPdfJob implements ShouldQueue
         </html>';
 
         return $html;
+    }
+
+    /**
+     * Get translated report type name for filename.
+     *
+     * @param  string  $language
+     * @param  string  $type  'monthly' or 'annual'
+     * @return string
+     */
+    private function getTranslatedReportTypeName(string $language, string $type): string
+    {
+        // Set locale temporarily to get translation
+        $originalLocale = App::getLocale();
+        App::setLocale($language);
+        
+        $translations = [
+            'it' => [
+                'monthly' => 'Relazione_attivita_mensile',
+                'annual' => 'Relazione_attivita_annuale',
+            ],
+            'en' => [
+                'monthly' => 'Activity_monthly_report',
+                'annual' => 'Activity_annual_report',
+            ],
+            'fr' => [
+                'monthly' => 'Rapport_activite_mensuel',
+                'annual' => 'Rapport_activite_annuel',
+            ],
+            'es' => [
+                'monthly' => 'Informe_actividad_mensual',
+                'annual' => 'Informe_actividad_anual',
+            ],
+            'de' => [
+                'monthly' => 'Aktivitaetsbericht_monatlich',
+                'annual' => 'Aktivitaetsbericht_jaehrlich',
+            ],
+        ];
+        
+        // Restore original locale
+        App::setLocale($originalLocale);
+        
+        // Return translation or fallback to English
+        return $translations[$language][$type] ?? $translations['en'][$type] ?? 'Activity_report';
     }
 
     /**
