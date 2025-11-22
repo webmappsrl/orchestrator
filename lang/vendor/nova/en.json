@@ -606,5 +606,12 @@
   "Modify the estimate (hours) if needed": "Modify the estimate (hours) if needed",
   "Convert Ticket to Tag": "Convert Ticket to Tag",
   "Do you want to convert the selected ticket to tag?": "Do you want to convert the selected ticket to tag?",
-  "Ticket converted to tag": "Ticket converted to tag"
+  "Ticket converted to tag": "Ticket converted to tag",
+  "Activity Report": "Activity Report",
+  "Report Summary": "Report Summary",
+  "Period": "Period",
+  "Report Type": "Report Type",
+  "Tickets List": "Tickets List",
+  "Monthly": "Monthly",
+  "Annual": "Annual"
 }

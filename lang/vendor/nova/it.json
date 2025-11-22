@@ -420,5 +420,12 @@
   "The :attribute field is required when status is Waiting.": "Il campo :attribute è obbligatorio quando lo stato è In attesa.",
   "The :attribute field is required when status is Problem.": "Il campo :attribute è obbligatorio quando lo stato è Problema.",
   "Activity monthly report": "Relazione_attivita_mensile",
-  "Activity annual report": "Relazione_attivita_annuale"
+  "Activity annual report": "Relazione_attivita_annuale",
+  "Activity Report": "Relazione Attività",
+  "Report Summary": "Riepilogo Report",
+  "Period": "Periodo",
+  "Report Type": "Tipo di Report",
+  "Tickets List": "Lista Ticket",
+  "Monthly": "Mensile",
+  "Annual": "Annuale"
 }

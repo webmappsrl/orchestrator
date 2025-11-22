@@ -130,7 +130,7 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             App::setLocale($language);
 
             // Generate PDF HTML
-            $html = $this->generatePdfHtml($activityReport);
+            $html = $this->generatePdfHtml($activityReport, $language);
 
             // Generate PDF
             $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
@@ -226,7 +226,7 @@ class GenerateActivityReportPdfJob implements ShouldQueue
     /**
      * Generate HTML content for PDF (same logic as controller).
      */
-    private function generatePdfHtml(ActivityReport $activityReport): string
+    private function generatePdfHtml(ActivityReport $activityReport, string $language = 'it'): string
     {
         $logoPath = config('orchestrator.pdf_logo_path');
         $logoHtml = '';
@@ -338,7 +338,7 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             <h2>' . __('Report Summary') . '</h2>
             <p><strong>' . __('Owner') . ':</strong> ' . htmlspecialchars($ownerName) . '</p>
             <p><strong>' . __('Period') . ':</strong> ' . htmlspecialchars($period) . '</p>
-            <p><strong>' . __('Report Type') . ':</strong> ' . __('' . ucfirst($activityReport->report_type->value)) . '</p>
+            <p><strong>' . __('Report Type') . ':</strong> ' . ($activityReport->report_type->value === 'monthly' ? __('Monthly') : __('Annual')) . '</p>
             <p><strong>' . __('Number of Tickets') . ':</strong> ' . $storiesCount . '</p>
         </div>';
 
@@ -349,7 +349,8 @@ class GenerateActivityReportPdfJob implements ShouldQueue
         foreach ($stories as $story) {
             $storyId = $story->id;
             $storyUrl = $baseUrl . '/resources/archived-story-showed-by-customers/' . $storyId;
-            $doneAt = $story->done_at ? $story->done_at->format('d/m/Y') : '-';
+            $dateFormat = $language === 'it' ? 'd/m/Y' : 'Y-m-d';
+            $doneAt = $story->done_at ? $story->done_at->format($dateFormat) : '-';
             $title = htmlspecialchars($story->name ?? '-');
             $description = htmlspecialchars(strip_tags($story->customer_request ?? '-'));
             $description = mb_strimwidth($description, 0, 100, '...');
