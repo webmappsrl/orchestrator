@@ -178,6 +178,134 @@
         </div>
 
         <div class="release-list">
+            <!-- MS-1.20.0 -->
+            <div class="release-card">
+                <div class="release-header">
+                    <h2 class="release-version">MS-1.20.0</h2>
+                    <span class="release-date">22 Novembre 2025</span>
+                </div>
+                <div class="release-content">
+                    <div class="release-html-content">
+                        <h1>🚀 Release MS-1.20.0 - Sistema Report Attività</h1>
+
+                        <p><strong>Ciao Team!</strong> 👋</p>
+
+                        <p>Siamo orgogliosi di annunciare la <strong>Release MS-1.20.0</strong> - una versione importante che introduce il <strong>nuovo sistema di Report Attività</strong> per clienti e organizzazioni, con generazione automatica di report mensili e annuali.</p>
+
+                        <hr>
+
+                        <h2>🎯 COSA C'È DI NUOVO</h2>
+
+                        <h3>📊 Sistema Report Attività Completo</h3>
+                        <ul>
+                        <li><strong>Generazione Report Mensili e Annuali</strong> - Nuovo sistema per generare automaticamente report attività per ogni cliente o organizzazione</li>
+                        <li><strong>PDF Professionali</strong> - Report PDF con logo, footer personalizzato e tabella dettagliata di tutti i ticket completati nel periodo</li>
+                        <li><strong>Traduzione Automatica</strong> - I report vengono generati nella lingua preferita del cliente/organizzazione (Italiano o Inglese)</li>
+                        <li><strong>Generazione Automatica</strong> - Possibilità di schedulare la generazione automatica dei report mensili il 1° di ogni mese</li>
+                        </ul>
+
+                        <h3>📅 Tracciamento Date Ticket</h3>
+                        <ul>
+                        <li><strong>Date Rilascio e Completamento</strong> - Nuovo sistema per tracciare automaticamente le date di rilascio e completamento dei ticket</li>
+                        <li><strong>Calcolo Automatico</strong> - Le date vengono calcolate automaticamente dai log delle modifiche di stato</li>
+                        <li><strong>Comando Artisan</strong> - Nuovo comando <code>story:calculate-dates</code> per ricalcolare le date per tutti i ticket esistenti</li>
+                        </ul>
+
+                        <h3>🔧 Miglioramenti Interfaccia</h3>
+                        <ul>
+                        <li><strong>Duplicazione Ticket Migliorata</strong> - I ticket duplicati ora preservano correttamente i campi "Problem Reason" e "Waiting Reason"</li>
+                        <li><strong>Interfaccia Ticket Archiviati</strong> - Aggiunte nuove colonne per visualizzare date di rilascio e completamento</li>
+                        <li><strong>Storico Ticket Collassabile</strong> - Il pannello "Storico e attività del ticket" è ora collassabile per una migliore esperienza utente</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>👥 PER CHI È QUESTA RELEASE</h2>
+
+                        <h3>👨‍💼 Admin</h3>
+                        <ul>
+                        <li><strong>Gestione Report</strong> - Interfaccia Nova completa per visualizzare tutti i report generati</li>
+                        <li><strong>Controllo Qualità</strong> - Possibilità di rigenerare report manualmente se necessario</li>
+                        <li><strong>Monitoraggio</strong> - Filtri avanzati per cercare report per periodo, cliente, organizzazione</li>
+                        </ul>
+
+                        <h3>🏢 Clienti e Organizzazioni</h3>
+                        <ul>
+                        <li><strong>Dashboard Report</strong> - Nuovo menu "Report Attività" per visualizzare i propri report disponibili</li>
+                        <li><strong>Download PDF</strong> - Download diretto dei report PDF con tutti i dettagli delle attività completate</li>
+                        <li><strong>Lingua Preferita</strong> - Configurazione della lingua preferita per i report (Italiano o Inglese)</li>
+                        </ul>
+
+                        <h3>👨‍💻 Developer</h3>
+                        <ul>
+                        <li><strong>Nuovi Comandi Artisan</strong> - Comandi per calcolo date ticket e generazione report</li>
+                        <li><strong>Documentazione Completa</strong> - Documentazione dettagliata di tutti i comandi Artisan disponibili</li>
+                        <li><strong>Job Asincroni</strong> - Generazione PDF tramite job queue (Horizon) per performance migliorate</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>📋 DETTAGLI RILASCIO</h2>
+
+                        <ul>
+                        <li><strong>Versione:</strong> MS-1.20.0</li>
+                        <li><strong>Data:</strong> 22/11/2025</li>
+                        <li><strong>Stato:</strong> Disponibile</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>⚠️ NOTA IMPORTANTE</h2>
+
+                        <h3>Variabili Ambiente</h3>
+                        <p>Per il corretto funzionamento in produzione, è necessario aggiungere le seguenti variabili al file <code>.env</code>:</p>
+
+                        <pre><code># MS-1.20.0 - Activity Reports Feature
+ENABLE_GENERATE_MONTHLY_ACTIVITY_REPORTS=false
+PLATFORM_NAME="Centro Servizi Montagna"
+PLATFORM_ACRONYM=CSM
+PDF_FOOTER="MONTAGNA SERVIZI S.C.P.A.&lt;br&gt;Via Errico Petrella 19 - 20124 - Milano (MI)&lt;br&gt;PEC montagnaserviziscpa@legalmail.it - email info@montagnaservizi.com&lt;br&gt;C.F./P.IVA: 11790660960"</code></pre>
+
+                        <p>Per i dettagli completi, vedere <code>changelog/MS-1.20.0-ENV-CHANGES.md</code>.</p>
+
+                        <h3>Post-Deployment</h3>
+                        <p>Dopo il deployment, eseguire i seguenti comandi:</p>
+
+                        <ol>
+                        <li><strong>Calcolare date ticket esistenti:</strong>
+                        <pre><code>php artisan story:calculate-dates</code></pre>
+                        </li>
+                        <li><strong>Generare report iniziali (opzionale):</strong>
+                        <pre><code>php artisan orchestrator:activity-report-generate</code></pre>
+                        </li>
+                        <li><strong>Verificare Horizon</strong> - Assicurarsi che Horizon sia attivo per l'elaborazione asincrona dei PDF</li>
+                        </ol>
+
+                        <h3>Migrations</h3>
+                        <p>Eseguire tutte le migrations per creare le nuove tabelle e colonne:</p>
+                        <ul>
+                        <li><code>activity_reports</code> - Tabella per i report attività</li>
+                        <li><code>stories.released_at</code> e <code>stories.done_at</code> - Nuovi campi per le date</li>
+                        <li><code>users.activity_report_language</code> e <code>organizations.activity_report_language</code> - Campi per lingua preferita</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>🎉 GRAZIE!</h2>
+
+                        <p>Grazie per il vostro supporto e feedback continuo! Questa release rappresenta un importante passo avanti nella gestione e comunicazione delle attività completate con i nostri clienti.</p>
+
+                        <p><strong>Buon lavoro!</strong> 🙌</p>
+
+                        <hr>
+
+                        <p><strong>Team Orchestrator</strong><br><em>Webmapp S.r.l.</em></p>
+
+                        <p><em>Per domande o assistenza, contattate il team tecnico.</em></p>
+                    </div>
+                </div>
+            </div>
+
             <!-- MS-1.19.0 -->
             <div class="release-card">
                 <div class="release-header">
