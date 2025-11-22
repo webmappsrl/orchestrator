@@ -209,7 +209,7 @@ class Story extends Resource
             $this->customerRequestField($request),
             
             // Ticket history and activities panel
-            new Panel(__('Ticket history and activities'), [
+            Panel::make(__('Ticket history and activities'), [
                 DateTime::make(__('Created At'), 'created_at')
                     ->displayUsing(function ($date) {
                         return $date ? $date->format('d/m/Y H:i') : '-';
@@ -303,7 +303,7 @@ class Story extends Resource
                     }
                     return ! $request->user()->hasRole(UserRole::Customer);
                 }),
-            ]),
+            ])->collapsible(),
             
             BelongsToMany::make(__('Child Stories'), 'childStories', Story::class)
                 ->nullable()

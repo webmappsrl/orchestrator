@@ -213,7 +213,7 @@ class TicketReport extends Resource
             $this->customerRequestField($request),
             
             // Ticket history and activities panel
-            new Panel(__('Ticket history and activities'), [
+            Panel::make(__('Ticket history and activities'), [
                 DateTime::make(__('Created At'), 'created_at')
                     ->displayUsing(function ($date) {
                         return $date ? $date->format('d/m/Y H:i') : '-';
@@ -286,7 +286,7 @@ class TicketReport extends Resource
                     ->asHtml(),
                 
                 $this->userActivityField(),
-            ]),
+            ])->collapsible(),
             
             BelongsToMany::make(__('Child Stories'), 'childStories', Story::class)
                 ->nullable()
