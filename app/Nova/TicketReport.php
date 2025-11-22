@@ -24,6 +24,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Resource;
 use App\Nova\Deadline as novaDeadline;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class TicketReport extends Resource
 {
@@ -296,8 +297,7 @@ class TicketReport extends Resource
                         return false;
                     }
                     return empty($this->parent_id);
-                })
-                ->filterable(),
+                }),
             BelongsTo::make(__('Parent Story'), 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
@@ -335,7 +335,7 @@ class TicketReport extends Resource
     {
         return [
             new Filters\TicketReportStatusFilter(),
-            new Filters\CreatorStoryFilter(),
+            (new NovaSearchableBelongsToFilter(__('Creator')))->fieldAttribute('creator')->filterBy('creator_id'),
             new Filters\TicketReportOrganizationFilter(),
         ];
     }
