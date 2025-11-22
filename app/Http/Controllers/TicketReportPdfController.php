@@ -1,60 +1,69 @@
 <?php
 
-namespace App\Nova\Actions;
+namespace App\Http\Controllers;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Collection;
-use Laravel\Nova\Actions\Action;
-use Laravel\Nova\Fields\ActionFields;
-use Laravel\Nova\Http\Requests\NovaRequest;
-use App\Models\Story;
-use App\Enums\UserRole;
+use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Story;
+use App\Enums\StoryStatus;
+use App\Enums\StoryType;
 use Carbon\Carbon;
 
-class ExportTicketReportToPdf extends Action
+class TicketReportPdfController extends Controller
 {
-    use InteractsWithQueue, Queueable;
-
-    /**
-     * The displayable name of the action.
-     *
-     * @return string
-     */
-    public function name()
+    public function download(Request $request)
     {
-        return __('Esporta Report PDF');
-    }
+        // Applica gli stessi filtri della indexQuery di TicketReport
+        $query = Story::query()
+            ->where('status', StoryStatus::Done->value)
+            ->where('type', '!=', StoryType::Scrum->value);
 
-    /**
-     * Perform the action on the given models.
-     *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
-     * @return mixed
-     */
-    public function handle(ActionFields $fields, Collection $models)
-    {
-        // Per action standalone, i filtri vengono passati nella query string
-        // Passiamo tutti i parametri della query alla route del PDF
-        $queryParams = request()->only([
-            'creator_id',
-            'organization_id', 
-            'status',
-            'done_at_start',
-            'done_at_end'
-        ]);
+        // Applica filtri opzionali
+        if ($request->has('creator_id') && $request->creator_id) {
+            $query->where('creator_id', $request->creator_id);
+        }
 
-        // Rimuovi i parametri null o vuoti
-        $queryParams = array_filter($queryParams, function($value) {
-            return $value !== null && $value !== '';
-        });
+        if ($request->has('organization_id') && $request->organization_id) {
+            $query->whereHas('creator.organizations', function ($q) use ($request) {
+                $q->where('organizations.id', $request->organization_id);
+            });
+        }
 
-        // Crea l'URL per il download con i filtri applicati
-        $url = route('ticket-report.pdf.download', $queryParams);
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
 
-        return Action::redirect($url);
+        // Filtri per range date su done_at
+        if ($request->has('done_at_start') && $request->done_at_start) {
+            $query->whereNotNull('done_at')
+                ->whereDate('done_at', '>=', $request->done_at_start);
+        }
+
+        if ($request->has('done_at_end') && $request->done_at_end) {
+            $query->whereNotNull('done_at')
+                ->whereDate('done_at', '<=', $request->done_at_end);
+        }
+
+        $stories = $query->orderBy('created_at', 'asc')->get();
+
+        // Prepara i dati per il PDF
+        $data = [
+            'stories' => $stories,
+            'title' => 'Report Attività Ticket',
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        // Genera l'HTML per la tabella
+        $html = $this->generatePdfHtml($data);
+
+        // Genera il PDF
+        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+
+        // Nome del file
+        $filename = 'report-tickets-' . Carbon::now()->format('Y-m-d_His') . '.pdf';
+
+        // Restituisce il PDF per il download
+        return $pdf->download($filename);
     }
 
     /**
@@ -203,56 +212,5 @@ class ExportTicketReportToPdf extends Action
 
         return $html;
     }
-
-    /**
-     * Get the fields available on the action.
-     *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return array
-     */
-    public function fields(NovaRequest $request)
-    {
-        return [];
-    }
-
-    /**
-     * Indicate that this action can be run without any models.
-     * This allows running the action on all filtered results.
-     *
-     * @return bool
-     */
-    public function standalone()
-    {
-        return true;
-    }
-
-    /**
-     * Determine if the action is visible for the given request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return bool
-     */
-    public function authorizedToSee($request)
-    {
-        if ($request->user() == null) {
-            return false;
-        }
-        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
-    }
-
-    /**
-     * Determine if the action is executable for the given request.
-     * For standalone actions, $model can be null.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Illuminate\Database\Eloquent\Model|null  $model
-     * @return bool
-     */
-    public function authorizedToRun($request, $model = null)
-    {
-        if ($request->user() == null) {
-            return false;
-        }
-        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
-    }
 }
+

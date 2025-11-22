@@ -322,7 +322,19 @@ class TicketReport extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            new Actions\ExportTicketReportToPdf(),
+            (new Actions\ExportTicketReportToPdf())
+                ->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                })
+                ->canRun(function ($request, $model) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
+                }),
         ];
     }
 
