@@ -25,9 +25,13 @@ Questo documento elenca tutti i punti nel codice dove lo stato di un ticket vien
    - 4.1. [Process Inbound Emails](#41-process-inbound-emails)
 5. [Comandi Manuali](#5-comandi-manuali)
    - 5.1. [Update Story Status](#51-update-story-status)
-6. [Riepilogo Tabellare](#-riepilogo-tabellare)
-7. [Note Importanti](#-note-importanti)
-8. [Debugging](#️-debugging)
+6. [Creazione e Aggiornamento Story Logs](#6-creazione-e-aggiornamento-story-logs)
+   - 6.1. [StoryObserver::createStoryLog()](#61-storyobservercreatestorylog)
+   - 6.2. [LogStory Middleware](#62-logstory-middleware)
+   - 6.3. [SendWaitingStoryReminder Command](#63-sendwaitingstoryreminder-command)
+7. [Riepilogo Tabellare](#-riepilogo-tabellare)
+8. [Note Importanti](#-note-importanti)
+9. [Debugging](#️-debugging)
 
 ---
 
@@ -389,6 +393,152 @@ Story::where('status', StoryStatus::New->value)
 
 ---
 
+## 6. Creazione e Aggiornamento Story Logs
+
+↑ [Torna all'indice](#indice)
+
+La tabella `story_logs` viene aggiornata in diversi punti per tracciare le modifiche e le visualizzazioni dei ticket. Questa sezione descrive tutti i punti dove viene creata o aggiornata una entry in `story_logs`.
+
+### 6.1. StoryObserver::createStoryLog()
+
+↑ [Torna all'indice](#indice)
+
+**Metodo:** `StoryObserver::createStoryLog()`  
+**File:** `app/Observers/StoryObserver.php`  
+**Trigger:** Chiamato da `StoryObserver::updated()` dopo che una story viene aggiornata
+
+**Comportamento:**
+- Viene eseguito quando una story viene aggiornata (non alla creazione)
+- Non viene eseguito se la story è stata appena creata (`wasRecentlyCreated` o flag interno)
+- Crea una entry in `story_logs` per ogni modifica ai campi della story
+
+**Campi registrati:**
+- `story_id`: ID della story modificata
+- `user_id`: ID dell'utente che ha effettuato la modifica (o `orchestrator_artisan@webmapp.it` se nessun utente autenticato)
+- `viewed_at`: Timestamp della modifica (formato `Y-m-d H:i`)
+- `changes`: JSON con tutti i campi modificati e i loro nuovi valori
+
+**Dettagli:**
+- Il campo `description` viene registrato come `'change description'` invece del valore completo
+- Se ci sono modifiche, viene anche:
+  - Creato un log in `activity.log`
+  - Eseguito `StoryTimeService::run()` per calcolare i tempi
+  - Dispatchato il job `UpdateUsersStoriesLogJob` per aggiornare `users_stories_log`
+  - Chiamato `saveQuietly()` sulla story per evitare loop infiniti
+
+**Esempio di entry creata:**
+```php
+StoryLog::create([
+    'story_id' => $story->id,
+    'user_id' => $user->id,
+    'viewed_at' => now()->format('Y-m-d H:i'),
+    'changes' => [
+        'status' => 'progress',
+        'user_id' => 123,
+        'description' => 'change description'
+    ]
+]);
+```
+
+**Quando NON viene creata una entry:**
+- Se la story è appena stata creata (`wasRecentlyCreated`)
+- Se non ci sono campi modificati (`getDirty()` è vuoto)
+- Se viene usato `saveQuietly()` sulla story (non triggera eventi Eloquent)
+
+---
+
+### 6.2. LogStory Middleware
+
+↑ [Torna all'indice](#indice)
+
+**Middleware:** `LogStory`  
+**File:** `app/Http/Middleware/LogStory.php`  
+**Registrato in:** `app/Http/Kernel.php` (gruppi `web` e `api`)  
+**Trigger:** Ad ogni richiesta HTTP che corrisponde al pattern `/resources/*stories*/{id}`
+
+**Comportamento:**
+- Traccia le visualizzazioni delle story da parte degli utenti
+- Crea o aggiorna una entry in `story_logs` quando un utente visualizza una story
+
+**Logica:**
+1. Estrae l'ID della story dall'URL (`/resources/*stories*/{id}`)
+2. Verifica se esiste già una entry per oggi per lo stesso utente e story
+3. Se esiste:
+   - Aggiorna `updated_at` solo se sono passati almeno 30 minuti dall'ultima visualizzazione
+   - Usa `touch()` per aggiornare il timestamp
+4. Se non esiste:
+   - Crea una nuova entry con `changes['watch']` = timestamp corrente
+
+**Esempio di entry creata:**
+```php
+StoryLog::create([
+    'story_id' => $storyId,
+    'user_id' => $userId,
+    'viewed_at' => now(),
+    'changes' => ['watch' => now()->format('Y-m-d H:i:s')]
+]);
+```
+
+**Note:**
+- Questo middleware NON modifica lo stato della story
+- Serve solo per tracciare le visualizzazioni (analytics)
+- Le entry con solo `watch` vengono usate per determinare se ci sono state modifiche rilevanti (vedi `SendWaitingStoryReminder`)
+
+---
+
+### 6.3. SendWaitingStoryReminder Command
+
+↑ [Torna all'indice](#indice)
+
+**Comando:** `story:send-waiting-reminder`  
+**File:** `app/Console/Commands/SendWaitingStoryReminder.php`  
+**Schedule:** Configurabile (non schedulato di default)  
+**Trigger:** Manuale o schedulato
+
+**Comportamento:**
+- Trova tutte le story con status `Waiting` create almeno 3 giorni lavorativi fa
+- Verifica se devono ricevere un reminder email (basandosi sull'ultima modifica rilevante in `story_logs`)
+- Invia un'email di reminder al creator della story
+- Crea una entry in `story_logs` per tracciare l'invio del reminder
+
+**Creazione StoryLog:**
+Il comando crea una entry dopo aver inviato il reminder:
+
+```php
+StoryLog::create([
+    'story_id' => $story->id,
+    'user_id' => 1, // User ID fisso (sistema)
+    'viewed_at' => now()->format('Y-m-d H:i'),
+    'changes' => ['status' => StoryStatus::Waiting->value]
+]);
+```
+
+**Logica per determinare se inviare il reminder:**
+1. Cerca in `story_logs` l'ultima entry dove `changes->status = Waiting`
+2. Cerca l'ultima modifica rilevante dopo quel punto (escludendo le entry con solo `watch`)
+3. Se l'ultima modifica rilevante è più vecchia di 3 giorni lavorativi, invia il reminder
+
+**Note:**
+- Questo comando NON modifica lo stato della story
+- Serve solo per inviare reminder e tracciare l'invio in `story_logs`
+- Usa un `user_id` fisso (1) per identificare le entry create dal sistema
+
+---
+
+### Riepilogo Creazione Story Logs
+
+| Punto | Trigger | Tipo Entry | Quando NON viene creata |
+|-------|---------|------------|-------------------------|
+| **StoryObserver::createStoryLog()** | Dopo aggiornamento story | Modifiche ai campi | Se `wasRecentlyCreated`, se `getDirty()` vuoto, se `saveQuietly()` |
+| **LogStory Middleware** | Visualizzazione story | Tracciamento visualizzazione | Se già esiste entry oggi e < 30 minuti |
+| **SendWaitingStoryReminder** | Dopo invio reminder | Tracciamento reminder | Se reminder non viene inviato |
+
+**Importante:**
+- Le entry create tramite `saveQuietly()` NON vengono registrate in `story_logs` perché non triggerano eventi Eloquent
+- Le modifiche automatiche dello stato (come quelle dei comandi schedulati) spesso usano `saveQuietly()` e quindi NON creano entry in `story_logs`
+
+---
+
 ## 📊 Riepilogo Tabellare
 
 ↑ [Torna all'indice](#indice)
@@ -428,6 +578,8 @@ Story::where('status', StoryStatus::New->value)
 2. **Creazione Story Log:**
    - Tutte le modifiche (tranne quelle con `saveQuietly()`) vengono registrate in `story_logs` tramite `StoryObserver::createStoryLog()`
    - Questo significa che i comandi schedulati con `saveQuietly()` NON creano entry in `story_logs`
+   - Le visualizzazioni delle story vengono tracciate dal middleware `LogStory` (vedi sezione 6.2)
+   - Il comando `SendWaitingStoryReminder` crea entry in `story_logs` per tracciare l'invio dei reminder (vedi sezione 6.3)
 
 3. **Story Figlie:**
    - Quando cambia lo status di un ticket padre, tutte le story figlie vengono aggiornate automaticamente
