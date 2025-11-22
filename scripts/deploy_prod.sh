@@ -47,7 +47,24 @@ php artisan orchestrator:initialize-scores
 # gracefully terminate laravel horizon
 php artisan horizon:terminate
 
+# Wait for Horizon to terminate gracefully
+echo "Waiting for Horizon to terminate gracefully..."
+sleep 5
+
 php artisan up
+
+# Restart Horizon
+# If Horizon is managed by supervisor/systemd it will restart automatically
+# Otherwise, restart it manually
+echo "Restarting Horizon..."
+# Check if Horizon is managed externally, otherwise start it in background
+if ! php artisan horizon:status 2>/dev/null | grep -q 'running'; then
+    # If not managed externally, start Horizon in background
+    nohup php artisan horizon > /dev/null 2>&1 &
+    echo "Horizon restarted in background."
+else
+    echo "Horizon is managed externally (supervisor/systemd), it will restart automatically."
+fi
 
 echo "Deployment finished!"
 
