@@ -8,6 +8,7 @@ use App\Models\ActivityReport;
 use App\Models\Organization;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
@@ -243,11 +244,26 @@ class ActivityReportPdfController extends Controller
         </style>';
 
         $header = '<div class="header">' . $logoHtml . '</div>';
-        $footer = '<div class="footer"><p>' . htmlspecialchars($footerText) . '</p></div>';
+        // Footer with HTML support (not escaped)
+        $footer = '<div class="footer"><p>' . $footerText . '</p></div>';
 
         // Generate summary page
         $ownerName = $activityReport->owner_name ?? '-';
-        $period = $activityReport->period ?? '-';
+        
+        // Generate period with translated month name
+        $period = '-';
+        if ($activityReport->report_type === \App\Enums\ReportType::Annual) {
+            $period = (string) $activityReport->year;
+        } elseif ($activityReport->report_type === \App\Enums\ReportType::Monthly && $activityReport->month) {
+            // Set locale for Carbon to translate month name
+            $originalLocale = Carbon::getLocale();
+            Carbon::setLocale($language);
+            $periodDate = Carbon::createFromDate($activityReport->year, $activityReport->month);
+            $monthName = $periodDate->translatedFormat('F'); // Gets translated month name
+            $period = $monthName . ' ' . $activityReport->year;
+            Carbon::setLocale($originalLocale); // Restore original locale
+        }
+        
         $storiesCount = $activityReport->stories()->count();
         
         $summaryHtml = '
@@ -262,12 +278,13 @@ class ActivityReportPdfController extends Controller
         // Generate table rows
         $tableRows = '';
         $baseUrl = config('app.url', 'http://localhost:8099');
-        $stories = $activityReport->stories()->orderBy('created_at', 'asc')->get();
+        $stories = $activityReport->stories()->with('creator')->orderBy('created_at', 'asc')->get();
         foreach ($stories as $story) {
             $storyId = $story->id;
             $storyUrl = $baseUrl . '/resources/archived-story-showed-by-customers/' . $storyId;
             $dateFormat = $language === 'it' ? 'd/m/Y' : 'Y-m-d';
             $doneAt = $story->done_at ? $story->done_at->format($dateFormat) : '-';
+            $creatorName = $story->creator ? htmlspecialchars($story->creator->name ?? '-') : '-';
             $title = htmlspecialchars($story->name ?? '-');
             $description = htmlspecialchars(strip_tags($story->customer_request ?? '-'));
             $description = mb_strimwidth($description, 0, 100, '...');
@@ -276,6 +293,7 @@ class ActivityReportPdfController extends Controller
             <tr>
                 <td><a href="' . $storyUrl . '" style="color: #2FBDA5; text-decoration: none; font-weight: bold;">#' . $storyId . '</a></td>
                 <td>' . $doneAt . '</td>
+                <td>' . $creatorName . '</td>
                 <td>' . $title . '</td>
                 <td class="description">' . $description . '</td>
             </tr>';
@@ -291,6 +309,7 @@ class ActivityReportPdfController extends Controller
             ' . $header . '
             ' . $footer . '
             <h1>' . __('Activity Report') . '</h1>
+            <p style="text-align: center; font-size: 14px; color: #666; margin-top: -10px; margin-bottom: 20px;">' . htmlspecialchars(config('orchestrator.platform_name', 'Centro Servizi Montagna')) . '</p>
             ' . $summaryHtml . '
             <h2>' . __('Tickets List') . '</h2>
             <div class="content">
@@ -299,6 +318,7 @@ class ActivityReportPdfController extends Controller
                         <tr>
                             <th>' . __('ID') . '</th>
                             <th>' . __('Done At') . '</th>
+                            <th>' . __('Creator') . '</th>
                             <th>' . __('Title') . '</th>
                             <th>' . __('Request') . '</th>
                         </tr>

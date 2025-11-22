@@ -613,5 +613,7 @@
   "Report Type": "Report Type",
   "Tickets List": "Tickets List",
   "Monthly": "Monthly",
-  "Annual": "Annual"
+  "Annual": "Annual",
+  "Number of Tickets": "Number of Tickets",
+  "Creator": "Creator"
 }

@@ -427,5 +427,7 @@
   "Report Type": "Tipo di Report",
   "Tickets List": "Lista Ticket",
   "Monthly": "Mensile",
-  "Annual": "Annuale"
+  "Annual": "Annuale",
+  "Number of Tickets": "Numero di Ticket",
+  "Creator": "Creatore"
 }
