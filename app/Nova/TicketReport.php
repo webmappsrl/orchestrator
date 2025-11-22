@@ -77,8 +77,8 @@ class TicketReport extends Resource
 
     /**
      * Build an "index" query for the given resource.
-     * Shows only tickets with status Released or Done
-     * Supports filtering by date range via query parameters
+     * Shows only tickets with status Done (excluding Scrum type)
+     * Supports filtering by date range via query parameters on done_at
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -86,47 +86,23 @@ class TicketReport extends Resource
      */
     public static function indexQuery(NovaRequest $request, $query)
     {
-        $query = $query->whereIn('status', [
-            StoryStatus::Released->value,
-            StoryStatus::Done->value,
-        ])
-        ->where('type', '!=', StoryType::Scrum->value);
+        $query = $query->where('status', StoryStatus::Done->value)
+            ->where('type', '!=', StoryType::Scrum->value);
 
         // Support for date range filtering via query parameters
+        // Filters work only on done_at
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
 
         if ($startDate || $endDate) {
-            $query->where(function ($q) use ($startDate, $endDate) {
-                // Filter by start date: ticket must have at least one date >= start_date
-                if ($startDate) {
-                    $q->where(function ($subQ) use ($startDate) {
-                        $subQ->whereDate('created_at', '>=', $startDate)
-                            ->orWhere(function ($dateQ) use ($startDate) {
-                                $dateQ->whereNotNull('released_at')
-                                    ->whereDate('released_at', '>=', $startDate);
-                            })
-                            ->orWhere(function ($dateQ) use ($startDate) {
-                                $dateQ->whereNotNull('done_at')
-                                    ->whereDate('done_at', '>=', $startDate);
-                            });
-                    });
-                }
-                // Filter by end date: ticket must have at least one date <= end_date
-                if ($endDate) {
-                    $q->where(function ($subQ) use ($endDate) {
-                        $subQ->whereDate('created_at', '<=', $endDate)
-                            ->orWhere(function ($dateQ) use ($endDate) {
-                                $dateQ->whereNotNull('released_at')
-                                    ->whereDate('released_at', '<=', $endDate);
-                            })
-                            ->orWhere(function ($dateQ) use ($endDate) {
-                                $dateQ->whereNotNull('done_at')
-                                    ->whereDate('done_at', '<=', $endDate);
-                            });
-                    });
-                }
-            });
+            if ($startDate) {
+                $query->whereNotNull('done_at')
+                    ->whereDate('done_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->whereNotNull('done_at')
+                    ->whereDate('done_at', '<=', $endDate);
+            }
         }
 
         // Use select to ensure all columns needed for ordering are included
