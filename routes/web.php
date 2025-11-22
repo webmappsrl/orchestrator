@@ -104,9 +104,6 @@ Route::get('/download-documentation-pdf/{id}', [\App\Http\Controllers\Documentat
     ->name('documentation.pdf.download')
     ->middleware(['nova']);
 
-Route::get('/download-ticket-report-pdf', [\App\Http\Controllers\TicketReportPdfController::class, 'download'])
-    ->name('ticket-report.pdf.download')
-    ->middleware(['nova']);
 
 Route::get('/generate-activity-report-pdf/{id}', [\App\Http\Controllers\ActivityReportPdfController::class, 'generate'])
     ->name('activity-report.pdf.generate')

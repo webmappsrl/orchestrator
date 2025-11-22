@@ -38,7 +38,6 @@ use App\Nova\Quote;
 use App\Nova\RecurringProduct;
 use App\Nova\StoryShowedByCustomer;
 use App\Nova\Tag;
-use App\Nova\TicketReport;
 use App\Nova\ActivityReport;
 use App\Nova\CustomerActivityReport;
 use App\Nova\ToBeTestedStory;
@@ -248,12 +247,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                                 return false;
                             }
                             return $request->user()->hasRole(UserRole::Admin);
-                        }),
-                        MenuItem::resource(TicketReport::class)->canSee(function ($request) {
-                            if ($request->user() == null) {
-                                return false;
-                            }
-                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Developer);
                         }),
                         MenuItem::externalLink('all times', url('/report'))->openInNewTab()->canSee(function ($request) {
                             if ($request->user() == null) {
