@@ -2,21 +2,44 @@
 
 Questo documento elenca tutti i punti nel codice dove lo stato di un ticket viene modificato automaticamente, senza intervento diretto dell'utente.
 
-## 📋 Indice
+## 📋 Indice {#indice}
 
-1. [Comandi Schedulati](#comandi-schedulati)
-2. [StoryObserver](#storyobserver)
-3. [Story Model - Eventi](#story-model---eventi)
-4. [Job per Creazione Story](#job-per-creazione-story)
-5. [Comandi Manuali](#comandi-manuali)
+1. [Comandi Schedulati](#1-comandi-schedulati)
+   - 1.1. [Story Progress to Todo (18:00)](#11-story-progress-to-todo-1800)
+   - 1.2. [Story Scrum to Done (16:00)](#12-story-scrum-to-done-1600)
+   - 1.3. [Story Auto Update Status (07:45)](#13-story-auto-update-status-0745)
+2. [StoryObserver](#2-storyobserver)
+   - 2.1. [Saving Event - Solo un ticket in Progress per utente](#21-saving-event---solo-un-ticket-in-progress-per-utente)
+   - 2.2. [Updating Event - Aggiornamento richiesta cliente](#22-updating-event---aggiornamento-richiesta-cliente)
+   - 2.3. [Updated Event - Aggiornamento date Released/Done](#23-updated-event---aggiornamento-date-releaseddone)
+     - [Quando lo status cambia a Released](#quando-lo-status-cambia-a-released)
+     - [Quando lo status cambia a Done](#quando-lo-status-cambia-a-done)
+3. [Story Model - Eventi](#3-story-model---eventi)
+   - 3.1. [Saving Event - Assegnazione automatica](#31-saving-event---assegnazione-automatica)
+     - [Assegnazione Developer](#assegnazione-developer)
+     - [Rimozione Developer da New](#rimozione-developer-da-new)
+   - 3.2. [Saved Event - Aggiornamento Epic](#32-saved-event---aggiornamento-epic)
+     - [Logica Epic Status](#logica-epic-status)
+   - 3.3. [Updated Event - Sincronizzazione Story Figlie](#33-updated-event---sincronizzazione-story-figlie)
+4. [Job per Creazione Story](#4-job-per-creazione-story)
+   - 4.1. [Process Inbound Emails](#41-process-inbound-emails)
+5. [Comandi Manuali](#5-comandi-manuali)
+   - 5.1. [Update Story Status](#51-update-story-status)
+6. [Riepilogo Tabellare](#-riepilogo-tabellare)
+7. [Note Importanti](#-note-importanti)
+8. [Debugging](#️-debugging)
 
 ---
 
 ## 1. Comandi Schedulati
 
+↑ [Torna all'indice](#indice)
+
 I seguenti comandi vengono eseguiti automaticamente in base alla configurazione in `app/Console/Kernel.php`:
 
 ### 1.1. Story Progress to Todo (18:00)
+
+↑ [Torna all'indice](#indice)
 
 **Comando:** `story:progress-to-todo`  
 **File:** `app/Console/Commands/MoveProgressStoriesInTodoCommand.php`  
@@ -39,6 +62,8 @@ Story::where('status', StoryStatus::Progress->value)
 ---
 
 ### 1.2. Story Scrum to Done (16:00)
+
+↑ [Torna all'indice](#indice)
 
 **Comando:** `story:scrum-to-done`  
 **File:** `app/Console/Commands/MoveScrumStoriesInDoneCommand.php`  
@@ -66,6 +91,8 @@ Story::where('type', StoryType::Scrum->value)
 
 ### 1.3. Story Auto Update Status (07:45)
 
+↑ [Torna all'indice](#indice)
+
 **Comando:** `story:auto-update-status`  
 **File:** `app/Console/Commands/AutoUpdateStoryStatus.php`  
 **Schedule:** Giornaliero alle 07:45 (timezone: Europe/Rome)  
@@ -91,9 +118,13 @@ Story::where('status', StoryStatus::Released->value)
 
 ## 2. StoryObserver
 
+↑ [Torna all'indice](#indice)
+
 Gli eventi gestiti da `app/Observers/StoryObserver.php` che modificano automaticamente lo stato:
 
 ### 2.1. Saving Event - Solo un ticket in Progress per utente
+
+↑ [Torna all'indice](#indice)
 
 **Metodo:** `StoryObserver::saving()`  
 **Trigger:** Prima del salvataggio di un ticket
@@ -120,6 +151,8 @@ if ($story->isDirty('status') && $story->status === StoryStatus::Progress->value
 
 ### 2.2. Updating Event - Aggiornamento richiesta cliente
 
+↑ [Torna all'indice](#indice)
+
 **Metodo:** `StoryObserver::updating()`  
 **Trigger:** Prima dell'aggiornamento di un ticket
 
@@ -142,16 +175,23 @@ if (!$story->wasRecentlyCreated
 
 ### 2.3. Updated Event - Aggiornamento date Released/Done
 
+↑ [Torna all'indice](#indice)
+
 **Metodo:** `StoryObserver::updateReleaseAndDoneDates()`  
 **Trigger:** Dopo l'aggiornamento di un ticket
 
 **Comportamento:**
 
 #### Quando lo status cambia a `Released`:
+
+↑ [Torna all'indice](#indice)
 - Imposta `released_at = now()` se non è già valorizzato
 - Salva con `saveQuietly()` (NON triggera eventi)
 
 #### Quando lo status cambia a `Done`:
+
+↑ [Torna all'indice](#indice)
+
 1. Chiama `StoryDateService::updateDates()` per cercare le date dai log
 2. Se `done_at` è ancora null dopo la ricerca nei log:
    - Usa `released_at` se disponibile
@@ -183,9 +223,13 @@ if ($statusChanged && $story->status === StoryStatus::Done->value && !$story->do
 
 ## 3. Story Model - Eventi
 
+↑ [Torna all'indice](#indice)
+
 Gli eventi gestiti direttamente nel modello `app/Models/Story.php`:
 
 ### 3.1. Saving Event - Assegnazione automatica
+
+↑ [Torna all'indice](#indice)
 
 **Metodo:** `Story::boot()` -> `saving()`  
 **Trigger:** Prima del salvataggio di un ticket
@@ -193,6 +237,8 @@ Gli eventi gestiti direttamente nel modello `app/Models/Story.php`:
 **Comportamento:**
 
 #### Assegnazione Developer:
+
+↑ [Torna all'indice](#indice)
 - Se lo status è `New` e viene assegnato un `user_id` (developer)
 - Imposta automaticamente lo status a `Assigned`
 
@@ -203,6 +249,9 @@ if ($story->status == StoryStatus::New->value && $story->user_id && $story->isDi
 ```
 
 #### Rimozione Developer da New:
+
+↑ [Torna all'indice](#indice)
+
 - Se lo status è `New` e viene cambiato lo status
 - Rimuove l'assegnazione del developer (`user_id = null`)
 
@@ -215,6 +264,8 @@ if ($story->status == StoryStatus::New->value && $story->isDirty('status')) {
 ---
 
 ### 3.2. Saved Event - Aggiornamento Epic
+
+↑ [Torna all'indice](#indice)
 
 **Metodo:** `Story::booted()` -> `saved()`  
 **Trigger:** Dopo il salvataggio di un ticket
@@ -232,7 +283,9 @@ if (!empty($story->epic)) {
 }
 ```
 
-**Logica Epic Status:**
+#### Logica Epic Status:
+
+↑ [Torna all'indice](#indice)
 - Nessuna storia -> `New`
 - Tutte `New` -> `New`
 - Tutte `Test` -> `Test`
@@ -243,6 +296,8 @@ if (!empty($story->epic)) {
 ---
 
 ### 3.3. Updated Event - Sincronizzazione Story Figlie
+
+↑ [Torna all'indice](#indice)
 
 **Metodo:** `Story::booted()` -> `updated()`  
 **Trigger:** Dopo l'aggiornamento di un ticket
@@ -265,9 +320,13 @@ if ($story->isDirty('status')) {
 
 ## 4. Job per Creazione Story
 
+↑ [Torna all'indice](#indice)
+
 Questi job non modificano lo stato ma creano nuove story con uno status iniziale:
 
 ### 4.1. Process Inbound Emails
+
+↑ [Torna all'indice](#indice)
 
 **Job:** `ProcessInboundEmails`  
 **File:** `app/Jobs/ProcessInboundEmails.php`  
@@ -303,9 +362,13 @@ $story->save(); // Triggera eventi
 
 ## 5. Comandi Manuali
 
+↑ [Torna all'indice](#indice)
+
 Questi comandi non sono schedulati ma possono essere eseguiti manualmente:
 
-### 4.1. Update Story Status
+### 5.1. Update Story Status
+
+↑ [Torna all'indice](#indice)
 
 **Comando:** `story:update-status`  
 **File:** `app/Console/Commands/UpdateStoryStatusCommand.php`
@@ -327,6 +390,8 @@ Story::where('status', StoryStatus::New->value)
 ---
 
 ## 📊 Riepilogo Tabellare
+
+↑ [Torna all'indice](#indice)
 
 | Punto | Trigger | Status Da | Status A | Save Method | Triggera Eventi |
 |-------|---------|-----------|----------|-------------|-----------------|
@@ -353,6 +418,8 @@ Story::where('status', StoryStatus::New->value)
 
 ## 🔍 Note Importanti
 
+↑ [Torna all'indice](#indice)
+
 1. **`save()` vs `saveQuietly()`:**
    - `save()` triggera tutti gli eventi Eloquent (created, updated, saving, etc.)
    - `saveQuietly()` salva il record senza triggerare eventi
@@ -373,6 +440,8 @@ Story::where('status', StoryStatus::New->value)
 ---
 
 ## 🛠️ Debugging
+
+↑ [Torna all'indice](#indice)
 
 Per verificare quale meccanismo ha causato un cambio di stato:
 
