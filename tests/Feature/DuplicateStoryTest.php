@@ -110,4 +110,58 @@ class DuplicateStoryTest extends TestCase
             $this->assertStoryCloned($latestOriginalStory, $latestDuplicatedStory);
         }
     }
+
+    /** @test */
+    public function test_duplicate_story_with_problem_status_and_problem_reason()
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        
+        // Create a story with Problem status and problem_reason
+        $originalStory = $this->createFullStory();
+        $originalStory->status = StoryStatus::Problem->value;
+        $originalStory->problem_reason = 'Test problem reason for duplication';
+        $originalStory->save();
+
+        $action = new DuplicateStory();
+        $fields = new ActionFields(collect(), collect());
+        $action->handle($fields, collect([$originalStory]));
+
+        // Find the duplicated story
+        $duplicatedStory = Story::where('id', '!=', $originalStory->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($duplicatedStory, 'Duplicated story not found.');
+        $this->assertEquals(StoryStatus::New->value, $duplicatedStory->status);
+        $this->assertEquals($originalStory->problem_reason, $duplicatedStory->problem_reason);
+        $this->assertEquals('Test problem reason for duplication', $duplicatedStory->problem_reason);
+    }
+
+    /** @test */
+    public function test_duplicate_story_with_waiting_status_and_waiting_reason()
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        
+        // Create a story with Waiting status and waiting_reason
+        $originalStory = $this->createFullStory();
+        $originalStory->status = StoryStatus::Waiting->value;
+        $originalStory->waiting_reason = 'Test waiting reason for duplication';
+        $originalStory->save();
+
+        $action = new DuplicateStory();
+        $fields = new ActionFields(collect(), collect());
+        $action->handle($fields, collect([$originalStory]));
+
+        // Find the duplicated story
+        $duplicatedStory = Story::where('id', '!=', $originalStory->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($duplicatedStory, 'Duplicated story not found.');
+        $this->assertEquals(StoryStatus::New->value, $duplicatedStory->status);
+        $this->assertEquals($originalStory->waiting_reason, $duplicatedStory->waiting_reason);
+        $this->assertEquals('Test waiting reason for duplication', $duplicatedStory->waiting_reason);
+    }
 }

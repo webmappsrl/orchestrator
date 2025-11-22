@@ -33,8 +33,35 @@ class DuplicateStory extends Action
 
         foreach ($models as $story) {
             $story->user_id = $user->id;
-            $newStory = Story::create($story->toArray());
+            // Remove status, conditional fields, and timestamps to avoid validation errors during creation
+            $storyData = $story->toArray();
+            
+            // Save problem_reason and waiting_reason if present before removing them
+            $problemReason = $storyData['problem_reason'] ?? null;
+            $waitingReason = $storyData['waiting_reason'] ?? null;
+            
+            unset(
+                $storyData['id'],
+                $storyData['status'],
+                $storyData['waiting_reason'],
+                $storyData['problem_reason'],
+                $storyData['created_at'],
+                $storyData['updated_at'],
+                $storyData['released_at'],
+                $storyData['done_at']
+            );
+            
+            $newStory = Story::create($storyData);
             $newStory->status = StoryStatus::New->value;
+            
+            // Restore problem_reason and waiting_reason if they were present
+            if (!empty($problemReason)) {
+                $newStory->problem_reason = $problemReason;
+            }
+            if (!empty($waitingReason)) {
+                $newStory->waiting_reason = $waitingReason;
+            }
+            
             $newStory->saveQuietly();
 
             // belongsTo
