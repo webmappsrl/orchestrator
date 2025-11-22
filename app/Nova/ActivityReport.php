@@ -285,5 +285,107 @@ class ActivityReport extends Resource
             new GenerateActivityReportPdf(),
         ];
     }
+
+    /**
+     * Determine if the current user can create new resources.
+     * Activity reports can only be created via jobs.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public static function authorizedToCreate(Request $request): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine if the current user can update the given resource.
+     * Activity reports can only be updated via jobs.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function authorizedToUpdate(Request $request): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine if the current user can delete the given resource.
+     * Activity reports cannot be deleted manually.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function authorizedToDelete(Request $request): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine if the current user can replicate the given resource.
+     * Activity reports cannot be replicated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function authorizedToReplicate(Request $request): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine if the current user can attach any of the given model resources.
+     * Stories are automatically synced via jobs.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    public function authorizedToAttachAny(NovaRequest $request, $model): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine if the current user can attach the given model resource.
+     * Stories are automatically synced via jobs.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    public function authorizedToAttach(NovaRequest $request, $model): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine if the current user can detach the given model resource.
+     * Stories are automatically synced via jobs.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  string  $relationship
+     * @return bool
+     */
+    public function authorizedToDetach(NovaRequest $request, $model, $relationship): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine if the current user can detach any of the given model resources.
+     * Stories are automatically synced via jobs.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  string  $relationship
+     * @return bool
+     */
+    public function authorizedToDetachAny(NovaRequest $request, $model, $relationship): bool
+    {
+        return false;
+    }
 }
 
