@@ -181,20 +181,29 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             }
 
             // Delete old PDF file if it exists and has a different name
+            // Also delete the old PDF even if filename is the same (to ensure fresh generation)
             if ($activityReport->pdf_url) {
                 $oldFilename = basename(parse_url($activityReport->pdf_url, PHP_URL_PATH));
                 $oldPdfPath = $storagePath . '/' . $oldFilename;
                 if ($oldFilename !== $filename && File::exists($oldPdfPath)) {
                     File::delete($oldPdfPath);
-                    Log::info('Deleted old PDF file', [
+                    Log::info('Deleted old PDF file (different filename)', [
                         'old_filename' => $oldFilename,
                         'new_filename' => $filename,
                     ]);
                 }
             }
+            
+            // Always delete PDF if it exists with the same filename (to ensure fresh generation)
+            $pdfPath = $storagePath . '/' . $filename;
+            if (File::exists($pdfPath)) {
+                File::delete($pdfPath);
+                Log::info('Deleted existing PDF file (same filename) for regeneration', [
+                    'filename' => $filename,
+                ]);
+            }
 
             // Save PDF to storage
-            $pdfPath = $storagePath . '/' . $filename;
             $pdf->save($pdfPath);
 
             // Generate public URL
