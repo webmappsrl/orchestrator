@@ -120,14 +120,14 @@ class FundraisingTest extends TestCase
             'name' => 'Interesse per: ' . $opportunity->name,
             'description' => 'Sono interessato a questa opportunità di finanziamento',
             'creator_id' => $this->customerUser->id,
-            'type' => StoryType::Ticket->value,
+            'type' => StoryType::Helpdesk->value,
             'status' => 'new',
         ]);
 
         $this->assertDatabaseHas('stories', [
             'name' => 'Interesse per: ' . $opportunity->name,
             'creator_id' => $this->customerUser->id,
-            'type' => StoryType::Ticket->value,
+            'type' => StoryType::Helpdesk->value,
         ]);
     }
 
