@@ -27,6 +27,7 @@ class User extends Authenticatable
         'email',
         'password',
         'roles',
+        'activity_report_language',
     ];
 
     /**

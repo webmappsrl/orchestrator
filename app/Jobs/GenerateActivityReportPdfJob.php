@@ -15,6 +15,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -85,14 +86,43 @@ class GenerateActivityReportPdfJob implements ShouldQueue
                 return; // Skip PDF generation if no tickets
             }
 
+            // Get the language preference from customer or organization
+            $language = 'it'; // Default to Italian
+            if ($this->ownerType === OwnerType::Customer && $this->customerId) {
+                $customer = User::find($this->customerId);
+                if ($customer && $customer->activity_report_language) {
+                    $language = $customer->activity_report_language;
+                }
+            } elseif ($this->ownerType === OwnerType::Organization && $this->organizationId) {
+                $organization = Organization::find($this->organizationId);
+                if ($organization && $organization->activity_report_language) {
+                    $language = $organization->activity_report_language;
+                }
+            }
+
+            // Set the locale for PDF generation
+            App::setLocale($language);
+
             // Generate PDF HTML
             $html = $this->generatePdfHtml($activityReport);
 
             // Generate PDF
             $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
 
-            // Generate filename
-            $filename = 'activity_report_' . $activityReport->id . '_' . now()->format('Ymd_His') . '.pdf';
+            // Generate filename: [APP_NAME]_[name]_Activity_monthly_report_YYYY_MM.pdf
+            $appName = config('app.name', 'Orchestrator');
+            $ownerName = $activityReport->owner_name ?? 'Unknown';
+            
+            // Clean the owner name (remove special characters, spaces, etc.)
+            $cleanOwnerName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $ownerName);
+            $cleanOwnerName = preg_replace('/_+/', '_', $cleanOwnerName); // Replace multiple underscores with single
+            $cleanOwnerName = trim($cleanOwnerName, '_'); // Remove leading/trailing underscores
+            $cleanOwnerName = mb_substr($cleanOwnerName, 0, 50); // Limit length
+            
+            // Format month with leading zero
+            $monthFormatted = str_pad($this->month, 2, '0', STR_PAD_LEFT);
+            
+            $filename = $appName . '_' . $cleanOwnerName . '_Activity_monthly_report_' . $this->year . '_' . $monthFormatted . '.pdf';
 
             // Ensure storage/app/public/activity-reports directory exists
             $storagePath = storage_path('app/public/activity-reports');

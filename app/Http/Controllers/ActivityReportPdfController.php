@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OwnerType;
 use App\Models\ActivityReport;
+use App\Models\Organization;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -32,14 +36,43 @@ class ActivityReportPdfController extends Controller
                 return redirect()->back()->with('error', __('No tickets associated with this report.'));
             }
 
+            // Get the language preference from customer or organization
+            $language = 'it'; // Default to Italian
+            if ($activityReport->owner_type === OwnerType::Customer && $activityReport->customer_id) {
+                $customer = User::find($activityReport->customer_id);
+                if ($customer && $customer->activity_report_language) {
+                    $language = $customer->activity_report_language;
+                }
+            } elseif ($activityReport->owner_type === OwnerType::Organization && $activityReport->organization_id) {
+                $organization = Organization::find($activityReport->organization_id);
+                if ($organization && $organization->activity_report_language) {
+                    $language = $organization->activity_report_language;
+                }
+            }
+
+            // Set the locale for PDF generation
+            App::setLocale($language);
+
             // Generate PDF HTML
             $html = $this->generatePdfHtml($activityReport);
 
             // Generate PDF
             $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
 
-            // Generate filename
-            $filename = 'activity_report_' . $activityReport->id . '_' . now()->format('Ymd_His') . '.pdf';
+            // Generate filename: [APP_NAME]_[name]_Activity_monthly_report_YYYY_MM.pdf
+            $appName = config('app.name', 'Orchestrator');
+            $ownerName = $activityReport->owner_name ?? 'Unknown';
+            
+            // Clean the owner name (remove special characters, spaces, etc.)
+            $cleanOwnerName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $ownerName);
+            $cleanOwnerName = preg_replace('/_+/', '_', $cleanOwnerName); // Replace multiple underscores with single
+            $cleanOwnerName = trim($cleanOwnerName, '_'); // Remove leading/trailing underscores
+            $cleanOwnerName = mb_substr($cleanOwnerName, 0, 50); // Limit length
+            
+            // Format month with leading zero
+            $monthFormatted = str_pad($activityReport->month, 2, '0', STR_PAD_LEFT);
+            
+            $filename = $appName . '_' . $cleanOwnerName . '_Activity_monthly_report_' . $activityReport->year . '_' . $monthFormatted . '.pdf';
 
             // Ensure storage/app/public/activity-reports directory exists
             $storagePath = storage_path('app/public/activity-reports');

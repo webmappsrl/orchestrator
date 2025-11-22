@@ -90,6 +90,18 @@ class User extends Resource
                 ->creationRules('required', Rules\Password::defaults())
                 ->updateRules('nullable', Rules\Password::defaults()),
 
+            Select::make(__('Activity Report Language'), 'activity_report_language')
+                ->options([
+                    'it' => __('Italian'),
+                    'en' => __('English'),
+                    'fr' => __('French'),
+                    'es' => __('Spanish'),
+                    'de' => __('German'),
+                ])
+                ->default('it')
+                ->displayUsingLabels()
+                ->help(__('Language used for generating activity reports PDFs')),
+
             BelongsToMany::make('Apps'),
             BelongsToMany::make('Organizations'),
             Text::make(__('Organizations'), function () {

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Number;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Enums\UserRole;
@@ -51,13 +52,30 @@ class Organization extends Resource
                 ->sortable()
                 ->rules('required', 'max:255'),
 
+            Select::make(__('Activity Report Language'), 'activity_report_language')
+                ->options([
+                    'it' => __('Italian'),
+                    'en' => __('English'),
+                    'fr' => __('French'),
+                    'es' => __('Spanish'),
+                    'de' => __('German'),
+                ])
+                ->default('it')
+                ->displayUsingLabels()
+                ->help(__('Language used for generating activity reports PDFs')),
+
             Number::make('Utenti', 'users_count')
                 ->sortable()
                 ->showOnIndex()
-                ->showOnDetail(),
+                ->showOnDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating()
+                ->readonly(),
 
             BelongsToMany::make('Users')
-                ->showOnDetail(),
+                ->showOnDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
         ];
     }
 
