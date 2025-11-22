@@ -78,7 +78,7 @@ class TicketReport extends Resource
     /**
      * Build an "index" query for the given resource.
      * Shows only tickets with status Done (excluding Scrum type)
-     * Supports filtering by date range via query parameters on done_at
+     * Date range filtering is handled by TicketReportDoneAtStartDateFilter and TicketReportDoneAtEndDateFilter
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -88,22 +88,6 @@ class TicketReport extends Resource
     {
         $query = $query->where('status', StoryStatus::Done->value)
             ->where('type', '!=', StoryType::Scrum->value);
-
-        // Support for date range filtering via query parameters
-        // Filters work only on done_at
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
-
-        if ($startDate || $endDate) {
-            if ($startDate) {
-                $query->whereNotNull('done_at')
-                    ->whereDate('done_at', '>=', $startDate);
-            }
-            if ($endDate) {
-                $query->whereNotNull('done_at')
-                    ->whereDate('done_at', '<=', $endDate);
-            }
-        }
 
         // Use select to ensure all columns needed for ordering are included
         return $query->select('stories.*')->orderBy('created_at', 'asc');
@@ -313,6 +297,8 @@ class TicketReport extends Resource
             new Filters\TicketReportStatusFilter(),
             (new NovaSearchableBelongsToFilter(__('Creator')))->fieldAttribute('creator')->filterBy('creator_id'),
             new Filters\TicketReportOrganizationFilter(),
+            new Filters\TicketReportDoneAtStartDateFilter(),
+            new Filters\TicketReportDoneAtEndDateFilter(),
         ];
     }
 
