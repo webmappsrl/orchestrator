@@ -66,5 +66,17 @@ else
     echo "Horizon is managed externally (supervisor/systemd), it will restart automatically."
 fi
 
+# Wait for Horizon to be fully ready
+echo "Waiting for Horizon to be ready..."
+sleep 5
+
+# Update story dates from logs
+echo "Updating story dates (released_at and done_at)..."
+php artisan story:calculate-dates
+
+# Generate activity reports for previous month (default)
+echo "Generating activity reports for previous month..."
+php artisan orchestrator:activity-report-generate
+
 echo "Deployment finished!"
 
