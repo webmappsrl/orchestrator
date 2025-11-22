@@ -163,6 +163,7 @@ class ActivityReport extends Resource
     {
         return array_merge($this->fields($request), [
             BelongsToMany::make(__('Stories'), 'stories', Story::class)
+                ->searchable()
                 ->sortable(),
         ]);
     }

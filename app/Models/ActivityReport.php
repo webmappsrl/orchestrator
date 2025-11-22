@@ -145,5 +145,51 @@ class ActivityReport extends Model
         return $query->where('owner_type', OwnerType::Organization->value)
             ->where('organization_id', $organizationId);
     }
+
+    /**
+     * Sync stories associated with this report based on done_at date, owner_type, and customer/organization.
+     */
+    public function syncStories(): void
+    {
+        $startDate = $this->start_date;
+        $endDate = $this->end_date;
+
+        // Build query for stories with done_at in the period
+        $query = Story::whereNotNull('done_at')
+            ->whereBetween('done_at', [$startDate, $endDate]);
+
+        // Filter by owner_type
+        if ($this->owner_type === OwnerType::Customer) {
+            // Filter by customer (creator_id)
+            if ($this->customer_id) {
+                $query->where('creator_id', $this->customer_id);
+            } else {
+                // No customer selected, clear all stories
+                $this->stories()->detach();
+                return;
+            }
+        } elseif ($this->owner_type === OwnerType::Organization) {
+            // Filter by organization (creator must belong to organization)
+            if ($this->organization_id) {
+                $query->whereHas('creator.organizations', function ($q) {
+                    $q->where('organizations.id', $this->organization_id);
+                });
+            } else {
+                // No organization selected, clear all stories
+                $this->stories()->detach();
+                return;
+            }
+        } else {
+            // Invalid owner_type, clear all stories
+            $this->stories()->detach();
+            return;
+        }
+
+        // Get matching story IDs
+        $matchingStoryIds = $query->pluck('id')->toArray();
+
+        // Sync stories (this will attach new ones and detach removed ones)
+        $this->stories()->sync($matchingStoryIds);
+    }
 }
 
