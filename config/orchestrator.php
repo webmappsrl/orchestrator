@@ -122,4 +122,18 @@ return [
 
     'story_max_file_size' => env('STORY_MAX_FILE_SIZE', 10) * 1024 * 1024, // Convert MB to bytes
 
+    /*
+    |--------------------------------------------------------------------------
+    | Platform Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This configuration defines the platform name and acronym used in
+    | PDF report filenames and other places. You can customize it by
+    | setting PLATFORM_NAME and PLATFORM_ACRONYM in your .env file.
+    |
+    */
+
+    'platform_name' => env('PLATFORM_NAME', 'Centro Servizi Montagna'),
+    'platform_acronym' => env('PLATFORM_ACRONYM', 'CSM'),
+
 ];

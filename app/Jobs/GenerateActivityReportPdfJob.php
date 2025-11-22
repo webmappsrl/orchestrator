@@ -135,9 +135,14 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             // Generate PDF
             $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
 
-            // Generate filename with translated text: [APP_NAME]_[name]_[translated_report_name]_YYYY_MM.pdf
-            $appName = config('app.name', 'Orchestrator');
+            // Generate filename: [platform_acronym]_YYYY_MM_[translated_report_type]_[owner_name].pdf
+            $platformAcronym = config('orchestrator.platform_acronym', 'CSM');
             $ownerName = $activityReport->owner_name ?? 'Unknown';
+            
+            // Clean the platform acronym (remove special characters, spaces, etc.)
+            $cleanPlatformAcronym = preg_replace('/[^a-zA-Z0-9_-]/', '_', $platformAcronym);
+            $cleanPlatformAcronym = preg_replace('/_+/', '_', $cleanPlatformAcronym); // Replace multiple underscores with single
+            $cleanPlatformAcronym = trim($cleanPlatformAcronym, '_'); // Remove leading/trailing underscores
             
             // Clean the owner name (remove special characters, spaces, etc.)
             $cleanOwnerName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $ownerName);
@@ -145,30 +150,24 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             $cleanOwnerName = trim($cleanOwnerName, '_'); // Remove leading/trailing underscores
             $cleanOwnerName = mb_substr($cleanOwnerName, 0, 50); // Limit length
             
-            // Get translated report type name
+            // Get translated report type text
+            $reportTypeText = $this->getTranslatedReportTypeText($activityReport->report_type, $language);
+            
+            // Generate filename based on report type
             if ($activityReport->report_type === ReportType::Monthly) {
-                $reportTypeName = $this->getTranslatedReportTypeName($language, 'monthly');
                 // Format month with leading zero
                 $monthFormatted = str_pad($this->month, 2, '0', STR_PAD_LEFT);
-                $period = $this->year . '_' . $monthFormatted;
+                $filename = $cleanPlatformAcronym . '_' . $this->year . '_' . $monthFormatted . '_' . $reportTypeText . '_' . $cleanOwnerName . '.pdf';
             } else {
-                $reportTypeName = $this->getTranslatedReportTypeName($language, 'annual');
-                $period = (string) $this->year;
+                $filename = $cleanPlatformAcronym . '_' . $this->year . '_' . $reportTypeText . '_' . $cleanOwnerName . '.pdf';
             }
             
             Log::info('Activity report PDF filename generation', [
                 'activity_report_id' => $activityReport->id,
                 'language' => $language,
                 'report_type' => $activityReport->report_type->value,
-                'report_type_name' => $reportTypeName,
+                'filename' => $filename,
             ]);
-            
-            // Clean translated report type name
-            $cleanReportTypeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $reportTypeName);
-            $cleanReportTypeName = preg_replace('/_+/', '_', $cleanReportTypeName);
-            $cleanReportTypeName = trim($cleanReportTypeName, '_');
-            
-            $filename = $appName . '_' . $cleanOwnerName . '_' . $cleanReportTypeName . '_' . $period . '.pdf';
             
             Log::info('Activity report PDF filename final', [
                 'activity_report_id' => $activityReport->id,
@@ -435,6 +434,44 @@ class GenerateActivityReportPdfJob implements ShouldQueue
         
         // Restore original locale
         App::setLocale($originalLocale);
+        
+        // Return translation or fallback to English
+        return $translations[$language][$type] ?? $translations['en'][$type] ?? 'Activity_report';
+    }
+
+    /**
+     * Get translated report type text for filename.
+     *
+     * @param  ReportType  $reportType
+     * @param  string  $language
+     * @return string
+     */
+    private function getTranslatedReportTypeText(ReportType $reportType, string $language): string
+    {
+        $translations = [
+            'it' => [
+                'monthly' => 'Report_mensile_attivita',
+                'annual' => 'Report_annuale_attivita',
+            ],
+            'en' => [
+                'monthly' => 'Monthly_activity_report',
+                'annual' => 'Annual_activity_report',
+            ],
+            'fr' => [
+                'monthly' => 'Rapport_activite_mensuel',
+                'annual' => 'Rapport_activite_annuel',
+            ],
+            'es' => [
+                'monthly' => 'Informe_actividad_mensual',
+                'annual' => 'Informe_actividad_anual',
+            ],
+            'de' => [
+                'monthly' => 'Aktivitaetsbericht_monatlich',
+                'annual' => 'Aktivitaetsbericht_jaehrlich',
+            ],
+        ];
+        
+        $type = $reportType === ReportType::Monthly ? 'monthly' : 'annual';
         
         // Return translation or fallback to English
         return $translations[$language][$type] ?? $translations['en'][$type] ?? 'Activity_report';
