@@ -197,8 +197,4 @@ class DoneEpic extends Resource
         ];
     }
 
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
 }

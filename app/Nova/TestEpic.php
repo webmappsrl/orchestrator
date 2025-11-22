@@ -201,8 +201,4 @@ class TestEpic extends Resource
         ];
     }
 
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
 }

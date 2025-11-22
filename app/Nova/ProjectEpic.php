@@ -201,8 +201,4 @@ class ProjectEpic extends Resource
         ];
     }
 
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
 }

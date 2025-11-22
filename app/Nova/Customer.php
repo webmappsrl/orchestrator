@@ -262,11 +262,6 @@ class Customer extends Resource
         return [];
     }
 
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
-
     public static function afterCreate(NovaRequest $request, Model $model)
     {
         $model->score = $model->score_cash + $model->score_pain + $model->score_business;

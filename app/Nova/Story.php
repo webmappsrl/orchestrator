@@ -105,6 +105,10 @@ class Story extends Resource
 
     public function indexBreadcrumb(NovaRequest $resourceClass, Breadcrumbs $breadcrumbs, Breadcrumb $indexBreadcrumb)
     {
+        if (is_null($indexBreadcrumb)) {
+            return Breadcrumb::indexResource($this);
+        }
+
         $previousUrl = url()->previous();
         $previousPath = parse_url($previousUrl, PHP_URL_PATH).'?'.parse_url($previousUrl, PHP_URL_QUERY);
         if (strlen($previousPath) > 60) {

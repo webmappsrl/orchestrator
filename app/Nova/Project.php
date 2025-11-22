@@ -200,8 +200,4 @@ class Project extends Resource
         ];
     }
 
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
 }

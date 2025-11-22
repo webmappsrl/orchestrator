@@ -175,8 +175,4 @@ class Deadline extends Resource
         ];
     }
 
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
 }

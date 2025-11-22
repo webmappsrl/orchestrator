@@ -50,6 +50,10 @@ use Laravel\Nova\Menu\MenuItem;
 use Laravel\Nova\Menu\MenuSection;
 use Laravel\Nova\Nova;
 use Laravel\Nova\NovaApplicationServiceProvider;
+use Formfeed\Breadcrumbs\Breadcrumbs;
+use Formfeed\Breadcrumbs\Breadcrumb;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Illuminate\Support\Arr;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
 {
@@ -63,11 +67,21 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         parent::boot();
         Nova::withBreadcrumbs(true);
 
+        // Fix per garantire che rootBreadcrumb restituisca sempre un array
+        Breadcrumbs::rootCallback(function (NovaRequest $request, Breadcrumbs $breadcrumbs, Breadcrumb $rootBreadcrumb) {
+            if (is_null($rootBreadcrumb)) {
+                $rootBreadcrumb = Breadcrumb::make(__("Home"), "/");
+            }
+            $result = Arr::wrap($rootBreadcrumb);
+            // Assicurati che sia sempre un array valido
+            return is_array($result) ? $result : [$rootBreadcrumb];
+        });
+
         Nova::style('nova-custom', public_path('/nova-custom.css'));
 
         Nova::mainMenu(function (Request $request) {
             $newStoryUrl = '/resources/stories/new';
-            if (auth()->user()->hasRole(UserRole::Customer)) {
+            if (auth()->user() != null && auth()->user()->hasRole(UserRole::Customer)) {
                 $newStoryUrl = '/resources/story-showed-by-customers/new';
             }
 

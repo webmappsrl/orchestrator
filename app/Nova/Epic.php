@@ -212,8 +212,4 @@ class Epic extends Resource
         ];
     }
 
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
 }

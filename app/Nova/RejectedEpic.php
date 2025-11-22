@@ -201,8 +201,4 @@ class RejectedEpic extends Resource
         ];
     }
 
-    public function indexBreadcrumb()
-    {
-        return null;
-    }
 }
