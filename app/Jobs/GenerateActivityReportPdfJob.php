@@ -383,7 +383,7 @@ class GenerateActivityReportPdfJob implements ShouldQueue
         // Generate table rows
         $tableRows = '';
         $baseUrl = config('app.url', 'http://localhost:8099');
-        $stories = $activityReport->stories()->with('creator')->orderBy('created_at', 'asc')->get();
+        $stories = $activityReport->stories()->with('creator')->orderBy('done_at', 'asc')->get();
         foreach ($stories as $story) {
             $storyId = $story->id;
             $storyUrl = $baseUrl . '/resources/archived-story-showed-by-customers/' . $storyId;
