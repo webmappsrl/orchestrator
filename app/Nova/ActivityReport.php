@@ -15,6 +15,7 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
+use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class ActivityReport extends Resource
 {
@@ -62,6 +63,18 @@ class ActivityReport extends Resource
     }
 
     /**
+     * Build an "index" query for the given resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        return $query->with(['customer', 'organization']);
+    }
+
+    /**
      * Determine if this resource is available for navigation.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -93,12 +106,14 @@ class ActivityReport extends Resource
                 ])
                 ->displayUsingLabels()
                 ->rules('required')
-                ->sortable(),
+                ->sortable()
+                ->hideFromIndex(),
 
             BelongsTo::make(__('Customer'), 'customer', User::class)
                 ->nullable()
                 ->searchable()
                 ->rules('required_if:owner_type,' . OwnerType::Customer->value)
+                ->hideFromIndex()
                 ->dependsOn(['owner_type'], function ($field, $request, $formData) {
                     if (isset($formData['owner_type']) && $formData['owner_type'] === OwnerType::Customer->value) {
                         $field->show();
@@ -111,12 +126,39 @@ class ActivityReport extends Resource
                 ->nullable()
                 ->searchable()
                 ->rules('required_if:owner_type,' . OwnerType::Organization->value)
+                ->hideFromIndex()
                 ->dependsOn(['owner_type'], function ($field, $request, $formData) {
                     if (isset($formData['owner_type']) && $formData['owner_type'] === OwnerType::Organization->value) {
                         $field->show();
                     } else {
                         $field->hide();
                     }
+                }),
+
+            Text::make(__('Owner'), 'owner_info')
+                ->onlyOnIndex()
+                ->displayUsing(function () {
+                    $ownerName = $this->owner_name ?? '-';
+                    $ownerType = $this->owner_type ? __(ucfirst($this->owner_type->value)) : '-';
+                    
+                    // Get language from customer or organization
+                    $language = 'it'; // default
+                    $languageLabel = 'IT';
+                    if ($this->owner_type === OwnerType::Customer && $this->customer_id) {
+                        $customer = $this->customer;
+                        if ($customer && $customer->activity_report_language) {
+                            $language = $customer->activity_report_language;
+                            $languageLabel = strtoupper($customer->activity_report_language);
+                        }
+                    } elseif ($this->owner_type === OwnerType::Organization && $this->organization_id) {
+                        $organization = $this->organization;
+                        if ($organization && $organization->activity_report_language) {
+                            $language = $organization->activity_report_language;
+                            $languageLabel = strtoupper($organization->activity_report_language);
+                        }
+                    }
+                    
+                    return $ownerName . ' - ' . $ownerType . ' - ' . $languageLabel;
                 }),
 
             Select::make(__('Report Type'), 'report_type')
@@ -126,12 +168,14 @@ class ActivityReport extends Resource
                 ])
                 ->displayUsingLabels()
                 ->rules('required')
-                ->sortable(),
+                ->sortable()
+                ->hideFromIndex(),
 
             Number::make(__('Year'), 'year')
                 ->rules('required', 'integer', 'min:2000', 'max:' . (now()->year + 1))
                 ->default(fn() => now()->year)
-                ->sortable(),
+                ->sortable()
+                ->hideFromIndex(),
 
             Number::make(__('Month'), 'month')
                 ->rules('required_if:report_type,' . ReportType::Monthly->value, 'nullable', 'integer', 'min:1', 'max:12')
@@ -144,11 +188,31 @@ class ActivityReport extends Resource
                     }
                 }),
 
+            Text::make(__('Period'), 'period_info')
+                ->onlyOnIndex()
+                ->displayUsing(function () {
+                    $year = $this->year ?? '-';
+                    
+                    if ($this->report_type === ReportType::Annual) {
+                        return $year . ' (yearly)';
+                    } elseif ($this->report_type === ReportType::Monthly && $this->month) {
+                        $monthFormatted = str_pad($this->month, 2, '0', STR_PAD_LEFT);
+                        return $year . '-' . $monthFormatted;
+                    }
+                    
+                    return $year;
+                }),
+
             Text::make(__('PDF URL'), 'pdf_url')
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
                 ->displayUsing(function ($url) {
-                    return $url ? '<a href="' . $url . '" target="_blank" class="link-default">' . __('Download PDF') . '</a>' : '-';
+                    if (!$url) {
+                        return '-';
+                    }
+                    // Extract filename from URL
+                    $filename = basename(parse_url($url, PHP_URL_PATH));
+                    return '<a href="' . $url . '" target="_blank" class="link-default">' . htmlspecialchars($filename) . '</a>';
                 })
                 ->asHtml(),
         ];
@@ -188,7 +252,14 @@ class ActivityReport extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new \App\Nova\Filters\ActivityReportOwnerTypeFilter,
+            new \App\Nova\Filters\ActivityReportReportTypeFilter,
+            (new NovaSearchableBelongsToFilter(__('Customer')))->fieldAttribute('customer')->filterBy('customer_id'),
+            (new NovaSearchableBelongsToFilter(__('Organization')))->fieldAttribute('organization')->filterBy('organization_id'),
+            new \App\Nova\Filters\ActivityReportYearFilter,
+            new \App\Nova\Filters\ActivityReportMonthFilter,
+        ];
     }
 
     /**
