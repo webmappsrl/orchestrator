@@ -132,10 +132,8 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             // Generate PDF HTML
             $html = $this->generatePdfHtml($activityReport, $language);
 
-            // Generate PDF with PHP enabled for inline scripts
-            $pdf = Pdf::loadHTML($html)
-                ->setPaper('a4', 'portrait')
-                ->setOption('enable_php', true);
+            // Generate PDF
+            $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
 
             // Generate filename: [platform_acronym]_YYYY_MM_[translated_report_type]_[owner_name].pdf
             $platformAcronym = config('orchestrator.platform_acronym', 'CSM');
@@ -230,6 +228,8 @@ class GenerateActivityReportPdfJob implements ShouldQueue
      */
     private function generatePdfHtml(ActivityReport $activityReport, string $language = 'it'): string
     {
+        // Get platform acronym for title
+        $platformAcronym = config('orchestrator.platform_acronym', 'CSM');
         $logoPath = config('orchestrator.pdf_logo_path');
         $logoHtml = '';
         
@@ -275,13 +275,6 @@ class GenerateActivityReportPdfJob implements ShouldQueue
                 color: #777;
             }
             
-            .footer-pagination {
-                text-align: right;
-                font-size: 9px;
-                color: #777;
-                margin-top: 5px;
-                padding-right: 20px;
-            }
 
             .content {
                 margin-top: 20px;
@@ -335,41 +328,9 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             }
         </style>';
 
-        // Generate filename for pagination
-        $platformAcronym = config('orchestrator.platform_acronym', 'CSM');
-        $ownerNameForFilename = $activityReport->owner_name ?? 'Unknown';
-        $cleanOwnerName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $ownerNameForFilename);
-        $cleanOwnerName = preg_replace('/_+/', '_', $cleanOwnerName);
-        $cleanOwnerName = trim($cleanOwnerName, '_');
-        $cleanOwnerName = mb_substr($cleanOwnerName, 0, 50);
-        $reportTypeText = $this->getTranslatedReportTypeText($activityReport->report_type, $language);
-        
-        if ($activityReport->report_type === ReportType::Monthly) {
-            $monthFormatted = str_pad($activityReport->month, 2, '0', STR_PAD_LEFT);
-            $filenameForPagination = $platformAcronym . '_' . $activityReport->year . '_' . $monthFormatted . '_' . $reportTypeText . '_' . $cleanOwnerName . '.pdf';
-        } else {
-            $filenameForPagination = $platformAcronym . '_' . $activityReport->year . '_' . $reportTypeText . '_' . $cleanOwnerName . '.pdf';
-        }
-        
-        // Get page text translated
-        $pageText = __('page');
-        
         $header = '<div class="header">' . $logoHtml . '</div>';
-        // Footer with HTML support (not escaped) and pagination via inline PHP script
-        $footer = '<div class="footer"><p>' . $footerText . '</p>
-            <script type="text/php">
-            if (isset($pdf)) {
-                $font = $fontMetrics->get_font("Helvetica", "normal");
-                $fontSize = 9;
-                $text = "' . htmlspecialchars($filenameForPagination) . ' : ' . htmlspecialchars($pageText) . ' {PAGE_NUM} / {PAGE_COUNT}";
-                $textWidth = $fontMetrics->get_text_width($text, $font, $fontSize);
-                $pageWidth = $pdf->get_width();
-                $pageHeight = $pdf->get_height();
-                $x = $pageWidth - $textWidth - 20; // Right aligned with 20px margin
-                $y = $pageHeight - 15; // Bottom with 15px margin
-                $pdf->page_text($x, $y, $text, $font, $fontSize, array(0.5, 0.5, 0.5));
-            }
-            </script></div>';
+        // Footer with HTML support (not escaped)
+        $footer = '<div class="footer"><p>' . $footerText . '</p></div>';
 
         // Generate summary page
         $ownerName = $activityReport->owner_name ?? '-';
