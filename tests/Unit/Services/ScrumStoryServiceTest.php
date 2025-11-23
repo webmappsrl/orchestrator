@@ -48,9 +48,11 @@ class ScrumStoryServiceTest extends TestCase
         $this->assertEquals($timestamp->format('Y-m-d H:i:s'), $story->released_at->format('Y-m-d H:i:s'));
         $this->assertEquals($timestamp->format('Y-m-d H:i:s'), $story->done_at->format('Y-m-d H:i:s'));
 
-        // Check StoryLog was created
-        $log = StoryLog::where('story_id', $story->id)->latest()->first();
-        $this->assertNotNull($log);
+        // Check StoryLog was created (should be the latest one with status 'done')
+        $log = StoryLog::where('story_id', $story->id)
+            ->where('changes->status', StoryStatus::Done->value)
+            ->first();
+        $this->assertNotNull($log, 'StoryLog with status done should be created');
         $this->assertEquals($user->id, $log->user_id);
         $this->assertEquals(['status' => StoryStatus::Done->value], $log->changes);
     }

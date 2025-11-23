@@ -27,6 +27,27 @@ class StoryObserver
         // Mark this story as newly created
         self::$createdStories[$story->id] = true;
 
+        // Determine user_id for the log
+        // If story has user_id, use it; otherwise use logged in user; if null, don't create log
+        $userId = $story->user_id;
+        if (!$userId) {
+            $loggedUser = Auth::user();
+            $userId = $loggedUser ? $loggedUser->id : null;
+        }
+
+        // Create StoryLog entry for story creation only if we have a user_id
+        // (user_id is required in story_logs table)
+        if ($userId) {
+            StoryLog::create([
+                'story_id' => $story->id,
+                'user_id' => $userId,
+                'viewed_at' => now()->format('Y-m-d H:i:s'),
+                'changes' => [
+                    'status' => $story->status,
+                ],
+            ]);
+        }
+
         $user = Auth::user();
         if (is_null($user)) {
             $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();

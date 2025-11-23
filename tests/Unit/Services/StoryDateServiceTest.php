@@ -34,6 +34,9 @@ class StoryDateServiceTest extends TestCase
             'status' => StoryStatus::Released->value,
         ]);
 
+        // Delete the creation log (created by observer) to avoid interference
+        StoryLog::where('story_id', $story->id)->delete();
+
         // Create multiple story logs with different release dates
         // First release: 30/10/2025
         StoryLog::create([
@@ -78,6 +81,9 @@ class StoryDateServiceTest extends TestCase
             'status' => StoryStatus::Progress->value,
         ]);
 
+        // Delete the creation log (created by observer) to avoid interference
+        StoryLog::where('story_id', $story->id)->delete();
+
         // Create a story log without release status
         StoryLog::create([
             'story_id' => $story->id,
@@ -105,6 +111,9 @@ class StoryDateServiceTest extends TestCase
         $story = Story::factory()->create([
             'status' => StoryStatus::Done->value,
         ]);
+
+        // Delete the creation log (created by observer) to avoid interference
+        StoryLog::where('story_id', $story->id)->delete();
 
         // Create multiple story logs with different done dates
         // First done: 15/11/2025
@@ -149,6 +158,9 @@ class StoryDateServiceTest extends TestCase
             'status' => StoryStatus::Released->value,
             'released_at' => null,
         ]);
+
+        // Delete the creation log (created by observer) to avoid interference
+        StoryLog::where('story_id', $story->id)->delete();
 
         // Create multiple story logs with different release dates
         // First release: 30/10/2025
