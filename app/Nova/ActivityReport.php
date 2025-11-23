@@ -15,6 +15,7 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
+use Laravel\Nova\Query\Search\SearchableRelation;
 use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class ActivityReport extends Resource
@@ -41,6 +42,20 @@ class ActivityReport extends Resource
     public static $search = [
         'id',
     ];
+
+    /**
+     * Get the searchable columns for the resource.
+     *
+     * @return array
+     */
+    public static function searchableColumns()
+    {
+        return [
+            'id',
+            new SearchableRelation('customer', 'name'),
+            new SearchableRelation('organization', 'name'),
+        ];
+    }
 
     /**
      * Get the displayable label of the resource.
