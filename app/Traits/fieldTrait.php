@@ -116,6 +116,33 @@ trait fieldTrait
             ->canSee($this->canSee($fieldName));
     }
 
+    public function historyField()
+    {
+        return Text::make(__('History'), 'history', function () {
+            $history = [];
+            
+            if ($this->created_at) {
+                $history[] = __('Created At') . ': ' . Carbon::parse($this->created_at)->format('d/m/Y H:i');
+            }
+            
+            if ($this->updated_at) {
+                $history[] = __('Updated At') . ': ' . Carbon::parse($this->updated_at)->format('d/m/Y H:i');
+            }
+            
+            if ($this->released_at) {
+                $history[] = __('Released At') . ': ' . Carbon::parse($this->released_at)->format('d/m/Y H:i');
+            }
+            
+            if ($this->done_at) {
+                $history[] = __('Done At') . ': ' . Carbon::parse($this->done_at)->format('d/m/Y H:i');
+            }
+            
+            return !empty($history) ? implode('<br>', $history) : '-';
+        })
+            ->asHtml()
+            ->canSee($this->canSee('history'));
+    }
+
     public function typeField(NovaRequest $request, $fieldName = 'type')
     {
         $isEdit = $request->isCreateOrAttachRequest() || $request->isUpdateOrUpdateAttachedRequest();

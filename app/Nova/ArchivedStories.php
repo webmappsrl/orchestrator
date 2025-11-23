@@ -51,31 +51,7 @@ class ArchivedStories extends Story
                 $this->effectiveHoursField($request),
                 $this->infoField($request),
             ]),
-            $this->createdAtField(),
-            \Laravel\Nova\Fields\DateTime::make(__('Updated At'), 'updated_at')
-                ->sortable()
-                ->displayUsing(function ($updatedAt) {
-                    if (!$updatedAt) {
-                        return '-';
-                    }
-                    return \Carbon\Carbon::parse($updatedAt)->format('d/m/Y');
-                }),
-            \Laravel\Nova\Fields\DateTime::make(__('Released At'), 'released_at')
-                ->sortable()
-                ->displayUsing(function ($releasedAt) {
-                    if (!$releasedAt) {
-                        return '-';
-                    }
-                    return \Carbon\Carbon::parse($releasedAt)->format('d/m/Y');
-                }),
-            \Laravel\Nova\Fields\DateTime::make(__('Done At'), 'done_at')
-                ->sortable()
-                ->displayUsing(function ($doneAt) {
-                    if (!$doneAt) {
-                        return '-';
-                    }
-                    return \Carbon\Carbon::parse($doneAt)->format('d/m/Y');
-                }),
+            $this->historyField(),
         ];
 
         return array_map(function ($field) {

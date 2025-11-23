@@ -33,7 +33,6 @@ class ArchivedStoryShowedByCustomer extends Story
     {
         $fields = [
             ID::make()->sortable(),
-            $this->createdAtField(),
             $this->statusField($request),
             $this->assignedToField(),
             $this->typeField($request),
@@ -42,7 +41,7 @@ class ArchivedStoryShowedByCustomer extends Story
             $this->relationshipField($request),
             $this->estimatedHoursField($request),
             $this->effectiveHoursField($request),
-            $this->updatedAtField(),
+            $this->historyField(),
             $this->deadlineField($request),
 
         ];
