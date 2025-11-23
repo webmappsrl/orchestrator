@@ -137,12 +137,16 @@ class Kanban2 extends Dashboard
 
     /**
      * Get recent activities for a user (last 2 days with activity)
+     * Only includes stories with status Released or Done
      */
     protected function getRecentActivities(Authenticatable $user)
     {
         // Find the most recent date with activity for this user
         $mostRecentActivity = \App\Models\UsersStoriesLog::where('user_id', $user->id)
             ->where('elapsed_minutes', '>', 0)
+            ->whereHas('story', function ($query) {
+                $query->whereIn('status', [StoryStatus::Released->value, StoryStatus::Done->value]);
+            })
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
             ->first();
@@ -154,6 +158,9 @@ class Kanban2 extends Dashboard
         // Get all distinct dates with activity, ordered by date descending
         $uniqueDates = \App\Models\UsersStoriesLog::where('user_id', $user->id)
             ->where('elapsed_minutes', '>', 0)
+            ->whereHas('story', function ($query) {
+                $query->whereIn('status', [StoryStatus::Released->value, StoryStatus::Done->value]);
+            })
             ->distinct()
             ->orderBy('date', 'desc')
             ->pluck('date')
@@ -163,10 +170,13 @@ class Kanban2 extends Dashboard
             return collect();
         }
         
-        // Get all activities from those dates
+        // Get all activities from those dates, filtered by status Released or Done
         return \App\Models\UsersStoriesLog::where('user_id', $user->id)
             ->whereIn('date', $uniqueDates)
             ->where('elapsed_minutes', '>', 0)
+            ->whereHas('story', function ($query) {
+                $query->whereIn('status', [StoryStatus::Released->value, StoryStatus::Done->value]);
+            })
             ->with(['story.tags', 'story.creator'])
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
