@@ -733,6 +733,7 @@ php artisan tag:projects
 | `orchestrator:process-inbound-emails` | `ProcessInboundEmailsCommand.php` | Ogni 5 min | - |
 | `orchestrator:initialize-scores` | `InitializeNullCustomersScore.php` | Manuale | - |
 | `orchestrator:activity-report-generate` | `GenerateMonthlyActivityReports.php` | 1° del mese 12:00 | `--year`, `--month` |
+| `orchestrator:documentation-pdf-generate` | `GenerateDocumentationPdfs.php` | Manuale | `--id` |
 | **Database Commands** |
 | `app:initialize-database` | `InitializeDatabase.php` | Manuale | `--force` |
 | **User Commands** |
