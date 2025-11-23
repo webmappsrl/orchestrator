@@ -58,8 +58,9 @@ class Documentation extends Resource
                     return '<span style="color: #999;">' . __('PDF not yet generated') . '</span>';
                 }
                 $filename = basename(parse_url($this->pdf_url, PHP_URL_PATH));
-                $linkText = htmlspecialchars($filename);
-                return '<a href="' . route('documentation.pdf.download', ['id' => $this->id]) . '" class="link-default" target="_blank" download="' . htmlspecialchars($filename) . '">' . $linkText . '</a>';
+                // Show full filename in detail view, compact text in index view
+                $linkText = $request->isResourceIndexRequest() ? '📄 ' . htmlspecialchars($filename) : htmlspecialchars($filename);
+                return '<a href="' . htmlspecialchars($this->pdf_url) . '" class="link-default" target="_blank" download="' . htmlspecialchars($filename) . '">' . $linkText . '</a>';
             })
                 ->asHtml()
                 ->hideWhenCreating()
