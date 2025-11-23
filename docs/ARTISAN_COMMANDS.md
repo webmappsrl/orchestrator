@@ -19,6 +19,7 @@ Questo documento elenca tutti i comandi Artisan definiti nell'applicazione Orche
    - 3.3. [orchestrator:process-inbound-emails](#33-orchestratorprocess-inbound-emails)
    - 3.4. [orchestrator:initialize-scores](#34-orchestratorinitialize-scores)
    - 3.5. [orchestrator:activity-report-generate](#35-orchestratoractivity-report-generate)
+   - 3.6. [orchestrator:documentation-pdf-generate](#36-orchestratordocumentation-pdf-generate)
 4. [Database Commands](#database-commands)
    - 4.1. [app:initialize-database](#41-appinitialize-database)
 5. [User Commands](#user-commands)
@@ -500,6 +501,54 @@ php artisan orchestrator:activity-report-generate --year=2025 --month=11
 
 ---
 
+### 3.6. orchestrator:documentation-pdf-generate
+
+↑ [Torna all'indice](#indice)
+
+**File:** `app/Console/Commands/GenerateDocumentationPdfs.php`
+
+**Signature:**
+```bash
+orchestrator:documentation-pdf-generate 
+    {--id= : The ID of a specific documentation to generate PDF for (optional)}
+```
+
+**Description:**
+Generate PDF files for documentations. Use --id to generate for a specific documentation, or omit to generate for all.
+
+**Opzioni:**
+- `--id=` - ID di una documentazione specifica per cui generare il PDF (opzionale)
+
+**Comportamento:**
+1. Se viene passato `--id`, genera il PDF solo per quella documentazione specifica
+2. Se non viene passato `--id`, genera i PDF per tutte le documentazioni esistenti
+3. Dispatches il job `GenerateDocumentationPdfJob` per ogni documentazione
+4. Il job genera il PDF in background e salva l'URL nel campo `pdf_url` della documentazione
+
+**Job Dispatched:**
+- Il job `GenerateDocumentationPdfJob` genera il PDF usando `DocumentationPdfService`
+- Il PDF viene salvato in `storage/app/public/documentations/`
+- Nome file: `acronimo_doc_[nome_documentazione].pdf` (es: `CSM_doc_Manuale_Operativo.pdf`)
+- Il PDF include header con logo (da config) e footer (da config)
+
+**Esempio:**
+```bash
+# Genera PDF per tutte le documentazioni
+php artisan orchestrator:documentation-pdf-generate
+
+# Genera PDF per una documentazione specifica
+php artisan orchestrator:documentation-pdf-generate --id=11
+```
+
+**Note:**
+- I job vengono processati in coda (vedi `config/queue.php`)
+- I PDF vengono salvati in `storage/app/public/documentations/` (non nel repository)
+- I PDF sono accessibili tramite link simbolico `public/storage`
+- Il PDF viene automaticamente rigenerato quando la documentazione viene creata o modificata (nome/descrizione) tramite `DocumentationObserver`
+- Il PDF viene automaticamente eliminato quando la documentazione viene eliminata
+
+---
+
 ## Database Commands
 
 ↑ [Torna all'indice](#indice)
@@ -715,5 +764,5 @@ php artisan tag:projects
 ---
 
 **Ultimo aggiornamento:** Novembre 2025  
-**Versione:** MS-1.20.0
+**Versione:** MS-1.20.3
 
