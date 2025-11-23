@@ -8,6 +8,7 @@ use Manogi\Tiptap\Tiptap;
 use App\Traits\fieldTrait;
 use Laravel\Nova\Resource;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use App\Nova\Actions\ExportToPdf;
 use App\Enums\DocumentationCategory;
@@ -52,6 +53,18 @@ class Documentation extends Resource
         return [
             ID::make(__('ID'), 'id')->sortable(),
             $this->titleField('name')->readonly(false),
+            Text::make(__('PDF Download'), function () use ($request) {
+                if (!$this->pdf_url) {
+                    return '<span style="color: #999;">' . __('PDF not yet generated') . '</span>';
+                }
+                $filename = basename(parse_url($this->pdf_url, PHP_URL_PATH));
+                $linkText = htmlspecialchars($filename);
+                return '<a href="' . route('documentation.pdf.download', ['id' => $this->id]) . '" class="link-default" target="_blank" download="' . htmlspecialchars($filename) . '">' . $linkText . '</a>';
+            })
+                ->asHtml()
+                ->hideWhenCreating()
+                ->hideWhenUpdating()
+                ->sortable(false),
             $this->tagsField()->hideWhenCreating(),
             Select::make('Category', 'category')
                 ->options(DocumentationCategory::labels())

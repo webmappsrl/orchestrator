@@ -32,6 +32,10 @@ chmod -R 755 storage/app/dompdf
 mkdir -p storage/app/public/activity-reports
 chmod -R 755 storage/app/public/activity-reports
 
+# Create documentations directory for PDF storage
+mkdir -p storage/app/public/documentations
+chmod -R 755 storage/app/public/documentations
+
 # Create PDF logo directory if it doesn't exist
 mkdir -p storage/app/pdf-logo
 chmod -R 755 storage/app/pdf-logo
