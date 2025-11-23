@@ -73,6 +73,7 @@ class Organization extends Resource
                 ->readonly(),
 
             BelongsToMany::make('Users')
+                ->searchable()
                 ->showOnDetail()
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
