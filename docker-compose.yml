@@ -39,7 +39,11 @@ services:
         container_name: "redis_${APP_NAME}"
         restart: always
         ports:
-            - 6379:6379
+            - "127.0.0.1:6379:6379"
+        volumes:
+            - "./docker/volumes/redis/data:/data"
+            - "./docker/configs/redis.conf:/usr/local/etc/redis/redis.conf"
+        command: redis-server /usr/local/etc/redis/redis.conf
         networks:
             - laravel
     mailpit:
