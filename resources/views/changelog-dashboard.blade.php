@@ -178,6 +178,99 @@
         </div>
 
         <div class="release-list">
+            <!-- MS-1.21.0 -->
+            <div class="release-card">
+                <div class="release-header">
+                    <h2 class="release-version">MS-1.21.0</h2>
+                    <span class="release-date">25 Novembre 2025</span>
+                </div>
+                <div class="release-content">
+                    <div class="release-html-content">
+                        <h1>🚀 Release MS-1.21.0 - Riorganizzazione SCRUM e Miglioramenti UI</h1>
+
+                        <p><strong>Ciao!</strong> 👋</p>
+
+                        <p>Abbiamo riorganizzato il menu SCRUM e migliorato la visualizzazione delle informazioni nei ticket per rendere il lavoro quotidiano più efficiente.</p>
+
+                        <hr>
+
+                        <h2>🎯 COSA C'È DI NUOVO</h2>
+
+                        <h3>🌟 Feature Principali</h3>
+                        <ul>
+                        <li><strong>Nuove risorse Nova per stati ticket</strong> - Ora puoi visualizzare facilmente tutti i ticket con stati specifici:
+                        <ul>
+                        <li><strong>Da Testare</strong> - Tutti i ticket in stato "Test" (non solo quelli assegnati a te)</li>
+                        <li><strong>In Attesa</strong> - Tutti i ticket in stato "In Attesa"</li>
+                        <li><strong>Problemi</strong> - Tutti i ticket in stato "Problemi"</li>
+                        </ul>
+                        </li>
+                        <li><strong>Menu SCRUM riorganizzato</strong> - Tutte le risorse e dashboard relative allo sviluppo agile sono ora raggruppate in un sottomenu dedicato "SCRUM"</li>
+                        <li><strong>Kanban2 semplificato</strong> - La dashboard mostra solo le informazioni essenziali per il lavoro quotidiano:
+                        <ul>
+                        <li>"Cosa ho fatto ieri" - Attività recenti completate</li>
+                        <li>"Cosa farò oggi" - Ticket da svolgere (todo/assigned)</li>
+                        </ul>
+                        </li>
+                        </ul>
+
+                        <h3>⚙️ Miglioramenti</h3>
+                        <ul>
+                        <li><strong>Colonna Informazioni migliorata</strong> - Ora mostra anche il tester quando presente, con colore verde scuro per distinguerlo facilmente</li>
+                        <li><strong>Label Tag più chiaro</strong> - I tag nella colonna Informazioni ora hanno il label "Tag:" per maggiore chiarezza</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>👥 PER CHI È QUESTA RELEASE</h2>
+
+                        <h3>👨‍💼 Admin</h3>
+                        <ul>
+                        <li>Migliore organizzazione del menu per gestire i ticket</li>
+                        <li>Visualizzazione completa di tutti i ticket in stato Test, In Attesa e Problemi</li>
+                        </ul>
+
+                        <h3>👨‍💻 Developer</h3>
+                        <ul>
+                        <li>Dashboard Kanban2 più focalizzata sul lavoro quotidiano</li>
+                        <li>Accesso rapido a tutte le risorse SCRUM dal menu dedicato</li>
+                        <li>Informazioni più complete nella colonna Info dei ticket</li>
+                        </ul>
+
+                        <h3>🏢 Manager</h3>
+                        <ul>
+                        <li>Migliore visibilità su tutti i ticket in attesa di test o con problemi</li>
+                        <li>Organizzazione più chiara delle risorse nel menu</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>📋 DETTAGLI RILASCIO</h2>
+
+                        <ul>
+                        <li><strong>Versione:</strong> MS-1.21.0</li>
+                        <li><strong>Data:</strong> 25/11/2025</li>
+                        <li><strong>Stato:</strong> Disponibile</li>
+                        </ul>
+
+                        <hr>
+
+                        <h2>🎉 GRAZIE!</h2>
+
+                        <p>Speriamo che queste migliorie rendano il vostro lavoro più efficiente e organizzato.</p>
+
+                        <p><strong>Buon lavoro!</strong> 🙌</p>
+
+                        <hr>
+
+                        <p><strong>Team Orchestrator</strong><br>
+                        <em>Webmapp S.r.l.</em></p>
+
+                        <p><em>Per domande o assistenza, contattate il team tecnico.</em></p>
+                    </div>
+                </div>
+            </div>
+
             <!-- MS-1.20.0 -->
             <div class="release-card">
                 <div class="release-header">
