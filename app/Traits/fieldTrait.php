@@ -666,8 +666,9 @@ trait fieldTrait
         $appLink = $this->getAppLink();
         $tagLinks = $this->getTagLinks();
         $creatorLink = $this->getCreatorLink();
+        $testerLink = $this->getTesterLink();
 
-        return "{$appLink}{$creatorLink}{$tagLinks}";
+        return "{$appLink}{$creatorLink}{$testerLink}{$tagLinks}";
     }
 
     private function getAppLink($creator = null)
@@ -741,6 +742,23 @@ trait fieldTrait
                 target="_blank"
                 style="color:chocolate; font-weight:bold;">
                 Creator: {$creator->name}
+            </a> <br>
+            HTML;
+        }
+        return '';
+    }
+
+    private function getTesterLink()
+    {
+        $tester = $this->resource->tester;
+        if ($tester) {
+            $url = url("/resources/users/{$tester->id}");
+            return <<<HTML
+            <a
+                href="{$url}"
+                target="_blank"
+                style="color:darkgreen; font-weight:bold;">
+                Tester: {$tester->name}
             </a> <br>
             HTML;
         }
