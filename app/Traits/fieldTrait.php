@@ -717,7 +717,7 @@ trait fieldTrait
             foreach ($tags as $tag) {
                 $url = $tag->getResourceUrlAttribute();
                 $HTML .=    <<<HTML
-            <a
+            <span style="color:orange; font-weight:bold;">Tag:</span> <a
                 href="$url"
                 target="_blank"
                 style="color:orange; font-weight:bold;">
