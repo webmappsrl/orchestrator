@@ -41,6 +41,9 @@ use App\Nova\Tag;
 use App\Nova\ActivityReport;
 use App\Nova\CustomerActivityReport;
 use App\Nova\ToBeTestedStory;
+use App\Nova\ProblemStory;
+use App\Nova\TestStory;
+use App\Nova\WaitingStory;
 use App\Nova\User;
 use App\Nova\Organization;
 use Illuminate\Http\Request;
@@ -102,20 +105,25 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 }),
 
                 MenuSection::make('AGILE', [
-                    MenuItem::dashboard(Kanban2::class),
-                    MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => $scrumMeetCode]))->openInNewTab()->canSee(function ($request) {
-                        if ($request->user() == null) {
-                            return false;
-                        }
-                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
-                    }),
-                    MenuItem::externalLink('MEET', 'https://meet.google.com/'.$scrumMeetCode)->openInNewTab()->canSee(function ($request) {
-                        if ($request->user() == null) {
-                            return false;
-                        }
-                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
-                    }),
-                    MenuItem::dashboard(Activity::class),
+                    MenuGroup::make('SCRUM', [
+                        MenuItem::dashboard(Kanban2::class),
+                        MenuItem::resource(TestStory::class),
+                        MenuItem::resource(WaitingStory::class),
+                        MenuItem::resource(ProblemStory::class),
+                        MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => $scrumMeetCode]))->openInNewTab()->canSee(function ($request) {
+                            if ($request->user() == null) {
+                                return false;
+                            }
+                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                        }),
+                        MenuItem::externalLink('MEET', 'https://meet.google.com/'.$scrumMeetCode)->openInNewTab()->canSee(function ($request) {
+                            if ($request->user() == null) {
+                                return false;
+                            }
+                            return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                        }),
+                        MenuItem::dashboard(Activity::class),
+                    ])->collapsedByDefault(),
                     MenuGroup::make(__('Tickets'), [
                         MenuItem::link(__('Nuovi'), '/resources/new-stories'),
                         MenuItem::link(__('Customers'), '/resources/customer-stories'),

@@ -111,7 +111,7 @@ class Kanban2 extends Dashboard
     {
         $stories = $this->getTodoAndAssignedStories($user);
         $count = $stories->count();
-        $title = 'Cosa devo fare (todo/assigned): [' . $count . '] ticket';
+        $title = 'Cosa farò oggi: [' . $count . '] ticket';
 
         return (new HtmlCard)
             ->width($width)
@@ -375,23 +375,8 @@ class Kanban2 extends Dashboard
         // Aggiungi la tabella attività recenti
         $cards[] = $this->recentActivitiesCard($user);
 
-        // Aggiungi la tabella attività sperimentali (basata su released_at e done_at)
-        $cards[] = $this->experimentalActivitiesCard($user);
-
-        // Aggiungi la tabella Test assegnate come developer (in attesa di verifica)
-        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'In attesa di verifica (da testare)', true, true);
-
-        // Aggiungi la tabella Problem
-        $cards[] = $this->storyCard('problem', __('Problem'), $user, 'full', 'Che problemi ho incontrato (problemi)');
-
-        // Aggiungi la tabella Waiting
-        $cards[] = $this->storyCard('waiting', __('Waiting'), $user, 'full', 'Cosa sto aspettando (in attesa)');
-
         // Aggiungi la tabella TODO (con todo e assigned)
         $cards[] = $this->todoAndAssignedCard($user);
-
-        // Aggiungi la tabella Test (ticket assegnati come tester)
-        $cards[] = $this->storyCard('testing', __('Test'), $user, 'full', 'Cosa devo verificare (da testare)', false, false, true);
 
         return $cards;
     }
