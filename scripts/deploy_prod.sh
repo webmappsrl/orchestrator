@@ -26,19 +26,19 @@ php artisan optimize
 
 # Create DomPDF directories with correct permissions (for PDF generation)
 mkdir -p storage/app/dompdf/fonts storage/app/dompdf/tmp
-chmod -R 755 storage/app/dompdf
+chmod -R 755 storage/app/dompdf || true
 
 # Create activity reports directory for PDF storage
 mkdir -p storage/app/public/activity-reports
-chmod -R 755 storage/app/public/activity-reports
+chmod -R 755 storage/app/public/activity-reports || true
 
 # Create documentations directory for PDF storage
 mkdir -p storage/app/public/documentations
-chmod -R 755 storage/app/public/documentations
+chmod -R 755 storage/app/public/documentations || true
 
 # Create PDF logo directory if it doesn't exist
 mkdir -p storage/app/pdf-logo
-chmod -R 755 storage/app/pdf-logo
+chmod -R 755 storage/app/pdf-logo || true
 
 # Create symbolic link for storage if it doesn't exist
 if [ ! -L public/storage ] && [ ! -d public/storage ]; then
