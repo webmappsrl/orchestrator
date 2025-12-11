@@ -40,15 +40,16 @@ class ArchivedStories extends Story
     public function fieldsInIndex(NovaRequest $request)
     {
         $fields = [
-            \Laravel\Nova\Fields\ID::make()->sortable(),
-            $this->statusField($request),
+            Stack::make(__('MAIN INFO'), [
+                $this->clickableIdField(),
+                $this->statusField($request),
+                $this->assignedUserTextField(),
+            ]),
             \Laravel\Nova\Fields\Stack::make(__('Ticket Info'), [
                 $this->typeField($request),
                 $this->titleField(),
                 $this->relationshipField($request),
-                $this->assignedToField(),
                 $this->estimatedHoursField($request),
-                $this->effectiveHoursField($request),
                 $this->infoField($request),
             ]),
             $this->historyField(),

@@ -137,6 +137,10 @@ trait fieldTrait
                 $history[] = __('Done At') . ': ' . Carbon::parse($this->done_at)->format('d/m/Y H:i');
             }
             
+            // Add Effective hours as last row
+            $hours = $this->hours ?? 0;
+            $history[] = __('Effective Hours') . ': ' . $hours;
+            
             return !empty($history) ? implode('<br>', $history) : '-';
         })
             ->asHtml()
@@ -823,5 +827,28 @@ trait fieldTrait
         return isset($statusOptions[$statusValue])
             ? [$statusOptions[$statusValue]->value => $statusOptions[$statusValue]]
             : [];
+    }
+
+    /**
+     * Create a clickable ID field that opens the detail view
+     */
+    public function clickableIdField()
+    {
+        return Text::make(__('ID'), 'id', function () {
+            // All Story resources share the same model, so we use 'stories' as the base URI
+            $url = url("/resources/stories/{$this->id}");
+            return '<a href="' . $url . '" style="color: #2FBDA5; font-weight: bold;">' . $this->id . '</a>';
+        })->asHtml();
+    }
+
+    /**
+     * Create a text field showing the assigned user
+     */
+    public function assignedUserTextField()
+    {
+        return Text::make(__('User'), 'assigned_user', function () {
+            $user = $this->developer;
+            return $user ? $user->name : '-';
+        });
     }
 }

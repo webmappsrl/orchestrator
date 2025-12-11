@@ -166,17 +166,15 @@ class Story extends Resource
     public function fieldsInIndex(NovaRequest $request)
     {
         $fields = [
-            ID::make()->sortable(),
-            $this->statusField($request),
+            Stack::make(__('MAIN INFO'), [
+                $this->clickableIdField(),
+                $this->statusField($request),
+                $this->assignedUserTextField(),
+            ]),
             Stack::make(__('Title'), [
                 $this->typeField($request),
                 $this->titleField(),
                 $this->relationshipField($request),
-            ]),
-            Stack::make(__('ASSIGNED/HOURS'), [
-                $this->assignedToField(),
-                $this->estimatedHoursField($request),
-                $this->effectiveHoursField($request),
             ]),
             $this->infoField($request),
             $this->historyField(),

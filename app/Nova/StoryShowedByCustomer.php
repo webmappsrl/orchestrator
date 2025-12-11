@@ -65,9 +65,11 @@ class StoryShowedByCustomer extends Story
     public  function fieldsInIndex(NovaRequest $request)
     {
         $fields = [
-            ID::make()->sortable(),
-            $this->statusField($request),
-            $this->assignedToField(),
+            Stack::make(__('MAIN INFO'), [
+                $this->clickableIdField(),
+                $this->statusField($request),
+                $this->assignedUserTextField(),
+            ]),
             $this->typeField($request),
             $this->infoField($request),
             $this->titleField(),

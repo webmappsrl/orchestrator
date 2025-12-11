@@ -106,6 +106,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('AGILE', [
                     MenuGroup::make('SCRUM', [
+                        MenuItem::link(__('Nuovi'), '/resources/new-stories'),
                         MenuItem::dashboard(Kanban2::class),
                         MenuItem::resource(TestStory::class),
                         MenuItem::resource(WaitingStory::class),
@@ -125,7 +126,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::dashboard(Activity::class),
                     ])->collapsedByDefault(),
                     MenuGroup::make(__('Tickets'), [
-                        MenuItem::link(__('Nuovi'), '/resources/new-stories'),
                         MenuItem::link(__('Customers'), '/resources/customer-stories'),
                         MenuItem::link(__('In progress'), '/resources/in-progress-stories'),
                         MenuItem::link(__('Da svolgere'), '/resources/assigned-to-me-stories'),
