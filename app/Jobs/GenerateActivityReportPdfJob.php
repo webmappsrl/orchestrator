@@ -304,14 +304,19 @@ class GenerateActivityReportPdfJob implements ShouldQueue
             table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 10px;
+                font-size: 9px;
                 margin-top: 10px;
+                table-layout: fixed;
             }
 
             th, td {
                 border: 1px solid #ddd;
-                padding: 8px;
+                padding: 6px;
                 text-align: left;
+                word-wrap: break-word;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                vertical-align: top;
             }
 
             th {
@@ -323,9 +328,21 @@ class GenerateActivityReportPdfJob implements ShouldQueue
                 background-color: #f9f9f9;
             }
 
-            .description {
-                max-width: 200px;
-                word-wrap: break-word;
+            /* Fixed column widths */
+            th:nth-child(1), td:nth-child(1) {
+                width: 8%;
+            }
+
+            th:nth-child(2), td:nth-child(2) {
+                width: 12%;
+            }
+
+            th:nth-child(3), td:nth-child(3) {
+                width: 25%;
+            }
+
+            th:nth-child(4), td:nth-child(4) {
+                width: 55%;
             }
 
             .summary {
@@ -383,24 +400,21 @@ class GenerateActivityReportPdfJob implements ShouldQueue
         // Generate table rows
         $tableRows = '';
         $baseUrl = config('app.url', 'http://localhost:8099');
-        $stories = $activityReport->stories()->with('creator')->orderBy('done_at', 'asc')->get();
+        $stories = $activityReport->stories()->orderBy('done_at', 'asc')->get();
         foreach ($stories as $story) {
             $storyId = $story->id;
             $storyUrl = $baseUrl . '/resources/archived-story-showed-by-customers/' . $storyId;
             $dateFormat = $language === 'it' ? 'd/m/Y' : 'Y-m-d';
             $doneAt = $story->done_at ? $story->done_at->format($dateFormat) : '-';
-            $creatorName = $story->creator ? htmlspecialchars($story->creator->name ?? '-') : '-';
             $title = htmlspecialchars($story->name ?? '-');
             $description = htmlspecialchars(strip_tags($story->customer_request ?? '-'));
-            $description = mb_strimwidth($description, 0, 100, '...');
 
             $tableRows .= '
             <tr>
                 <td><a href="' . $storyUrl . '" style="color: #2FBDA5; text-decoration: none; font-weight: bold;">#' . $storyId . '</a></td>
                 <td>' . $doneAt . '</td>
-                <td>' . $creatorName . '</td>
                 <td>' . $title . '</td>
-                <td class="description">' . $description . '</td>
+                <td>' . $description . '</td>
             </tr>';
         }
 
@@ -423,7 +437,6 @@ class GenerateActivityReportPdfJob implements ShouldQueue
                         <tr>
                             <th>' . __('ID') . '</th>
                             <th>' . __('Done At') . '</th>
-                            <th>' . __('Creator') . '</th>
                             <th>' . __('Title') . '</th>
                             <th>' . __('Request') . '</th>
                         </tr>
