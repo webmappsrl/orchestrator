@@ -5,7 +5,7 @@
                 <i class="fas fa-user text-white text-xl"></i>
             </div>
             <h3 class="ml-3 text-lg leading-6 font-medium text-gray-900">
-                Informazioni Login
+                👤 Informazioni Login
             </h3>
         </div>
         
