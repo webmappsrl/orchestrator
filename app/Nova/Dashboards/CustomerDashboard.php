@@ -2,9 +2,10 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Enums\StoryStatus;
 use App\Enums\UserRole;
-use App\Models\FundraisingOpportunity;
 use App\Models\FundraisingProject;
+use App\Models\Story;
 use App\Models\User;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Dashboard;
@@ -19,82 +20,85 @@ class CustomerDashboard extends Dashboard
     public function cards()
     {
         return [
-            $this->fundraisingOpportunitiesCard(),
-            $this->myProjectsCard(),
-            $this->recentActivityCard(),
+            $this->loginInfoCard(),
+            $this->ticketsToCompleteCard(),
+            $this->fspProjectsCard(),
         ];
     }
 
     /**
-     * Card showing active fundraising opportunities
+     * Card showing login information
      */
-    protected function fundraisingOpportunitiesCard()
-    {
-        $opportunities = FundraisingOpportunity::where('deadline', '>=', now())
-            ->orderBy('deadline', 'asc')
-            ->limit(5)
-            ->get();
-
-        return (new HtmlCard)
-            ->width('1/3')
-            ->view('customer-dashboard.opportunities', [
-                'opportunities' => $opportunities,
-            ])
-            ->canSee(function ($request) {
-                return $request->user()->hasRole(UserRole::Customer);
-            });
-    }
-
-    /**
-     * Card showing user's fundraising projects
-     */
-    protected function myProjectsCard()
-    {
-        $user = auth()->user();
-        $projects = FundraisingProject::where(function ($query) use ($user) {
-            $query->where('lead_user_id', $user->id)
-                  ->orWhereHas('partners', function ($q) use ($user) {
-                      $q->where('user_id', $user->id);
-                  });
-        })
-        ->with(['fundraisingOpportunity', 'leadUser'])
-        ->orderBy('updated_at', 'desc')
-        ->limit(5)
-        ->get();
-
-        return (new HtmlCard)
-            ->width('1/3')
-            ->view('customer-dashboard.projects', [
-                'projects' => $projects,
-            ])
-            ->canSee(function ($request) {
-                return $request->user()->hasRole(UserRole::Customer);
-            });
-    }
-
-    /**
-     * Card showing recent activity
-     */
-    protected function recentActivityCard()
+    protected function loginInfoCard()
     {
         $user = auth()->user();
         
-        // Get recent stories related to fundraising projects
-        $recentStories = \App\Models\Story::whereHas('fundraisingProject', function ($query) use ($user) {
+        $loginInfo = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'last_login' => $user->last_login_at ?? 'Mai',
+        ];
+
+        return (new HtmlCard)
+            ->width('1/3')
+            ->view('customer-dashboard.login-info', [
+                'loginInfo' => $loginInfo,
+            ])
+            ->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Customer);
+            });
+    }
+
+    /**
+     * Card showing number of tickets to complete
+     */
+    protected function ticketsToCompleteCard()
+    {
+        $user = auth()->user();
+        
+        $ticketStatuses = [
+            StoryStatus::New->value,
+            StoryStatus::Backlog->value,
+            StoryStatus::Assigned->value,
+            StoryStatus::Todo->value,
+            StoryStatus::Progress->value,
+            StoryStatus::Test->value,
+            StoryStatus::Problem->value,
+            StoryStatus::Waiting->value,
+        ];
+
+        $ticketsCount = Story::where('creator_id', $user->id)
+            ->whereIn('status', $ticketStatuses)
+            ->count();
+
+        return (new HtmlCard)
+            ->width('1/3')
+            ->view('customer-dashboard.tickets-to-complete', [
+                'ticketsCount' => $ticketsCount,
+            ])
+            ->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Customer);
+            });
+    }
+
+    /**
+     * Card showing number of FSP projects
+     */
+    protected function fspProjectsCard()
+    {
+        $user = auth()->user();
+        
+        $fspProjectsCount = FundraisingProject::where(function ($query) use ($user) {
             $query->where('lead_user_id', $user->id)
                   ->orWhereHas('partners', function ($q) use ($user) {
                       $q->where('user_id', $user->id);
                   });
-        })
-        ->with(['fundraisingProject'])
-        ->orderBy('updated_at', 'desc')
-        ->limit(5)
-        ->get();
+        })->count();
 
         return (new HtmlCard)
             ->width('1/3')
-            ->view('customer-dashboard.activity', [
-                'stories' => $recentStories,
+            ->view('customer-dashboard.fsp-projects', [
+                'fspProjectsCount' => $fspProjectsCount,
             ])
             ->canSee(function ($request) {
                 return $request->user()->hasRole(UserRole::Customer);
