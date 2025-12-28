@@ -25,6 +25,7 @@ class CustomerDashboard extends Dashboard
             $this->ticketsToCompleteCard(),
             $this->fspProjectsCard(),
             $this->storageCard(),
+            $this->budgetCard(),
         ];
     }
 
@@ -131,6 +132,23 @@ class CustomerDashboard extends Dashboard
             ->width('1/3')
             ->view('customer-dashboard.storage', [
                 'googleDriveUrl' => $user->google_drive_url,
+            ])
+            ->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Customer);
+            });
+    }
+
+    /**
+     * Card showing Google Drive budget access
+     */
+    protected function budgetCard()
+    {
+        $user = auth()->user();
+        
+        return (new HtmlCard)
+            ->width('1/3')
+            ->view('customer-dashboard.budget', [
+                'googleDriveBudgetUrl' => $user->google_drive_budget_url,
             ])
             ->canSee(function ($request) {
                 return $request->user()->hasRole(UserRole::Customer);

@@ -130,6 +130,34 @@ class User extends Resource
                     return '<span style="color: #999; font-style: italic;">' . __('messages.The field is empty and must be entered via edit.') . '</span>';
                 }),
 
+            Text::make('Google Drive Budget URL', 'google_drive_budget_url')
+                ->rules('nullable', 'url')
+                ->help(__('URL to the user\'s Google Drive budget folder'))
+                ->onlyOnForms()
+                ->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+                    return $request->user()->hasRole(UserRole::Admin);
+                }),
+
+            Text::make('Google Drive Budget URL', 'google_drive_budget_url')
+                ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+                    return $request->user()->hasRole(UserRole::Admin);
+                })
+                ->asHtml()
+                ->resolveUsing(function () {
+                    $url = $this->google_drive_budget_url;
+                    if ($url) {
+                        return '<a style="color: darkblue;" href="' . $url . '" target="_blank">' . $url . '</a>';
+                    }
+                    return '<span style="color: #999; font-style: italic;">' . __('messages.The field is empty and must be entered via edit.') . '</span>';
+                }),
+
             BelongsToMany::make('Apps'),
             BelongsToMany::make('Organizations'),
             Text::make(__('Organizations'), function () {
