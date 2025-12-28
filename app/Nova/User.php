@@ -102,6 +102,34 @@ class User extends Resource
                 ->displayUsingLabels()
                 ->help(__('Language used for generating activity reports PDFs')),
 
+            Text::make('Google Drive URL', 'google_drive_url')
+                ->rules('nullable', 'url')
+                ->help(__('URL to the user\'s Google Drive folder'))
+                ->onlyOnForms()
+                ->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+                    return $request->user()->hasRole(UserRole::Admin);
+                }),
+
+            Text::make('Google Drive URL', 'google_drive_url')
+                ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+                    return $request->user()->hasRole(UserRole::Admin);
+                })
+                ->asHtml()
+                ->resolveUsing(function () {
+                    $url = $this->google_drive_url;
+                    if ($url) {
+                        return '<a style="color: darkblue;" href="' . $url . '" target="_blank">' . $url . '</a>';
+                    }
+                    return '<span style="color: #999; font-style: italic;">' . __('messages.The field is empty and must be entered via edit.') . '</span>';
+                }),
+
             BelongsToMany::make('Apps'),
             BelongsToMany::make('Organizations'),
             Text::make(__('Organizations'), function () {

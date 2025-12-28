@@ -24,6 +24,7 @@ class CustomerDashboard extends Dashboard
             $this->documentationCard(),
             $this->ticketsToCompleteCard(),
             $this->fspProjectsCard(),
+            $this->storageCard(),
         ];
     }
 
@@ -113,6 +114,23 @@ class CustomerDashboard extends Dashboard
             ->width('1/3')
             ->view('customer-dashboard.fsp-projects', [
                 'fspProjectsCount' => $fspProjectsCount,
+            ])
+            ->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Customer);
+            });
+    }
+
+    /**
+     * Card showing Google Drive storage access
+     */
+    protected function storageCard()
+    {
+        $user = auth()->user();
+        
+        return (new HtmlCard)
+            ->width('1/3')
+            ->view('customer-dashboard.storage', [
+                'googleDriveUrl' => $user->google_drive_url,
             ])
             ->canSee(function ($request) {
                 return $request->user()->hasRole(UserRole::Customer);

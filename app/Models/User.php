@@ -28,6 +28,7 @@ class User extends Authenticatable
         'password',
         'roles',
         'activity_report_language',
+        'google_drive_url',
     ];
 
     /**
