@@ -2,7 +2,6 @@
 
 namespace App\Nova;
 
-use App\Models\Story;
 use App\Enums\UserRole;
 use Manogi\Tiptap\Tiptap;
 use App\Traits\fieldTrait;
@@ -66,12 +65,15 @@ class Documentation extends Resource
                 ->hideWhenCreating()
                 ->hideWhenUpdating()
                 ->sortable(false),
-            $this->tagsField()->hideWhenCreating(),
+            $this->tagsField()->hideWhenCreating()->hideFromIndex(),
             Select::make('Category', 'category')
                 ->options(DocumentationCategory::labels())
                 ->default(DocumentationCategory::Customer->value)
                 ->sortable()
-                ->rules('required'),
+                ->rules('required')
+                ->hideFromIndex(function ($request) {
+                    return $request->user()->hasRole(UserRole::Customer);
+                }),
             Tiptap::make(__('Dev notes'), 'description')
                 ->hideFromIndex()
                 ->buttons($this->tiptapAllButtons)
@@ -84,22 +86,7 @@ class Documentation extends Resource
     public static function indexQuery(NovaRequest $request, $query)
     {
         if ($request->user()->hasRole(UserRole::Customer)) {
-            $customerStories = Story::where('creator_id', $request->user()->id)->get();
-            // Ottieni tutti i tag delle storie del cliente
-            $customerStoryTags = $customerStories->flatMap(function ($story) {
-                return $story->tags;
-            });
-            // Filtra i tag che hanno il tipo "documentation"
-            $documentationIds = $customerStoryTags->filter(function ($tag) {
-                if ($tag->getTaggableTypeAttribute() === 'Documentation') {
-                    $documentation = \App\Models\Documentation::find($tag->taggable_id);
-                    return $documentation->category == DocumentationCategory::Customer;
-                } else {
-                    return false;
-                }
-            })->pluck('taggable_id');
-
-            return $query->whereIn('id', $documentationIds);
+            return $query->where('category', DocumentationCategory::Customer->value);
         }
         return $query;
     }

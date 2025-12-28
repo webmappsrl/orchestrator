@@ -21,6 +21,7 @@ class CustomerDashboard extends Dashboard
     {
         return [
             $this->loginInfoCard(),
+            $this->documentationCard(),
             $this->ticketsToCompleteCard(),
             $this->fspProjectsCard(),
         ];
@@ -44,6 +45,19 @@ class CustomerDashboard extends Dashboard
             ->view('customer-dashboard.login-info', [
                 'loginInfo' => $loginInfo,
             ])
+            ->canSee(function ($request) {
+                return $request->user()->hasRole(UserRole::Customer);
+            });
+    }
+
+    /**
+     * Card showing documentation link
+     */
+    protected function documentationCard()
+    {
+        return (new HtmlCard)
+            ->width('1/3')
+            ->view('customer-dashboard.documentation')
             ->canSee(function ($request) {
                 return $request->user()->hasRole(UserRole::Customer);
             });
