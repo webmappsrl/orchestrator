@@ -47,7 +47,7 @@ class CustomerActivityReport extends Resource
      */
     public static function label()
     {
-        return __('Activity Reports');
+        return __('Report');
     }
 
     /**

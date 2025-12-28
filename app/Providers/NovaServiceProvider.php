@@ -95,13 +95,21 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('HELP', [
                     MenuItem::resource(Documentation::class),
                     MenuItem::dashboard(TicketStatus::class),
-                    MenuItem::dashboard(Changelog::class),
+                    MenuItem::dashboard(Changelog::class)->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
+                        return !$request->user()->hasRole(UserRole::Customer);
+                    }),
                 ])->icon('question-mark-circle')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
                     }
 
-                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
+                    return $request->user()->hasRole(UserRole::Admin) || 
+                           $request->user()->hasRole(UserRole::Manager) || 
+                           $request->user()->hasRole(UserRole::Developer) ||
+                           $request->user()->hasRole(UserRole::Customer);
                 }),
 
                 MenuSection::make('AGILE', [
@@ -210,14 +218,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make(__('CUSTOMER'), [
                     MenuItem::dashboard(CustomerDashboard::class),
-                    MenuItem::resource(Documentation::class),
-                    MenuItem::resource(ArchivedStoryShowedByCustomer::class),
                     MenuItem::resource(StoryShowedByCustomer::class),
                     MenuItem::resource(CustomerActivityReport::class),
                     MenuGroup::make(__('FundRaising'), [
                         MenuItem::resource(CustomerFundraisingOpportunity::class),
                         MenuItem::resource(CustomerFundraisingProject::class),
                     ])->collapsedByDefault(),
+                    MenuItem::resource(ArchivedStoryShowedByCustomer::class),
                 ])->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
@@ -291,7 +298,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         }
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
-                ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
+                ])->icon('user')->collapsedByDefault()->collapsedByDefault()->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+                    return !$request->user()->hasRole(UserRole::Customer);
+                }),
 
                 MenuSection::make('APP', [
                     MenuItem::resource(App::class),
