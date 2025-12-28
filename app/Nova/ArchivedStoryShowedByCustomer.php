@@ -9,6 +9,7 @@ use App\Nova\Actions\MoveStoriesFromEpic;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Nova\Actions\moveStoriesFromProjectToEpicAction;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Stack;
 
 class ArchivedStoryShowedByCustomer extends Story
 {

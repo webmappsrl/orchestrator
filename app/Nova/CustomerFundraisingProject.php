@@ -53,6 +53,44 @@ class CustomerFundraisingProject extends Resource
     public static $displayInNavigation = true;
 
     /**
+     * Get the displayable label of the resource.
+     *
+     * @return string
+     */
+    public static function label()
+    {
+        return __('Progetti');
+    }
+
+    /**
+     * Determine if the current user can view any resources.
+     */
+    public static function authorizedToViewAny(Request $request): bool
+    {
+        $user = $request->user();
+        if ($user == null) {
+            return false;
+        }
+        return $user->hasRole(\App\Enums\UserRole::Customer);
+    }
+
+    /**
+     * Build an "index" query for the given resource.
+     * Filtra solo i progetti dove l'utente è coinvolto (capofila o partner)
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        if ($request->user() && $request->user()->hasRole(\App\Enums\UserRole::Customer)) {
+            return $query->whereInvolved($request->user()->id);
+        }
+        return $query;
+    }
+
+    /**
      * Get the fields displayed by the resource.
      * Versione semplificata per i customer - solo visualizzazione
      *

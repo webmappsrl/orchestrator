@@ -53,6 +53,28 @@ class CustomerFundraisingOpportunity extends Resource
     public static $displayInNavigation = true;
 
     /**
+     * Get the displayable label of the resource.
+     *
+     * @return string
+     */
+    public static function label()
+    {
+        return __('Bandi');
+    }
+
+    /**
+     * Determine if the current user can view any resources.
+     */
+    public static function authorizedToViewAny(Request $request): bool
+    {
+        $user = $request->user();
+        if ($user == null) {
+            return false;
+        }
+        return $user->hasRole(\App\Enums\UserRole::Customer);
+    }
+
+    /**
      * Get the fields displayed by the resource.
      * Versione semplificata per i customer - solo visualizzazione
      *
@@ -174,7 +196,7 @@ class CustomerFundraisingOpportunity extends Resource
 
     /**
      * Get the actions available for the resource.
-     * Solo azioni per customer: export PDF e creazione Story
+     * Solo azioni per customer: creazione Story
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
@@ -182,7 +204,6 @@ class CustomerFundraisingOpportunity extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            new \App\Nova\Actions\ExportFundraisingOpportunityPdf,
             new \App\Nova\Actions\CreateStoryFromFundraisingOpportunity,
         ];
     }

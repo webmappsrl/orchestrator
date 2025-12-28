@@ -218,13 +218,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make(__('CUSTOMER'), [
                     MenuItem::dashboard(CustomerDashboard::class),
+                    MenuItem::link(__('Nuovi'), '/resources/story-showed-by-customers/new'),
                     MenuItem::resource(StoryShowedByCustomer::class),
                     MenuItem::resource(CustomerActivityReport::class),
-                    MenuGroup::make(__('FundRaising'), [
-                        MenuItem::resource(CustomerFundraisingOpportunity::class),
-                        MenuItem::resource(CustomerFundraisingProject::class),
-                    ])->collapsedByDefault(),
                     MenuItem::resource(ArchivedStoryShowedByCustomer::class),
+                    MenuItem::resource(CustomerFundraisingOpportunity::class),
+                    MenuItem::resource(CustomerFundraisingProject::class),
                 ])->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
