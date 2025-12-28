@@ -218,7 +218,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make(__('CUSTOMER'), [
                     MenuItem::dashboard(CustomerDashboard::class),
-                    MenuItem::link(__('Nuovi'), '/resources/story-showed-by-customers/new'),
+                    MenuItem::link(__('Nuovo ticket'), '/resources/story-showed-by-customers/new'),
                     MenuItem::resource(StoryShowedByCustomer::class),
                     MenuItem::resource(CustomerActivityReport::class),
                     MenuItem::resource(ArchivedStoryShowedByCustomer::class),

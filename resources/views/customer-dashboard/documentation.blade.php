@@ -21,6 +21,15 @@
                     Vai alla documentazione <i class="fas fa-arrow-right ml-1"></i>
                 </a>
             </div>
+            
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <p class="text-sm font-medium text-gray-900 mb-3">
+                    Contatti:
+                </p>
+                <a href="/resources/story-showed-by-customers/new" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    Crea un nuovo ticket <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
         </div>
     </div>
 </div>
