@@ -175,9 +175,29 @@ Modifica in `config/app.php`:
 - `version` → nuova versione
 - `release_date` → data release
 
-## 📊 Step 5: Aggiorna la Dashboard Changelog (opzionale)
+## 📊 Step 5: Verifica la Dashboard Changelog
 
-Le patch release generalmente **non vengono aggiunte alla dashboard Changelog** perché questa mostra solo le major release. Se la patch contiene fix critici o è particolarmente importante, puoi aggiungerla seguendo lo stesso processo del template minor release.
+La dashboard Changelog è **dinamica** e legge automaticamente i file CHANGELOG dalla directory `changelog/`.
+
+**Le patch release vengono automaticamente incluse nella dashboard!**
+
+Il sistema:
+- Legge automaticamente tutti i file `CHANGELOG-MS-X.Y.Z.md` dalla directory `changelog/`
+- Organizza le release per minor version (es. 1.21.x)
+- Le patch (es. MS-1.21.1, MS-1.21.2) vengono automaticamente raggruppate nella loro minor release (1.21.x)
+- Converte il markdown in HTML per la visualizzazione
+- Ordina le release dalla più recente alla meno recente
+
+**Verifica:**
+1. Dopo aver creato il file `CHANGELOG-MS-X.Y.Z.md`, pulisci la cache:
+   ```bash
+   docker-compose exec phpfpm php artisan optimize:clear
+   ```
+2. Accedi alla dashboard Changelog in Nova: `Help > Changelog`
+3. Clicca sulla minor release corrispondente (es. se hai creato MS-1.21.3, clicca su "Changelog MS-1.21.x")
+4. Verifica che la patch appaia correttamente nella lista delle patch di quella minor release
+
+**Nota:** Non è necessario modificare manualmente nessun file di view. Il sistema carica automaticamente tutte le patch nella loro minor release corrispondente.
 
 ## ✅ Step 6: Commit e Tag
 
@@ -188,8 +208,6 @@ git add changelog/CHANGELOG-MS-X.Y.Z.md
 git add changelog/email/EMAIL-RELEASE-MS-X.Y.Z.md changelog/email/EMAIL-RELEASE-MS-X.Y.Z.txt
 # Aggiungi config/app.php
 git add config/app.php
-# Se hai aggiornato la dashboard:
-git add resources/views/changelog-dashboard.blade.php
 
 # Commit
 git commit -m "fix: prepare patch release MS-X.Y.Z"
@@ -229,10 +247,11 @@ Per MS-1.18.1:
 2. Crea `changelog/CHANGELOG-MS-1.18.1.md` con i bug fix
 3. (Opzionale) Crea `changelog/email/EMAIL-RELEASE-MS-1.18.1.md` e `EMAIL-RELEASE-MS-1.18.1.txt` se il fix è critico
 4. Aggiorna `config/app.php`: version='MS-1.18.1', release_date='2025-11-04'
-5. (Opzionale) Aggiorna `resources/views/changelog-dashboard.blade.php` se necessario
-6. Commit, tag e push
-7. Deploy su staging/produzione
-8. Comunicazione al team (solo se necessario)
+5. Pulisci la cache: `docker-compose exec phpfpm php artisan optimize:clear`
+6. Verifica che la patch appaia correttamente nella dashboard Changelog nella minor release corrispondente (1.18.x)
+7. Commit, tag e push
+8. Deploy su staging/produzione
+9. Comunicazione al team (solo se necessario)
 
 ## 🔄 Differenze con Minor/Major Release
 
@@ -241,7 +260,7 @@ Le patch release sono le più semplici:
 - **Nessuna nuova feature**
 - **Nessuna breaking change**
 - **Email generalmente opzionale**
-- **Dashboard Changelog generalmente non aggiornata**
+- **Dashboard Changelog automatica**: le patch vengono automaticamente incluse nella loro minor release
 - **Processo più veloce** e meno formale
 - **Changelog molto snello** focalizzato solo su fix
 
@@ -252,4 +271,38 @@ Le patch release sono le più semplici:
 - Email esempi: `changelog/email/EMAIL-RELEASE-MS-*.md`
 - Template Minor Release: `.cursor/templates/minor_release.md`
 - Template Major Release: `.cursor/templates/major_release.md`
+- Servizio Changelog: `app/Services/ChangelogService.php`
+- Dashboard Changelog: `app/Nova/Dashboards/Changelog.php`
+- Dashboard Minor Release: `app/Nova/Dashboards/ChangelogMinorRelease.php`
+
+## 🔍 Come Funziona il Sistema Changelog
+
+Il sistema changelog è completamente dinamico:
+
+1. **ChangelogService** (`app/Services/ChangelogService.php`):
+   - Scansiona la directory `changelog/` per trovare tutti i file `CHANGELOG-MS-*.md`
+   - Estrae le versioni e le organizza per minor release (es. 1.21.x)
+   - Le patch vengono automaticamente raggruppate nella loro minor release
+   - Converte il markdown in HTML usando `league/commonmark`
+   - Estrae le date di release dal contenuto markdown
+
+2. **Dashboard Changelog** (`app/Nova/Dashboards/Changelog.php`):
+   - Dashboard principale che mostra tutte le minor release
+   - Visualizza un menu con tutte le minor release cliccabili
+
+3. **Dashboard ChangelogMinorRelease** (`app/Nova/Dashboards/ChangelogMinorRelease.php`):
+   - Dashboard dinamica creata automaticamente per ogni minor release
+   - Mostra tutte le patch (es. 1.21.1, 1.21.2, 1.21.3, ecc.) relative a quella minor release
+   - Accessibile tramite URL: `/dashboards/changelog-1-21` (per 1.21.x)
+
+4. **Menu Nova**:
+   - Il menu "Help > Changelog" punta automaticamente all'ultima minor release disponibile
+   - Le dashboard vengono registrate dinamicamente in `NovaServiceProvider`
+
+**Vantaggi per le Patch Release:**
+- ✅ Le patch vengono automaticamente incluse nella loro minor release
+- ✅ Nessuna modifica manuale necessaria
+- ✅ Le patch appaiono automaticamente dopo aver creato il file CHANGELOG
+- ✅ Organizzazione automatica per minor release
+- ✅ Conversione automatica markdown → HTML
 
