@@ -163,7 +163,7 @@ return [
     */
 
     'brand' => [
-        'logo' => public_path('/images/logo.svg'),
+        'logo' => env('NOVA_LOGO_PATH', public_path('images/logo-montagna-servizi.svg')),
 
         'colors' => [
             "400" => "24, 182, 155, 0.5",

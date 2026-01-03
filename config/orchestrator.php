@@ -70,6 +70,22 @@ return [
     'pdf_logo_path' => env('PDF_LOGO_PATH', storage_path('app/pdf-logo/logo.png')),
 
     /*
+     * Nova Logo Configuration
+     *--------------------------------------------------------------------------
+     *
+     * This value is used as the logo path for Nova interface.
+     * Nova requires an SVG file. If you have a PNG logo, you can:
+     * 1. Convert it to SVG
+     * 2. Use a wrapper SVG that references the PNG
+     * 3. Place an SVG version in public/images/
+     *
+     * Default: public/images/logo.svg (fallback to PDF logo if exists)
+     *
+     */
+
+    'nova_logo_path' => env('NOVA_LOGO_PATH', public_path('images/logo-montagna-servizi.svg')),
+
+    /*
     |--------------------------------------------------------------------------
     | Story Allowed File Types Configuration
     |--------------------------------------------------------------------------
