@@ -95,12 +95,45 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('HELP', [
                     MenuItem::resource(Documentation::class),
                     MenuItem::dashboard(TicketStatus::class),
-                    MenuItem::dashboard(Changelog::class)->canSee(function ($request) {
-                        if ($request->user() == null) {
-                            return false;
+                    (function () {
+                        try {
+                            $changelogService = app(\App\Services\ChangelogService::class);
+                            $minorReleases = $changelogService->getMinorReleases();
+                            if (empty($minorReleases) || !is_array($minorReleases)) {
+                                return MenuItem::dashboard(Changelog::class)->canSee(function ($request) {
+                                    if ($request->user() == null) {
+                                        return false;
+                                    }
+                                    return !$request->user()->hasRole(UserRole::Customer);
+                                });
+                            }
+                            // Get the first (latest) minor release
+                            $latestMinorVersion = array_key_first($minorReleases);
+                            if (!$latestMinorVersion || !is_string($latestMinorVersion)) {
+                                return MenuItem::dashboard(Changelog::class)->canSee(function ($request) {
+                                    if ($request->user() == null) {
+                                        return false;
+                                    }
+                                    return !$request->user()->hasRole(UserRole::Customer);
+                                });
+                            }
+                            return MenuItem::dashboard(new \App\Nova\Dashboards\ChangelogMinorRelease($latestMinorVersion))
+                                ->canSee(function ($request) {
+                                    if ($request->user() == null) {
+                                        return false;
+                                    }
+                                    return !$request->user()->hasRole(UserRole::Customer);
+                                });
+                        } catch (\Exception $e) {
+                            \Log::error('Error creating changelog menu item: ' . $e->getMessage());
+                            return MenuItem::dashboard(Changelog::class)->canSee(function ($request) {
+                                if ($request->user() == null) {
+                                    return false;
+                                }
+                                return !$request->user()->hasRole(UserRole::Customer);
+                            });
                         }
-                        return !$request->user()->hasRole(UserRole::Customer);
-                    }),
+                    })(),
                 ])->icon('question-mark-circle')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
@@ -361,7 +394,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     protected function dashboards()
     {
-        return [
+        $dashboards = [
             new \App\Nova\Dashboards\Kanban,
             new \App\Nova\Dashboards\Kanban2,
             new \App\Nova\Dashboards\Activity,
@@ -376,6 +409,24 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new \App\Nova\Dashboards\TicketStatus,
             new \App\Nova\Dashboards\Changelog,
         ];
+
+        // Add changelog minor release dashboards
+        try {
+            $changelogService = app(\App\Services\ChangelogService::class);
+            $minorReleases = $changelogService->getMinorReleases();
+            if (is_array($minorReleases) && !empty($minorReleases)) {
+                foreach ($minorReleases as $minorVersion => $release) {
+                    if ($minorVersion && is_string($minorVersion) && !empty($minorVersion)) {
+                        $dashboards[] = new \App\Nova\Dashboards\ChangelogMinorRelease($minorVersion);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // If there's an error loading releases, just skip adding them
+            \Log::warning('Error loading changelog minor releases: ' . $e->getMessage());
+        }
+
+        return $dashboards;
     }
 
     /**

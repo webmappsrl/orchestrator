@@ -2,6 +2,8 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Services\ChangelogService;
+use Illuminate\Http\Request;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Dashboard;
 
@@ -14,10 +16,16 @@ class Changelog extends Dashboard
      */
     public function cards()
     {
+        $changelogService = app(ChangelogService::class);
+        $minorReleases = $changelogService->getMinorReleases();
+        
+        // Show the index page with menu and links to minor release dashboards
         return [
             (new HtmlCard)
                 ->width('full')
-                ->view('changelog-dashboard')
+                ->view('changelog-dashboard-index', [
+                    'minorReleases' => $minorReleases,
+                ])
                 ->center(true),
         ];
     }

@@ -112,6 +112,13 @@ Route::get('/generate-activity-report-pdf/{id}', [\App\Http\Controllers\Activity
 Route::get('/scrum-meeting/{meetCode}', [ScrumController::class, 'createOrUpdateScrumStory'])
     ->middleware(['auth'])->name('scrum.meeting');
 
+// Changelog routes
+Route::get('/changelog', [\App\Http\Controllers\ChangelogController::class, 'index'])
+    ->middleware(['nova'])->name('changelog.index');
+
+Route::get('/changelog/{minorVersion}', [\App\Http\Controllers\ChangelogController::class, 'showMinorRelease'])
+    ->middleware(['nova'])->name('changelog.minor-release');
+
 // Rotta per gestire la selezione del developer nella dashboard
 Route::post('/set-dashboard-developer', function () {
     $developerId = request('developer_id');
