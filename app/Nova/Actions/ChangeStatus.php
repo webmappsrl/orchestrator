@@ -87,6 +87,119 @@ class ChangeStatus extends Action
     }
 
     /**
+     * Get available status transitions based on current status
+     *
+     * @param string $currentStatus
+     * @return array
+     */
+    private function getAvailableStatuses($currentStatus)
+    {
+        $availableStatuses = [];
+
+        switch ($currentStatus) {
+            case StoryStatus::New->value:
+                $availableStatuses = [
+                    StoryStatus::Assigned,
+                    StoryStatus::Backlog,
+                    StoryStatus::Rejected,
+                    StoryStatus::Problem,
+                    StoryStatus::Waiting,
+                ];
+                break;
+
+            case StoryStatus::Backlog->value:
+                $availableStatuses = [
+                    StoryStatus::Assigned,
+                    StoryStatus::Problem,
+                    StoryStatus::Waiting,
+                ];
+                break;
+
+            case StoryStatus::Assigned->value:
+                $availableStatuses = [
+                    StoryStatus::Todo,
+                    StoryStatus::Problem,
+                    StoryStatus::Waiting,
+                ];
+                break;
+
+            case StoryStatus::Todo->value:
+                $availableStatuses = [
+                    StoryStatus::Progress,
+                    StoryStatus::Rejected,
+                    StoryStatus::Problem,
+                    StoryStatus::Waiting,
+                ];
+                break;
+
+            case StoryStatus::Progress->value:
+                $availableStatuses = [
+                    StoryStatus::Test,
+                    StoryStatus::Released,
+                    StoryStatus::Todo,
+                    StoryStatus::Rejected,
+                    StoryStatus::Problem,
+                    StoryStatus::Waiting,
+                ];
+                break;
+
+            case StoryStatus::Test->value:
+                $availableStatuses = [
+                    StoryStatus::Tested,
+                    StoryStatus::Todo,
+                ];
+                break;
+
+            case StoryStatus::Tested->value:
+                $availableStatuses = [
+                    StoryStatus::Released,
+                ];
+                break;
+
+            case StoryStatus::Released->value:
+                $availableStatuses = [
+                    StoryStatus::Done,
+                ];
+                break;
+
+            case StoryStatus::Waiting->value:
+                // Da Waiting si può tornare solo agli stati da cui si può passare a Waiting
+                $availableStatuses = [
+                    StoryStatus::New,
+                    StoryStatus::Backlog,
+                    StoryStatus::Assigned,
+                    StoryStatus::Todo,
+                    StoryStatus::Progress,
+                ];
+                break;
+
+            case StoryStatus::Problem->value:
+                // Da Problem si può tornare solo agli stati da cui si può passare a Problem
+                $availableStatuses = [
+                    StoryStatus::New,
+                    StoryStatus::Backlog,
+                    StoryStatus::Assigned,
+                    StoryStatus::Todo,
+                    StoryStatus::Progress,
+                ];
+                break;
+
+            case StoryStatus::Done->value:
+            case StoryStatus::Rejected->value:
+                // Stati finali: nessuna transizione possibile
+                $availableStatuses = [];
+                break;
+
+            default:
+                // Fallback: mostra tutti gli stati
+                $availableStatuses = StoryStatus::cases();
+                break;
+        }
+
+        return $availableStatuses;
+    }
+
+    /**
      * Get the fields available on the action.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
@@ -94,9 +207,33 @@ class ChangeStatus extends Action
      */
     public function fields(NovaRequest $request)
     {
+        // Ottieni lo stato corrente del ticket
+        $currentStatus = null;
+        
+        // Se è un'azione su un singolo elemento (detail view)
+        if ($request->resourceId) {
+            $model = \App\Models\Story::find($request->resourceId);
+            if ($model) {
+                $currentStatus = $model->status;
+            }
+        }
+        // Se è un'azione bulk (index view), prendi il primo modello
+        elseif ($request->resources) {
+            $resourceIds = is_string($request->resources) ? explode(',', $request->resources) : $request->resources;
+            if (!empty($resourceIds)) {
+                $model = \App\Models\Story::find($resourceIds[0]);
+                if ($model) {
+                    $currentStatus = $model->status;
+                }
+            }
+        }
+
+        // Ottieni gli stati disponibili in base allo stato corrente
+        $availableStatuses = $this->getAvailableStatuses($currentStatus ?? StoryStatus::New->value);
+
         // Crea un array di opzioni per il dropdown degli stati
         $statusOptions = [];
-        foreach (StoryStatus::cases() as $status) {
+        foreach ($availableStatuses as $status) {
             $statusOptions[$status->value] = $status->icon() . ' ' . $status->name;
         }
 
@@ -166,6 +303,28 @@ class ChangeStatus extends Action
     public function name()
     {
         return __('Change Status');
+    }
+
+    /**
+     * Determine if the action is executable for the given request.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    public function authorizedToRun($request, $model)
+    {
+        // Ottieni lo stato corrente
+        $currentStatus = $model->status ?? null;
+        
+        // Se lo stato è Done o Rejected, non permettere transizioni
+        if (in_array($currentStatus, [StoryStatus::Done->value, StoryStatus::Rejected->value])) {
+            return false;
+        }
+
+        // Verifica che ci siano stati disponibili
+        $availableStatuses = $this->getAvailableStatuses($currentStatus ?? StoryStatus::New->value);
+        return !empty($availableStatuses);
     }
 }
 
