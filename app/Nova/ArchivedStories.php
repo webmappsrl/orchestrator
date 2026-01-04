@@ -5,7 +5,7 @@ namespace App\Nova;
 use App\Enums\StoryStatus;
 use Illuminate\Http\Request;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use App\Nova\Actions\DuplicateStory;
+use Laravel\Nova\Fields\Stack;
 
 class ArchivedStories extends Story
 {
@@ -27,7 +27,34 @@ class ArchivedStories extends Story
 
     public static function authorizedToCreate(Request $request)
     {
+        // Allow creation during replication (same behavior as CustomerStory)
+        // Check if this is a replicate request by checking for fromResourceId parameter
+        if ($request instanceof NovaRequest && $request->isCreateOrAttachRequest()) {
+            $fromResourceId = $request->input('fromResourceId');
+            if ($fromResourceId) {
+                return true; // Allow creation when replicating
+            }
+        }
+        
+        // Also check URL path for /replicate pattern
+        $path = $request->path();
+        if (preg_match('#/resources/[^/]+/(\d+)/replicate#', $path)) {
+            return true; // Allow creation when replicating
+        }
+        
         return false;
+    }
+
+    /**
+     * Determine if the user is authorized to replicate the given resource.
+     * Same behavior as CustomerStory - allows replication.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function authorizedToReplicate(Request $request)
+    {
+        return true;
     }
 
     /**
@@ -94,7 +121,6 @@ class ArchivedStories extends Story
                 ->confirmText(__('Seleziona il nuovo stato per il ticket. Clicca su "Conferma" per salvare o "Annulla" per cancellare.'))
                 ->confirmButtonText(__('Conferma'))
                 ->cancelButtonText(__('Annulla')),
-            (new DuplicateStory)->showInline()
         ];
     }
 }
