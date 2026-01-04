@@ -350,8 +350,23 @@ class ChangeStatus extends Action
             Textarea::make(__('Ragione del fallimento del test'), 'test_failure_reason')
                 ->help(__('Specifica la ragione del fallimento del test'))
                 ->dependsOn(['status'], function (Textarea $field, NovaRequest $request, $formData) {
-                    // Mostra solo se si sta selezionando Todo
-                    if (!isset($formData->status) || $formData->status !== StoryStatus::Todo->value) {
+                    // Mostra solo se lo stato corrente è Test E si sta selezionando Todo
+                    $newStatus = $formData->status ?? null;
+                    
+                    // Recupera il modello per verificare lo stato corrente
+                    $model = null;
+                    if ($request->resourceId) {
+                        $model = \App\Models\Story::find($request->resourceId);
+                    } elseif ($request->resources) {
+                        $resourceIds = is_string($request->resources) ? explode(',', $request->resources) : $request->resources;
+                        if (!empty($resourceIds)) {
+                            $model = \App\Models\Story::find($resourceIds[0]);
+                        }
+                    }
+                    
+                    $currentStatus = $model ? $model->status : null;
+                    
+                    if ($newStatus !== StoryStatus::Todo->value || $currentStatus !== StoryStatus::Test->value) {
                         $field->hide();
                     }
                 })
