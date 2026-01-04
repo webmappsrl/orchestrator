@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ __('Changelog') }} - MS-{{ $minorVersion }}.x</title>
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -207,6 +211,72 @@
             background-color: transparent;
             padding: 0;
         }
+
+        .patch-index {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .patch-index h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 20px;
+            color: #343a40;
+            border-bottom: 2px solid #2FBDA5;
+            padding-bottom: 10px;
+        }
+
+        .patch-index-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .patch-index-list li {
+            margin: 0;
+        }
+
+        .patch-index-link {
+            display: block;
+            padding: 8px 12px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #343a40;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .patch-index-link:hover {
+            background-color: #e9ecef;
+            border-color: #2FBDA5;
+            color: #2FBDA5;
+        }
+
+        .back-to-index {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #2FBDA5;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .back-to-index:hover {
+            background-color: #28a085;
+            text-decoration: none;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -224,9 +294,27 @@
             @endforeach
         </div>
 
+        @if(count($patches) > 0)
+        <div class="patch-index" id="patch-index">
+            <h2>{{ __('Indice delle Patch') }}</h2>
+            <ul class="patch-index-list">
+                @foreach($patches as $patch)
+                    <li>
+                        <a href="#patch-{{ str_replace('.', '-', $patch['version']) }}" class="patch-index-link">
+                            MS-{{ $patch['version'] }}
+                            @if($patch['date'])
+                                <span style="display: block; font-size: 12px; color: #6c757d; margin-top: 4px;">{{ $patch['date'] }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
         <div class="release-list">
             @foreach($patches as $patch)
-                <div class="release-card">
+                <div class="release-card" id="patch-{{ str_replace('.', '-', $patch['version']) }}">
                     <div class="release-header">
                         <h2 class="release-version">MS-{{ $patch['version'] }}</h2>
                         @if($patch['date'])
@@ -237,6 +325,7 @@
                         <div class="release-html-content">
                             {!! $patch['content'] !!}
                         </div>
+                        <a href="#patch-index" class="back-to-index">↑ {{ __('Torna all\'indice') }}</a>
                     </div>
                 </div>
             @endforeach
