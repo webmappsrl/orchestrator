@@ -38,15 +38,20 @@ class ChangeStatus extends Action
         $waitingReason = $fields->waiting_reason ?? null;
         $problemReason = $fields->problem_reason ?? null;
         $developerId = $fields->developer_id ?? null;
+        $testerId = $fields->tester_id ?? null;
+        $testFailureReason = $fields->test_failure_reason ?? null;
 
         foreach ($models as $model) {
+            // Salva lo stato precedente
+            $previousStatus = $model->status;
+
             // Verifica che il developer sia assegnato quando lo stato è "assigned"
             if ($status === StoryStatus::Assigned->value && empty($developerId)) {
                 return Action::danger('E\' obbligatorio assegnare un developer');
             }
 
             // Verifica che il tester sia assegnato prima di passare a "testing"
-            if ($status === StoryStatus::Test->value && empty($model->tester_id)) {
+            if ($status === StoryStatus::Test->value && empty($testerId)) {
                 return Action::danger('Impossibile cambiare lo stato a "Da testare" senza avere assegnato un tester.');
             }
 
@@ -60,12 +65,22 @@ class ChangeStatus extends Action
                 return Action::danger('Impossibile cambiare lo stato a "Problema" senza specificare la descrizione del problema.');
             }
 
+            // Verifica che test_failure_reason sia valorizzato quando si passa da Test a Todo
+            if ($status === StoryStatus::Todo->value && $previousStatus === StoryStatus::Test->value && empty($testFailureReason)) {
+                return Action::danger('Impossibile cambiare lo stato da "Da testare" a "Da fare" senza specificare la ragione del fallimento del test.');
+            }
+
             // Prepara i dati per l'aggiornamento
             $updateData = ['status' => $status];
 
             // Aggiungi developer_id se presente quando lo stato è "assigned"
             if ($status === StoryStatus::Assigned->value && $developerId) {
                 $updateData['user_id'] = $developerId;
+            }
+
+            // Aggiungi tester_id se presente quando lo stato è "test"
+            if ($status === StoryStatus::Test->value && $testerId) {
+                $updateData['tester_id'] = $testerId;
             }
 
             // Aggiungi waiting_reason se presente
@@ -76,6 +91,21 @@ class ChangeStatus extends Action
             // Aggiungi problem_reason se presente
             if ($status === StoryStatus::Problem->value && $problemReason) {
                 $updateData['problem_reason'] = $problemReason;
+            }
+
+            // Se si passa da Test a Todo, aggiungi la nota nel campo description
+            if ($status === StoryStatus::Todo->value && $previousStatus === StoryStatus::Test->value && $testFailureReason) {
+                $tester = $model->tester;
+                $testerName = $tester ? $tester->name : 'N/A';
+                $dateTime = now()->format('d/m/Y H:i');
+                
+                $failureNote = "TEST FALLITO / {$dateTime} / {$testerName}. {$testFailureReason}";
+                
+                // Aggiungi la nota in cima alle note di sviluppo esistenti
+                $existingDescription = $model->description ?? '';
+                $updateData['description'] = $existingDescription 
+                    ? $failureNote . "\n\n" . $existingDescription
+                    : $failureNote;
             }
 
             $model->update($updateData);
@@ -126,7 +156,6 @@ class ChangeStatus extends Action
             case StoryStatus::Todo->value:
                 $availableStatuses = [
                     StoryStatus::Progress,
-                    StoryStatus::Rejected,
                     StoryStatus::Problem,
                     StoryStatus::Waiting,
                 ];
@@ -137,7 +166,6 @@ class ChangeStatus extends Action
                     StoryStatus::Test,
                     StoryStatus::Released,
                     StoryStatus::Todo,
-                    StoryStatus::Rejected,
                     StoryStatus::Problem,
                     StoryStatus::Waiting,
                 ];
@@ -146,6 +174,7 @@ class ChangeStatus extends Action
             case StoryStatus::Test->value:
                 $availableStatuses = [
                     StoryStatus::Tested,
+                    StoryStatus::Released,
                     StoryStatus::Todo,
                 ];
                 break;
@@ -209,6 +238,7 @@ class ChangeStatus extends Action
     {
         // Ottieni lo stato corrente del ticket
         $currentStatus = null;
+        $model = null;
         
         // Se è un'azione su un singolo elemento (detail view)
         if ($request->resourceId) {
@@ -265,6 +295,30 @@ class ChangeStatus extends Action
                     return [];
                 }),
 
+            Select::make(__('Tester'), 'tester_id')
+                ->options(function () {
+                    return User::whereJsonDoesntContain('roles', UserRole::Customer->value)
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                })
+                ->searchable()
+                ->default(function () use ($model) {
+                    return $model && $model->tester_id ? $model->tester_id : null;
+                })
+                ->help(__('Seleziona il tester a cui assegnare il ticket'))
+                ->dependsOn(['status'], function (Select $field, NovaRequest $request, $formData) {
+                    if (!isset($formData->status) || $formData->status !== StoryStatus::Test->value) {
+                        $field->hide();
+                    }
+                })
+                ->rules(function (NovaRequest $request) {
+                    if ($request->input('status') === StoryStatus::Test->value) {
+                        return ['required'];
+                    }
+                    return [];
+                }),
+
             Textarea::make(__('Waiting Reason'), 'waiting_reason')
                 ->help(__('Specifica il motivo dell\'attesa'))
                 ->dependsOn(['status'], function (Textarea $field, NovaRequest $request, $formData) {
@@ -289,6 +343,36 @@ class ChangeStatus extends Action
                 ->rules(function (NovaRequest $request) {
                     if ($request->input('status') === StoryStatus::Problem->value) {
                         return ['required'];
+                    }
+                    return [];
+                }),
+
+            Textarea::make(__('Ragione del fallimento del test'), 'test_failure_reason')
+                ->help(__('Specifica la ragione del fallimento del test'))
+                ->dependsOn(['status'], function (Textarea $field, NovaRequest $request, $formData) {
+                    // Mostra solo se si sta selezionando Todo
+                    if (!isset($formData->status) || $formData->status !== StoryStatus::Todo->value) {
+                        $field->hide();
+                    }
+                })
+                ->rules(function (NovaRequest $request) {
+                    // Verifica se lo stato corrente è Test e quello nuovo è Todo
+                    $newStatus = $request->input('status');
+                    if ($newStatus === StoryStatus::Todo->value) {
+                        // Recupera il modello per verificare lo stato corrente
+                        $model = null;
+                        if ($request->resourceId) {
+                            $model = \App\Models\Story::find($request->resourceId);
+                        } elseif ($request->resources) {
+                            $resourceIds = is_string($request->resources) ? explode(',', $request->resources) : $request->resources;
+                            if (!empty($resourceIds)) {
+                                $model = \App\Models\Story::find($resourceIds[0]);
+                            }
+                        }
+                        
+                        if ($model && $model->status === StoryStatus::Test->value) {
+                            return ['required'];
+                        }
                     }
                     return [];
                 }),
