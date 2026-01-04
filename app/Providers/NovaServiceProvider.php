@@ -27,6 +27,7 @@ use App\Nova\Dashboards\ActivityCustomerDetails;
 use App\Nova\Dashboards\ActivityOrganizationsDetails;
 use App\Nova\Dashboards\CustomerDashboard;
 use App\Nova\Dashboards\TicketStatus;
+use App\Nova\Dashboards\TicketFlow;
 use App\Nova\Dashboards\Changelog;
 use App\Nova\Documentation;
 use App\Nova\FundraisingOpportunity;
@@ -95,6 +96,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('HELP', [
                     MenuItem::resource(Documentation::class),
                     MenuItem::dashboard(TicketStatus::class),
+                    MenuItem::dashboard(TicketFlow::class),
                     (function () {
                         try {
                             $changelogService = app(\App\Services\ChangelogService::class);
@@ -407,6 +409,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new \App\Nova\Dashboards\ActivityOrganizationsDetails,
             new \App\Nova\Dashboards\CustomerDashboard,
             new \App\Nova\Dashboards\TicketStatus,
+            new \App\Nova\Dashboards\TicketFlow,
             new \App\Nova\Dashboards\Changelog,
         ];
 
