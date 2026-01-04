@@ -63,6 +63,11 @@ class ArchivedStoryShowedByCustomer extends Story
             return [];
         }
         $actions = [
+            (new actions\ChangeStatus())
+                ->showInline()
+                ->confirmText(__('Seleziona il nuovo stato per il ticket. Clicca su "Conferma" per salvare o "Annulla" per cancellare.'))
+                ->confirmButtonText(__('Conferma'))
+                ->cancelButtonText(__('Annulla')),
             (new actions\EditStories)
                 ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')

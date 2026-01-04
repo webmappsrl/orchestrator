@@ -89,6 +89,11 @@ class ArchivedStories extends Story
     public function actions(NovaRequest $request)
     {
         return [
+            (new actions\ChangeStatus())
+                ->showInline()
+                ->confirmText(__('Seleziona il nuovo stato per il ticket. Clicca su "Conferma" per salvare o "Annulla" per cancellare.'))
+                ->confirmButtonText(__('Conferma'))
+                ->cancelButtonText(__('Annulla')),
             (new DuplicateStory)->showInline()
         ];
     }
