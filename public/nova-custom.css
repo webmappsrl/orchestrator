@@ -12,3 +12,39 @@
         position: fixed;
     }
 }
+
+/* Stile per i link SOLO nei campi "Richiesta" (Request) e "Note di sviluppo" (Description) */
+/* Campo Richiesta - wrapper con classe specifica */
+.story-request-field a[href] {
+    color: #4099de !important;
+    text-decoration: underline !important;
+    font-weight: 500 !important;
+}
+
+.story-request-field a[href]:hover {
+    color: #2d7bb8 !important;
+    text-decoration: underline !important;
+}
+
+/* Campo Note di sviluppo (Description) - contenuti Tiptap in modalità readonly/view */
+/* Targettiamo solo i link dentro i campi Tiptap che sono nella pagina di dettaglio (non in edit) */
+[data-testid="content"] .ProseMirror:not([contenteditable="true"]) a[href],
+[data-testid="content"] [data-tiptap-editor]:not([contenteditable="true"]) a[href],
+.ProseMirror[contenteditable="false"] a[href],
+.ProseMirror[readonly] a[href],
+[data-tiptap-editor][contenteditable="false"] a[href],
+[data-tiptap-editor][readonly] a[href] {
+    color: #4099de !important;
+    text-decoration: underline !important;
+    font-weight: 500 !important;
+}
+
+[data-testid="content"] .ProseMirror:not([contenteditable="true"]) a[href]:hover,
+[data-testid="content"] [data-tiptap-editor]:not([contenteditable="true"]) a[href]:hover,
+.ProseMirror[contenteditable="false"] a[href]:hover,
+.ProseMirror[readonly] a[href]:hover,
+[data-tiptap-editor][contenteditable="false"] a[href]:hover,
+[data-tiptap-editor][readonly] a[href]:hover {
+    color: #2d7bb8 !important;
+    text-decoration: underline !important;
+}

@@ -632,7 +632,11 @@ trait fieldTrait
         if ($request->isCreateOrAttachRequest()) {
             return $customerRequestFieldEdit;
         } else if ($request->isResourceDetailRequest()) {
-            return Text::make(__('Request'), $fieldName)
+            return Text::make(__('Request'), $fieldName, function () use ($fieldName) {
+                $content = $this->resource->$fieldName ?? '';
+                $styledContent = $this->styleLinksInHtml($content);
+                return '<div class="story-request-field">' . $styledContent . '</div>';
+            })
                 ->asHtml()
                 ->canSee(function ($request) use ($fieldName) {
                     $creator = $this->resource->creator;
@@ -1018,6 +1022,40 @@ trait fieldTrait
         return isset($statusOptions[$statusValue])
             ? [$statusOptions[$statusValue]->value => $statusOptions[$statusValue]]
             : [];
+    }
+
+    /**
+     * Add inline styles to links in HTML content
+     */
+    private function styleLinksInHtml($html)
+    {
+        if (empty($html)) {
+            return $html;
+        }
+        
+        // Pattern per trovare tutti i tag <a> con href
+        // Cattura anche i link che hanno già attributi style
+        $pattern = '/<a\s+([^>]*href=["\']([^"\']*)["\'][^>]*)>(.*?)<\/a>/is';
+        
+        return preg_replace_callback($pattern, function ($matches) {
+            $fullTag = $matches[0];
+            $attributes = $matches[1];
+            $href = $matches[2];
+            $content = $matches[3];
+            
+            // Se il link ha già uno style, aggiungiamo i nostri stili
+            if (preg_match('/style=["\']([^"\']*)["\']/', $attributes, $styleMatches)) {
+                $existingStyle = $styleMatches[1];
+                // Rimuoviamo lo style esistente e lo sostituiamo
+                $attributes = preg_replace('/style=["\'][^"\']*["\']/', '', $attributes);
+                $newStyle = 'color: #4099de; text-decoration: underline; font-weight: 500; ' . $existingStyle;
+            } else {
+                // Aggiungiamo solo i nostri stili
+                $newStyle = 'color: #4099de; text-decoration: underline; font-weight: 500;';
+            }
+            
+            return '<a ' . trim($attributes) . ' style="' . $newStyle . '">' . $content . '</a>';
+        }, $html);
     }
 
     /**
