@@ -117,10 +117,27 @@ class ArchivedStories extends Story
     {
         return [
             (new actions\ChangeStatus())
+                ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    // Mostra solo nella detail view, non nella index
+                    return $request->resourceId !== null;
+                })
                 ->showInline()
                 ->confirmText(__('Seleziona il nuovo stato per il ticket. Clicca su "Conferma" per salvare o "Annulla" per cancellare.'))
                 ->confirmButtonText(__('Conferma'))
                 ->cancelButtonText(__('Annulla')),
         ];
+    }
+
+    /**
+     * Get the actions available for the index.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function actionsForIndex(NovaRequest $request)
+    {
+        // Nessuna action nella index - tutte le actions sono solo nella detail view
+        return [];
     }
 }

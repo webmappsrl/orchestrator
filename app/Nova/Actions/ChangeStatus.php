@@ -5,6 +5,7 @@ namespace App\Nova\Actions;
 use App\Enums\StoryStatus;
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Models\StoryLog;
 use Illuminate\Bus\Queueable;
 use Laravel\Nova\Actions\Action;
 use Illuminate\Support\Collection;
@@ -120,11 +121,20 @@ class ChangeStatus extends Action
      * Get available status transitions based on current status
      *
      * @param string $currentStatus
+     * @param \App\Models\Story|null $model
      * @return array
      */
-    private function getAvailableStatuses($currentStatus)
+    private function getAvailableStatuses($currentStatus, $model = null)
     {
         $availableStatuses = [];
+
+        // Se lo stato corrente è PROBLEM o WAITING, recupera solo lo stato precedente da story_logs
+        if (in_array($currentStatus, [StoryStatus::Problem->value, StoryStatus::Waiting->value]) && $model) {
+            $previousStatus = $this->getPreviousStatusFromLogs($model);
+            if ($previousStatus) {
+                return [StoryStatus::from($previousStatus)];
+            }
+        }
 
         switch ($currentStatus) {
             case StoryStatus::New->value:
@@ -229,6 +239,100 @@ class ChangeStatus extends Action
     }
 
     /**
+     * Get resource IDs from Nova request (handles both single and bulk actions)
+     *
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
+     * @return array|null
+     */
+    private function getResourceIdsFromRequest(NovaRequest $request)
+    {
+        // Se è un'azione su un singolo elemento (detail view)
+        if ($request->resourceId) {
+            return [$request->resourceId];
+        }
+        
+        // Prova diversi modi per ottenere i resource IDs per bulk actions
+        $resourceIds = null;
+        
+        // Metodo 1: dalla proprietà resources
+        if ($request->resources) {
+            $resourceIds = is_string($request->resources) ? explode(',', $request->resources) : $request->resources;
+        }
+        // Metodo 2: dalla query string
+        elseif ($request->query('resources')) {
+            $resources = $request->query('resources');
+            if (is_string($resources)) {
+                // Potrebbe essere JSON o comma-separated
+                $decoded = json_decode($resources, true);
+                $resourceIds = $decoded !== null ? $decoded : explode(',', $resources);
+            } else {
+                $resourceIds = $resources;
+            }
+        }
+        // Metodo 3: dalla query string come array
+        elseif ($request->has('resources')) {
+            $resources = $request->input('resources');
+            if (is_string($resources)) {
+                $decoded = json_decode($resources, true);
+                $resourceIds = $decoded !== null ? $decoded : explode(',', $resources);
+            } else {
+                $resourceIds = $resources;
+            }
+        }
+        
+        return $resourceIds && !empty($resourceIds) ? (is_array($resourceIds) ? $resourceIds : [$resourceIds]) : null;
+    }
+
+    /**
+     * Get the previous status from story_logs before the ticket was set to PROBLEM or WAITING
+     *
+     * @param \App\Models\Story $model
+     * @return string|null
+     */
+    private function getPreviousStatusFromLogs($model)
+    {
+        // Cerca il log più recente dove lo stato è cambiato a PROBLEM o WAITING
+        $statusChangeLog = StoryLog::where('story_id', $model->id)
+            ->where(function ($query) {
+                $query->where('changes->status', StoryStatus::Problem->value)
+                    ->orWhere('changes->status', StoryStatus::Waiting->value);
+            })
+            ->orderBy('viewed_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!$statusChangeLog) {
+            return null;
+        }
+
+        // Cerca tutti i log precedenti a quello che ha cambiato lo stato a PROBLEM/WAITING
+        // ordinati per data decrescente
+        $allLogs = StoryLog::where('story_id', $model->id)
+            ->where(function ($query) use ($statusChangeLog) {
+                $query->where('viewed_at', '<', $statusChangeLog->viewed_at)
+                    ->orWhere(function ($q) use ($statusChangeLog) {
+                        $q->where('viewed_at', '=', $statusChangeLog->viewed_at)
+                            ->where('id', '<', $statusChangeLog->id);
+                    });
+            })
+            ->orderBy('viewed_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // Cerca il primo log che ha uno stato diverso da PROBLEM/WAITING
+        foreach ($allLogs as $log) {
+            if (isset($log->changes['status'])) {
+                $logStatus = $log->changes['status'];
+                if (!in_array($logStatus, [StoryStatus::Problem->value, StoryStatus::Waiting->value])) {
+                    return $logStatus;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Get the fields available on the action.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
@@ -240,26 +344,19 @@ class ChangeStatus extends Action
         $currentStatus = null;
         $model = null;
         
-        // Se è un'azione su un singolo elemento (detail view)
-        if ($request->resourceId) {
-            $model = \App\Models\Story::find($request->resourceId);
+        // Recupera i resource IDs dalla request
+        $resourceIds = $this->getResourceIdsFromRequest($request);
+        
+        if ($resourceIds && !empty($resourceIds)) {
+            // Prendi il primo elemento per determinare lo stato corrente
+            $model = \App\Models\Story::find($resourceIds[0]);
             if ($model) {
                 $currentStatus = $model->status;
             }
         }
-        // Se è un'azione bulk (index view), prendi il primo modello
-        elseif ($request->resources) {
-            $resourceIds = is_string($request->resources) ? explode(',', $request->resources) : $request->resources;
-            if (!empty($resourceIds)) {
-                $model = \App\Models\Story::find($resourceIds[0]);
-                if ($model) {
-                    $currentStatus = $model->status;
-                }
-            }
-        }
 
         // Ottieni gli stati disponibili in base allo stato corrente
-        $availableStatuses = $this->getAvailableStatuses($currentStatus ?? StoryStatus::New->value);
+        $availableStatuses = $this->getAvailableStatuses($currentStatus ?? StoryStatus::New->value, $model);
 
         // Crea un array di opzioni per il dropdown degli stati
         $statusOptions = [];
@@ -355,13 +452,9 @@ class ChangeStatus extends Action
                     
                     // Recupera il modello per verificare lo stato corrente
                     $model = null;
-                    if ($request->resourceId) {
-                        $model = \App\Models\Story::find($request->resourceId);
-                    } elseif ($request->resources) {
-                        $resourceIds = is_string($request->resources) ? explode(',', $request->resources) : $request->resources;
-                        if (!empty($resourceIds)) {
-                            $model = \App\Models\Story::find($resourceIds[0]);
-                        }
+                    $resourceIds = $this->getResourceIdsFromRequest($request);
+                    if ($resourceIds && !empty($resourceIds)) {
+                        $model = \App\Models\Story::find($resourceIds[0]);
                     }
                     
                     $currentStatus = $model ? $model->status : null;
@@ -376,13 +469,9 @@ class ChangeStatus extends Action
                     if ($newStatus === StoryStatus::Todo->value) {
                         // Recupera il modello per verificare lo stato corrente
                         $model = null;
-                        if ($request->resourceId) {
-                            $model = \App\Models\Story::find($request->resourceId);
-                        } elseif ($request->resources) {
-                            $resourceIds = is_string($request->resources) ? explode(',', $request->resources) : $request->resources;
-                            if (!empty($resourceIds)) {
-                                $model = \App\Models\Story::find($resourceIds[0]);
-                            }
+                        $resourceIds = $this->getResourceIdsFromRequest($request);
+                        if ($resourceIds && !empty($resourceIds)) {
+                            $model = \App\Models\Story::find($resourceIds[0]);
                         }
                         
                         if ($model && $model->status === StoryStatus::Test->value) {
@@ -422,7 +511,7 @@ class ChangeStatus extends Action
         }
 
         // Verifica che ci siano stati disponibili
-        $availableStatuses = $this->getAvailableStatuses($currentStatus ?? StoryStatus::New->value);
+        $availableStatuses = $this->getAvailableStatuses($currentStatus ?? StoryStatus::New->value, $model);
         return !empty($availableStatuses);
     }
 }

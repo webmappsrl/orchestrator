@@ -64,6 +64,11 @@ class ArchivedStoryShowedByCustomer extends Story
         }
         $actions = [
             (new actions\ChangeStatus())
+                ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    // Mostra solo nella detail view, non nella index
+                    return $request->resourceId !== null;
+                })
                 ->showInline()
                 ->confirmText(__('Seleziona il nuovo stato per il ticket. Clicca su "Conferma" per salvare o "Annulla" per cancellare.'))
                 ->confirmButtonText(__('Conferma'))
@@ -101,7 +106,17 @@ class ArchivedStoryShowedByCustomer extends Story
         return $actions;
     }
 
-
+    /**
+     * Get the actions available for the index.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function actionsForIndex(NovaRequest $request)
+    {
+        // Nessuna action nella index - tutte le actions sono solo nella detail view
+        return [];
+    }
 
     public static function authorizedToCreate(Request $request)
     {

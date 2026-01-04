@@ -79,6 +79,11 @@ class InProgressStory extends Story
     {
         return [
             (new actions\ChangeStatus())
+                ->onlyOnDetail()
+                ->canSee(function ($request) {
+                    // Mostra solo nella detail view, non nella index
+                    return $request->resourceId !== null;
+                })
                 ->showInline()
                 ->confirmText(__('Seleziona il nuovo stato per il ticket. Clicca su "Conferma" per salvare o "Annulla" per cancellare.'))
                 ->confirmButtonText(__('Conferma'))
