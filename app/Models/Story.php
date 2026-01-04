@@ -108,6 +108,20 @@ class Story extends Model implements HasMedia
         });
 
         static::created(function (Story $story) {
+            // Associate tags if this was created via replicate
+            // Check if fromResourceId is in the request (Nova passes this during replicate)
+            $request = request();
+            $fromResourceId = $request->input('fromResourceId');
+            if ($fromResourceId) {
+                $originalStory = self::find($fromResourceId);
+                if ($originalStory) {
+                    $tagIds = $originalStory->tags->pluck('id')->toArray();
+                    if (!empty($tagIds)) {
+                        $story->tags()->sync($tagIds);
+                    }
+                }
+            }
+            
             $user = auth()->user();
             if ($user) {
                 // Only set creator_id if it's empty/null
@@ -119,6 +133,7 @@ class Story extends Model implements HasMedia
                 }
 
                 $story->save();
+                
                 if ($user->hasRole(UserRole::Customer)) {
                     $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                     foreach ($developers as $developer) {
@@ -451,6 +466,25 @@ class Story extends Model implements HasMedia
     public function fundraisingProject()
     {
         return $this->belongsTo(FundraisingProject::class);
+    }
+
+    /**
+     * Create a new instance of the model for replication.
+     * Adds "(COPY)" to the name when replicating.
+     *
+     * @param  array|null  $except
+     * @return static
+     */
+    public function replicate(array $except = null)
+    {
+        $replicated = parent::replicate($except);
+        
+        // Add (COPY) to the name if it exists
+        if (isset($replicated->name)) {
+            $replicated->name = $replicated->name . ' (COPY)';
+        }
+        
+        return $replicated;
     }
 
     // Metodo per aggiungere un partecipante

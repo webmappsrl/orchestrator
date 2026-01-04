@@ -260,6 +260,28 @@ class Story extends Resource
 
     public function fieldsInEdit(NovaRequest $request)
     {
+        // Check if we're in replicate context
+        $isReplicating = false;
+        $originalStoryId = null;
+        
+        // Check for fromResourceId parameter (Nova passes this during replicate)
+        if ($request->isCreateOrAttachRequest()) {
+            $fromResourceId = $request->input('fromResourceId');
+            if ($fromResourceId) {
+                $isReplicating = true;
+                $originalStoryId = $fromResourceId;
+            }
+        }
+        
+        // Fallback: Check URL path for /replicate pattern
+        if (!$isReplicating) {
+            $path = $request->path();
+            if (preg_match('#/resources/[^/]+/(\d+)/replicate#', $path, $matches)) {
+                $isReplicating = true;
+                $originalStoryId = $matches[1];
+            }
+        }
+        
         $fields = [
             ID::make()->sortable(),
             $this->titleField(),
@@ -268,7 +290,16 @@ class Story extends Resource
             $this->creatorField(),
             $this->assignedToField(),
             $this->testedByField(),
-            $this->tagsField(),
+        ];
+        
+        // Show replicated_tags field if replicating, otherwise show normal tags field
+        if ($isReplicating && $originalStoryId) {
+            $fields[] = $this->replicatedTagsField($originalStoryId);
+        } else {
+            $fields[] = $this->tagsField();
+        }
+        
+        $fields = array_merge($fields, [
             $this->typeField($request),
             $this->descriptionField(),
             Files::make('Documents', 'documents')
@@ -297,7 +328,7 @@ class Story extends Resource
                     return ! $request->user()->hasRole(UserRole::Customer);
                 })
                 ->help(__('Here you can attach the ticket that has the same issue. If multiple tickets share the same issue, attach the main ticket to all related tickets. You can find the main ticket by searching for its title. It is important to note that when the main ticket status changes, the status of all related tickets will also be updated.')),
-        ];
+        ]);
 
         return array_map(function ($field) {
             return $field->onlyOnForms();

@@ -598,6 +598,47 @@ trait fieldTrait
         return $field;
     }
 
+    public function replicatedTagsField($originalStoryId)
+    {
+        return Text::make(__('Replicated Tags'), 'replicated_tags', function () use ($originalStoryId) {
+            $originalStory = \App\Models\Story::find($originalStoryId);
+            if (!$originalStory) {
+                return 'Original Story ID: ' . $originalStoryId . ' (not found)';
+            }
+            
+            $tags = $originalStory->tags;
+            if ($tags->isEmpty()) {
+                return 'No tags in original story';
+            }
+            
+            $tagsList = $tags->map(function ($tag) {
+                return $tag->name . ' (' . $tag->id . ')';
+            })->implode(', ');
+            
+            return $tagsList;
+        })
+            ->default(function () use ($originalStoryId) {
+                $originalStory = \App\Models\Story::find($originalStoryId);
+                if (!$originalStory) {
+                    return 'Original Story ID: ' . $originalStoryId . ' (not found)';
+                }
+                
+                $tags = $originalStory->tags;
+                if ($tags->isEmpty()) {
+                    return 'No tags in original story';
+                }
+                
+                $tagsList = $tags->map(function ($tag) {
+                    return $tag->name . ' (' . $tag->id . ')';
+                })->implode(', ');
+                
+                return $tagsList;
+            })
+            ->help(__('This ticket is being replicated from Story ID: ') . $originalStoryId)
+            ->readonly()
+            ->canSee($this->canSee('tags'));
+    }
+
     public function projectField($fieldName = 'project')
     {
 

@@ -51,6 +51,11 @@ class DuplicateStory extends Action
                 $storyData['done_at']
             );
             
+            // Add (COPY) to the title
+            if (isset($storyData['name'])) {
+                $storyData['name'] = $storyData['name'] . ' (COPY)';
+            }
+            
             $newStory = Story::create($storyData);
             $newStory->status = StoryStatus::New->value;
             
