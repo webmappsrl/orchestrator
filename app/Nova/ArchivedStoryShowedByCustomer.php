@@ -69,40 +69,9 @@ class ArchivedStoryShowedByCustomer extends Story
                 ->confirmButtonText(__('Conferma'))
                 ->cancelButtonText(__('Annulla')),
             (new actions\EditStories)
-                ->confirmText('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
+                ->confirmText('Edit User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
-
-            (new actions\StoryToProgressStatusAction)
-                ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Progress or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
-            (new actions\StoryToDoneStatusAction)
-                ->showInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
-            (new actions\StoryToTestStatusAction)
-                ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Test or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
-            (new actions\StoryToRejectedStatusAction)
-                ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
-            (new actions\StoryToTodoStatusAction)
-                ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Todo or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
-
         ];
 
         if ($request->viaResource == 'projects') {
@@ -122,11 +91,7 @@ class ArchivedStoryShowedByCustomer extends Story
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel')
                 ->showInline());
-            array_push($actions, (new actions\moveToBacklogAction)
-                ->confirmText('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel')
-                ->showInline());
+            // moveToBacklogAction rimossa - usare ChangeStatus invece
             array_push($actions, (new MoveStoriesFromEpic)
                 ->confirmText('Select the epic where you want to move the story. Click on "Confirm" to perform the action or "Cancel" to delete.')
                 ->confirmButtonText('Confirm')

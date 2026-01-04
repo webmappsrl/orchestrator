@@ -43,9 +43,7 @@ class EditStories extends Action
             if (isset($fields['type'])) {
                 $model->type = $fields['type'];
             }
-            if (isset($fields['status'])) {
-                $model->status = $fields['status'];
-            }
+            // Status non può essere modificato tramite questa azione - usare ChangeStatus invece
             if (isset($fields['creator'])) {
                 $model->creator_id = $fields['creator'];
             }
@@ -81,13 +79,10 @@ class EditStories extends Action
      */
     public function fields(NovaRequest $request)
     {
-        $storyStatusOptions =
-            collect(StoryStatus::cases())->mapWithKeys(fn($status) => [$status->value => $status]);
         $storyTypeOptions =
             collect(StoryType::cases())->mapWithKeys(fn($type) => [$type->value => $type]);
         return [
             Select::make('Type')->options($storyTypeOptions),
-            Select::make('Status')->options($storyStatusOptions),
             Select::make('Assigned To')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             Select::make('Tester')->options(User::whereJsonDoesntContain('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),
             Select::make('Creator')->options(User::whereJsonContains('roles', UserRole::Customer)->get()->pluck('name', 'id'))->nullable(),

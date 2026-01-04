@@ -330,42 +330,33 @@ trait fieldTrait
      */
     public function statusField($request, $fieldName = 'status')
     {
-        $isEdit = $request->isCreateOrAttachRequest() || $request->isUpdateOrUpdateAttachedRequest();
-        if ($isEdit) {
-            return   Select::make(__('Status'), $fieldName)
-                ->options($this->getOptions())
-                ->default(StoryStatus::New)
-                ->help(__('Ticket progress status.'))
-                ->readonly(function ($request) {
-                    return $request->user()->hasRole(UserRole::Customer) && $this->resource->status !== StoryStatus::Released->value;
-                });
-        } else {
-            return Text::make(__('Status'), 'status', function () {
-                $status = $this->status;
-                $color = $this->getStatusColor($status);
-                $icon = $this->getStatusIcon($status);
-                $label = strtoupper(__(ucfirst($status)));
-                
-                return <<<HTML
-                    <span style="
-                        background-color: {$color}80;
-                        color: #374151;
-                        font-weight: bold;
-                        padding: 4px 12px;
-                        border-radius: 12px;
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 6px;
-                        border: 1px solid {$color};
-                        text-transform: uppercase;
-                    ">
-                        <span>{$icon}</span>
-                        <span>{$label}</span>
-                    </span>
-                HTML;
-            })
-            ->asHtml();
-        }
+        // Il campo status è sempre solo visualizzazione (non editabile)
+        // La modifica dello stato avviene solo tramite l'azione ChangeStatus
+        return Text::make(__('Status'), 'status', function () {
+            $status = $this->status;
+            $color = $this->getStatusColor($status);
+            $icon = $this->getStatusIcon($status);
+            $label = strtoupper(__(ucfirst($status)));
+            
+            return <<<HTML
+                <span style="
+                    background-color: {$color}80;
+                    color: #374151;
+                    font-weight: bold;
+                    padding: 4px 12px;
+                    border-radius: 12px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    border: 1px solid {$color};
+                    text-transform: uppercase;
+                ">
+                    <span>{$icon}</span>
+                    <span>{$label}</span>
+                </span>
+            HTML;
+        })
+        ->asHtml();
     }
 
     public function assignedToField()

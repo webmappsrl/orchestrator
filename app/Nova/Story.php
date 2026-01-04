@@ -257,7 +257,6 @@ class Story extends Resource
         $fields = [
             ID::make()->sortable(),
             $this->titleField(),
-            $this->statusField($request),
             $this->waitingReasonField(),
             $this->problemReasonField(),
             $this->creatorField(),
@@ -395,51 +394,9 @@ class Story extends Resource
                     }
                 ),
             (new EditStories)
-                ->confirmText(__('Edit Status, User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.'))
+                ->confirmText(__('Edit User and Deadline for the selected stories. Click "Confirm" to save or "Cancel" to delete.'))
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel')),
-
-            (new actions\StoryToProgressStatusAction)
-                ->onlyInline()
-                ->confirmText(__('Click on the "Confirm" button to save the status in Progress or "Cancel" to cancel.'))
-                ->confirmButtonText(__('Confirm'))
-                ->cancelButtonText(__('Cancel'))
-                ->canSee(function () {
-                    return $this->status !== StoryStatus::Progress->value;
-                }),
-
-            (new actions\StoryToDoneStatusAction)
-                ->showInline()
-                ->confirmText(__('Click on the "Confirm" button to save the status in Done or "Cancel" to cancel.'))
-                ->confirmButtonText(__('Confirm'))
-                ->cancelButtonText(__('Cancel'))
-                ->canSee(function () {
-                    return $this->status !== StoryStatus::Done->value;
-                }),
-
-            (new actions\StoryToTestStatusAction)
-                ->onlyInline()
-                ->confirmText(__('Click on the "Confirm" button to save the status in Test or "Cancel" to cancel.'))
-                ->confirmButtonText(__('Confirm'))
-                ->cancelButtonText(__('Cancel'))
-                ->canSee(function () {
-                    return $this->status !== StoryStatus::Test->value;
-                }),
-
-            (new actions\StoryToRejectedStatusAction)
-                ->onlyInline()
-                ->confirmText(__('Click on the "Confirm" button to save the status in Rejected or "Cancel" to cancel.'))
-                ->confirmButtonText(__('Confirm'))
-                ->cancelButtonText(__('Cancel'))
-                ->canSee(function () {
-                    return $this->status !== StoryStatus::Rejected->value;
-                }),
-
-            (new actions\StoryToTodoStatusAction)
-                ->onlyInline()
-                ->confirmText('Click on the "Confirm" button to save the status in Todo or "Cancel" to cancel.')
-                ->confirmButtonText('Confirm')
-                ->cancelButtonText('Cancel'),
 
             (new actions\ConvertStoryToTagAction)
                 ->onlyOnDetail()
@@ -470,12 +427,7 @@ class Story extends Resource
         }
 
         if ($request->viaResource != 'projects') {
-
-            array_push($actions, (new actions\moveToBacklogAction)
-                ->confirmText(__('Click on the "Confirm" button to move the selected stories to Backlog or "Cancel" to cancel.'))
-                ->confirmButtonText(__('Confirm'))
-                ->cancelButtonText(__('Cancel'))
-                ->showInline());
+            // moveToBacklogAction rimossa - usare ChangeStatus invece
         }
 
         return $actions;
