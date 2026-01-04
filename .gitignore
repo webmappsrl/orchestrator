@@ -27,3 +27,4 @@ settings.json
 app/google-calendar/service-account-credentials.json
 
 cat/
+.DS_Store
