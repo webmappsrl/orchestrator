@@ -212,6 +212,12 @@ class Story extends Resource
             
             // Ticket history and activities panel
             Panel::make(__('Ticket history and activities'), [
+                $this->historyLogField()->canSee(function ($request) {
+                    if ($request->user() == null) {
+                        return false;
+                    }
+                    return ! $request->user()->hasRole(UserRole::Customer);
+                }),
                 $this->userActivityField()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;

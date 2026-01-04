@@ -199,14 +199,210 @@ trait fieldTrait
             });
     }
 
-    public function historyLogField(NovaRequest $request,)
+    public function historyLogField()
     {
-        return  Text::make('History Log')
+        return Text::make(__('Ticket Changes'), 'ticket_changes', function () {
+            // Load ALL story logs with user relationship (no limit)
+            $storyLogs = $this->resource->storyLogs()->with('user')->limit(null)->get();
+            
+            if ($storyLogs->isEmpty()) {
+                return '<p style="color: #6c757d; font-style: italic;">' . __('No changes recorded yet.') . '</p>';
+            }
+            
+            // Sort by updated_at from changes JSON (descending), then by id desc as fallback
+            $storyLogs = $storyLogs->sort(function ($a, $b) {
+                // Get updated_at from changes JSON for both logs
+                $changesA = is_array($a->changes) ? $a->changes : (json_decode($a->changes, true) ?: []);
+                $changesB = is_array($b->changes) ? $b->changes : (json_decode($b->changes, true) ?: []);
+                
+                $updatedAtA = $changesA['updated_at'] ?? null;
+                $updatedAtB = $changesB['updated_at'] ?? null;
+                
+                // Parse timestamps
+                $timestampA = 0;
+                $timestampB = 0;
+                
+                if ($updatedAtA) {
+                    try {
+                        $timestampA = Carbon::parse($updatedAtA)->timestamp;
+                    } catch (\Exception $e) {
+                        $timestampA = $a->viewed_at ? Carbon::parse($a->viewed_at)->timestamp : 0;
+                    }
+                } else {
+                    $timestampA = $a->viewed_at ? Carbon::parse($a->viewed_at)->timestamp : 0;
+                }
+                
+                if ($updatedAtB) {
+                    try {
+                        $timestampB = Carbon::parse($updatedAtB)->timestamp;
+                    } catch (\Exception $e) {
+                        $timestampB = $b->viewed_at ? Carbon::parse($b->viewed_at)->timestamp : 0;
+                    }
+                } else {
+                    $timestampB = $b->viewed_at ? Carbon::parse($b->viewed_at)->timestamp : 0;
+                }
+                
+                // Compare timestamps (descending)
+                if ($timestampB !== $timestampA) {
+                    return $timestampB <=> $timestampA;
+                }
+                
+                // If timestamps are equal, sort by id descending
+                return $b->id <=> $a->id;
+            })->values();
+            
+            return $this->formatStoryLogs($storyLogs);
+        })
             ->onlyOnDetail()
-            ->canSee(function ($request) {
-                return !$request->user()->hasRole(UserRole::Customer);
-            })
-            ->asHtml();
+            ->asHtml()
+            ->help(__('This field shows the history of changes made to the ticket, including timestamps, user, and descriptions.'));
+    }
+    
+    /**
+     * Format story logs from story_logs table
+     */
+    private function formatStoryLogs($storyLogs): string
+    {
+        // Preload users for better performance - collect all user IDs from changes
+        $userIds = collect();
+        foreach ($storyLogs as $log) {
+            $changes = is_array($log->changes) ? $log->changes : (json_decode($log->changes, true) ?: []);
+            foreach ($changes as $field => $value) {
+                if (in_array($field, ['user_id', 'tester_id', 'creator_id']) && is_numeric($value)) {
+                    $userIds->push((int) $value);
+                }
+            }
+        }
+        
+        $users = $userIds->unique()->isNotEmpty() 
+            ? \App\Models\User::whereIn('id', $userIds->unique())->get()->keyBy('id') 
+            : collect();
+        
+        $html = '<div style="max-height: 400px; overflow-y: auto;">';
+        $html .= '<table style="width: 100%; border-collapse: collapse;">';
+        $html .= '<thead>';
+        $html .= '<tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">';
+        $html .= '<th style="padding: 8px; text-align: left; font-weight: bold;">' . __('Date/Time') . '</th>';
+        $html .= '<th style="padding: 8px; text-align: left; font-weight: bold;">' . __('User') . '</th>';
+        $html .= '<th style="padding: 8px; text-align: left; font-weight: bold;">' . __('Changes') . '</th>';
+        $html .= '</tr>';
+        $html .= '</thead>';
+        $html .= '<tbody>';
+        
+        foreach ($storyLogs as $log) {
+            // Get timestamp from updated_at in changes JSON, fallback to viewed_at
+            $timestamp = null;
+            $changes = is_array($log->changes) ? $log->changes : (json_decode($log->changes, true) ?: []);
+            if (isset($changes['updated_at'])) {
+                try {
+                    $timestamp = Carbon::parse($changes['updated_at']);
+                } catch (\Exception $e) {
+                    // Fallback to viewed_at if parsing fails
+                    $timestamp = $log->viewed_at ? Carbon::parse($log->viewed_at) : null;
+                }
+            } else {
+                // Use viewed_at as fallback
+                $timestamp = $log->viewed_at ? Carbon::parse($log->viewed_at) : null;
+            }
+            
+            $formattedTimestamp = $timestamp ? $timestamp->format('d/m/Y H:i:s') : __('Unknown');
+            
+            // Get user name
+            $userName = $log->user ? $log->user->name : __('Unknown User');
+            
+            // Format changes description
+            $changesDescription = $this->formatChangesDescription($log->changes, $users);
+            
+            $html .= '<tr style="border-bottom: 1px solid #dee2e6;">';
+            $html .= '<td style="padding: 8px; white-space: nowrap;">' . htmlspecialchars($formattedTimestamp) . '</td>';
+            $html .= '<td style="padding: 8px;">' . htmlspecialchars($userName) . '</td>';
+            $html .= '<td style="padding: 8px;">' . $changesDescription . '</td>';
+            $html .= '</tr>';
+        }
+        
+        $html .= '</tbody>';
+        $html .= '</table>';
+        $html .= '</div>';
+        
+        return $html;
+    }
+    
+    /**
+     * Format changes description from JSON changes
+     */
+    private function formatChangesDescription($changes, $users = null): string
+    {
+        if (empty($changes)) {
+            return '<span style="color: #6c757d; font-style: italic;">' . __('No changes') . '</span>';
+        }
+        
+        // If changes is already an array, use it directly
+        if (is_array($changes)) {
+            $changesArray = $changes;
+        } else {
+            // Try to decode JSON
+            $decoded = json_decode($changes, true);
+            $changesArray = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : [];
+        }
+        
+        if (empty($changesArray)) {
+            return '<span style="color: #6c757d; font-style: italic;">' . __('No changes') . '</span>';
+        }
+        
+        $descriptions = [];
+        foreach ($changesArray as $field => $value) {
+            $fieldLabel = $this->getFieldLabel($field);
+            
+            // Format value based on type and field
+            if (is_null($value)) {
+                $formattedValue = '<em>null</em>';
+            } elseif (is_bool($value)) {
+                $formattedValue = $value ? __('Yes') : __('No');
+            } elseif (is_array($value)) {
+                $formattedValue = json_encode($value, JSON_UNESCAPED_UNICODE);
+            } elseif (in_array($field, ['user_id', 'tester_id', 'creator_id']) && is_numeric($value) && $users) {
+                // Try to get user name for user-related fields
+                $user = $users->get((int) $value);
+                $formattedValue = $user ? htmlspecialchars($user->name) . ' (ID: ' . $value . ')' : htmlspecialchars((string) $value);
+            } elseif ($field === 'status' && !empty($value)) {
+                // Format status with translation
+                $formattedValue = '<span style="font-weight: bold;">' . htmlspecialchars(__(ucfirst($value))) . '</span>';
+            } else {
+                $formattedValue = htmlspecialchars((string) $value);
+                // Truncate long values
+                if (strlen($formattedValue) > 100) {
+                    $formattedValue = substr($formattedValue, 0, 100) . '...';
+                }
+            }
+            
+            $descriptions[] = '<strong>' . htmlspecialchars($fieldLabel) . ':</strong> ' . $formattedValue;
+        }
+        
+        return implode('<br>', $descriptions);
+    }
+    
+    /**
+     * Get human-readable label for field name
+     */
+    private function getFieldLabel(string $field): string
+    {
+        $labels = [
+            'status' => __('Status'),
+            'user_id' => __('Assigned Developer'),
+            'tester_id' => __('Tester'),
+            'creator_id' => __('Creator'),
+            'name' => __('Title'),
+            'description' => __('Description'),
+            'type' => __('Type'),
+            'priority' => __('Priority'),
+            'estimated_hours' => __('Estimated Hours'),
+            'waiting_reason' => __('Waiting Reason'),
+            'problem_reason' => __('Problem Reason'),
+            'parent_id' => __('Parent Story'),
+            'customer_request' => __('Customer Request'),
+        ];
+        
+        return $labels[$field] ?? ucfirst(str_replace('_', ' ', $field));
     }
 
     public function ChildField(NovaRequest $request)
@@ -790,10 +986,14 @@ trait fieldTrait
         $fieldName = 'creator';
         return BelongsTo::make(__('Creator'), $fieldName, 'App\Nova\User')
             ->nullable()
+            ->searchable()
             ->default(function ($request) {
-                return auth()->user()->id;
+                // Only set default if creator_id is not already set
+                if ($request->isCreateOrAttachRequest() && !$request->has('creator_id')) {
+                    return auth()->user()->id;
+                }
+                return null;
             })
-            ->readonly()
             ->canSee($this->canSee($fieldName));
     }
 

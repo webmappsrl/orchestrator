@@ -38,12 +38,16 @@ class StoryObserver
         // Create StoryLog entry for story creation only if we have a user_id
         // (user_id is required in story_logs table)
         if ($userId) {
+            // Ensure status is set (default to 'new' if null)
+            $status = $story->status ?? StoryStatus::New->value;
+            
             StoryLog::create([
                 'story_id' => $story->id,
                 'user_id' => $userId,
                 'viewed_at' => now()->format('Y-m-d H:i:s'),
                 'changes' => [
-                    'status' => $story->status,
+                    'status' => $status,
+                    'updated_at' => $story->created_at ? $story->created_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
                 ],
             ]);
         }
@@ -207,6 +211,11 @@ class StoryObserver
         $jsonChanges = [];
 
         foreach ($dirtyFields as $field => $newValue) {
+            // Skip null values (they don't represent meaningful changes)
+            if ($newValue === null) {
+                continue;
+            }
+            
             if ($field === 'description') {
                 $newValue = 'change description';
             }

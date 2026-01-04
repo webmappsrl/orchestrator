@@ -40,6 +40,7 @@ class Story extends Model implements HasMedia
         'problem_reason',
         'released_at',
         'done_at',
+        'history_log',
     ];
 
     protected $casts = [
@@ -109,7 +110,10 @@ class Story extends Model implements HasMedia
         static::created(function (Story $story) {
             $user = auth()->user();
             if ($user) {
-                $story->creator_id = $user->id;
+                // Only set creator_id if it's empty/null
+                if (empty($story->creator_id)) {
+                    $story->creator_id = $user->id;
+                }
                 if (!isset($story->type)) {
                     $story->type = StoryType::Helpdesk->value;
                 }
