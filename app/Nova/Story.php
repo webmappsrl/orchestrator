@@ -673,4 +673,30 @@ class Story extends Resource
         
         return $helpText;
     }
+
+    /**
+     * Determine if the current user can update the given resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function authorizedToUpdate(\Illuminate\Http\Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return false;
+        }
+
+        // Admin e Manager possono modificare tutti i ticket
+        if ($user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager)) {
+            return true;
+        }
+
+        // Developer può modificare solo i ticket assegnati o di cui è tester
+        if ($user->hasRole(UserRole::Developer)) {
+            return $this->resource->user_id === $user->id || $this->resource->tester_id === $user->id;
+        }
+
+        return false;
+    }
 }

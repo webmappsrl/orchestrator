@@ -6,7 +6,9 @@ use App\Enums\StoryStatus;
 use App\Enums\UserRole;
 use App\Models\User;
 use App\Models\StoryLog;
+use App\Models\Story;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nova\Actions\Action;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\ActionFields;
@@ -494,6 +496,24 @@ class ChangeStatus extends Action
     }
 
     /**
+     * Determine if the action is visible for the given request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function authorizedToSee($request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return false;
+        }
+        // Admin, Manager e Developer possono vedere l'azione
+        return $user->hasRole(UserRole::Admin) 
+            || $user->hasRole(UserRole::Manager) 
+            || $user->hasRole(UserRole::Developer);
+    }
+
+    /**
      * Determine if the action is executable for the given request.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
@@ -502,6 +522,31 @@ class ChangeStatus extends Action
      */
     public function authorizedToRun($request, $model)
     {
+        $user = $request->user();
+        if (!$user) {
+            return false;
+        }
+
+        // Se non è un'istanza di Story, non procedere
+        if (!$model instanceof Story) {
+            return false;
+        }
+
+        // Admin e Manager possono modificare tutti i ticket
+        if ($user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager)) {
+            // Continua con le altre verifiche
+        }
+        // Developer può modificare solo i ticket assegnati o di cui è tester
+        elseif ($user->hasRole(UserRole::Developer)) {
+            if ($model->user_id !== $user->id && $model->tester_id !== $user->id) {
+                return false;
+            }
+        }
+        // Altri ruoli non possono modificare
+        else {
+            return false;
+        }
+
         // Ottieni lo stato corrente
         $currentStatus = $model->status ?? null;
         
