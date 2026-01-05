@@ -57,13 +57,16 @@ class StoryShowedByCustomer extends Story
 
     public function getOptions(): array
     {
-
-        if ($this->resource->status == null) {
-            $this->resource->status = StoryStatus::New->value;
+        if (!$this->resource || $this->resource->status == null) {
+            $statusValue = StoryStatus::New->value;
+        } else {
+            $statusValue = $this->resource->status;
         }
+        
+        $statusLabel = $this->getStatusLabel($statusValue);
         $storyStatusOptions = [
             StoryStatus::Done->value => StoryStatus::Done,
-            ...$this->getStatusLabel($this->resource->status)
+            ...(is_array($statusLabel) ? $statusLabel : [])
         ];
 
         return $storyStatusOptions;
