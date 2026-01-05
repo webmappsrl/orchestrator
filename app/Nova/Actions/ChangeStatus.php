@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Models\StoryLog;
 use App\Models\Story;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nova\Actions\Action;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Fields\ActionFields;
