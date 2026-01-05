@@ -233,6 +233,23 @@ docker-compose exec phpfpm php artisan config:cache
 # Test degli endpoint modificati (se presenti)
 ```
 
+### Deploy in Produzione
+
+Per il deploy in produzione, utilizza il template dedicato:
+
+**📋 Template Deploy Produzione**: `.cursor/templates/deploy_produzione.md`
+
+Il template di deploy produzione automatizza tutto il processo:
+- Cambio al branch `montagna-servizi`
+- Verifica Docker
+- Esecuzione `artisan down`
+- Checkout dell'ultimo tag MS-*
+- Esecuzione dello script `deploy_prod.sh`
+- Verifica e inserimento variabili `.env` mancanti con backup automatico
+- Pulizia cache
+
+**Nota**: Dopo aver creato il tag e fatto il push, segui il template di deploy produzione per eseguire il deploy in modo sicuro e automatizzato.
+
 ## 📌 Step 8: Post-Release
 
 - Comunicazione al team (solo se fix critici)
@@ -250,7 +267,7 @@ Per MS-1.18.1:
 5. Pulisci la cache: `docker-compose exec phpfpm php artisan optimize:clear`
 6. Verifica che la patch appaia correttamente nella dashboard Changelog nella minor release corrispondente (1.18.x)
 7. Commit, tag e push
-8. Deploy su staging/produzione
+8. Deploy su staging/produzione usando il template `.cursor/templates/deploy_produzione.md`
 9. Comunicazione al team (solo se necessario)
 
 ## 🔄 Differenze con Minor/Major Release
@@ -271,6 +288,7 @@ Le patch release sono le più semplici:
 - Email esempi: `changelog/email/EMAIL-RELEASE-MS-*.md`
 - Template Minor Release: `.cursor/templates/minor_release.md`
 - Template Major Release: `.cursor/templates/major_release.md`
+- **Template Deploy Produzione**: `.cursor/templates/deploy_produzione.md`
 - Servizio Changelog: `app/Services/ChangelogService.php`
 - Dashboard Changelog: `app/Nova/Dashboards/Changelog.php`
 - Dashboard Minor Release: `app/Nova/Dashboards/ChangelogMinorRelease.php`
