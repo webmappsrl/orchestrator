@@ -104,6 +104,19 @@ class Kernel extends ConsoleKernel
                     Log::info('orchestrator:scrum-archive command finished');
                 });
         }
+
+        // Auto-restore waiting stories
+        if (config('orchestrator.tasks.autorestore_waiting')) {
+            $schedule->command('orchestrator:autoupdate-waiting')
+                ->timezone('Europe/Rome')
+                ->daily()
+                ->before(function () {
+                    Log::info('orchestrator:autoupdate-waiting command starting');
+                })
+                ->after(function () {
+                    Log::info('orchestrator:autoupdate-waiting command finished');
+                });
+        }
     }
 
     /**

@@ -21,7 +21,8 @@ class MediaObserver
             $user = Auth::user();
 
             if (is_null($user)) {
-                $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
+                $artisanUserEmail = config('orchestrator.artisan_user_email');
+                $user = $artisanUserEmail ? User::where('email', $artisanUserEmail)->first() : null;
             }
 
             if ($user && $story) {
@@ -65,7 +66,8 @@ class MediaObserver
             $user = Auth::user();
 
             if (is_null($user)) {
-                $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
+                $artisanUserEmail = config('orchestrator.artisan_user_email');
+                $user = $artisanUserEmail ? User::where('email', $artisanUserEmail)->first() : null;
             }
 
             if ($user) {

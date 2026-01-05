@@ -54,7 +54,8 @@ class StoryObserver
 
         $user = Auth::user();
         if (is_null($user)) {
-            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
+            $artisanUserEmail = config('orchestrator.artisan_user_email');
+            $user = $artisanUserEmail ? User::where('email', $artisanUserEmail)->first() : null;
         }
 
         if ($user) {
@@ -205,8 +206,16 @@ class StoryObserver
 
         $user = Auth::user();
         if (is_null($user)) {
-            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
-        } //there is a seeder for this user (PhpArtisanUserSeeder)
+            $artisanUserEmail = config('orchestrator.artisan_user_email');
+            $user = $artisanUserEmail ? User::where('email', $artisanUserEmail)->first() : null;
+        }
+
+        // If no user is found, skip creating the log (user_id is required in story_logs table)
+        if (is_null($user)) {
+            $artisanUserEmail = config('orchestrator.artisan_user_email');
+            Log::warning("StoryObserver: Cannot create story log for story ID {$story->id} - no user found (neither authenticated nor artisan user: {$artisanUserEmail})");
+            return;
+        }
 
         $jsonChanges = [];
 
@@ -305,7 +314,8 @@ class StoryObserver
     {
         $user = Auth::user();
         if (is_null($user)) {
-            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
+            $artisanUserEmail = config('orchestrator.artisan_user_email');
+            $user = $artisanUserEmail ? User::where('email', $artisanUserEmail)->first() : null;
         }
 
         if ($user) {

@@ -26,7 +26,8 @@ if (!function_exists('log_story_activity')) {
         if (is_null($user)) {
             $user = auth()->user();
             if (is_null($user)) {
-                $user = \App\Models\User::where('email', 'orchestrator_artisan@webmapp.it')->first();
+                $artisanUserEmail = config('orchestrator.artisan_user_email');
+                $user = $artisanUserEmail ? \App\Models\User::where('email', $artisanUserEmail)->first() : null;
             }
         }
 

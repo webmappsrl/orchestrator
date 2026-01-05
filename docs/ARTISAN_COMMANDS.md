@@ -20,6 +20,7 @@ Questo documento elenca tutti i comandi Artisan definiti nell'applicazione Orche
    - 3.4. [orchestrator:initialize-scores](#34-orchestratorinitialize-scores)
    - 3.5. [orchestrator:activity-report-generate](#35-orchestratoractivity-report-generate)
    - 3.6. [orchestrator:documentation-pdf-generate](#36-orchestratordocumentation-pdf-generate)
+   - 3.7. [orchestrator:autoupdate-waiting](#37-orchestratorautoupdate-waiting)
 4. [Database Commands](#database-commands)
    - 4.1. [app:initialize-database](#41-appinitialize-database)
 5. [User Commands](#user-commands)
@@ -549,6 +550,63 @@ php artisan orchestrator:documentation-pdf-generate --id=11
 
 ---
 
+### 3.7. orchestrator:autoupdate-waiting
+
+↑ [Torna all'indice](#indice)
+
+**File:** `app/Console/Commands/AutoUpdateWaitingStories.php`
+
+**Signature:**
+```bash
+orchestrator:autoupdate-waiting
+```
+
+**Description:**
+Automatically restores tickets from Waiting status to their previous status after a configured number of days.
+
+**Comportamento:**
+- Trova tutti i ticket con status `Waiting`
+- Per ogni ticket, verifica quando è entrato in Waiting (da `story_logs`)
+- Se sono passati più giorni di `ORCHESTRATOR_AUTORESTORE_WAITING_DAYS` (default: 7), ripristina lo stato precedente
+- Recupera lo stato precedente da `story_logs` usando la stessa logica di `ChangeStatus::getPreviousStatusFromLogs()`
+- Se non viene trovato uno stato precedente, usa `StoryStatus::New` come fallback
+- Aggiunge una nota di sviluppo nel campo `description` con formato:
+  ```
+  Rimesso da IN attesa in [STATO_PRECEDENTE] perché sono passati X giorni.
+  Motivo dell'attesa: [MOTIVO_ATTESA]
+  ```
+- Salva il ticket con `save()` (triggera eventi e crea entry in `story_logs`)
+
+**Logica di recupero stato precedente:**
+1. Cerca il log più recente dove lo stato è cambiato a `Waiting`
+2. Cerca tutti i log precedenti a quello
+3. Trova il primo log con uno stato diverso da `Waiting`/`Problem`
+4. Se non trovato, usa `New` come fallback
+
+**Variabili .env:**
+- `ORCHESTRATOR_AUTORESTORE_WAITING_ENABLED`: Abilita/disabilita il comando nello scheduler (default: `false`)
+- `ORCHESTRATOR_AUTORESTORE_WAITING_DAYS`: Numero di giorni dopo i quali ripristinare (default: `7`)
+
+**Schedule:**
+- Eseguito giornalmente (timezone: Europe/Rome) se abilitato
+- Configurabile via `config('orchestrator.tasks.autorestore_waiting')`
+- La verifica di abilitazione viene fatta solo nello scheduler, non nel comando
+
+**Esempio:**
+```bash
+# Esegui manualmente il comando (anche se disabilitato nello scheduler)
+php artisan orchestrator:autoupdate-waiting
+```
+
+**Note:**
+- Il calcolo dei giorni è calendariale (non lavorativo), diverso da altri comandi
+- Il campo `waiting_reason` viene mantenuto anche dopo il ripristino
+- Il comando può essere eseguito manualmente anche quando disabilitato nello scheduler (utile per test)
+- Usa `save()` quindi triggera eventi Eloquent e crea entry in `story_logs`
+- Il cambio di stato del padre aggiornerà automaticamente le story figlie tramite `StoryObserver`
+
+---
+
 ## Database Commands
 
 ↑ [Torna all'indice](#indice)
@@ -734,6 +792,7 @@ php artisan tag:projects
 | `orchestrator:initialize-scores` | `InitializeNullCustomersScore.php` | Manuale | - |
 | `orchestrator:activity-report-generate` | `GenerateMonthlyActivityReports.php` | 1° del mese 12:00 | `--year`, `--month` |
 | `orchestrator:documentation-pdf-generate` | `GenerateDocumentationPdfs.php` | Manuale | `--id` |
+| `orchestrator:autoupdate-waiting` | `AutoUpdateWaitingStories.php` | Daily | - |
 | **Database Commands** |
 | `app:initialize-database` | `InitializeDatabase.php` | Manuale | `--force` |
 | **User Commands** |
@@ -757,6 +816,7 @@ php artisan tag:projects
 3. **Comandi con `save()`:**
    - Gli altri comandi che modificano story usano `save()`
    - Questi comandi creano entry in `story_logs` tramite `StoryObserver`
+   - `orchestrator:autoupdate-waiting` usa `save()` per creare entry in `story_logs` e triggerare eventi
 
 4. **Esecuzione Manuale:**
    - Tutti i comandi schedulati possono essere eseguiti manualmente

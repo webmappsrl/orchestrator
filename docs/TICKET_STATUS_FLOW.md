@@ -142,8 +142,12 @@ Il flusso naturale di un ticket segue questa sequenza:
 
 - **Quando**: Il ticket è in pausa in attesa di informazioni, approvazioni o azioni esterne
 - **Regola**: Richiede obbligatoriamente la compilazione del campo `waiting_reason`
-- **Risoluzione**: Quando l'attesa termina, il ticket torna **solo** allo stato precedente da cui era partito
+- **Risoluzione Manuale**: Quando l'attesa termina, il ticket torna **solo** allo stato precedente da cui era partito
+- **Risoluzione Automatica**: Dopo X giorni (configurabile tramite `ORCHESTRATOR_AUTORESTORE_WAITING_DAYS`, default: 7), il ticket viene ripristinato automaticamente allo stato precedente tramite il comando `orchestrator:autoupdate-waiting`. Se non viene trovato uno stato precedente in `story_logs`, viene usato `New` come fallback.
 - **Reminder**: I ticket in `Waiting` da più di 3 giorni lavorativi ricevono automaticamente un reminder email
+- **Configurazione**: 
+  - `ORCHESTRATOR_AUTORESTORE_WAITING_ENABLED` (default: `false`) per abilitare/disabilitare il comando
+  - `ORCHESTRATOR_AUTORESTORE_WAITING_DAYS` (default: `7`) per configurare i giorni di attesa
 
 **Stati da cui si può passare a Waiting:**
 - `New`
@@ -159,6 +163,7 @@ Il flusso naturale di un ticket segue questa sequenza:
   - Se era `Assigned` → torna a `Assigned`
   - Se era `Todo` → torna a `Todo`
   - Se era `Progress` → torna a `Progress`
+- Se non viene trovato uno stato precedente → `New` (fallback automatico)
 
 ### Flusso Rejected
 
@@ -198,6 +203,14 @@ Il flusso naturale di un ticket segue questa sequenza:
 - **Quando**: Giornaliero alle 07:45, per ticket rilasciati da almeno 3 giorni lavorativi
 - **Dove**: Comando `story:auto-update-status`
 - **Comportamento**: I ticket in `Released` da più di 3 giorni lavorativi vengono impostati a `Done`
+
+### 6. Waiting → Stato Precedente (Automatico dopo X giorni)
+- **Quando**: Giornaliero, per ticket in `Waiting` da più di X giorni (configurabile tramite `ORCHESTRATOR_AUTORESTORE_WAITING_DAYS`, default: 7 giorni)
+- **Dove**: Comando `orchestrator:autoupdate-waiting`
+- **Comportamento**: I ticket in `Waiting` vengono ripristinati automaticamente allo stato precedente recuperato da `story_logs`. Se non viene trovato uno stato precedente, viene usato `New` come fallback. Viene aggiunta una nota di sviluppo nel campo `description` con il motivo dell'attesa.
+- **Configurazione**: 
+  - `ORCHESTRATOR_AUTORESTORE_WAITING_ENABLED` (default: `false`) per abilitare/disabilitare
+  - `ORCHESTRATOR_AUTORESTORE_WAITING_DAYS` (default: `7`) per configurare i giorni di attesa
 
 ### 6. Aggiornamento Richiesta Cliente → Todo
 - **Quando**: Un utente diverso dal developer assegnato modifica il campo `customer_request` e il developer ha ruolo `Customer`

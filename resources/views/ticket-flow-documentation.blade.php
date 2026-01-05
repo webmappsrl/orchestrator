@@ -516,9 +516,11 @@
             <div class="trigger"><strong>{{ __('Può evolvere in') }}:</strong></div>
             <ul>
                 <li><strong>{{ __('Stato precedente') }}</strong> - <span style="color: #666; font-weight: bold;">{{ __('Manuale') }}</span> {{ __('quando l\'attesa termina, il ticket torna allo stato precedente da cui era partito') }}</li>
+                <li><strong>{{ __('Stato precedente') }}</strong> - <span style="color: #4caf50; font-weight: bold;">{{ __('Automatico') }}</span> {{ __('dopo X giorni (configurabile tramite ORCHESTRATOR_AUTORESTORE_WAITING_DAYS, default: 7 giorni) tramite comando orchestrator:autoupdate-waiting') }}</li>
             </ul>
             <div class="rule" style="margin-top: 10px;"><strong>{{ __('Regola') }}:</strong> {{ __('Richiede obbligatoriamente la compilazione del campo waiting_reason') }}</div>
             <div class="rule" style="margin-top: 10px;"><strong>{{ __('Reminder') }}:</strong> {{ __('I ticket in Waiting da più di 3 giorni lavorativi ricevono automaticamente un reminder email') }}</div>
+            <div class="rule" style="margin-top: 10px;"><strong>{{ __('Ripristino Automatico') }}:</strong> {{ __('Se non viene trovato uno stato precedente in story_logs, il ticket viene ripristinato a New. Il motivo dell\'attesa viene mantenuto e viene aggiunta una nota di sviluppo nel campo description.') }}</div>
         </div>
 
         <div class="transition-card">
@@ -586,8 +588,10 @@
             <p><strong>{{ __('Quando') }}:</strong> {{ __('Il ticket è in pausa in attesa di informazioni, approvazioni o azioni esterne') }}</p>
             <p><strong>{{ __('Regola') }}:</strong> {{ __('Richiede obbligatoriamente la compilazione del campo waiting_reason') }}</p>
             <p><strong>{{ __('Stati da cui si può passare a Waiting') }}:</strong> New, Backlog, Assigned, Todo, Progress</p>
-            <p><strong>{{ __('Risoluzione') }}:</strong> {{ __('Quando l\'attesa termina, il ticket torna solo allo stato precedente da cui era partito') }}</p>
+            <p><strong>{{ __('Risoluzione Manuale') }}:</strong> {{ __('Quando l\'attesa termina, il ticket torna solo allo stato precedente da cui era partito') }}</p>
+            <p><strong>{{ __('Risoluzione Automatica') }}:</strong> {{ __('Dopo X giorni (configurabile tramite ORCHESTRATOR_AUTORESTORE_WAITING_DAYS, default: 7), il ticket viene ripristinato automaticamente allo stato precedente tramite il comando orchestrator:autoupdate-waiting. Se non viene trovato uno stato precedente, viene usato New come fallback.') }}</p>
             <p><strong>{{ __('Reminder') }}:</strong> {{ __('I ticket in Waiting da più di 3 giorni lavorativi ricevono automaticamente un reminder email') }}</p>
+            <p><strong>{{ __('Configurazione') }}:</strong> {{ __('ORCHESTRATOR_AUTORESTORE_WAITING_ENABLED (default: false) per abilitare/disabilitare il comando, ORCHESTRATOR_AUTORESTORE_WAITING_DAYS (default: 7) per configurare i giorni di attesa') }}</p>
         </div>
 
         <div class="alternative-flow">
@@ -621,6 +625,14 @@
             <h4>4. {{ __('Released → Done (Automatico dopo 3 giorni)') }}</h4>
             <p><strong>{{ __('Quando') }}:</strong> {{ __('Giornaliero alle 07:45, per ticket rilasciati da almeno 3 giorni lavorativi') }}</p>
             <p><strong>{{ __('Comportamento') }}:</strong> {{ __('I ticket in Released da più di 3 giorni lavorativi vengono impostati a Done') }}</p>
+        </div>
+
+        <div class="automatic-transition">
+            <h4>5. {{ __('Waiting → Stato Precedente (Automatico dopo X giorni)') }}</h4>
+            <p><strong>{{ __('Quando') }}:</strong> {{ __('Giornaliero, per ticket in Waiting da più di X giorni (configurabile tramite ORCHESTRATOR_AUTORESTORE_WAITING_DAYS, default: 7 giorni)') }}</p>
+            <p><strong>{{ __('Comportamento') }}:</strong> {{ __('I ticket in Waiting vengono ripristinati automaticamente allo stato precedente recuperato da story_logs. Se non viene trovato uno stato precedente, viene usato New come fallback. Viene aggiunta una nota di sviluppo nel campo description con il motivo dell\'attesa.') }}</p>
+            <p><strong>{{ __('Comando') }}:</strong> <code>orchestrator:autoupdate-waiting</code></p>
+            <p><strong>{{ __('Configurazione') }}:</strong> {{ __('ORCHESTRATOR_AUTORESTORE_WAITING_ENABLED (default: false) per abilitare/disabilitare, ORCHESTRATOR_AUTORESTORE_WAITING_DAYS (default: 7) per configurare i giorni di attesa') }}</p>
         </div>
 
         <h2 id="regole-validazione">{{ __('Regole di Validazione') }}</h2>

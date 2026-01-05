@@ -8,6 +8,7 @@ Questo documento elenca tutti i punti nel codice dove lo stato di un ticket vien
    - 1.1. [Story Progress to Todo (18:00)](#11-story-progress-to-todo-1800)
    - 1.2. [Story Scrum to Done (16:00)](#12-story-scrum-to-done-1600)
    - 1.3. [Story Auto Update Status (07:45)](#13-story-auto-update-status-0745)
+   - 1.4. [Auto Restore Waiting Stories (Giornaliero)](#14-auto-restore-waiting-stories-giornaliero)
 2. [StoryObserver](#2-storyobserver)
    - 2.1. [Saving Event - Solo un ticket in Progress per utente](#21-saving-event---solo-un-ticket-in-progress-per-utente)
    - 2.2. [Updating Event - Aggiornamento richiesta cliente](#22-updating-event---aggiornamento-richiesta-cliente)
@@ -117,6 +118,46 @@ Story::where('status', StoryStatus::Released->value)
 ```
 
 **Nota:** Il calcolo dei "3 giorni lavorativi" esclude sabato e domenica.
+
+---
+
+### 1.4. Auto Restore Waiting Stories (Giornaliero)
+
+↑ [Torna all'indice](#indice)
+
+**Comando:** `orchestrator:autoupdate-waiting`  
+**File:** `app/Console/Commands/AutoUpdateWaitingStories.php`  
+**Schedule:** Giornaliero (timezone: Europe/Rome)  
+**Config:** `config('orchestrator.tasks.autorestore_waiting')`  
+**Giorni di attesa:** `config('orchestrator.autorestore_waiting_days')` (default: 7)
+
+**Comportamento:**
+- Trova tutti i ticket con status `Waiting`
+- Per ogni ticket, verifica quando è entrato in Waiting (da `story_logs`)
+- Se sono passati più giorni di `ORCHESTRATOR_AUTORESTORE_WAITING_DAYS` (default: 7), ripristina lo stato precedente
+- Recupera lo stato precedente da `story_logs` usando la stessa logica di `ChangeStatus::getPreviousStatusFromLogs()`
+- Se non viene trovato uno stato precedente, usa `StoryStatus::New` come fallback
+- Aggiunge una nota di sviluppo nel campo `description` con formato:
+  ```
+  Rimesso da IN attesa in [STATO_PRECEDENTE] perché sono passati X giorni.
+  Motivo dell'attesa: [MOTIVO_ATTESA]
+  ```
+- Salva il ticket con `save()` (triggera eventi e crea entry in `story_logs`)
+
+**Logica di recupero stato precedente:**
+1. Cerca il log più recente dove lo stato è cambiato a `Waiting`
+2. Cerca tutti i log precedenti a quello
+3. Trova il primo log con uno stato diverso da `Waiting`/`Problem`
+4. Se non trovato, usa `New` come fallback
+
+**Variabili .env:**
+- `ORCHESTRATOR_AUTORESTORE_WAITING_ENABLED`: Abilita/disabilita il comando (default: `false`)
+- `ORCHESTRATOR_AUTORESTORE_WAITING_DAYS`: Numero di giorni dopo i quali ripristinare (default: `7`)
+
+**Nota:** 
+- Il calcolo dei giorni è calendariale (non lavorativo), diverso da altri comandi
+- Il campo `waiting_reason` viene mantenuto anche dopo il ripristino
+- Il comando può essere eseguito manualmente anche quando disabilitato nello scheduler (utile per test)
 
 ---
 
@@ -549,6 +590,7 @@ StoryLog::create([
 | `story:progress-to-todo` | 18:00 (daily) | `Progress` | `Todo` | `save()` | ✅ Sì |
 | `story:scrum-to-done` | 16:00 (daily) | Qualsiasi | `Done` | `saveQuietly()` | ❌ No |
 | `story:auto-update-status` | 07:45 (daily) | `Released` (3+ giorni) | `Done` | `saveQuietly()` | ❌ No |
+| `orchestrator:autoupdate-waiting` | Daily | `Waiting` (X+ giorni) | Stato precedente (o `New`) | `save()` | ✅ Sì |
 | **StoryObserver** |
 | `saving()` | Prima salvataggio | `Progress` (altri) | `Todo` | `save()` | ✅ Sì |
 | `updating()` | Prima aggiornamento | Qualsiasi | `Todo` | Implicito | ✅ Sì |

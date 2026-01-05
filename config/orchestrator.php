@@ -21,7 +21,20 @@ return [
         'process_inbound_emails' => env('ENABLE_PROCESS_INBOUND_EMAILS', false),
         'generate_monthly_activity_reports' => env('ENABLE_GENERATE_MONTHLY_ACTIVITY_REPORTS', false),
         'scrum_archive' => env('ENABLE_SCRUM_ARCHIVE', false),
+        'autorestore_waiting' => env('ORCHESTRATOR_AUTORESTORE_WAITING_ENABLED', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auto-restore Waiting Stories Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This configuration controls the automatic restoration of tickets from
+    | Waiting status to their previous status after a configured number of days.
+    |
+    */
+
+    'autorestore_waiting_days' => env('ORCHESTRATOR_AUTORESTORE_WAITING_DAYS', 7),
 
     'story' => [
         'status' => [
@@ -152,5 +165,19 @@ return [
 
     'platform_name' => env('PLATFORM_NAME', 'Centro Servizi Montagna'),
     'platform_acronym' => env('PLATFORM_ACRONYM', 'CSM'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Artisan User Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This configuration defines the email address of the user used for
+    | automated operations (like Artisan commands) when no authenticated
+    | user is available. You can customize it by setting ARTISAN_USER_EMAIL
+    | in your .env file.
+    |
+    */
+
+    'artisan_user_email' => env('ARTISAN_USER_EMAIL', 'orchestrator_artisan@webmapp.it'),
 
 ];
