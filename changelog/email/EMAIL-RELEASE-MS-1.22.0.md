@@ -1,0 +1,119 @@
+# 🚀 Release MS-1.22.0 - Consolidamento Minor Release 1.21.x
+
+**Ciao!** 👋
+
+Siamo lieti di annunciare la release **MS-1.22.0**, che consolida tutte le patch rilasciate dalla versione MS-1.21.0 alla MS-1.21.24. Questa minor release include miglioramenti significativi all'interfaccia utente, nuove funzionalità per la gestione dei ticket, sistema di changelog dinamico, e numerosi bug fix e miglioramenti tecnici.
+
+---
+
+## 🎯 **COSA C'È DI NUOVO**
+
+### **🌟 Feature Principali**
+
+- **Dashboard Customer Completa** - Nuova dashboard con card informative per login info, ticket da completare, progetti FSP, documentazione, archiviazione Google Drive e budget
+- **Sistema Changelog Dinamico** - Sistema completamente automatico per visualizzazione changelog in Nova, organizzazione per minor release, conversione markdown → HTML
+- **Automazione Processi** - Comandi automatizzati per archiviazione ticket Scrum e auto-restore ticket in attesa dopo periodo configurato
+- **Documentazione Flusso Ticket** - Dashboard TicketFlow in Nova con documentazione completa del flusso di evoluzione dei ticket
+- **Template Deploy Produzione** - Template completo per deploy automatizzato con gestione Docker, backup automatico `.env`, e troubleshooting
+
+### **⚙️ Miglioramenti**
+
+- **Interfaccia Ticket Nova** - Riorganizzazione colonne index con nuova colonna MAIN INFO, Effective hours in History, colonne ragione attesa/problemi
+- **Gestione Stati Ticket** - Miglioramenti Change Status Action, gestione intelligente stati PROBLEM/WAITING, gestione fallimento test
+- **Replica Ticket** - Suffisso (COPY) automatico, visualizzazione tag durante replica, copia automatica tag
+- **Pannello Storico** - Campo "Ticket Changes" che mostra tutti i cambiamenti del ticket con timestamp dalla tabella `story_logs`
+- **Sistema Changelog** - Indice patch, navigazione migliorata con link "Torna all'indice"
+
+### **🐛 Bug Fix**
+
+- **Activity Report PDF** - Risolto problema formattazione tabelle, ottimizzazione colonne
+- **Ticket Archiviati** - Risolti errori caricamento e replica, implementata logica replicate corretta
+- **Nova Resources** - Risolti errori con resource null o status null
+- **Gestione Null User** - Corretta gestione graceful quando utente Artisan non esiste
+- **Logica Transizione Stati** - Corretta logica ripristino stati auto-restore
+
+---
+
+## 👥 **PER CHI È QUESTA RELEASE**
+
+### **👨‍💼 Admin**
+
+- **Dashboard Changelog Dinamico** - Sistema automatico per visualizzazione changelog, nessuna modifica manuale necessaria
+- **Template Deploy Produzione** - Template completo per deploy automatizzato con backup automatico `.env`
+- **Configurazione Google Drive** - Campi per archiviazione documenti e budget nella tabella users
+- **Comandi Automatizzati** - Comandi per archiviazione Scrum e auto-restore Waiting configurabili tramite variabili d'ambiente
+
+### **👨‍💻 Developer**
+
+- **Interfaccia Ticket Migliorata** - Riorganizzazione colonne, campo Ticket Changes, gestione replicate migliorata
+- **Gestione Stati Avanzata** - Change Status Action migliorato, recupero stato precedente da `story_logs`
+- **Sistema Changelog** - Sistema completamente dinamico, organizzazione automatica per minor release
+- **Documentazione Completa** - Dashboard TicketFlow, documentazione comandi Artisan, transizioni automatiche
+- **Test Suite** - Corretti test obsoleti, aggiunta suite test completa per AutoUpdateWaitingStoriesService
+
+### **🏢 Customer**
+
+- **Dashboard Customer Completa** - Dashboard con card informative per login info, ticket da completare, progetti FSP
+- **Documentazione e Contatti** - Card documentazione con sezione contatti e link per creare nuovo ticket
+- **Archiviazione Google Drive** - Accesso diretto a cartelle Google Drive per documenti e budget
+- **Menu Migliorato** - Menu HELP visibile, organizzazione voci migliorata, label più chiari
+
+---
+
+## 📋 **DETTAGLI RILASCIO**
+
+- **Versione:** MS-1.22.0
+- **Data:** 05/01/2026
+- **Stato:** Disponibile
+- **Patch consolidate:** 25 (da MS-1.21.0 a MS-1.21.24)
+- **Nuove feature principali:** 8
+- **Miglioramenti significativi:** 15+
+- **Bug fix:** 10+
+
+---
+
+## ⚠️ **NOTA IMPORTANTE**
+
+### **Deployment**
+
+Dopo il deploy, eseguire i seguenti comandi:
+
+```bash
+# Pulizia cache
+docker-compose exec phpfpm php artisan optimize:clear
+
+# Eseguire migrazioni (se presenti)
+docker-compose exec phpfpm php artisan migrate
+```
+
+### **Configurazione**
+
+Verificare le seguenti variabili d'ambiente per le nuove funzionalità (opzionali):
+
+- `ENABLE_SCRUM_ARCHIVE` - Abilita task schedulato per archiviazione Scrum (default: false)
+- `SCRUM_ARCHIVE_CREATOR_ID` - ID utente per archiviazione Scrum
+- `SCRUM_ARCHIVE_TAG_ID` - ID tag per archiviazione Scrum
+- `ORCHESTRATOR_AUTORESTORE_WAITING_ENABLED` - Abilita auto-restore Waiting (default: false)
+- `ORCHESTRATOR_AUTORESTORE_WAITING_DAYS` - Giorni per auto-restore (default: 7)
+- `ARTISAN_USER_EMAIL` - Email utente per comandi Artisan (default: orchestrator_artisan@webmapp.it)
+- `NOVA_LOGO_PATH` - Path logo Nova (opzionale)
+
+---
+
+## 🎉 **GRAZIE!**
+
+Questa minor release rappresenta un consolidamento significativo delle funzionalità e miglioramenti sviluppati durante il ciclo 1.21.x, con focus particolare su:
+- Miglioramento dell'esperienza utente nelle dashboard e interfacce Nova
+- Automazione di processi manuali (archiviazione Scrum, auto-restore Waiting)
+- Sistema di documentazione e changelog dinamico
+- Robustezza e stabilità del sistema (bug fix, gestione errori, test)
+
+**Buon lavoro!** 🙌
+
+---
+
+**Team Orchestrator**  
+*Webmapp S.r.l.*
+
+*Per domande o assistenza, contattate il team tecnico.*
+
