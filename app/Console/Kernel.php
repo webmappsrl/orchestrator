@@ -90,6 +90,20 @@ class Kernel extends ConsoleKernel
                     Log::info('orchestrator:activity-report-generate command finished');
                 });
         }
+
+        // Scrum archive (runs daily at 5:00 AM)
+        if (config('orchestrator.tasks.scrum_archive')) {
+            $schedule
+                ->command('orchestrator:scrum-archive')
+                ->timezone('Europe/Rome')
+                ->dailyAt('05:00')
+                ->before(function () {
+                    Log::info('orchestrator:scrum-archive command starting');
+                })
+                ->after(function () {
+                    Log::info('orchestrator:scrum-archive command finished');
+                });
+        }
     }
 
     /**

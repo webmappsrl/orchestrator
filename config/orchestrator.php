@@ -20,6 +20,7 @@ return [
         'story_auto_update_status' => env('ENABLE_STORY_AUTO_UPDATE_STATUS', false),
         'process_inbound_emails' => env('ENABLE_PROCESS_INBOUND_EMAILS', false),
         'generate_monthly_activity_reports' => env('ENABLE_GENERATE_MONTHLY_ACTIVITY_REPORTS', false),
+        'scrum_archive' => env('ENABLE_SCRUM_ARCHIVE', false),
     ],
 
     'story' => [
