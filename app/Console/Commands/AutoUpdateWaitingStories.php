@@ -75,13 +75,20 @@ class AutoUpdateWaitingStories extends Command
                     Log::info("Story ID {$story->id}: No previous status found in logs, using New as fallback.");
                 }
 
-                // If previous status was todo, change it to progress
+                // Determine target status based on previous status
                 $targetStatus = $previousStatus;
-                if ($previousStatus === StoryStatus::Todo->value) {
-                    $targetStatus = StoryStatus::Progress->value;
-                    $this->info("Story ID {$story->id}: Previous status was Todo, changing to Progress.");
-                    Log::info("Story ID {$story->id}: Previous status was Todo, changing to Progress.");
+                
+                // If previous status was progress, released, or done, change it to todo
+                if (in_array($previousStatus, [
+                    StoryStatus::Progress->value,
+                    StoryStatus::Released->value,
+                    StoryStatus::Done->value
+                ])) {
+                    $targetStatus = StoryStatus::Todo->value;
+                    $this->info("Story ID {$story->id}: Previous status was {$previousStatus}, changing to Todo.");
+                    Log::info("Story ID {$story->id}: Previous status was {$previousStatus}, changing to Todo.");
                 }
+                // If previous status was todo, it remains in todo (no change needed)
 
                 // Restore the story to target status
                 $this->restoreStory($story, $targetStatus, $daysInWaiting, $previousStatus);
@@ -115,14 +122,18 @@ class AutoUpdateWaitingStories extends Command
         }
 
         // Find the most recent log entry where status changed to Waiting
+        // Use raw query to avoid any potential issues with JSON casting
         $waitingLog = StoryLog::where('story_id', $story->id)
-            ->where('changes->status', StoryStatus::Waiting->value)
+            ->whereRaw("changes->>'status' = ?", [StoryStatus::Waiting->value])
             ->orderBy('viewed_at', 'desc')
             ->orderBy('id', 'desc')
             ->first();
 
         if ($waitingLog && $waitingLog->viewed_at) {
-            return Carbon::parse($waitingLog->viewed_at);
+            // viewed_at is already a Carbon instance due to the cast, but parse handles both
+            return $waitingLog->viewed_at instanceof Carbon 
+                ? $waitingLog->viewed_at 
+                : Carbon::parse($waitingLog->viewed_at);
         }
 
         // Fallback: if no log found, use updated_at (less reliable)
@@ -148,8 +159,9 @@ class AutoUpdateWaitingStories extends Command
         }
 
         // Find the most recent log where status changed to WAITING
+        // Use raw query to avoid any potential issues with JSON casting
         $statusChangeLog = StoryLog::where('story_id', $story->id)
-            ->where('changes->status', StoryStatus::Waiting->value)
+            ->whereRaw("changes->>'status' = ?", [StoryStatus::Waiting->value])
             ->orderBy('viewed_at', 'desc')
             ->orderBy('id', 'desc')
             ->first();
@@ -234,9 +246,11 @@ class AutoUpdateWaitingStories extends Command
         $waitingReason = $story->waiting_reason ?? 'Non specificato';
         
         // Create development note
-        // If we changed from todo to progress, mention both in the note
-        if ($originalPreviousStatus === StoryStatus::Todo->value && $targetStatus === StoryStatus::Progress->value) {
-            $note = "Rimesso da IN attesa in Progress (precedentemente era in Todo) perché sono passati {$daysInWaiting} giorni.\nMotivo dell'attesa: {$waitingReason}";
+        // If we changed status (from progress/released/done to todo), mention both in the note
+        if ($originalPreviousStatus && $originalPreviousStatus !== $targetStatus) {
+            $originalStatusDisplayName = $statusNames[$originalPreviousStatus] ?? ucfirst($originalPreviousStatus);
+            $targetStatusDisplayName = $statusNames[$targetStatus] ?? ucfirst($targetStatus);
+            $note = "Rimesso da IN attesa in {$targetStatusDisplayName} (precedentemente era in {$originalStatusDisplayName}) perché sono passati {$daysInWaiting} giorni.\nMotivo dell'attesa: {$waitingReason}";
         } else {
             $note = "Rimesso da IN attesa in {$statusDisplayName} perché sono passati {$daysInWaiting} giorni.\nMotivo dell'attesa: {$waitingReason}";
         }
