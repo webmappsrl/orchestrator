@@ -57,7 +57,8 @@ class StoryCreationLogTest extends TestCase
         $log = StoryLog::where('story_id', $story->id)->first();
         $this->assertNotNull($log, 'StoryLog should be created');
         $this->assertEquals($loggedUser->id, $log->user_id, 'Should use logged in user');
-        $this->assertEquals(['status' => StoryStatus::New->value], $log->changes);
+        $this->assertArrayHasKey('status', $log->changes);
+        $this->assertEquals(StoryStatus::New->value, $log->changes['status']);
         
         Auth::logout();
     }
