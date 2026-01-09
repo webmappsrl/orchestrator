@@ -29,6 +29,7 @@ class StoryPolicy
     /**
      * Determine whether the user can view the model.
      * Admin / Manager / Developer: possono visualizzare tutti i ticket
+     * Customer: possono visualizzare solo i ticket di cui sono creator (usando creator_id, non user_id)
      *
      * @param  \App\Models\User  $user
      * @param  \App\Models\Story  $story
@@ -36,9 +37,19 @@ class StoryPolicy
      */
     public function view(User $user, Story $story)
     {
-        return $user->hasRole(UserRole::Admin) 
+        // Admin, Manager, Developer possono vedere tutti i ticket
+        if ($user->hasRole(UserRole::Admin) 
             || $user->hasRole(UserRole::Manager) 
-            || $user->hasRole(UserRole::Developer);
+            || $user->hasRole(UserRole::Developer)) {
+            return true;
+        }
+        
+        // Customer può vedere solo le storie di cui è creator (usando creator_id, non user_id)
+        if ($user->hasRole(UserRole::Customer)) {
+            return $story->creator_id === $user->id;
+        }
+        
+        return false;
     }
 
     /**
