@@ -94,3 +94,4 @@ docker compose exec phpfpm php artisan tinker --execute="echo json_encode(App\Mo
 # Controlla i tag creati
 docker compose exec phpfpm php artisan tinker --execute="echo json_encode(App\Models\Tag::all(['name', 'description', 'estimate'])->toArray(), JSON_PRETTY_PRINT);"
 ```
+

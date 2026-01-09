@@ -397,7 +397,7 @@ Nell'interfaccia Nova sono disponibili azioni rapide per cambiare lo stato dei t
 
 ## Note Importanti
 
-1. **Transizioni Automatiche**: Alcune transizioni avvengono automaticamente tramite comandi schedulati. Consulta `docs/AUTOMATIC_STATUS_CHANGES.md` per i dettagli completi.
+1. **Transizioni Automatiche**: Alcune transizioni avvengono automaticamente tramite comandi schedulati. Consulta `docs/management/automatic-status-changes.md` per i dettagli completi.
 
 2. **Story Logs**: Tutte le modifiche di stato vengono registrate in `story_logs` per tracciabilità completa.
 
