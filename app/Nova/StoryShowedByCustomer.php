@@ -176,6 +176,7 @@ class StoryShowedByCustomer extends Story
 
     /**
      * Determine if the current user can update the given resource.
+     * Customer non può modificare le storie, solo visualizzarle.
      */
     public function authorizedToUpdate(\Illuminate\Http\Request $request): bool
     {
@@ -184,27 +185,8 @@ class StoryShowedByCustomer extends Story
             return false;
         }
         
-        // Customer può aggiornare solo le storie di cui è creator (usando creator_id, non user_id)
+        // Customer non può modificare le storie
         if ($user->hasRole(UserRole::Customer)) {
-            $story = null;
-            
-            // Prova a ottenere la story da $this->resource
-            if ($this->resource && isset($this->resource->creator_id)) {
-                $story = $this->resource;
-            }
-            // Altrimenti, prova a caricare il modello dal request
-            elseif ($request instanceof NovaRequest) {
-                $resourceId = $request->resourceId ?? $request->route('resourceId');
-                if ($resourceId) {
-                    $story = static::$model::find($resourceId);
-                }
-            }
-            
-            // Verifica che la story esista e che il creator_id corrisponda all'utente
-            if ($story) {
-                return $story->creator_id === $user->id;
-            }
-            
             return false;
         }
         
