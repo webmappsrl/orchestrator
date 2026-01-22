@@ -3,6 +3,12 @@
 namespace App\Nova;
 
 use App\Enums\UserRole;
+use App\Models\Customer as CustomerModel;
+use App\Nova\Filters\ContractStatusFilter;
+use App\Nova\Metrics\ContractsByStatus;
+use App\Nova\Metrics\TotalActiveContracts;
+use App\Nova\Metrics\TotalExpiredContracts;
+use App\Nova\Metrics\TotalExpiringContracts;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Badge;
@@ -162,7 +168,7 @@ class Renewals extends Customer
 
                     if ($daysUntilExpiration < 0) {
                         return 'expired';
-                    } elseif ($daysUntilExpiration <= \App\Models\Customer::EXPIRING_SOON_DAYS) {
+                    } elseif ($daysUntilExpiration <= CustomerModel::EXPIRING_SOON_DAYS) {
                         return 'expiring_soon';
                     } else {
                         return 'active';
@@ -195,10 +201,10 @@ class Renewals extends Customer
     public function cards(NovaRequest $request)
     {
         return [
-            (new Metrics\ContractsByStatus)->width('full'),
-            new Metrics\TotalActiveContracts,
-            new Metrics\TotalExpiringContracts,
-            new Metrics\TotalExpiredContracts,
+            (new ContractsByStatus)->width('full'),
+            new TotalActiveContracts,
+            new TotalExpiringContracts,
+            new TotalExpiredContracts,
         ];
     }
 
@@ -211,7 +217,7 @@ class Renewals extends Customer
     public function filters(NovaRequest $request)
     {
         return [
-            new Filters\ContractStatusFilter,
+            new ContractStatusFilter,
         ];
     }
 
