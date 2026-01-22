@@ -405,5 +405,19 @@
   "Modify the estimate (hours) if needed": "Modifica la stima (ore) se necessario",
   "Convert Ticket to Tag": "Converti Ticket in Tag",
   "Do you want to convert the selected ticket to tag?": "Vuoi convertire il ticket selezionato in tag?",
-  "Ticket converted to tag": "Ticket convertito in tag"
+  "Ticket converted to tag": "Ticket convertito in tag",
+  "Contract Expiration Date": "Data Scadenza Contratto",
+  "Contract Value": "Valore Contratto",
+  "Renewals": "Rinnovi",
+  "Renewal": "Rinnovo",
+  "Contract Status": "Stato Contratto",
+  "Days Until Expiration": "Giorni alla Scadenza",
+  "Expiring Soon": "In Scadenza",
+  "Active": "Attivo",
+  "days ago": "giorni fa",
+  "days": "giorni",
+  "Total Active Contracts": "Totale Contratti Attivi",
+  "Total Expiring Contracts": "Totale Contratti in Scadenza",
+  "Total Expired Contracts": "Totale Contratti Scaduti",
+  "By Contract Status": "Per Stato Contratto"
 }

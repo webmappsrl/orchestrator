@@ -187,6 +187,15 @@ class Customer extends Resource
             Text::make('S/invoice', 'subscription_last_invoice')
                 ->sortable()
                 ->nullable()->hideFromIndex(),
+            Date::make(__('Contract Expiration Date'), 'contract_expiration_date')
+                ->sortable()
+                ->nullable()
+                ->hideFromIndex(),
+            Currency::make(__('Contract Value'), 'contract_value')
+                ->sortable()
+                ->currency('EUR')
+                ->nullable()
+                ->hideFromIndex(),
             MarkdownTui::make('Notes', 'notes')
                 ->initialEditType(EditorType::MARKDOWN)
                 ->hideFromIndex(),

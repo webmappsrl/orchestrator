@@ -16,7 +16,8 @@ class Customer extends Model
 
     //Casts of the model dates
     protected $casts = [
-        'subscription_last_payment' => 'date'
+        'subscription_last_payment' => 'date',
+        'contract_expiration_date' => 'date'
     ];
 
 
@@ -36,7 +37,9 @@ class Customer extends Model
         'score',
         'score_cash',
         'score_pain',
-        'score_business'
+        'score_business',
+        'contract_expiration_date',
+        'contract_value'
 
     ];
 
