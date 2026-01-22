@@ -16,7 +16,7 @@ class TotalActiveContracts extends Value
      */
     public function calculate(NovaRequest $request)
     {
-        $thirtyDaysFromNow = now()->addDays(30)->startOfDay();
+        $thirtyDaysFromNow = now()->addDays(Customer::EXPIRING_SOON_DAYS)->startOfDay();
 
         $count = Customer::whereNotNull('contract_expiration_date')
             ->where('contract_expiration_date', '>', $thirtyDaysFromNow)

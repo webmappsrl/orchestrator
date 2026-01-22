@@ -17,20 +17,20 @@ class ContractsByStatus extends Partition
     public function calculate(NovaRequest $request)
     {
         $today = now()->startOfDay();
-        $thirtyDaysFromNow = now()->addDays(30)->startOfDay();
+        $thirtyDaysFromNow = now()->addDays(Customer::EXPIRING_SOON_DAYS)->startOfDay();
 
         // Conta i contratti scaduti
         $expiredCount = Customer::whereNotNull('contract_expiration_date')
             ->where('contract_expiration_date', '<', $today)
             ->count();
 
-        // Conta i contratti in scadenza (tra oggi e 30 giorni)
+        // Conta i contratti in scadenza (tra oggi e EXPIRING_SOON_DAYS giorni)
         $expiringSoonCount = Customer::whereNotNull('contract_expiration_date')
             ->where('contract_expiration_date', '>=', $today)
             ->where('contract_expiration_date', '<=', $thirtyDaysFromNow)
             ->count();
 
-        // Conta i contratti attivi (oltre 30 giorni)
+        // Conta i contratti attivi (oltre EXPIRING_SOON_DAYS giorni)
         $activeCount = Customer::whereNotNull('contract_expiration_date')
             ->where('contract_expiration_date', '>', $thirtyDaysFromNow)
             ->count();

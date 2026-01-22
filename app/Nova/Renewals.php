@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Enums\UserRole;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Badge;
 use Laravel\Nova\Fields\Currency;
@@ -133,8 +134,8 @@ class Renewals extends Customer
                         return '-';
                     }
 
-                    $expirationDate = \Carbon\Carbon::parse($this->contract_expiration_date);
-                    $today = \Carbon\Carbon::today();
+                    $expirationDate = Carbon::parse($this->contract_expiration_date);
+                    $today = Carbon::today();
                     $days = $today->diffInDays($expirationDate, false);
 
                     if ($days < 0) {
@@ -155,13 +156,13 @@ class Renewals extends Customer
 
                 // Contract Status
                 Badge::make(__('Contract Status'), function () {
-                    $expirationDate = \Carbon\Carbon::parse($this->contract_expiration_date);
-                    $today = \Carbon\Carbon::today();
+                    $expirationDate = Carbon::parse($this->contract_expiration_date);
+                    $today = Carbon::today();
                     $daysUntilExpiration = $today->diffInDays($expirationDate, false);
 
                     if ($daysUntilExpiration < 0) {
                         return 'expired';
-                    } elseif ($daysUntilExpiration <= 30) {
+                    } elseif ($daysUntilExpiration <= \App\Models\Customer::EXPIRING_SOON_DAYS) {
                         return 'expiring_soon';
                     } else {
                         return 'active';

@@ -2,6 +2,7 @@
 
 namespace App\Nova\Filters;
 
+use App\Models\Customer;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -25,7 +26,7 @@ class ContractStatusFilter extends Filter
     public function apply(NovaRequest $request, $query, $value)
     {
         $today = now()->startOfDay();
-        $thirtyDaysFromNow = now()->addDays(30)->startOfDay();
+        $thirtyDaysFromNow = now()->addDays(Customer::EXPIRING_SOON_DAYS)->startOfDay();
 
         switch ($value) {
             case 'expired':

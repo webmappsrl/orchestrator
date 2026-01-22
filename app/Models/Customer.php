@@ -14,6 +14,11 @@ class Customer extends Model
 {
     use HasFactory;
 
+    /**
+     * Days threshold for contracts to be considered "expiring soon"
+     */
+    public const EXPIRING_SOON_DAYS = 30;
+
     //Casts of the model dates
     protected $casts = [
         'subscription_last_payment' => 'date',
