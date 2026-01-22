@@ -606,5 +606,19 @@
   "Modify the estimate (hours) if needed": "Modify the estimate (hours) if needed",
   "Convert Ticket to Tag": "Convert Ticket to Tag",
   "Do you want to convert the selected ticket to tag?": "Do you want to convert the selected ticket to tag?",
-  "Ticket converted to tag": "Ticket converted to tag"
+  "Ticket converted to tag": "Ticket converted to tag",
+  "Contract Expiration Date": "Contract Expiration Date",
+  "Contract Value": "Contract Value",
+  "Renewals": "Renewals",
+  "Renewal": "Renewal",
+  "Contract Status": "Contract Status",
+  "Days Until Expiration": "Days Until Expiration",
+  "Expiring Soon": "Expiring Soon",
+  "Active": "Active",
+  "days ago": "days ago",
+  "days": "days",
+  "Total Active Contracts": "Total Active Contracts",
+  "Total Expiring Contracts": "Total Expiring Contracts",
+  "Total Expired Contracts": "Total Expired Contracts",
+  "By Contract Status": "By Contract Status"
 }

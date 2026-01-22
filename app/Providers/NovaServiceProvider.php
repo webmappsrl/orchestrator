@@ -20,6 +20,7 @@ use App\Nova\Product;
 use App\Nova\Project;
 use App\Nova\Quote;
 use App\Nova\RecurringProduct;
+use App\Nova\Renewals;
 use App\Nova\StoryShowedByCustomer;
 use App\Nova\Tag;
 use App\Nova\ToBeTestedStory;
@@ -95,6 +96,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(ArchivedQuotes::class),
                     ])->collapsedByDefault(),
                     MenuItem::resource(Customer::class),
+                    MenuItem::resource(Renewals::class)->canSee(function ($request) {
+                        if ($request->user() == null) {
+                            return false;
+                        }
+
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager);
+                    }),
                     MenuItem::resource(CustomerTickets::class)->canSee(function ($request) {
                         if ($request->user() == null) {
                             return false;
@@ -241,7 +249,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 // reindirizza alla dashboard Kanban
                 if ($user->hasRole(UserRole::Admin) ||
                     $user->hasRole(UserRole::Manager) ||
-                    $user->hasRole(UserRole::Developer)) {
+                    $user->hasRole(UserRole::Developer)
+                ) {
                     return '/dashboards/kanban';
                 }
             }

@@ -18,6 +18,16 @@ class RedirectIfCustomer
     {
         $customerRole = UserRole::Customer;
         $user = $request->user();
+
+        // Reindirizza da renewals a customers
+        if ($request->is('resources/renewals/*')) {
+            $path = $request->path();
+            $pathParts = explode('/', $path);
+            $id = end($pathParts);
+
+            return redirect('resources/customers/' . $id);
+        }
+
         // Controlla se l'utente è autenticato e ha il ruolo di 'customer'
         if (isset($user) && $user->hasRole($customerRole)) {
             // Reindirizza a 'customerStory' se l'utente è un 'customer'
