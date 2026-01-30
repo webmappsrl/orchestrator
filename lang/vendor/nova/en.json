@@ -620,5 +620,6 @@
   "Total Active Contracts": "Total Active Contracts",
   "Total Expiring Contracts": "Total Expiring Contracts",
   "Total Expired Contracts": "Total Expired Contracts",
-  "By Contract Status": "By Contract Status"
+  "By Contract Status": "By Contract Status",
+  "Total value of subscriptions": "Total value of subscriptions"
 }

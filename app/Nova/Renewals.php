@@ -9,6 +9,7 @@ use App\Nova\Metrics\ContractsByStatus;
 use App\Nova\Metrics\TotalActiveContracts;
 use App\Nova\Metrics\TotalExpiredContracts;
 use App\Nova\Metrics\TotalExpiringContracts;
+use App\Nova\Metrics\TotalSubscriptionValue;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Badge;
@@ -201,7 +202,8 @@ class Renewals extends Customer
     public function cards(NovaRequest $request)
     {
         return [
-            (new ContractsByStatus)->width('full'),
+            (new ContractsByStatus)->width('1/2'),
+            (new TotalSubscriptionValue)->width('1/2'),
             new TotalActiveContracts,
             new TotalExpiringContracts,
             new TotalExpiredContracts,
