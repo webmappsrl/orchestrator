@@ -6,7 +6,7 @@ use App\Models\Customer;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Value;
 
-class TotalActiveContracts extends Value
+class TotalSubscriptionValue extends Value
 {
     /**
      * The element's icon (empty = no icon box).
@@ -17,18 +17,14 @@ class TotalActiveContracts extends Value
 
     /**
      * Calculate the value of the metric.
-     * Total value in euro of active contracts and count of active contracts.
+     * Total value in euro of all subscriptions and count of subscriptions.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return mixed
      */
     public function calculate(NovaRequest $request)
     {
-        $thirtyDaysFromNow = now()->addDays(Customer::EXPIRING_SOON_DAYS)->startOfDay();
-
-        $query = Customer::whereNotNull('contract_expiration_date')
-            ->where('contract_expiration_date', '>', $thirtyDaysFromNow);
-
+        $query = Customer::whereNotNull('contract_expiration_date');
         $total = (clone $query)->sum('contract_value');
         $count = (clone $query)->count();
 
@@ -65,6 +61,6 @@ class TotalActiveContracts extends Value
      */
     public function name()
     {
-        return __('Total Active Contracts');
+        return __('Total value of subscriptions');
     }
 }

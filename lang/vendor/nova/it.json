@@ -419,5 +419,6 @@
   "Total Active Contracts": "Totale Contratti Attivi",
   "Total Expiring Contracts": "Totale Contratti in Scadenza",
   "Total Expired Contracts": "Totale Contratti Scaduti",
-  "By Contract Status": "Per Stato Contratto"
+  "By Contract Status": "Per Stato Contratto",
+  "Total value of subscriptions": "Valore complessivo degli abbonamenti"
 }
