@@ -9,7 +9,15 @@ use Laravel\Nova\Metrics\Value;
 class TotalExpiringContracts extends Value
 {
     /**
+     * The element's icon (empty = no icon box).
+     *
+     * @var string
+     */
+    public $icon = '';
+
+    /**
      * Calculate the value of the metric.
+     * Total value in euro of expiring contracts and count of expiring contracts.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return mixed
@@ -19,12 +27,17 @@ class TotalExpiringContracts extends Value
         $today = now()->startOfDay();
         $thirtyDaysFromNow = now()->addDays(Customer::EXPIRING_SOON_DAYS)->startOfDay();
 
-        $count = Customer::whereNotNull('contract_expiration_date')
+        $query = Customer::whereNotNull('contract_expiration_date')
             ->where('contract_expiration_date', '>=', $today)
-            ->where('contract_expiration_date', '<=', $thirtyDaysFromNow)
-            ->count();
+            ->where('contract_expiration_date', '<=', $thirtyDaysFromNow);
 
-        return $this->result($count);
+        $total = (clone $query)->sum('contract_value');
+        $count = (clone $query)->count();
+
+        return $this->result($total ?? 0)
+            ->format('0,0.00')
+            ->suffix(' euro (' . $count . ' ' . __('total') . ')')
+            ->withoutSuffixInflection();
     }
 
     /**
