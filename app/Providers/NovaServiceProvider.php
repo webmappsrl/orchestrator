@@ -48,7 +48,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         Nova::style('nova-custom', public_path('/nova-custom.css'));
 
-        Nova::script('renewals-italian-format', public_path('nova-renewals-format.js'));
+        Nova::script('renewals-italian-format', public_path('js/renewals-format.js'));
 
         Nova::mainMenu(function (Request $request) {
             $newStoryUrl = '/resources/stories/new';
@@ -62,7 +62,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuItem::externalLink('SCRUM', route('scrum.meeting', ['meetCode' => $scrumMeetCode]))->openInNewTab()->canSee(function ($request) {
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
-                MenuItem::externalLink('MEET', 'https://meet.google.com/'.$scrumMeetCode)->openInNewTab()->canSee(function ($request) {
+                MenuItem::externalLink('MEET', 'https://meet.google.com/' . $scrumMeetCode)->openInNewTab()->canSee(function ($request) {
                     return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                 }),
                 MenuSection::dashboard(Kanban::class)->icon('chart-bar')->canSee(function ($request) {
@@ -249,7 +249,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 // Per tutti gli altri utenti (Admin, Manager, Developer),
                 // reindirizza alla dashboard Kanban
-                if ($user->hasRole(UserRole::Admin) ||
+                if (
+                    $user->hasRole(UserRole::Admin) ||
                     $user->hasRole(UserRole::Manager) ||
                     $user->hasRole(UserRole::Developer)
                 ) {
