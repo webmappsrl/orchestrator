@@ -48,6 +48,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         Nova::style('nova-custom', public_path('/nova-custom.css'));
 
+        Nova::script('renewals-italian-format', public_path('nova-renewals-format.js'));
+
         Nova::mainMenu(function (Request $request) {
             $newStoryUrl = '/resources/stories/new';
             if (auth()->user()->hasRole(UserRole::Customer)) {
