@@ -33,8 +33,9 @@ class TotalActiveContracts extends Value
         $count = (clone $query)->count();
 
         return $this->result($total ?? 0)
+            ->currency('€')
             ->format('0,0.00')
-            ->suffix(' euro (' . $count . ' ' . __('total') . ')')
+            ->suffix('(' . $count . ' ' . __('total') . ')')
             ->withoutSuffixInflection();
     }
 
