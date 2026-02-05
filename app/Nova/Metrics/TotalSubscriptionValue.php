@@ -24,7 +24,10 @@ class TotalSubscriptionValue extends Value
      */
     public function calculate(NovaRequest $request)
     {
-        $query = Customer::whereNotNull('contract_expiration_date');
+        $query = Customer::where(function ($q) {
+            $q->whereNotNull('contract_expiration_date')
+              ->orWhereNotNull('contract_value');
+        });
         $total = (clone $query)->sum('contract_value');
         $count = (clone $query)->count();
 
