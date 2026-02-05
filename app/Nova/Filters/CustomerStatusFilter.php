@@ -2,10 +2,11 @@
 
 namespace App\Nova\Filters;
 
+use App\Enums\CustomerStatus;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class CustomerWpMigrationFilter extends Filter
+class CustomerStatusFilter extends Filter
 {
     /**
      * The filter's component.
@@ -13,6 +14,8 @@ class CustomerWpMigrationFilter extends Filter
      * @var string
      */
     public $component = 'select-filter';
+
+    public $name = 'Status';
 
     /**
      * Apply the filter to the given query.
@@ -24,7 +27,7 @@ class CustomerWpMigrationFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
-        return $query->where('wp_migration', $value);
+        return $query->where('status', $value);
     }
 
     /**
@@ -35,15 +38,20 @@ class CustomerWpMigrationFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return [
-            'Wordpress' => 'wordpress',
-            'Geohub' => 'geohub',
-            'Geobox' => 'geobox',
-        ];
+        $options = [];
+        foreach (CustomerStatus::cases() as $value) {
+            $options[__($value->name)] = $value->value;
+        }
+        return $options;
     }
 
+    /**
+     * Get the displayable name of the filter.
+     *
+     * @return string
+     */
     public function name()
     {
-        return 'Content migration status';
+        return __('Status');
     }
 }

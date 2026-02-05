@@ -60,6 +60,7 @@
   "Create & Add Another": "Create & Add Another",
   "Delete File": "Delete File",
   "Edit": "Edit",
+  "Edit Status": "Edit Status",
   "Edit Attached": "Edit Attached",
   "Go Home": "Go Home",
   "Hold Up!": "Hold Up!",
@@ -615,11 +616,18 @@
   "Days Until Expiration": "Days Until Expiration",
   "Expiring Soon": "Expiring Soon",
   "Active": "Active",
+  "active": "Active",
   "days ago": "days ago",
   "days": "days",
+  "Lost": "Lost",
+  "lost": "Lost",
+  "Opportunity": "Opportunity",
+  "opportunity": "Opportunity",
   "Total Active Contracts": "Total Active Contracts",
   "Total Expiring Contracts": "Total Expiring Contracts",
   "Total Expired Contracts": "Total Expired Contracts",
   "By Contract Status": "By Contract Status",
-  "Total value of subscriptions": "Total value of subscriptions"
+  "Total value of subscriptions": "Total value of subscriptions",
+  "Unknown": "Unknown",
+  "unknown": "Unknown"
 }

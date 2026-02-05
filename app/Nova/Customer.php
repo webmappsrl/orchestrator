@@ -16,7 +16,9 @@ use Laravel\Nova\Fields\Currency;
 use Eminiarts\Tabs\Traits\HasTabs;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use App\Nova\Filters\CustomerWpMigrationFilter;
+use App\Nova\Filters\CustomerStatusFilter;
+use App\Nova\Actions\EditCustomerStatus;
+use App\Enums\CustomerStatus;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\Textarea;
@@ -129,11 +131,6 @@ class Customer extends Resource
             })->asHtml()
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
-            Number::make('Score', 'score')
-                ->sortable()
-                ->nullable()
-                ->hideWhenCreating()
-                ->hideWhenUpdating(),
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255')
@@ -150,6 +147,15 @@ class Customer extends Resource
                 ->sortable()
                 ->nullable()
                 ->onlyOnForms(),
+            Select::make(__('Status'), 'status')->options(
+                collect(CustomerStatus::cases())->mapWithKeys(function ($status) {
+                    return [$status->value => __(ucfirst($status->value))];
+                })->toArray()
+            )->sortable()
+                ->default(CustomerStatus::Unknown->value)
+                ->displayUsing(function ($value) {
+                    return __(ucfirst($value));
+                }),
             Text::make('HS', 'hs_id')
                 ->sortable()
                 ->nullable()
@@ -158,13 +164,6 @@ class Customer extends Resource
                 ->sortable()
                 ->nullable()
                 ->hideFromIndex(),
-            Select::make('WP Migration', 'wp_migration')->options(
-                [
-                    'wordpress' => 'Wordpress',
-                    'geohub' => 'Geohub',
-                    'geobox' => 'Geobox',
-                ]
-            )->sortable()->nullable(),
             MarkdownTui::make('Migration Note', 'migration_note')
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
@@ -246,7 +245,9 @@ class Customer extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new CustomerStatusFilter(),
+        ];
     }
 
     /**
@@ -268,7 +269,9 @@ class Customer extends Resource
      */
     public function actions(NovaRequest $request)
     {
-        return [];
+        return [
+            new EditCustomerStatus(),
+        ];
     }
 
     public function indexBreadcrumb()
@@ -276,21 +279,4 @@ class Customer extends Resource
         return null;
     }
 
-    public static function afterCreate(NovaRequest $request, Model $model)
-    {
-        $model->score = $model->score_cash + $model->score_pain + $model->score_business;
-        if ($model->score == null) {
-            $model->score = 0;
-        }
-        $model->save();
-    }
-
-    public static function afterUpdate(NovaRequest $request, Model $model)
-    {
-        $model->score = $model->score_cash + $model->score_pain + $model->score_business;
-        if ($model->score == null) {
-            $model->score = 0;
-        }
-        $model->save();
-    }
 }
