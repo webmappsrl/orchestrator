@@ -120,16 +120,16 @@ class Quote extends Resource
                 ->onlyOnDetail(),
             Status::make('Status')
                 ->loadingWhen([
-                    'new',
-                    'sent',
-                    'to present',
-                    'presented',
-                    'waiting for order',
-                    'cold'
+                    QuoteStatus::New->value,
+                    QuoteStatus::Sent->value,
+                    QuoteStatus::To_Present->value,
+                    QuoteStatus::Presented->value,
+                    QuoteStatus::Waiting_For_Order->value,
+                    QuoteStatus::Cold->value
                 ])
                 ->failedWhen([
-                    'closed lost',
-                    'closed lost offer'
+                    QuoteStatus::Closed_Lost->value,
+                    QuoteStatus::Closed_Lost_Offer->value
                 ])
                 ->displayUsing(function () {
                     return __(ucwords($this->status));
