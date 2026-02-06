@@ -17,6 +17,7 @@ use App\Nova\Metrics\SentQuotes;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\DateTime;
 use App\Nova\Actions\DuplicateQuote;
 use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Filters\QuoteStatusFilter;
@@ -106,6 +107,17 @@ class Quote extends Resource
                     })
                     ->asHtml(),
             ])->setTitle(__('Title')),
+            DateTime::make(__('Created At'), 'created_at')
+                ->displayUsing(function ($date) {
+                    return $date ? $date->format('d/m/Y H:i') : null;
+                })
+                ->onlyOnDetail()
+                ->sortable(),
+            Text::make(__('Status'), 'status')
+                ->displayUsing(function () {
+                    return __(ucwords($this->status));
+                })
+                ->onlyOnDetail(),
             Status::make('Status')
                 ->loadingWhen([
                     'new',
