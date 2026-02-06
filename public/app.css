@@ -1,65 +1,107 @@
+/* ============================================
+   STYLES FOR QUOTE PDF (DomPDF)
+   ============================================ */
+
+@page {
+    size: A4;
+    margin: 45mm 10mm 20mm 10mm; /* top margin for header, bottom for footer */
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, sans-serif;
     font-size: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    margin: 0;
+    padding: 0;
+    line-height: 1.4;
+    overflow: visible;
+    height: auto;
 }
 
 .webmapp-header {
-    padding-bottom: 20px;
+    position: fixed;
+    top: -40mm; /* positioned in the top margin area */
+    left: 0;
+    right: 0;
+    height: 35mm;
     text-align: right;
-    width: 100%;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.quote-url {
+    font-size: 8px;
+    color: #666;
+    text-align: right;
+    margin-bottom: 5px;
+    font-family: 'Courier New', monospace;
 }
 
 .webmapp-details {
     font-size: 10px;
     line-height: 0.9rem;
+    text-align: right;
 }
 
-.header-space {
-    height: 200px;
-    width: 100%;
-}
-
-.footer-space {
-    height: 100px;
-    width: 100%;
+.webmapp-details p {
+    margin: 0;
 }
 
 .logo {
-    width: 80px;
-    height: 80px;
-    margin-right: 20px;
-    align-self: flex-end;
+    text-align: right;
+    margin-bottom: 3px;
+}
+
+.logo img {
+    width: 70px;
+    height: auto;
+    display: inline-block;
+}
+
+.pdf-footer {
+    position: fixed;
+    bottom: -15mm; /* positioned in the bottom margin area */
+    left: 0;
+    right: 0;
+    height: 15mm;
+    text-align: right;
+    font-size: 8px;
+    color: #666;
+    padding-top: 5px;
+    border-top: 1px solid #eee;
 }
 
 .customer-details-page {
     display: flex;
     flex-direction: column;
+    margin-bottom: 20px;
 }
 
 .customer-details {
     font-size: 16px;
     margin-bottom: 10px;
-    margin-top: 30px;
+    margin-top: 0;
     color: rgba(23, 22, 22, 0.795);
-    margin-right: 30px;
+    margin-right: 0;
+    margin-left: auto;
+    text-align: right;
     font-weight: bold;
-    right: 0;
+    width: 100%;
 }
 
 .customer-details h3 {
     font-size: 14px;
-    text-align: center;
+    text-align: right;
     color: gray;
     font-style: italic;
     margin-bottom: 40px;
+}
+
+.customer-details p {
+    text-align: right;
 }
 
 .subject-container {
@@ -68,21 +110,18 @@ body {
     margin-top: 10px;
     color: rgba(23, 22, 22, 0.795);
     align-self: flex-start;
+    text-align: left;
     font-weight: bold;
     line-height: 0.5cm;
+    width: 100%;
 }
 
-.subject-container h4 {
-    font-weight: normal;
-    margin-top: 100px;
-}
-
-.service-description {
-    page-break-inside: auto;
+.subject-container p {
+    text-align: left;
 }
 
 .service-description h2,
-h3 {
+.service-description h3 {
     color: #005485;
 }
 
@@ -95,7 +134,32 @@ h3 {
     padding-right: 20px;
     line-height: 2rem;
     word-wrap: break-word;
-    page-break-after: always;
+    page-break-inside: auto;
+    overflow: visible;
+    height: auto;
+}
+
+/* Prevents content from being cut off */
+ul {
+    page-break-inside: auto;
+}
+
+li {
+    page-break-inside: auto;
+    orphans: 2;
+    widows: 2;
+}
+
+/* Ensures lists continue correctly on subsequent pages */
+.service-details ul {
+    page-break-inside: auto;
+}
+
+.service-details li {
+    page-break-inside: auto !important;
+    page-break-after: auto;
+    orphans: 2;
+    widows: 2;
 }
 
 p.indent-paragraph {
@@ -126,94 +190,191 @@ th {
 
 .td {
     padding: 8px;
-    /* text-align: right; */
     vertical-align: top;
     border: none;
     border-bottom: 1px solid #ddd;
-}
-
-.webmapp-footer {
-    margin-top: 10px;
-    width: 70%;
-    font-weight: 200;
-    text-align: center;
-    color: rgba(189, 183, 183, 0.737);
-    height: 115px;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    print-color-adjust: exact;
-    border: 1px solid black;
-}
-
-.no-elements {
-    text-align: center;
-    font-size: 30px;
-    color: red;
-}
-
-.td-placeholder {
-    border: none;
 }
 
 .aligned-right {
     text-align: right;
 }
 
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+thead {
+    display: table-header-group;
+}
+
+tbody {
+    display: table-row-group;
+}
+
+tr {
+    page-break-inside: avoid;
+}
+
+td, th {
+    padding: 8px;
+    vertical-align: top;
+}
+
+/* Prevents tables from being cut off */
+table {
+    page-break-inside: auto;
+}
+
+/* Ensures content continues correctly */
+p {
+    orphans: 2;
+    widows: 2;
+}
+
+h2, h3, h4 {
+    page-break-after: avoid;
+    orphans: 2;
+    widows: 2;
+}
+
+/* Prevents sections from being cut off */
+.service-description,
+.payment-plan,
 .delivery-time {
-    align-self: flex-end;
-    margin-bottom: 2cm;
+    page-break-inside: auto;
 }
 
-.payment-plan {
-    align-self: flex-end;
+/* Ensures lists can be paginated correctly */
+.service-details {
+    orphans: 2;
+    widows: 2;
 }
 
-@media print {
-    @page {
-        size: A4;
-        margin: 4mm;
-        padding-top: 500px;
-        padding-bottom: 500px;
-        break-inside: avoid;
-    }
+.service-details p {
+    orphans: 2;
+    widows: 2;
+}
 
-    .products-and-services-page {
-        page-break-before: always;
-        page-break-inside: auto;
-    }
+h2 {
+    margin-top: 20px;
+    margin-bottom: 15px;
+    color: #005485;
+}
 
-    .recurring-products-page {
-        page-break-before: always;
-        page-break-inside: auto;
-    }
+h3 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #005485;
+}
 
-    header {
-        position: fixed;
-        top: 0;
-        width: 100%;
-    }
+h4 {
+    margin-top: 10px;
+    margin-bottom: 8px;
+}
 
-    thead {
-        display: table-header-group;
-    }
+p {
+    margin: 8px 0;
+}
 
-    tfoot {
-        display: table-footer-group;
-    }
+ul {
+    margin: 10px 0;
+    padding-left: 40px;
+    page-break-inside: auto;
+}
 
-    .customer-details {
-        line-height: 0.2cm;
-        align-self: flex-end;
-    }
+li {
+    margin: 5px 0;
+    page-break-inside: auto;
+    orphans: 2;
+    widows: 2;
+}
 
-    .products-and-services-page {
-        page-break-before: avoid;
-        page-break-inside: avoid;
-    }
+/* Ensures list content continues correctly */
+.service-details ul li {
+    page-break-inside: auto !important;
+    page-break-after: auto;
+    orphans: 2;
+    widows: 2;
+}
 
-    .recurring-products-page {
-        page-break-before: avoid;
-        page-break-inside: auto;
-    }
+/* Allows long content to be split across pages */
+.service-details li span.product-title {
+    display: inline;
+}
+
+.service-details li p {
+    page-break-inside: auto;
+    orphans: 2;
+    widows: 2;
+}
+
+/* Prevents service sections from being cut off */
+.service-description > * {
+    page-break-inside: auto;
+}
+
+.service-description p {
+    page-break-inside: auto;
+    orphans: 2;
+    widows: 2;
+}
+
+/* Ensures paragraphs inside lists can be paginated */
+.service-details li p {
+    orphans: 2;
+    widows: 2;
+    page-break-inside: auto;
+}
+
+/* Allows pagination of long lists */
+.service-details ul {
+    orphans: 2;
+    widows: 2;
+    page-break-inside: auto;
+}
+
+/* Ensures content can continue on subsequent pages */
+.service-details {
+    overflow: visible;
+    height: auto;
+}
+
+.message {
+    margin-top: 30px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.products-and-services-page,
+.recurring-products-page,
+.additional-services {
+    margin: 20px 0;
+    page-break-inside: auto;
+}
+
+/* DomPDF-specific rules to prevent content from being cut off */
+.service-description {
+    page-break-inside: auto;
+    overflow: visible;
+}
+
+/* Ensures all content can be displayed */
+* {
+    max-height: none !important;
+}
+
+div {
+    overflow: visible;
+}
+
+.products-and-services-page table,
+.recurring-products-page table,
+.additional-services table {
+    width: 100%;
+    border-collapse: collapse;
 }

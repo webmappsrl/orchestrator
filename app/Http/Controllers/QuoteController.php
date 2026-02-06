@@ -41,12 +41,32 @@ class QuoteController extends Controller
     public function show(Request $request, $id)
     {
         $quote = Quote::findOrFail($id);
-        $quote->clearEmptyAdditionalServicesTranslations(); //necessary for the fallback locale to work, otherwise will return a language key with empty string
+        $quote->clearEmptyAdditionalServicesTranslations(); // necessary for the fallback locale to work, otherwise will return a language key with empty string
         $lang = $request->get('lang', 'it');
 
         App::setLocale($lang);
 
-        return view('quote', compact('quote'));
+        // Always generate PDF with DomPDF
+        return $this->generatePdf($quote, $lang);
+    }
+
+    /**
+     * Generate PDF for the quote using DomPDF
+     */
+    protected function generatePdf(Quote $quote, string $lang)
+    {
+        $config = config('quote-pdf');
+        $customerName = $quote->customer->full_name ?? $quote->customer->name;
+        $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
+
+        // Generate PDF using DomPDF with custom configuration
+        $pdf = PDF::loadView('quote-pdf', compact('quote', 'config'))
+            ->setPaper($config['page']['size'], $config['page']['orientation'])
+            ->setOption('enable-local-file-access', true)
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('isHtml5ParserEnabled', true);
+
+        return $pdf->stream($pdfName . '.pdf');
     }
 
     /**
