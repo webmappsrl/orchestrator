@@ -74,7 +74,7 @@ class Renewals extends Customer
 
     /**
      * Build an "index" query for the given resource.
-     * Shows only customers that have a contract_expiration_date.
+     * Shows customers that have a contract_expiration_date or a contract_value.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -82,7 +82,10 @@ class Renewals extends Customer
      */
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->whereNotNull('contract_expiration_date');
+        return $query->where(function ($q) {
+            $q->whereNotNull('contract_expiration_date')
+              ->orWhereNotNull('contract_value');
+        });
     }
 
     /**
@@ -163,6 +166,10 @@ class Renewals extends Customer
 
                 // Contract Status
                 Badge::make(__('Contract Status'), function () {
+                    if (!$this->contract_expiration_date) {
+                        return 'no_date';
+                    }
+
                     $expirationDate = Carbon::parse($this->contract_expiration_date);
                     $today = Carbon::today();
                     $daysUntilExpiration = $today->diffInDays($expirationDate, false);
@@ -179,11 +186,13 @@ class Renewals extends Customer
                         'expired' => 'danger',
                         'expiring_soon' => 'warning',
                         'active' => 'success',
+                        'no_date' => 'info',
                     ])
                     ->labels([
                         'expired' => __('Expired'),
                         'expiring_soon' => __('Expiring Soon'),
                         'active' => __('Active'),
+                        'no_date' => __('No Date'),
                     ])
                     ->sortable('contract_expiration_date'),
             ];

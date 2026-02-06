@@ -35,6 +35,11 @@ class ContractsByStatus extends Partition
             ->where('contract_expiration_date', '>', $thirtyDaysFromNow)
             ->count();
 
+        // Conta i contratti senza data ma con valore contratto
+        $noDateCount = Customer::whereNull('contract_expiration_date')
+            ->whereNotNull('contract_value')
+            ->count();
+
         // Costruisci l'array dei risultati con le chiavi tradotte
         $results = [];
 
@@ -48,6 +53,10 @@ class ContractsByStatus extends Partition
 
         if ($activeCount > 0) {
             $results[__('Active')] = $activeCount;
+        }
+
+        if ($noDateCount > 0) {
+            $results[__('No Date')] = $noDateCount;
         }
 
         return $this->result($results)->colors($this->colors());
@@ -64,6 +73,7 @@ class ContractsByStatus extends Partition
             __('Expired') => '#DC3545',      // danger (rosso)
             __('Expiring Soon') => '#FFC107', // warning (arancione)
             __('Active') => '#28A745',        // success (verde)
+            __('No Date') => '#17A2B8',       // info (azzurro/blu)
         ];
     }
 

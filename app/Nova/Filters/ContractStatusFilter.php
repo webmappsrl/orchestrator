@@ -42,6 +42,10 @@ class ContractStatusFilter extends Filter
                 return $query->whereNotNull('contract_expiration_date')
                     ->where('contract_expiration_date', '>', $thirtyDaysFromNow);
 
+            case 'no_date':
+                return $query->whereNull('contract_expiration_date')
+                    ->whereNotNull('contract_value');
+
             default:
                 return $query;
         }
@@ -59,6 +63,7 @@ class ContractStatusFilter extends Filter
             __('Expired') => 'expired',
             __('Expiring Soon') => 'expiring_soon',
             __('Active') => 'active',
+            __('No Date') => 'no_date',
         ];
     }
 

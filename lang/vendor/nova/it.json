@@ -83,6 +83,7 @@
   "of": "di",
   "View": "Vedi",
   "Edit": "Modifica",
+  "Edit Status": "Modifica Stato",
   "Delete": "Elimina",
   "Replicate": "Replica",
   "Delete Resource": "Elimina",
@@ -414,11 +415,19 @@
   "Days Until Expiration": "Giorni alla Scadenza",
   "Expiring Soon": "In Scadenza",
   "Active": "Attivo",
+  "active": "Attivo",
   "days ago": "giorni fa",
   "days": "giorni",
+  "Lost": "Perso",
+  "lost": "Perso",
+  "Opportunity": "Opportunità",
+  "opportunity": "Opportunità",
   "Total Active Contracts": "Totale Contratti Attivi",
   "Total Expiring Contracts": "Totale Contratti in Scadenza",
   "Total Expired Contracts": "Totale Contratti Scaduti",
   "By Contract Status": "Per Stato Contratto",
-  "Total value of subscriptions": "Valore complessivo degli abbonamenti"
+  "Total value of subscriptions": "Valore complessivo degli abbonamenti",
+  "No Date": "Senza data",
+  "Unknown": "Sconosciuto",
+  "unknown": "Sconosciuto"
 }
