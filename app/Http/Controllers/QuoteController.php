@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Quote;
-use Barryvdh\DomPDF\Facade\PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Requests\StoreQuoteRequest;
 use App\Http\Requests\UpdateQuoteRequest;
 use Illuminate\Http\Request;
@@ -60,7 +60,7 @@ class QuoteController extends Controller
         $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
 
         // Generate PDF using DomPDF with custom configuration
-        $pdf = PDF::loadView('quote-pdf', compact('quote', 'config'))
+        $pdf = Pdf::loadView('quote-pdf', compact('quote', 'config'))
             ->setPaper($config['page']['size'], $config['page']['orientation'])
             ->setOption('enable-local-file-access', true)
             ->setOption('isRemoteEnabled', true)
