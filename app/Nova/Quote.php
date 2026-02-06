@@ -106,12 +106,26 @@ class Quote extends Resource
                     })
                     ->asHtml(),
             ])->setTitle(__('Title')),
-            Status::make('Status')->loadingWhen(['new', 'sent'])->failedWhen(['closed lost'])->displayUsing(function () {
-                return __($this->status);
-            })->onlyOnIndex(),
+            Status::make('Status')
+                ->loadingWhen([
+                    'new',
+                    'sent',
+                    'to present',
+                    'presented',
+                    'waiting for order',
+                    'cold'
+                ])
+                ->failedWhen([
+                    'closed lost',
+                    'closed lost offer'
+                ])
+                ->displayUsing(function () {
+                    return __(ucwords($this->status));
+                })
+                ->onlyOnIndex(),
             Select::make('Status')->options(
                 collect(QuoteStatus::cases())->mapWithKeys(function ($status) {
-                    return [$status->value => $status->label()];
+                    return [$status->value => __(ucwords($status->value))];
                 })->toArray()
             )->onlyOnForms()
                 ->default(QuoteStatus::New->value),
@@ -299,7 +313,12 @@ class Quote extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        $whereNotIn =  [QuoteStatus::Closed_Won->value,  QuoteStatus::Closed_Lost->value];
+        $whereNotIn =  [
+            QuoteStatus::Closed_Won->value,
+            QuoteStatus::Closed_Lost->value,
+            QuoteStatus::Closed_Won_Offer->value,
+            QuoteStatus::Closed_Lost_Offer->value
+        ];
         return $query
             ->whereNotIn('status', $whereNotIn);
     }

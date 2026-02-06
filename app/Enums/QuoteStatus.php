@@ -10,16 +10,10 @@ enum QuoteStatus: string
     case Closed_Won = 'closed won';
     case Partially_Paid = 'partially paid';
     case Paid = 'paid';
-
-    public function label(): string
-    {
-        return match ($this) {
-            self::New => __('New'),
-            self::Sent => __('Sent'),
-            self::Closed_Lost => __('Closed Lost'),
-            self::Closed_Won => __('Closed Won'),
-            self::Partially_Paid => __('Partially Paid'),
-            self::Paid => __('Paid'),
-        };
-    }
+    case To_Present = 'to present';
+    case Presented = 'presented';
+    case Waiting_For_Order = 'waiting for order';
+    case Cold = 'cold';
+    case Closed_Won_Offer = 'closed won offer';
+    case Closed_Lost_Offer = 'closed lost offer';
 }

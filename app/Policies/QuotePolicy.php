@@ -45,7 +45,9 @@ class QuotePolicy
         return $quote->status != QuoteStatus::Partially_Paid->value &&
             $quote->status != QuoteStatus::Paid->value &&
             $quote->status != QuoteStatus::Closed_Won->value &&
-            $quote->status != QuoteStatus::Closed_Lost->value;
+            $quote->status != QuoteStatus::Closed_Lost->value &&
+            $quote->status != QuoteStatus::Closed_Won_Offer->value &&
+            $quote->status != QuoteStatus::Closed_Lost_Offer->value;
     }
 
     /**

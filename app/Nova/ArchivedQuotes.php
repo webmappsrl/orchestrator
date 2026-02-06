@@ -28,7 +28,12 @@ class ArchivedQuotes extends Quote
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        $whereIn = [QuoteStatus::Closed_Won->value,  QuoteStatus::Closed_Lost->value];
+        $whereIn = [
+            QuoteStatus::Closed_Won->value,
+            QuoteStatus::Closed_Lost->value,
+            QuoteStatus::Closed_Won_Offer->value,
+            QuoteStatus::Closed_Lost_Offer->value
+        ];
         return $query
             ->whereIn('status', $whereIn);
     }
