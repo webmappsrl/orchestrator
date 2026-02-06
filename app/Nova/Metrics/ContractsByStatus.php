@@ -73,7 +73,7 @@ class ContractsByStatus extends Partition
             __('Expired') => '#DC3545',      // danger (rosso)
             __('Expiring Soon') => '#FFC107', // warning (arancione)
             __('Active') => '#28A745',        // success (verde)
-            __('No Date') => '#6C757D',       // secondary (grigio)
+            __('No Date') => '#17A2B8',       // info (azzurro/blu)
         ];
     }
 
