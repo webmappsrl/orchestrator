@@ -36,14 +36,10 @@ class QuoteStatusFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-
-        return [
-            'new' => QuoteStatus::New,
-            'sent' => QuoteStatus::Sent,
-            'closed lost' => QuoteStatus::Closed_Lost,
-            'closed won' => QuoteStatus::Closed_Won,
-            'partially paid' =>  QuoteStatus::Partially_Paid,
-            'paid' =>  QuoteStatus::Paid,
-        ];
+        $options = [];
+        foreach (QuoteStatus::cases() as $value) {
+            $options[__($value->name)] = $value->value;
+        }
+        return $options;
     }
 }

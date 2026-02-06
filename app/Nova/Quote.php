@@ -17,6 +17,7 @@ use App\Nova\Metrics\SentQuotes;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\DateTime;
 use App\Nova\Actions\DuplicateQuote;
 use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Filters\QuoteStatusFilter;
@@ -106,12 +107,37 @@ class Quote extends Resource
                     })
                     ->asHtml(),
             ])->setTitle(__('Title')),
-            Status::make('Status')->loadingWhen(['new', 'sent'])->failedWhen(['closed lost'])->displayUsing(function () {
-                return __($this->status);
-            })->onlyOnIndex(),
+            DateTime::make(__('Created At'), 'created_at')
+                ->displayUsing(function ($date) {
+                    return $date ? $date->format('d/m/Y H:i') : null;
+                })
+                ->onlyOnDetail()
+                ->sortable(),
+            Text::make(__('Status'), 'status')
+                ->displayUsing(function () {
+                    return __(ucwords($this->status));
+                })
+                ->onlyOnDetail(),
+            Status::make('Status')
+                ->loadingWhen([
+                    QuoteStatus::New->value,
+                    QuoteStatus::Sent->value,
+                    QuoteStatus::To_Present->value,
+                    QuoteStatus::Presented->value,
+                    QuoteStatus::Waiting_For_Order->value,
+                    QuoteStatus::Cold->value
+                ])
+                ->failedWhen([
+                    QuoteStatus::Closed_Lost->value,
+                    QuoteStatus::Closed_Lost_Offer->value
+                ])
+                ->displayUsing(function () {
+                    return __(ucwords($this->status));
+                })
+                ->onlyOnIndex(),
             Select::make('Status')->options(
                 collect(QuoteStatus::cases())->mapWithKeys(function ($status) {
-                    return [$status->value => $status->label()];
+                    return [$status->value => __(ucwords($status->value))];
                 })->toArray()
             )->onlyOnForms()
                 ->default(QuoteStatus::New->value),
@@ -299,7 +325,12 @@ class Quote extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        $whereNotIn =  [QuoteStatus::Closed_Won->value,  QuoteStatus::Closed_Lost->value];
+        $whereNotIn =  [
+            QuoteStatus::Closed_Won->value,
+            QuoteStatus::Closed_Lost->value,
+            QuoteStatus::Closed_Won_Offer->value,
+            QuoteStatus::Closed_Lost_Offer->value
+        ];
         return $query
             ->whereNotIn('status', $whereNotIn);
     }
