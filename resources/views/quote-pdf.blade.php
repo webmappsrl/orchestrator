@@ -83,7 +83,7 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
             @if (count($quote->products) > 0)
             <h3 class="description">{{ __('Activation services') }}:</h3>
             <ul>
-                @foreach ($quote->products as $product)
+                @foreach ($quote->products->sortByDesc('id') as $product)
                 <li>
                     <span class="product-title">{{ $product->getTranslation('name', App::getLocale()) }}</span>
                     - {{ $product->getTranslation('description', App::getLocale()) }}
@@ -95,7 +95,7 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
             @if (count($quote->recurringProducts) > 0)
             <h3 class="description">{{ __('Maintenance services') }}:</h3>
             <ul>
-                @foreach ($quote->recurringProducts as $recurringProduct)
+                @foreach ($quote->recurringProducts->sortByDesc('id') as $recurringProduct)
                 <li>
                     <span class="product-title">{{ $recurringProduct->getTranslation('name', App::getLocale()) }}</span>
                     - {{ $recurringProduct->getTranslation('description', App::getLocale()) }}
@@ -151,7 +151,7 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
                 </tr>
             </thead>
             <tbody>
-                @foreach ($quote->products as $product)
+                @foreach ($quote->products->sortByDesc('id') as $product)
                 <tr>
                     <td class="td">{{ __($product->name) }}</td>
                     <td class="td">{{ __($product->sku) }}</td>
@@ -205,7 +205,7 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
                 </tr>
             </thead>
             <tbody>
-                @foreach ($quote->recurringProducts as $recurringProduct)
+                @foreach ($quote->recurringProducts->sortByDesc('id') as $recurringProduct)
                 <tr>
                     <td class="td">{{ __($recurringProduct->name) }}</td>
                     <td class="td">{{ __($recurringProduct->sku) }}</td>
