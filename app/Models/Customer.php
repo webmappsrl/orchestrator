@@ -47,8 +47,16 @@ class Customer extends Model
         'status',
         'phone',
         'mobile_phone'
-
+        'user_id',
     ];
+
+    /**
+     * Owner: the user who manages this customer (Admin or Manager).
+     */
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     public function projects()
     {
