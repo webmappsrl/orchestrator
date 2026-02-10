@@ -5,6 +5,8 @@ namespace App\Nova;
 use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
 use Eminiarts\Tabs\Tabs;
+use Illuminate\Database\Eloquent\Builder;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
@@ -16,9 +18,11 @@ use Laravel\Nova\Fields\Currency;
 use Eminiarts\Tabs\Traits\HasTabs;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Nova\Filters\CustomerOwnerFilter;
 use App\Nova\Filters\CustomerStatusFilter;
 use App\Nova\Actions\EditCustomerStatus;
 use App\Enums\CustomerStatus;
+use App\Enums\UserRole;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\Textarea;
@@ -51,7 +55,8 @@ class Customer extends Resource
         'domain_name',
         'full_name',
         'acronym',
-        'email'
+        'email',
+        'owner.name',
     ];
     public static function label()
     {
@@ -164,6 +169,15 @@ class Customer extends Resource
                 ->displayUsing(function ($value) {
                     return __(ucfirst($value));
                 }),
+            BelongsTo::make(__('Owner'), 'owner', User::class)
+                ->sortable()
+                ->searchable()
+                ->nullable()
+                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                    $query->whereJsonContains('roles', UserRole::Admin->value)
+                        ->orWhereJsonContains('roles', UserRole::Manager->value);
+                })
+                ->help(__('User who manages this customer (Admin or Manager).')),
             Text::make('HS', 'hs_id')
                 ->sortable()
                 ->nullable()
@@ -265,6 +279,7 @@ class Customer extends Resource
     {
         return [
             new CustomerStatusFilter(),
+            new CustomerOwnerFilter(),
         ];
     }
 
@@ -296,5 +311,4 @@ class Customer extends Resource
     {
         return null;
     }
-
 }

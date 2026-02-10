@@ -88,6 +88,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Customers owned by this user (user manages the customer).
+     */
+    public function ownedCustomers()
+    {
+        return $this->hasMany(Customer::class, 'user_id');
+    }
+
+    /**
      * Determine if the user can impersonate another user.
      *
      * @return bool
