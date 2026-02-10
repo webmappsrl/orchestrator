@@ -46,7 +46,7 @@ class Customer extends Model
         'contract_value',
         'status',
         'phone',
-        'mobile_phone'
+        'mobile_phone',
         'user_id',
     ];
 
