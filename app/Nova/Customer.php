@@ -84,6 +84,8 @@ class Customer extends Resource
                 $fullName = $this->full_name;
                 $emails = $this->email;
                 $acronym = $this->acronym;
+                $phone = $this->phone;
+                $mobilePhone = $this->mobile_phone;
 
                 if (isset($name) & isset($acronym)) {
                     $string .= $name . ' (' . $acronym . ')';
@@ -105,6 +107,12 @@ class Customer extends Resource
                     }
                     $mails = implode(", </br>", $mails);
                     $string .= '</br> ' . $mails;
+                }
+                if (isset($phone) && trim((string) $phone) !== '') {
+                    $string .= '</br>' . e($phone);
+                }
+                if (isset($mobilePhone) && trim((string) $mobilePhone) !== '') {
+                    $string .= '</br>' . e($mobilePhone);
                 }
                 return $string;
             })->asHtml()
@@ -168,6 +176,16 @@ class Customer extends Resource
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
             Text::make('Contact emails', 'email')
+                ->onlyOnForms(),
+            Text::make(__('Phone'), 'phone')
+                ->nullable()
+                ->rules('nullable', 'regex:/^[0-9]+$/', 'max:30')
+                ->help(__('Digits only (no spaces or symbols).'))
+                ->onlyOnForms(),
+            Text::make(__('Mobile phone'), 'mobile_phone')
+                ->nullable()
+                ->rules('nullable', 'regex:/^\+?[0-9]+$/', 'max:30')
+                ->help(__('Digits only; optional leading + for country code.'))
                 ->onlyOnForms(),
             Boolean::make('Subs.', 'has_subscription')
                 ->sortable()

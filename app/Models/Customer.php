@@ -44,7 +44,9 @@ class Customer extends Model
         'score_business',
         'contract_expiration_date',
         'contract_value',
-        'status'
+        'status',
+        'phone',
+        'mobile_phone'
 
     ];
 
