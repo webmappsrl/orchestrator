@@ -8,6 +8,14 @@ use Laravel\Nova\Resource as NovaResource;
 abstract class Resource extends NovaResource
 {
     /**
+     * Disable the "Traffic Cop" concurrency check that can trigger
+     * "Another user has updated this resource" due to timestamp precision (seconds vs microseconds).
+     *
+     * @var bool
+     */
+    public static $trafficCop = false;
+
+    /**
      * Build an "index" query for the given resource.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
