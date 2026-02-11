@@ -85,6 +85,9 @@ class Story extends Model implements HasMedia
             $user = auth()->user();
             if ($user) {
                 $story->creator_id = $user->id;
+                if (!isset($story->tester_id)) {
+                    $story->tester_id = $user->id;
+                }
                 if (!isset($story->type)) {
                     $story->type = StoryType::Helpdesk->value;
                 }
