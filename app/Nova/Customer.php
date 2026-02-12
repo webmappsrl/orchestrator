@@ -6,6 +6,7 @@ use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
 use Eminiarts\Tabs\Tabs;
 use Illuminate\Database\Eloquent\Builder;
+use Laravel\Nova\Fields\Badge;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Date;
@@ -163,15 +164,7 @@ class Customer extends Resource
                 ->sortable()
                 ->nullable()
                 ->onlyOnForms(),
-            Select::make(__('Status'), 'status')->options(
-                collect(CustomerStatus::cases())->mapWithKeys(function ($status) {
-                    return [$status->value => __(ucfirst($status->value))];
-                })->toArray()
-            )->sortable()
-                ->default(CustomerStatus::Unknown->value)
-                ->displayUsing(function ($value) {
-                    return __(ucfirst($value));
-                }),
+            $this->statusField($request),
             BelongsTo::make(__('Owner'), 'owner', User::class)
                 ->sortable()
                 ->searchable()
@@ -274,6 +267,44 @@ class Customer extends Resource
                 ->hideWhenUpdating(),
 
         ];
+    }
+
+    /**
+     * Status field: Badge with colors on index/detail.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return \Laravel\Nova\Fields\Field
+     */
+    protected function statusField(NovaRequest $request)
+    {
+        $isEdit = $request->isCreateOrAttachRequest() || $request->isUpdateOrUpdateAttachedRequest();
+        if ($isEdit) {
+            return Select::make(__('Status'), 'status')
+                ->options(
+                    collect(CustomerStatus::cases())->mapWithKeys(function ($status) {
+                        return [$status->value => __(ucfirst($status->value))];
+                    })->toArray()
+                )
+                ->sortable()
+                ->default(CustomerStatus::Unknown->value)
+                ->displayUsing(function ($value) {
+                    return __(ucfirst($value));
+                });
+        }
+        return Badge::make(__('Status'), 'status')
+            ->map([
+                'unknown' => 'info',
+                'opportunity' => 'warning',
+                'active' => 'success',
+                'lost' => 'danger',
+            ])
+            ->labels([
+                'unknown' => __('Unknown'),
+                'opportunity' => __('Opportunity'),
+                'active' => __('Active'),
+                'lost' => __('Lost'),
+            ])
+            ->sortable();
     }
 
     /**
