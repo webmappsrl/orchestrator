@@ -5,6 +5,8 @@ namespace App\Nova;
 use App\Enums\UserRole;
 use App\Models\Customer as CustomerModel;
 use App\Nova\Filters\ContractStatusFilter;
+use App\Nova\Filters\CustomerOwnerFilter;
+use App\Nova\Filters\CustomerStatusFilter;
 use App\Nova\Metrics\ContractsByStatus;
 use App\Nova\Metrics\TotalActiveContracts;
 use App\Nova\Metrics\TotalExpiredContracts;
@@ -13,6 +15,7 @@ use App\Nova\Metrics\TotalSubscriptionValue;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Badge;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
@@ -84,7 +87,7 @@ class Renewals extends Customer
     {
         return $query->where(function ($q) {
             $q->whereNotNull('contract_expiration_date')
-              ->orWhereNotNull('contract_value');
+                ->orWhereNotNull('contract_value');
         });
     }
 
@@ -101,37 +104,52 @@ class Renewals extends Customer
         // If we are in the index view, show only the required fields
         if ($request->isResourceIndexRequest()) {
             return [
-                // Customer field (full name only, clickable)
+                // Customer field: same structure as Customer index view (name, full_name, email, phone, mobile_phone)
                 Text::make('Customer', function () {
+                    $string = '';
+                    $name = $this->name;
                     $fullName = $this->full_name;
-                    $id = $this->id;
+                    $emails = $this->email;
+                    $acronym = $this->acronym;
+                    $phone = $this->phone;
+                    $mobilePhone = $this->mobile_phone;
+
+                    if (isset($name) & isset($acronym)) {
+                        $string .= $name . ' (' . $acronym . ')';
+                    } elseif (isset($name)) {
+                        $string .= $name;
+                    }
                     if (isset($fullName)) {
                         $fullName = wordwrap($fullName, 40, "\n", true);
                         $fullName = explode("\n", $fullName);
                         $fullName = implode("</br>", $fullName);
-                        $url = '/resources/customers/' . $id;
-                        return '<a href="' . $url . '" class="link-default">' . $fullName . '</a>';
+                        $string .= '</br>' . $fullName;
                     }
-                    return '-';
-                })->asHtml()
-                    ->sortable('full_name'),
-
-                // Email field
-                Text::make('Email', function () {
-                    $emails = $this->email;
                     if (isset($emails)) {
-                        //get the mails by exploding the string by comma or space
                         $mails = preg_split("/[\s,]+/", $this->email);
-                        //add a mailto link to each mail
                         foreach ($mails as $key => $mail) {
                             $mails[$key] = "<a style='color:blue;' href='mailto:$mail'>$mail</a>";
                         }
                         $mails = implode(", </br>", $mails);
-                        return $mails;
+                        $string .= '</br> ' . $mails;
                     }
-                    return '-';
+                    if (isset($phone) && trim((string) $phone) !== '') {
+                        $string .= '</br>' . e($phone);
+                    }
+                    if (isset($mobilePhone) && trim((string) $mobilePhone) !== '') {
+                        $string .= '</br>' . e($mobilePhone);
+                    }
+                    return $string ?: '-';
                 })->asHtml()
-                    ->sortable('email'),
+                    ->sortable('name'),
+
+                // Customer Status (reuse parent statusField for DRY)
+                $this->statusField($request),
+
+                // Owner
+                BelongsTo::make(__('Owner'), 'owner', User::class)
+                    ->sortable()
+                    ->nullable(),
 
                 // Contract Expiration Date
                 Date::make(__('Contract Expiration Date'), 'contract_expiration_date')
@@ -228,6 +246,8 @@ class Renewals extends Customer
     public function filters(NovaRequest $request)
     {
         return [
+            new CustomerStatusFilter,
+            new CustomerOwnerFilter,
             new ContractStatusFilter,
         ];
     }
