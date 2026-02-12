@@ -2,6 +2,7 @@
   "Stories": "Ticket",
   "Story": "Ticket",
   "Documents": "Documenti",
+  "Invoices": "Fatture",
   "Only specific document types are allowed": "Sono ammessi solo tipi di documenti specifici",
   "Logs": "Log",
   "Child Stories": "Ticket correlati",

@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Customer extends Model
+class Customer extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     /**
      * Days threshold for contracts to be considered "expiring soon"
@@ -78,6 +80,16 @@ class Customer extends Model
     public function tags()
     {
         return $this->morphMany(Tag::class, 'taggable');
+    }
+
+    /**
+     * Register media collections (documents: PDF only).
+     *
+     * @return void
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('documents')->acceptsMimeTypes(['application/pdf']);
     }
 
     protected static function booted()

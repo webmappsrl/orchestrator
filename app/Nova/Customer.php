@@ -27,6 +27,7 @@ use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\Textarea;
 use App\Nova\QuoteNoFilter;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 
 class Customer extends Resource
 {
@@ -231,6 +232,9 @@ class Customer extends Resource
                 ->hideFromIndex(),
             MarkdownTui::make('Notes', 'notes')
                 ->initialEditType(EditorType::MARKDOWN)
+                ->hideFromIndex(),
+            Files::make(__('Invoices'), 'documents')
+                ->singleMediaRules('mimetypes:application/pdf')
                 ->hideFromIndex(),
             new Tabs('Relationships', [
                 Tab::make(__('Projects'), [

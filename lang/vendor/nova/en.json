@@ -461,6 +461,7 @@
   "Stories": "Tickets",
   "Story": "Ticket",
   "Documents": "Documents",
+  "Invoices": "Invoices",
   "Only specific document types are allowed": "Only specific document types are allowed",
   "Logs": "Logs",
   "Child Stories": "Related Tickets",
