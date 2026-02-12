@@ -143,7 +143,9 @@ class Customer extends Resource
                 return $string;
             })->asHtml()
                 ->hideWhenCreating()
-                ->hideWhenUpdating(),
+                ->hideWhenUpdating()
+                ->hideFromIndex()
+                ->hideFromDetail(),
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255')
@@ -245,15 +247,27 @@ class Customer extends Resource
             Number::make('Score Cash', 'score_cash')
                 ->sortable()
                 ->nullable()
-                ->onlyOnForms(),
+                ->onlyOnForms()
+                ->hideFromIndex()
+                ->hideFromDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             Number::make('Score Pain', 'score_pain')
                 ->sortable()
                 ->nullable()
-                ->onlyOnForms(),
+                ->onlyOnForms()
+                ->hideFromIndex()
+                ->hideFromDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
             Number::make('Score Business', 'score_business')
                 ->sortable()
                 ->nullable()
-                ->onlyOnForms(),
+                ->onlyOnForms()
+                ->hideFromIndex()
+                ->hideFromDetail()
+                ->hideWhenCreating()
+                ->hideWhenUpdating(),
 
         ];
     }
