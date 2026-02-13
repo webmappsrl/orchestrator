@@ -158,6 +158,9 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'documents' => [
+            'mimetypes' => 'Only PDF files are allowed.',
+        ],
     ],
 
     /*
@@ -171,6 +174,8 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'documents' => 'invoices',
+    ],
 
 ];
