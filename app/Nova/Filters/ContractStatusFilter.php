@@ -2,6 +2,7 @@
 
 namespace App\Nova\Filters;
 
+use App\Enums\ContractStatus;
 use App\Models\Customer;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -25,30 +26,28 @@ class ContractStatusFilter extends Filter
      */
     public function apply(NovaRequest $request, $query, $value)
     {
+        $status = ContractStatus::tryFrom($value);
+        if ($status === null) {
+            return $query;
+        }
+
         $today = now()->startOfDay();
         $thirtyDaysFromNow = now()->addDays(Customer::EXPIRING_SOON_DAYS)->startOfDay();
 
-        switch ($value) {
-            case 'expired':
-                return $query->whereNotNull('contract_expiration_date')
-                    ->where('contract_expiration_date', '<', $today);
+        return match ($status) {
+            ContractStatus::Expired => $query->whereNotNull('contract_expiration_date')
+                ->where('contract_expiration_date', '<', $today),
 
-            case 'expiring_soon':
-                return $query->whereNotNull('contract_expiration_date')
-                    ->where('contract_expiration_date', '>=', $today)
-                    ->where('contract_expiration_date', '<=', $thirtyDaysFromNow);
+            ContractStatus::ExpiringSoon => $query->whereNotNull('contract_expiration_date')
+                ->where('contract_expiration_date', '>=', $today)
+                ->where('contract_expiration_date', '<=', $thirtyDaysFromNow),
 
-            case 'active':
-                return $query->whereNotNull('contract_expiration_date')
-                    ->where('contract_expiration_date', '>', $thirtyDaysFromNow);
+            ContractStatus::Active => $query->whereNotNull('contract_expiration_date')
+                ->where('contract_expiration_date', '>', $thirtyDaysFromNow),
 
-            case 'no_date':
-                return $query->whereNull('contract_expiration_date')
-                    ->whereNotNull('contract_value');
-
-            default:
-                return $query;
-        }
+            ContractStatus::NoDate => $query->whereNull('contract_expiration_date')
+                ->whereNotNull('contract_value'),
+        };
     }
 
     /**
@@ -59,12 +58,7 @@ class ContractStatusFilter extends Filter
      */
     public function options(NovaRequest $request)
     {
-        return [
-            __('Expired') => 'expired',
-            __('Expiring Soon') => 'expiring_soon',
-            __('Active') => 'active',
-            __('No Date') => 'no_date',
-        ];
+        return collect(ContractStatus::cases())->mapWithKeys(fn (ContractStatus $s) => [$s->label() => $s->value])->toArray();
     }
 
     /**
