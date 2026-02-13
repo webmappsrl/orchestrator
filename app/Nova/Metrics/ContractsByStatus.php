@@ -2,6 +2,7 @@
 
 namespace App\Nova\Metrics;
 
+use App\Enums\ContractStatus;
 use App\Models\Customer;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
@@ -40,41 +41,23 @@ class ContractsByStatus extends Partition
             ->whereNotNull('contract_value')
             ->count();
 
-        // Costruisci l'array dei risultati con le chiavi tradotte
-        $results = [];
-
-        if ($expiredCount > 0) {
-            $results[__('Expired')] = $expiredCount;
-        }
-
-        if ($expiringSoonCount > 0) {
-            $results[__('Expiring Soon')] = $expiringSoonCount;
-        }
-
-        if ($activeCount > 0) {
-            $results[__('Active')] = $activeCount;
-        }
-
-        if ($noDateCount > 0) {
-            $results[__('No Date')] = $noDateCount;
-        }
-
-        return $this->result($results)->colors($this->colors());
-    }
-
-    /**
-     * Get the colors for the metric.
-     *
-     * @return array
-     */
-    public function colors()
-    {
-        return [
-            __('Expired') => '#DC3545',      // danger (rosso)
-            __('Expiring Soon') => '#FFC107', // warning (arancione)
-            __('Active') => '#28A745',        // success (verde)
-            __('No Date') => '#17A2B8',       // info (azzurro/blu)
+        $counts = [
+            ContractStatus::Expired->value => $expiredCount,
+            ContractStatus::ExpiringSoon->value => $expiringSoonCount,
+            ContractStatus::Active->value => $activeCount,
+            ContractStatus::NoDate->value => $noDateCount,
         ];
+
+        $results = [];
+        $colors = [];
+        foreach (ContractStatus::cases() as $status) {
+            if (($counts[$status->value] ?? 0) > 0) {
+                $results[$status->label()] = $counts[$status->value];
+                $colors[$status->label()] = $status->metricColor();
+            }
+        }
+
+        return $this->result($results)->colors($colors);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Enums\ContractStatus;
 use App\Enums\UserRole;
 use App\Models\Customer as CustomerModel;
 use App\Nova\Filters\ContractStatusFilter;
@@ -184,34 +185,13 @@ class Renewals extends Customer
 
                 // Contract Status
                 Badge::make(__('Contract Status'), function () {
-                    if (!$this->contract_expiration_date) {
-                        return 'no_date';
-                    }
-
-                    $expirationDate = Carbon::parse($this->contract_expiration_date);
-                    $today = Carbon::today();
-                    $daysUntilExpiration = $today->diffInDays($expirationDate, false);
-
-                    if ($daysUntilExpiration < 0) {
-                        return 'expired';
-                    } elseif ($daysUntilExpiration <= CustomerModel::EXPIRING_SOON_DAYS) {
-                        return 'expiring_soon';
-                    } else {
-                        return 'active';
-                    }
+                    return ContractStatus::fromExpirationDate(
+                        $this->contract_expiration_date,
+                        CustomerModel::EXPIRING_SOON_DAYS
+                    )->value;
                 })
-                    ->map([
-                        'expired' => 'danger',
-                        'expiring_soon' => 'warning',
-                        'active' => 'success',
-                        'no_date' => 'info',
-                    ])
-                    ->labels([
-                        'expired' => __('Expired'),
-                        'expiring_soon' => __('Expiring Soon'),
-                        'active' => __('Active'),
-                        'no_date' => __('No Date'),
-                    ])
+                    ->map(collect(ContractStatus::cases())->mapWithKeys(fn (ContractStatus $s) => [$s->value => $s->badgeStyle()])->toArray())
+                    ->labels(collect(ContractStatus::cases())->mapWithKeys(fn (ContractStatus $s) => [$s->value => $s->label()])->toArray())
                     ->sortable('contract_expiration_date'),
             ];
         }
