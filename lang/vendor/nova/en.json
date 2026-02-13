@@ -523,6 +523,8 @@
   "Digits only (no spaces or symbols).": "Digits only (no spaces or symbols).",
   "Digits only; optional leading + for country code.": "Digits only; optional leading + for country code.",
   "Mobile phone": "Mobile phone",
+  "One or more numbers separated by comma (digits only).": "One or more numbers separated by comma (digits only).",
+  "One or more numbers separated by comma; optional + for country code.": "One or more numbers separated by comma; optional + for country code.",
   "Phone": "Phone",
   "Owner": "Owner",
   "Stories Count": "Number of Tickets",

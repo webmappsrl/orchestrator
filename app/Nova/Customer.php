@@ -116,10 +116,14 @@ class Customer extends Resource
                     $string .= '</br> ' . $mails;
                 }
                 if (isset($phone) && trim((string) $phone) !== '') {
-                    $string .= '</br>' . e($phone);
+                    $phones = preg_split("/[\s,]+/", $this->phone);
+                    $phones = array_filter(array_map('trim', $phones));
+                    $string .= '</br>' . implode('</br>', array_map('e', $phones));
                 }
                 if (isset($mobilePhone) && trim((string) $mobilePhone) !== '') {
-                    $string .= '</br>' . e($mobilePhone);
+                    $mobiles = preg_split("/[\s,]+/", $this->mobile_phone);
+                    $mobiles = array_filter(array_map('trim', $mobiles));
+                    $string .= '</br>' . implode('</br>', array_map('e', $mobiles));
                 }
                 return $string;
             })->asHtml()
@@ -189,13 +193,13 @@ class Customer extends Resource
                 ->onlyOnForms(),
             Text::make(__('Phone'), 'phone')
                 ->nullable()
-                ->rules('nullable', 'regex:/^[0-9]+$/', 'max:30')
-                ->help(__('Digits only (no spaces or symbols).'))
+                ->rules('nullable', 'regex:/^\+?[0-9]+(\s*,\s*\+?[0-9]+)*$/', 'max:255')
+                ->help(__('One or more numbers separated by comma; optional + for country code.'))
                 ->onlyOnForms(),
             Text::make(__('Mobile phone'), 'mobile_phone')
                 ->nullable()
-                ->rules('nullable', 'regex:/^\+?[0-9]+$/', 'max:30')
-                ->help(__('Digits only; optional leading + for country code.'))
+                ->rules('nullable', 'regex:/^\+?[0-9]+(\s*,\s*\+?[0-9]+)*$/', 'max:255')
+                ->help(__('One or more numbers separated by comma; optional + for country code.'))
                 ->onlyOnForms(),
             Boolean::make('Subs.', 'has_subscription')
                 ->sortable()
