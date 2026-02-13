@@ -174,8 +174,17 @@ class Customer extends Resource
                 ->searchable()
                 ->nullable()
                 ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
-                    $query->whereJsonContains('roles', UserRole::Admin->value)
-                        ->orWhereJsonContains('roles', UserRole::Manager->value);
+                    $query->where(function (Builder $q) {
+                        $q->whereJsonContains('roles', UserRole::Admin->value)
+                            ->orWhereJsonContains('roles', UserRole::Manager->value);
+                    });
+                    if ($request->filled('search')) {
+                        $search = '%' . trim($request->search) . '%';
+                        $query->where(function (Builder $q) use ($search) {
+                            $q->where('name', 'like', $search)
+                                ->orWhere('email', 'like', $search);
+                        });
+                    }
                 })
                 ->help(__('User who manages this customer (Admin or Manager).')),
             Text::make('HS', 'hs_id')
