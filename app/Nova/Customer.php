@@ -6,6 +6,7 @@ use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
 use Eminiarts\Tabs\Tabs;
 use Illuminate\Database\Eloquent\Builder;
+use Laravel\Nova\Fields\Badge;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Date;
@@ -115,10 +116,14 @@ class Customer extends Resource
                     $string .= '</br> ' . $mails;
                 }
                 if (isset($phone) && trim((string) $phone) !== '') {
-                    $string .= '</br>' . e($phone);
+                    $phones = preg_split("/[\s,]+/", $this->phone);
+                    $phones = array_filter(array_map('trim', $phones));
+                    $string .= '</br>' . implode('</br>', array_map('e', $phones));
                 }
                 if (isset($mobilePhone) && trim((string) $mobilePhone) !== '') {
-                    $string .= '</br>' . e($mobilePhone);
+                    $mobiles = preg_split("/[\s,]+/", $this->mobile_phone);
+                    $mobiles = array_filter(array_map('trim', $mobiles));
+                    $string .= '</br>' . implode('</br>', array_map('e', $mobiles));
                 }
                 return $string;
             })->asHtml()
@@ -163,15 +168,7 @@ class Customer extends Resource
                 ->sortable()
                 ->nullable()
                 ->onlyOnForms(),
-            Select::make(__('Status'), 'status')->options(
-                collect(CustomerStatus::cases())->mapWithKeys(function ($status) {
-                    return [$status->value => __(ucfirst($status->value))];
-                })->toArray()
-            )->sortable()
-                ->default(CustomerStatus::Unknown->value)
-                ->displayUsing(function ($value) {
-                    return __(ucfirst($value));
-                }),
+            $this->statusField($request),
             BelongsTo::make(__('Owner'), 'owner', User::class)
                 ->sortable()
                 ->searchable()
@@ -196,13 +193,13 @@ class Customer extends Resource
                 ->onlyOnForms(),
             Text::make(__('Phone'), 'phone')
                 ->nullable()
-                ->rules('nullable', 'regex:/^[0-9]+$/', 'max:30')
-                ->help(__('Digits only (no spaces or symbols).'))
+                ->rules('nullable', 'regex:/^\+?[0-9]+(\s*,\s*\+?[0-9]+)*$/', 'max:255')
+                ->help(__('One or more numbers separated by comma; optional + for country code.'))
                 ->onlyOnForms(),
             Text::make(__('Mobile phone'), 'mobile_phone')
                 ->nullable()
-                ->rules('nullable', 'regex:/^\+?[0-9]+$/', 'max:30')
-                ->help(__('Digits only; optional leading + for country code.'))
+                ->rules('nullable', 'regex:/^\+?[0-9]+(\s*,\s*\+?[0-9]+)*$/', 'max:255')
+                ->help(__('One or more numbers separated by comma; optional + for country code.'))
                 ->onlyOnForms(),
             Boolean::make('Subs.', 'has_subscription')
                 ->sortable()
@@ -274,6 +271,34 @@ class Customer extends Resource
                 ->hideWhenUpdating(),
 
         ];
+    }
+
+    /**
+     * Status field: Badge with colors on index/detail.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return \Laravel\Nova\Fields\Field
+     */
+    protected function statusField(NovaRequest $request)
+    {
+        $isEdit = $request->isCreateOrAttachRequest() || $request->isUpdateOrUpdateAttachedRequest();
+        if ($isEdit) {
+            return Select::make(__('Status'), 'status')
+                ->options(
+                    collect(CustomerStatus::cases())->mapWithKeys(function ($status) {
+                        return [$status->value => __(ucfirst($status->value))];
+                    })->toArray()
+                )
+                ->sortable()
+                ->default(CustomerStatus::Unknown->value)
+                ->displayUsing(function ($value) {
+                    return __(ucfirst($value));
+                });
+        }
+        return Badge::make(__('Status'), 'status')
+            ->map(collect(CustomerStatus::cases())->mapWithKeys(fn(CustomerStatus $s) => [$s->value => $s->badgeStyle()])->toArray())
+            ->labels(collect(CustomerStatus::cases())->mapWithKeys(fn(CustomerStatus $s) => [$s->value => __(ucfirst($s->value))])->toArray())
+            ->sortable();
     }
 
     /**
