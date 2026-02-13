@@ -296,18 +296,8 @@ class Customer extends Resource
                 });
         }
         return Badge::make(__('Status'), 'status')
-            ->map([
-                'unknown' => 'info',
-                'opportunity' => 'warning',
-                'active' => 'success',
-                'lost' => 'danger',
-            ])
-            ->labels([
-                'unknown' => __('Unknown'),
-                'opportunity' => __('Opportunity'),
-                'active' => __('Active'),
-                'lost' => __('Lost'),
-            ])
+            ->map(collect(CustomerStatus::cases())->mapWithKeys(fn(CustomerStatus $s) => [$s->value => $s->badgeStyle()])->toArray())
+            ->labels(collect(CustomerStatus::cases())->mapWithKeys(fn(CustomerStatus $s) => [$s->value => __(ucfirst($s->value))])->toArray())
             ->sortable();
     }
 
