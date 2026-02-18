@@ -525,6 +525,7 @@
   "Mobile phone": "Mobile phone",
   "One or more numbers separated by comma (digits only).": "One or more numbers separated by comma (digits only).",
   "One or more numbers separated by comma; optional + for country code.": "One or more numbers separated by comma; optional + for country code.",
+  "One or more numbers separated by comma; spaces and common separators allowed.": "One or more numbers separated by comma; spaces and common separators allowed.",
   "Phone": "Phone",
   "Owner": "Owner",
   "Stories Count": "Number of Tickets",
@@ -667,5 +668,13 @@
   "Total value of subscriptions": "Total value of subscriptions",
   "No Date": "No Date",
   "Unknown": "Unknown",
-  "unknown": "Unknown"
+  "unknown": "Unknown",
+  "Customer Details": "Customer Details",
+  "Principale": "Main",
+  "Contatti": "Contacts",
+  "Domain Name": "Domain Name",
+  "Rinnovi": "Renewals",
+  "Contract Amount": "Contract Amount",
+  "Main": "Main",
+  "Contacts": "Contacts"
 }
