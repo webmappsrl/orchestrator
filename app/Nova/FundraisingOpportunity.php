@@ -11,11 +11,14 @@ use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Eminiarts\Tabs\Tabs;
+use Eminiarts\Tabs\Tab;
+use Eminiarts\Tabs\Traits\HasTabs;
 
 class FundraisingOpportunity extends Resource
 {
+    use HasTabs;
     /**
      * The model the resource corresponds to.
      *
@@ -163,66 +166,34 @@ class FundraisingOpportunity extends Resource
             return $this->fieldsForIndex($request);
         }
 
-        // Per dettaglio, creazione e modifica usa tutti i campi
+        // Costruisci l'array di tab dinamicamente
+        $tabs = [
+            new Tab('Principale', $this->getMainTabFields($request)),
+            new Tab('Economics', $this->getEconomicsTabFields()),
+        ];
+
+        // Mostra sempre il tab "Progetti" nella vista detail con il conteggio dei progetti
+        if ($request->isResourceDetailRequest() && $this->resource && $this->resource->exists) {
+            $projectsCount = $this->resource->projects()->count();
+            $tabs[] = new Tab('Progetti (' . $projectsCount . ')', $this->getProjectsTabFields());
+        }
+
+        // Per dettaglio, creazione e modifica usa tutti i campi organizzati in tab
         return [
+            new Tabs('Dettagli Opportunità', $tabs),
+        ];
+    }
+
+    /**
+     * Get fields for the "Principale" tab.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    private function getMainTabFields(NovaRequest $request): array
+    {
+        $fields = [
             ID::make()->sortable(),
-
-            Text::make('Nome del Bando', 'name')
-                ->rules('required', 'max:255')
-                ->sortable(),
-
-            URL::make('URL Ufficiale', 'official_url')
-                ->nullable()
-                ->displayUsing(function ($url) {
-                    return $url ? parse_url($url, PHP_URL_HOST) : null;
-                }),
-
-            Number::make('Fondo di Dotazione', 'endowment_fund')
-                ->step(0.01)
-                ->nullable()
-                ->displayUsing(function ($value) {
-                    return $value ? '€ ' . number_format($value, 2) : null;
-                }),
-
-            Date::make('Data di Scadenza', 'deadline')
-                ->rules('required')
-                ->onlyOnForms(),
-
-            Text::make('Data di Scadenza', function () {
-                $date = $this->deadline;
-                if (!$date) {
-                    return null;
-                }
-                $bgColor = $this->getDeadlineColor($date);
-                $formattedDate = $date->format('d/m/Y');
-                // Usa testo bianco per rosso e arancione, testo scuro per giallo e verde
-                $textColor = (in_array($bgColor, ['#dc2626', '#ea580c'])) ? '#ffffff' : '#1f2937';
-                return '<span style="background-color: ' . $bgColor . '; color: ' . $textColor . '; padding: 4px 8px; border-radius: 4px; font-weight: 600; display: inline-block;">' . htmlspecialchars($formattedDate) . '</span>';
-            })->exceptOnForms()->asHtml()->sortable(),
-
-            Text::make('Nome del Programma', 'program_name')
-                ->nullable()
-                ->sortable(),
-
-            Text::make('Sponsor', 'sponsor')
-                ->nullable()
-                ->sortable(),
-
-            Number::make('Quota Cofinanziamento (%)', 'cofinancing_quota')
-                ->step(0.01)
-                ->min(0)
-                ->max(100)
-                ->nullable()
-                ->displayUsing(function ($value) {
-                    return $value ? $value . '%' : null;
-                }),
-
-            Number::make('Contributo Massimo', 'max_contribution')
-                ->step(0.01)
-                ->nullable()
-                ->displayUsing(function ($value) {
-                    return $value ? '€ ' . number_format($value, 2) : null;
-                }),
 
             Select::make('Scope Territoriale', 'territorial_scope')
                 ->options([
@@ -236,18 +207,48 @@ class FundraisingOpportunity extends Resource
                 ->rules('required')
                 ->sortable(),
 
-            Textarea::make('Requisiti del Beneficiario', 'beneficiary_requirements')
+            Text::make('Sponsor', 'sponsor')
                 ->nullable()
-                ->rows(3),
+                ->sortable(),
 
-            Textarea::make('Requisiti del Capofila', 'lead_requirements')
+            Text::make('Nome del Programma', 'program_name')
                 ->nullable()
-                ->rows(3),
+                ->sortable(),
 
-            BelongsTo::make('Creato da', 'creator', User::class)
-                ->exceptOnForms()
-                ->showOnDetail()
-                ->showOnIndex(false),
+            Text::make('Nome del Bando', 'name')
+                ->rules('required', 'max:255')
+                ->sortable(),
+
+            Date::make('Data di Scadenza', 'deadline')
+                ->rules('required')
+                ->onlyOnForms(),
+
+            Text::make('Scadenza', function () {
+                $date = $this->deadline;
+                if (!$date) {
+                    return null;
+                }
+                $bgColor = $this->getDeadlineColor($date);
+                $formattedDate = $date->format('d/m/Y');
+                // Usa testo bianco per rosso e arancione, testo scuro per giallo e verde
+                $textColor = (in_array($bgColor, ['#dc2626', '#ea580c'])) ? '#ffffff' : '#1f2937';
+                
+                $now = now();
+                $daysRemaining = $now->diffInDays($date, false);
+                
+                $html = '<span style="background-color: ' . $bgColor . '; color: ' . $textColor . '; padding: 4px 8px; border-radius: 4px; font-weight: 600; display: inline-block;">' . htmlspecialchars($formattedDate) . '</span>';
+                
+                // Aggiungi i giorni rimanenti
+                if ($daysRemaining < 0) {
+                    $daysText = abs($daysRemaining) == 1 ? 'giorno fa' : 'giorni fa';
+                    $html .= ' <span style="margin-left: 4px; color: #dc2626;">(scaduto ' . abs($daysRemaining) . ' ' . $daysText . ')</span>';
+                } else {
+                    $daysText = $daysRemaining == 1 ? 'giorno' : 'giorni';
+                    $html .= ' <span style="margin-left: 4px;">(' . $daysRemaining . ' ' . $daysText . ' rimanenti)</span>';
+                }
+                
+                return $html;
+            })->exceptOnForms()->asHtml()->sortable(),
 
             BelongsTo::make('Responsabile', 'responsibleUser', User::class)
                 ->rules('required')
@@ -256,23 +257,76 @@ class FundraisingOpportunity extends Resource
                     return $query->whereJsonContains('roles', 'fundraising');
                 }),
 
+            BelongsTo::make('Creato da', 'creator', User::class)
+                ->exceptOnForms()
+                ->showOnDetail()
+                ->showOnIndex(false),
+        ];
+
+        return $fields;
+    }
+
+    /**
+     * Get fields for the "Economics" tab.
+     *
+     * @return array
+     */
+    private function getEconomicsTabFields(): array
+    {
+        return [
+            Number::make('Fondo di Dotazione', 'endowment_fund')
+                ->step(0.01)
+                ->nullable()
+                ->displayUsing(function ($value) {
+                    return $value ? '€ ' . number_format($value, 2) : null;
+                }),
+
+            Number::make('Quota Cofinanziamento (%)', 'cofinancing_quota')
+                ->step(0.01)
+                ->min(0)
+                ->max(100)
+                ->nullable()
+                ->displayUsing(function ($value) {
+                    return $value ? $value . '%' : null;
+                }),
+
+            Textarea::make('Requisiti del Beneficiario', 'beneficiary_requirements')
+                ->nullable()
+                ->rows(10)
+                ->alwaysShow(),
+
+            Textarea::make('Requisiti del Capofila', 'lead_requirements')
+                ->nullable()
+                ->rows(10)
+                ->alwaysShow(),
+        ];
+    }
+
+    /**
+     * Get fields for the "Progetti" tab.
+     *
+     * @return array
+     */
+    private function getProjectsTabFields(): array
+    {
+        return [
             Text::make('Progetti Associati', function () {
                 $projects = $this->projects;
                 if ($projects->isEmpty()) {
-                    return 'Nessun progetto associato';
+                    return '<p style="color: #6b7280; font-style: italic;">Non sono ancora stati attivati progetti in questa opportunità</p>';
                 }
                 
                 $projectLinks = $projects->map(function ($project) {
                     $url = '/resources/fundraising-projects/' . $project->id;
                     $title = htmlspecialchars($project->title);
-                    $status = ucfirst($project->status);
-                    return '<a href="' . $url . '" class="link-default">' . $title . '</a> (' . $status . ')';
+                    return '<li style="margin-bottom: 8px;"><a href="' . $url . '" class="link-default" style="text-decoration: none; color: #2563eb;">' . $title . '</a></li>';
                 })->toArray();
                 
-                return implode(', ', $projectLinks);
-            })->onlyOnDetail()->asHtml(),
+                return '<ul style="list-style-type: disc; padding-left: 20px; margin: 0;">' . implode('', $projectLinks) . '</ul>';
+            })->asHtml(),
         ];
     }
+
 
     /**
      * Get the fields for the index view.

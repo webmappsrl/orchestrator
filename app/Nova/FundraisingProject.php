@@ -237,6 +237,19 @@ class FundraisingProject extends Resource
     }
 
     /**
+     * Determine if the current user can view any resources.
+     */
+    public static function authorizedToViewAny(Request $request): bool
+    {
+        $user = $request->user();
+        if ($user == null) {
+            return false;
+        }
+        return $user->hasRole(\App\Enums\UserRole::Fundraising) || 
+               $user->hasRole(\App\Enums\UserRole::Admin);
+    }
+
+    /**
      * Determine if the current user can create new resources.
      */
     public static function authorizedToCreate(Request $request): bool
