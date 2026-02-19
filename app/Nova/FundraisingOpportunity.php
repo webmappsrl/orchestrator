@@ -36,7 +36,7 @@ class FundraisingOpportunity extends Resource
      * @var array
      */
     public static $search = [
-        'name', 'program_name', 'sponsor'
+        'name', 'program_name', 'sponsor', 'responsibleUser.name', 'responsibleUser.email'
     ];
 
     /**
@@ -130,7 +130,7 @@ class FundraisingOpportunity extends Resource
 
     /**
      * Build an "index" query for the given resource.
-     * Mostra solo le opportunità attive (deadline >= now) di default.
+     * Mostra solo le opportunità attive (deadline >= now).
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -141,9 +141,10 @@ class FundraisingOpportunity extends Resource
         // Filtra solo le opportunità attive (non scadute)
         $query = $query->where('deadline', '>=', now());
 
-        // Se l'utente non ha specificato un ordinamento personalizzato, ordina per deadline ASC (dalla più lontana alla più vicina)
+        // Se l'utente non ha specificato un ordinamento personalizzato, ordina per deadline ASC
         if (!$request->get('orderBy')) {
-            return $query->orderBy('deadline', 'asc');
+            // Rimuovi eventuali ordinamenti esistenti e applica quello di default
+            return $query->reorder()->orderBy('deadline', 'asc');
         }
 
         return $query;
@@ -365,7 +366,6 @@ class FundraisingOpportunity extends Resource
     {
         return [
             new \App\Nova\Filters\TerritorialScopeFilter,
-            new \App\Nova\Filters\ExpiredFilter,
             new \App\Nova\Filters\CofinancingFilter,
         ];
     }
