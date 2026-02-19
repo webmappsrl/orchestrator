@@ -89,6 +89,7 @@ class FundraisingOpportunitySeeder extends Seeder
             $endowmentFund = fake()->randomFloat(2, 10000, 5000000);
             $cofinancingQuota = fake()->randomFloat(2, 0, 100);
             $maxContribution = fake()->randomFloat(2, 5000, 1000000);
+            $evaluator = $fundraisingUsers->random();
             
             $opportunity = FundraisingOpportunity::create([
                 'name' => 'Bando Seeder #' . $i . ' - ' . fake()->words(3, true),
@@ -104,12 +105,55 @@ class FundraisingOpportunitySeeder extends Seeder
                 'lead_requirements' => fake()->paragraphs(rand(2, 4), true),
                 'created_by' => $fundraisingUsers->random()->id,
                 'responsible_user_id' => $fundraisingUsers->random()->id,
+                
+                // Parte 1 - Criteri principali (0-5 + descrizione)
+                'evaluation_criterion_a_score' => fake()->numberBetween(0, 5),
+                'evaluation_criterion_a_description' => fake()->paragraph(),
+                'evaluation_criterion_b_score' => fake()->numberBetween(0, 5),
+                'evaluation_criterion_b_description' => fake()->paragraph(),
+                'evaluation_criterion_c_score' => fake()->numberBetween(0, 5),
+                'evaluation_criterion_c_description' => fake()->paragraph(),
+                'evaluation_criterion_d_score' => fake()->numberBetween(0, 5),
+                'evaluation_criterion_d_description' => fake()->paragraph(),
+                'evaluation_criterion_e_score' => fake()->numberBetween(0, 5),
+                'evaluation_criterion_e_description' => fake()->paragraph(),
+                'evaluation_criterion_f_score' => fake()->numberBetween(0, 5),
+                'evaluation_criterion_f_description' => fake()->paragraph(),
+
+                // Parte 2 - Requisiti di base (0-1)
+                'evaluation_base_coerenza_bando' => fake()->numberBetween(0, 1),
+                'evaluation_base_capofila_idoneo' => fake()->numberBetween(0, 1),
+                'evaluation_base_partner_minimi' => fake()->numberBetween(0, 1),
+                'evaluation_base_cofinanziamento' => fake()->numberBetween(0, 1),
+                'evaluation_base_tempistiche' => fake()->numberBetween(0, 1),
+
+                // Parte 2 - Valutazione qualitativa (0-5)
+                'evaluation_qual_coerenza_cai' => fake()->numberBetween(0, 5),
+                'evaluation_qual_imp_ambientale' => fake()->numberBetween(0, 5),
+                'evaluation_qual_imp_sociale' => fake()->numberBetween(0, 5),
+                'evaluation_qual_imp_economico' => fake()->numberBetween(0, 5),
+                'evaluation_qual_obiettivi_chiari' => fake()->numberBetween(0, 5),
+                'evaluation_qual_solidita_azioni' => fake()->numberBetween(0, 5),
+                'evaluation_qual_capacita_partner' => fake()->numberBetween(0, 5),
+
+                // Parte 2 - Fattori premiali (0-3)
+                'evaluation_prem_innovazione' => fake()->numberBetween(0, 3),
+                'evaluation_prem_replicabilita' => fake()->numberBetween(0, 3),
+                'evaluation_prem_comunita' => fake()->numberBetween(0, 3),
+                'evaluation_prem_sostenibilita' => fake()->numberBetween(0, 3),
+
+                // Parte 2 - Rischi
+                'evaluation_risk_tecnici' => fake()->numberBetween(0, 3),
+                'evaluation_risk_finanziari' => fake()->numberBetween(-3, 3),
+                'evaluation_risk_organizzativi' => fake()->numberBetween(-2, 2),
+                'evaluation_risk_logistici' => fake()->numberBetween(-2, 2),
+
+                // Campi informativi
+                'evaluation_evaluated_by' => $evaluator->id,
+                'evaluation_evaluated_at' => fake()->dateTimeBetween('-6 months', 'now'),
             ]);
 
-            // Aggiungi valutazione per circa il 40% delle opportunità
-            if (fake()->boolean(40)) {
-                $this->addEvaluationData($opportunity, $fundraisingUsers->random());
-            }
+            // I totali vengono calcolati automaticamente dal Model tramite l'evento saving
 
             // Determina il numero di progetti da creare
             // Circa il 50% delle opportunità avrà 0 progetti
@@ -149,66 +193,6 @@ class FundraisingOpportunitySeeder extends Seeder
             }
         }
 
-        $this->command->info('Created 100 fundraising opportunities with random projects (0-10 per opportunity, ~50% with 0 projects) and evaluations (~40% of opportunities have evaluation data)');
-    }
-
-    /**
-     * Add evaluation data to an opportunity.
-     *
-     * @param FundraisingOpportunity $opportunity
-     * @param User $evaluator
-     * @return void
-     */
-    private function addEvaluationData(FundraisingOpportunity $opportunity, User $evaluator): void
-    {
-        // Parte 1 - Criteri principali (0-5 + descrizione)
-        $opportunity->update([
-            'evaluation_criterion_a_score' => fake()->numberBetween(0, 5),
-            'evaluation_criterion_a_description' => fake()->optional(0.8)->paragraph(),
-            'evaluation_criterion_b_score' => fake()->numberBetween(0, 5),
-            'evaluation_criterion_b_description' => fake()->optional(0.8)->paragraph(),
-            'evaluation_criterion_c_score' => fake()->numberBetween(0, 5),
-            'evaluation_criterion_c_description' => fake()->optional(0.8)->paragraph(),
-            'evaluation_criterion_d_score' => fake()->numberBetween(0, 5),
-            'evaluation_criterion_d_description' => fake()->optional(0.8)->paragraph(),
-            'evaluation_criterion_e_score' => fake()->numberBetween(0, 5),
-            'evaluation_criterion_e_description' => fake()->optional(0.8)->paragraph(),
-            'evaluation_criterion_f_score' => fake()->numberBetween(0, 5),
-            'evaluation_criterion_f_description' => fake()->optional(0.8)->paragraph(),
-
-            // Parte 2 - Requisiti di base (0-1)
-            'evaluation_base_coerenza_bando' => fake()->numberBetween(0, 1),
-            'evaluation_base_capofila_idoneo' => fake()->numberBetween(0, 1),
-            'evaluation_base_partner_minimi' => fake()->numberBetween(0, 1),
-            'evaluation_base_cofinanziamento' => fake()->numberBetween(0, 1),
-            'evaluation_base_tempistiche' => fake()->numberBetween(0, 1),
-
-            // Parte 2 - Valutazione qualitativa (0-5)
-            'evaluation_qual_coerenza_cai' => fake()->numberBetween(0, 5),
-            'evaluation_qual_imp_ambientale' => fake()->numberBetween(0, 5),
-            'evaluation_qual_imp_sociale' => fake()->numberBetween(0, 5),
-            'evaluation_qual_imp_economico' => fake()->numberBetween(0, 5),
-            'evaluation_qual_obiettivi_chiari' => fake()->numberBetween(0, 5),
-            'evaluation_qual_solidita_azioni' => fake()->numberBetween(0, 5),
-            'evaluation_qual_capacita_partner' => fake()->numberBetween(0, 5),
-
-            // Parte 2 - Fattori premiali (0-3)
-            'evaluation_prem_innovazione' => fake()->numberBetween(0, 3),
-            'evaluation_prem_replicabilita' => fake()->numberBetween(0, 3),
-            'evaluation_prem_comunita' => fake()->numberBetween(0, 3),
-            'evaluation_prem_sostenibilita' => fake()->numberBetween(0, 3),
-
-            // Parte 2 - Rischi
-            'evaluation_risk_tecnici' => fake()->numberBetween(0, 3),
-            'evaluation_risk_finanziari' => fake()->numberBetween(-3, 3),
-            'evaluation_risk_organizzativi' => fake()->numberBetween(-2, 2),
-            'evaluation_risk_logistici' => fake()->numberBetween(-2, 2),
-
-            // Campi informativi
-            'evaluation_evaluated_by' => $evaluator->id,
-            'evaluation_evaluated_at' => fake()->dateTimeBetween('-6 months', 'now'),
-        ]);
-
-        // I totali vengono calcolati automaticamente dal Model tramite l'evento saving
+        $this->command->info('Created 100 fundraising opportunities with random projects (0-10 per opportunity, ~50% with 0 projects) and all evaluation fields populated');
     }
 }

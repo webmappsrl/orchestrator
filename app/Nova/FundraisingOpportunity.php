@@ -413,6 +413,18 @@ class FundraisingOpportunity extends Resource
 
             BelongsTo::make('Responsabile', 'responsibleUser', User::class)
                 ->searchable(),
+
+            Number::make('P+', 'evaluation_total_positive')
+                ->sortable()
+                ->displayUsing(function ($value) {
+                    return $value ?? 0;
+                }),
+
+            Number::make('P-', 'evaluation_total_negative')
+                ->sortable()
+                ->displayUsing(function ($value) {
+                    return $value ?? 0;
+                }),
         ];
     }
 
