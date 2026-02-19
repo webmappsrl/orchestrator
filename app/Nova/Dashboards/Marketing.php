@@ -2,13 +2,28 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Enums\UserRole;
 use App\Models\Customer;
 use App\Models\Quote;
+use Illuminate\Http\Request;
 use Laravel\Nova\Dashboard;
 use Webmapp\KanbanCard\KanbanCard;
 
 class Marketing extends Dashboard
 {
+    /**
+     * Determine if the user can see the dashboard (stessa policy del CRM: solo Admin e Manager).
+     */
+    public function authorizedToSee(Request $request): bool
+    {
+        $user = $request->user();
+        if ($user === null) {
+            return false;
+        }
+
+        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
+    }
+
     /**
      * Get the displayable name of the dashboard.
      */

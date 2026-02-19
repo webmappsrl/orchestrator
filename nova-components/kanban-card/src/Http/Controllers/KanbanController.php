@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class KanbanController extends Controller
 {
@@ -36,6 +37,7 @@ class KanbanController extends Controller
         $displayFields = $config['displayFields'] ?? [];
         $filterField = $config['filterField'] ?? null;
         $searchFields = $config['searchFields'] ?? [];
+        $scopeName = $config['scopeName'] ?? null;
         $limitPerColumn = (int) ($config['limitPerColumn'] ?? self::LIMIT_PER_COLUMN);
         $limitPerColumn = max(1, min(500, $limitPerColumn));
 
@@ -73,7 +75,7 @@ class KanbanController extends Controller
 
         // Load more: single column, offset + limit
         if ($singleStatus !== null && $singleStatus !== '') {
-            $query = $this->buildItemsQuery($modelClass, $statusField, $withRelations, $filterField, $searchFields, $request);
+            $query = $this->buildItemsQuery($modelClass, $statusField, $withRelations, $filterField, $searchFields, $scopeName, $request);
             $query->where($statusField, $singleStatus);
             $query->orderBy((new $modelClass)->getKeyName());
             $items = $query->offset($offset)->limit(max(1, min(50, $limit)))->get();
@@ -83,7 +85,7 @@ class KanbanController extends Controller
         // Initial load: up to limitPerColumn per status
         $allItems = [];
         foreach ($statusValues as $statusValue) {
-            $query = $this->buildItemsQuery($modelClass, $statusField, $withRelations, $filterField, $searchFields, $request);
+            $query = $this->buildItemsQuery($modelClass, $statusField, $withRelations, $filterField, $searchFields, $scopeName, $request);
             $query->where($statusField, $statusValue);
             $query->orderBy((new $modelClass)->getKeyName());
             $chunk = $query->limit($limitPerColumn)->get();
@@ -96,7 +98,7 @@ class KanbanController extends Controller
     }
 
     /**
-     * Build base query for items (with, filter, search). Does not apply status.
+     * Build base query for items (with, filter, search, optional scope). Does not apply status.
      */
     protected function buildItemsQuery(
         string $modelClass,
@@ -104,9 +106,16 @@ class KanbanController extends Controller
         array $withRelations,
         ?string $filterField,
         array $searchFields,
+        ?string $scopeName,
         Request $request
     ) {
         $query = $modelClass::query();
+
+        $model = new $modelClass;
+        $scopeMethod = 'scope' . Str::studly($scopeName);
+        if ($scopeName !== null && $scopeName !== '' && method_exists($model, $scopeMethod)) {
+            $query->{$scopeName}();
+        }
 
         if (!empty($withRelations)) {
             $query->with($withRelations);

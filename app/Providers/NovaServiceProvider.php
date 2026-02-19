@@ -118,7 +118,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
                     MenuItem::resource(Quote::class),
-                ])->icon('users')->collapsedByDefault(),
+                ])->icon('users')->collapsedByDefault()->canSee(function ($request) {
+                    if ($request->user() === null) {
+                        return false;
+                    }
+
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager);
+                }),
 
                 MenuSection::make('DEV', [
                     MenuGroup::make(__('Archived'), [

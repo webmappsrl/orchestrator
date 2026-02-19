@@ -64,6 +64,22 @@ class KanbanCard extends Card
     public array $filterOptions = [];
 
     /**
+     * Initial value for the filter (e.g. pre-select current user on Kanban dashboard).
+     * When set, the filter is applied on first load and the combobox shows the matching option label.
+     */
+    public mixed $initialFilterValue = null;
+
+    /**
+     * Set the initial filter value so the card loads with this filter applied (e.g. current user id).
+     */
+    public function initialFilterValue(mixed $value): self
+    {
+        $this->initialFilterValue = $value;
+
+        return $this;
+    }
+
+    /**
      * Fields to search in (e.g. ['name', 'title']). When set, search box is shown.
      */
     public array $searchFields = [];
@@ -132,6 +148,16 @@ class KanbanCard extends Card
     public function component()
     {
         return 'kanban-card';
+    }
+
+    /**
+     * Apply a named scope on the model query (e.g. 'customerStories' calls scopeCustomerStories on the model).
+     */
+    public function scope(string $name): self
+    {
+        $this->scopeName = $name;
+
+        return $this;
     }
 
     /**
@@ -216,8 +242,9 @@ class KanbanCard extends Card
      * @param  string  $field  The model attribute to filter by (e.g. 'customer_id').
      * @param  string  $modelClass  Eloquent model class to load options from (e.g. Customer::class).
      * @param  string  $labelField  Model attribute to show as option label (e.g. 'name').
+     * @param  callable|null  $queryCallback  Optional: receive the query builder, return it after applying scope (e.g. only developers).
      */
-    public function filterBy(string $field, string $modelClass, string $labelField = 'name'): self
+    public function filterBy(string $field, string $modelClass, string $labelField = 'name', ?callable $queryCallback = null): self
     {
         $this->filterField = $field;
 
@@ -226,7 +253,11 @@ class KanbanCard extends Card
             return $this;
         }
 
-        $this->filterOptions = $modelClass::query()
+        $query = $modelClass::query();
+        if ($queryCallback !== null) {
+            $query = $queryCallback($query);
+        }
+        $this->filterOptions = $query
             ->orderBy($labelField)
             ->get()
             ->map(fn ($row) => [
@@ -295,6 +326,7 @@ class KanbanCard extends Card
             'searchFields' => $this->searchFields,
             'limitPerColumn' => $this->limitPerColumn,
             'deniedUpdateAbilities' => $this->deniedUpdateAbilities,
+            'scopeName' => $this->scopeName,
         ]));
     }
 
@@ -336,6 +368,7 @@ class KanbanCard extends Card
             'resourceUri' => $this->resourceUri,
             'filterField' => $this->filterField,
             'filterOptions' => $this->filterOptions,
+            'initialFilterValue' => $this->initialFilterValue !== null && $this->initialFilterValue !== '' ? (string) $this->initialFilterValue : null,
             'searchFields' => $this->searchFields,
             'limitPerColumn' => $this->limitPerColumn,
             'collapsible' => $this->collapsible,

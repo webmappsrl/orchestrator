@@ -139,10 +139,12 @@ Nova.booting((app) => {
                 var raw = localStorage.getItem(storageKey);
                 if (raw !== null) saved = raw === '1';
             } catch (e) {}
+            var initialFilter = this.card.initialFilterValue;
+            var initialFilterStr = (initialFilter !== undefined && initialFilter !== null && initialFilter !== '') ? String(initialFilter) : '';
             return {
                 loading: true,
                 items: [],
-                filterValue: '',
+                filterValue: initialFilterStr,
                 searchValue: '',
                 searchDebounce: null,
                 updatingIds: [],
@@ -220,7 +222,7 @@ Nova.booting((app) => {
                     collapse: t.collapse || 'Collapse',
                     collapseLabel: t.collapseLabel || 'Board',
                     loadMore: t.loadMore || 'Load 10 more',
-                    searchOrFilterPlaceholder: t.searchOrFilterPlaceholder || 'Cerca o seleziona...',
+                    searchOrFilterPlaceholder: t.searchOrFilterPlaceholder || 'Cerca o seleziona',
                     filterPlaceholder: t.filterPlaceholder || 'Seleziona...',
                     noFilterMatch: t.noFilterMatch || 'Nessun risultato',
                 };
