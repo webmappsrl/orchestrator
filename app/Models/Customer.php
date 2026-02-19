@@ -36,6 +36,7 @@ class Customer extends Model implements HasMedia
         'hs_id',
         'domain_name',
         'full_name',
+        'acronym',
         'has_subscription',
         'subscription_amount',
         'subscription_last_payment',
@@ -51,6 +52,35 @@ class Customer extends Model implements HasMedia
         'mobile_phone',
         'user_id',
     ];
+
+    /**
+     * Normalize phone string: Unicode spaces to normal space, strip zero-width/invisible chars.
+     */
+    protected static function normalizePhoneString(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+        $value = preg_replace('/[\x{200B}\x{200C}\x{200D}\x{200E}\x{200F}\x{FEFF}]/u', '', $value);
+        $value = preg_replace('/\p{Z}/u', ' ', $value);
+        return trim(preg_replace('/\s+/', ' ', $value));
+    }
+
+    /**
+     * Set the phone attribute (normalize copy-paste characters).
+     */
+    public function setPhoneAttribute(?string $value): void
+    {
+        $this->attributes['phone'] = static::normalizePhoneString($value);
+    }
+
+    /**
+     * Set the mobile_phone attribute (normalize copy-paste characters).
+     */
+    public function setMobilePhoneAttribute(?string $value): void
+    {
+        $this->attributes['mobile_phone'] = static::normalizePhoneString($value);
+    }
 
     /**
      * Owner: the user who manages this customer (Admin or Manager).

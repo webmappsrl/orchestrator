@@ -82,56 +82,151 @@ class Customer extends Resource
      */
     public function fields(NovaRequest $request)
     {
-        $title = 'Customer Details:' . $this->name;
         return [
-            ID::make()->sortable(),
-            Text::make('Customer', function () {
-                $string = '';
-                $name = $this->name;
-                $fullName = $this->full_name;
-                $emails = $this->email;
-                $acronym = $this->acronym;
-                $phone = $this->phone;
-                $mobilePhone = $this->mobile_phone;
+            (new Tabs(__('Customer Details'), [
+                Tab::make(__('Main'), [
+                    ID::make()->sortable(),
+                    Text::make(__('Contacts'), function () {
+                        $string = '';
+                        $name = $this->name;
+                        $fullName = $this->full_name;
+                        $emails = $this->email;
+                        $acronym = $this->acronym;
+                        $phone = $this->phone;
+                        $mobilePhone = $this->mobile_phone;
 
-                if (isset($name) & isset($acronym)) {
-                    $string .= $name . ' (' . $acronym . ')';
-                } elseif (isset($name)) {
-                    $string .= $name;
-                }
-                if (isset($fullName)) {
-                    $fullName = wordwrap($fullName, 40, "\n", true);
-                    $fullName = explode("\n", $fullName);
-                    $fullName = implode("</br>", $fullName);
-                    $string .= '</br>' . $fullName;
-                }
-                if (isset($emails)) {
-                    //get the mails by exploding the string by comma or space
-                    $mails = preg_split("/[\s,]+/", $this->email);
-                    //add a mailto link to each mail
-                    foreach ($mails as $key => $mail) {
-                        $mails[$key] = "<a style='color:blue;' href='mailto:$mail'>$mail</a>";
-                    }
-                    $mails = implode(", </br>", $mails);
-                    $string .= '</br> ' . $mails;
-                }
-                if (isset($phone) && trim((string) $phone) !== '') {
-                    $phones = preg_split("/[\s,]+/", $this->phone);
-                    $phones = array_filter(array_map('trim', $phones));
-                    $string .= '</br>' . implode('</br>', array_map('e', $phones));
-                }
-                if (isset($mobilePhone) && trim((string) $mobilePhone) !== '') {
-                    $mobiles = preg_split("/[\s,]+/", $this->mobile_phone);
-                    $mobiles = array_filter(array_map('trim', $mobiles));
-                    $string .= '</br>' . implode('</br>', array_map('e', $mobiles));
-                }
-                return $string;
-            })->asHtml()
-                ->hideWhenCreating()
-                ->hideWhenUpdating()
-                ->showOnPreview(function (NovaRequest $request, $resource) {
-                    return $resource->exists;
-                }),
+                        if (isset($name) && isset($acronym)) {
+                            $string .= $name . ' (' . e($acronym) . ')';
+                        } elseif (isset($name)) {
+                            $string .= $name;
+                        }
+                        if (isset($fullName)) {
+                            $fullName = wordwrap($fullName, 40, "\n", true);
+                            $fullName = explode("\n", $fullName);
+                            $fullName = implode("</br>", $fullName);
+                            $string .= '</br>' . $fullName;
+                        }
+                        if (isset($emails)) {
+                            $mails = preg_split("/[\s,]+/", $this->email);
+                            foreach ($mails as $key => $mail) {
+                                $mails[$key] = "<a style='color:blue;' href='mailto:$mail'>$mail</a>";
+                            }
+                            $mails = implode(", </br>", $mails);
+                            $string .= '</br> ' . $mails;
+                        }
+                        if (isset($phone) && trim((string) $phone) !== '') {
+                            $string .= '</br>' . e($phone);
+                        }
+                        if (isset($mobilePhone) && trim((string) $mobilePhone) !== '') {
+                            $string .= '</br>' . e($mobilePhone);
+                        }
+                        return $string ?: '-';
+                    })->asHtml()
+                        ->hideWhenCreating()
+                        ->hideWhenUpdating()
+                        ->showOnPreview(function (NovaRequest $request, $resource) {
+                            return $resource->exists;
+                        }),
+                    Text::make('Name')
+                        ->sortable()
+                        ->rules('required', 'max:255')
+                        ->creationRules('unique:customers,name')
+                        ->onlyOnForms(),
+                    Text::make('Full Name', 'full_name')
+                        ->sortable()
+                        ->nullable()
+                        ->onlyOnForms(),
+                    Textarea::make('Heading', 'heading')
+                        ->nullable()
+                        ->hideFromIndex(),
+                    Text::make(__('Domain Name'), 'domain_name')
+                        ->sortable()
+                        ->nullable()
+                        ->hideFromIndex()
+                        ->displayUsing(function ($value) {
+                            if (empty(trim((string) $value))) {
+                                return $value;
+                            }
+                            $url = $value;
+                            if (!preg_match('#^https?://#i', $url)) {
+                                $url = 'https://' . $url;
+                            }
+                            return '<a class="link-default" target="_blank" href="' . e($url) . '">' . e($value) . '</a>';
+                        })
+                        ->asHtml(),
+                    Text::make('Acronym', 'acronym')
+                        ->sortable()
+                        ->nullable()
+                        ->hideFromIndex(),
+                    Text::make('Contact emails', 'email')
+                        ->onlyOnForms(),
+                    Text::make(__('Phone'), 'phone')
+                        ->nullable()
+                        ->rules('nullable', 'regex:/^[\d\s\p{Z}+,\-\.()\x{200B}\x{200C}\x{200D}\x{FEFF}]+$/u', 'max:255')
+                        ->help(__('One or more numbers separated by comma; spaces and common separators allowed.'))
+                        ->onlyOnForms(),
+                    Text::make(__('Mobile phone'), 'mobile_phone')
+                        ->nullable()
+                        ->rules('nullable', 'regex:/^[\d\s\p{Z}+,\-\.()\x{200B}\x{200C}\x{200D}\x{FEFF}]+$/u', 'max:255')
+                        ->help(__('One or more numbers separated by comma; spaces and common separators allowed.'))
+                        ->onlyOnForms(),
+                    $this->statusField($request),
+                    BelongsTo::make(__('Owner'), 'owner', User::class)
+                        ->sortable()
+                        ->searchable()
+                        ->nullable()
+                        ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                            $query->where(function (Builder $q) {
+                                $q->whereJsonContains('roles', UserRole::Admin->value)
+                                    ->orWhereJsonContains('roles', UserRole::Manager->value);
+                            });
+                            if ($request->filled('search')) {
+                                $search = '%' . trim($request->search) . '%';
+                                $query->where(function (Builder $q) use ($search) {
+                                    $q->where('name', 'like', $search)
+                                        ->orWhere('email', 'like', $search);
+                                });
+                            }
+                        })
+                        ->help(__('User who manages this customer (Admin or Manager).')),
+                    Date::make(__('Contract Expiration Date'), 'contract_expiration_date')
+                        ->sortable()
+                        ->nullable()
+                        ->hideFromIndex(),
+                    Currency::make(__('Contract Value'), 'contract_value')
+                        ->sortable()
+                        ->currency('EUR')
+                        ->nullable()
+                        ->hideFromIndex(),
+                ]),
+                Tab::make(__('Renewals'), [
+                    Files::make(__('Invoices'), 'documents')
+                        ->singleMediaRules('mimetypes:application/pdf')
+                        ->hideFromIndex(),
+                    Date::make(__('Contract Expiration Date'), 'contract_expiration_date')
+                        ->sortable()
+                        ->nullable()
+                        ->hideFromIndex()
+                        ->onlyOnDetail(),
+                    Currency::make(__('Contract Amount'), 'contract_value')
+                        ->sortable()
+                        ->currency('EUR')
+                        ->nullable()
+                        ->hideFromIndex()
+                        ->onlyOnDetail(),
+                ]),
+                Tab::make(__('Quotes'), [
+                    HasMany::make(__('Quotes'), 'quotes', QuoteNoFilter::class),
+                ]),
+            ]))->withToolbar(),
+            new Panel(__('Notes'), [
+                MarkdownTui::make(__('Notes'), 'notes')
+                    ->initialEditType(EditorType::MARKDOWN)
+                    ->hideFromIndex(),
+                MarkdownTui::make('Migration Note', 'migration_note')
+                    ->hideFromIndex()
+                    ->initialEditType(EditorType::MARKDOWN),
+            ]),
             Text::make('Scores', function () {
                 $string = '';
                 $scoreCash = $this->score_cash;
@@ -152,108 +247,6 @@ class Customer extends Resource
                 ->hideWhenUpdating()
                 ->hideFromIndex()
                 ->hideFromDetail(),
-            Text::make('Name')
-                ->sortable()
-                ->rules('required', 'max:255')
-                ->creationRules('unique:customers,name')
-                ->onlyOnForms(),
-            Text::make('Full Name', 'full_name')
-                ->sortable()
-                ->nullable()
-                ->onlyOnForms(),
-            Textarea::make('Heading', 'heading')
-                ->nullable()
-                ->hideFromIndex(),
-            Text::make('Acronym', 'acronym')
-                ->sortable()
-                ->nullable()
-                ->onlyOnForms(),
-            $this->statusField($request),
-            BelongsTo::make(__('Owner'), 'owner', User::class)
-                ->sortable()
-                ->searchable()
-                ->nullable()
-                ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
-                    $query->where(function (Builder $q) {
-                        $q->whereJsonContains('roles', UserRole::Admin->value)
-                            ->orWhereJsonContains('roles', UserRole::Manager->value);
-                    });
-                    if ($request->filled('search')) {
-                        $search = '%' . trim($request->search) . '%';
-                        $query->where(function (Builder $q) use ($search) {
-                            $q->where('name', 'like', $search)
-                                ->orWhere('email', 'like', $search);
-                        });
-                    }
-                })
-                ->help(__('User who manages this customer (Admin or Manager).')),
-            Text::make('HS', 'hs_id')
-                ->sortable()
-                ->nullable()
-                ->hideFromIndex(),
-            Text::make('Domain Name', 'domain_name')
-                ->sortable()
-                ->nullable()
-                ->hideFromIndex(),
-            MarkdownTui::make('Migration Note', 'migration_note')
-                ->hideFromIndex()
-                ->initialEditType(EditorType::MARKDOWN),
-            Text::make('Contact emails', 'email')
-                ->onlyOnForms(),
-            Text::make(__('Phone'), 'phone')
-                ->nullable()
-                ->rules('nullable', 'regex:/^\+?[0-9]+(\s*,\s*\+?[0-9]+)*$/', 'max:255')
-                ->help(__('One or more numbers separated by comma; optional + for country code.'))
-                ->onlyOnForms(),
-            Text::make(__('Mobile phone'), 'mobile_phone')
-                ->nullable()
-                ->rules('nullable', 'regex:/^\+?[0-9]+(\s*,\s*\+?[0-9]+)*$/', 'max:255')
-                ->help(__('One or more numbers separated by comma; optional + for country code.'))
-                ->onlyOnForms(),
-            Boolean::make('Subs.', 'has_subscription')
-                ->sortable()
-                ->nullable()->hideFromIndex(),
-            Currency::make('S/Amount', 'subscription_amount')
-                ->sortable()
-                ->currency('EUR')
-                ->nullable()->hideFromIndex(),
-            Date::make('S/Payment', 'subscription_last_payment')
-                ->sortable()
-                ->nullable()->hideFromIndex(),
-            Number::make('S/year', 'subscription_last_covered_year')
-                ->sortable()
-                ->nullable()
-                ->rules('nullable', 'integer')->hideFromIndex(),
-            Text::make('S/invoice', 'subscription_last_invoice')
-                ->sortable()
-                ->nullable()->hideFromIndex(),
-            Date::make(__('Contract Expiration Date'), 'contract_expiration_date')
-                ->sortable()
-                ->nullable()
-                ->hideFromIndex(),
-            Currency::make(__('Contract Value'), 'contract_value')
-                ->sortable()
-                ->currency('EUR')
-                ->nullable()
-                ->hideFromIndex(),
-            MarkdownTui::make('Notes', 'notes')
-                ->initialEditType(EditorType::MARKDOWN)
-                ->hideFromIndex(),
-            Files::make(__('Invoices'), 'documents')
-                ->singleMediaRules('mimetypes:application/pdf')
-                ->hideFromIndex(),
-            new Tabs('Relationships', [
-                Tab::make(__('Projects'), [
-                    HasMany::make(__('Projects'), 'projects', Project::class),
-                ]),
-                Tab::make('Quotes', [
-                    HasMany::make('Quotes', 'quotes', QuoteNoFilter::class),
-                ]),
-                Tab::make('Deadlines', [
-                    HasMany::make('Deadlines', 'deadlines', Deadline::class),
-                ]),
-
-            ]),
             Number::make('Score Cash', 'score_cash')
                 ->sortable()
                 ->nullable()
@@ -278,7 +271,6 @@ class Customer extends Resource
                 ->hideFromDetail()
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
-
         ];
     }
 

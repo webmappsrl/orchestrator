@@ -58,6 +58,7 @@
   "Mobile phone": "Cellulare",
   "One or more numbers separated by comma (digits only).": "Uno o più numeri separati da virgola (solo cifre).",
   "One or more numbers separated by comma; optional + for country code.": "Uno o più numeri separati da virgola; + opzionale per prefisso internazionale.",
+  "One or more numbers separated by comma; spaces and common separators allowed.": "Uno o più numeri separati da virgola; spazi e separatori comuni consentiti.",
   "Phone": "Telefono",
   "Customer tickets": "Ticket dei clienti",
   "Stories Count": "Numero di Ticket",
@@ -456,5 +457,13 @@
   "Total value of subscriptions": "Valore complessivo degli abbonamenti",
   "No Date": "Senza data",
   "Unknown": "Sconosciuto",
-  "unknown": "Sconosciuto"
+  "unknown": "Sconosciuto",
+  "Customer Details": "Dettagli Cliente",
+  "Principale": "Principale",
+  "Contatti": "Contatti",
+  "Domain Name": "Nome dominio",
+  "Rinnovi": "Rinnovi",
+  "Contract Amount": "Importo contratto",
+  "Main": "Principale",
+  "Contacts": "Contatti"
 }
