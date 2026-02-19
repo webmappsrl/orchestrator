@@ -12,7 +12,6 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class FundraisingOpportunity extends Resource
@@ -39,6 +38,112 @@ class FundraisingOpportunity extends Resource
     public static $search = [
         'name', 'program_name', 'sponsor'
     ];
+
+    /**
+     * Get the displayable label of the resource.
+     *
+     * @return string
+     */
+    public static function label()
+    {
+        return 'Opportunities';
+    }
+
+    /**
+     * Wrap text at specified length without breaking words.
+     *
+     * @param  string  $text
+     * @param  int  $length
+     * @return string
+     */
+    private function wrapText($text, $length = 80)
+    {
+        if (empty($text)) {
+            return '';
+        }
+
+        if (mb_strlen($text) <= $length) {
+            return htmlspecialchars($text);
+        }
+
+        $wrapped = '';
+        $words = explode(' ', $text);
+        $currentLine = '';
+
+        foreach ($words as $word) {
+            $testLine = $currentLine === '' ? $word : $currentLine . ' ' . $word;
+            
+            if (mb_strlen($testLine) <= $length) {
+                $currentLine = $testLine;
+            } else {
+                if ($currentLine !== '') {
+                    $wrapped .= htmlspecialchars($currentLine) . '<br>';
+                    $currentLine = $word;
+                } else {
+                    // Word is longer than length, force break
+                    $wrapped .= htmlspecialchars($word) . '<br>';
+                    $currentLine = '';
+                }
+            }
+        }
+
+        if ($currentLine !== '') {
+            $wrapped .= htmlspecialchars($currentLine);
+        }
+
+        return $wrapped;
+    }
+
+    /**
+     * Get the color for the deadline based on days remaining.
+     *
+     * @param  \Carbon\Carbon|null  $deadline
+     * @return string
+     */
+    private function getDeadlineColor($deadline)
+    {
+        if (!$deadline) {
+            return '#6b7280'; // gray
+        }
+
+        $now = now();
+        $daysRemaining = $now->diffInDays($deadline, false);
+
+        // Scaduto
+        if ($daysRemaining < 0) {
+            return '#dc2626'; // red
+        }
+
+        // ~30 giorni (0-30 giorni rimanenti)
+        if ($daysRemaining <= 30) {
+            return '#ea580c'; // orange
+        }
+
+        // ~60 giorni (31-90 giorni rimanenti)
+        if ($daysRemaining <= 90) {
+            return '#eab308'; // yellow
+        }
+
+        // > 90 giorni
+        return '#22c55e'; // green
+    }
+
+    /**
+     * Build an "index" query for the given resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        // Se l'utente non ha specificato un ordinamento personalizzato, ordina per deadline ASC (dalla più lontana alla più vicina)
+        if (!$request->get('orderBy')) {
+            return $query->orderBy('deadline', 'asc');
+        }
+
+        return $query;
+    }
 
     /**
      * Get the fields displayed by the resource.
@@ -76,10 +181,19 @@ class FundraisingOpportunity extends Resource
 
             Date::make('Data di Scadenza', 'deadline')
                 ->rules('required')
-                ->sortable()
-                ->displayUsing(function ($date) {
-                    return $date ? $date->format('d/m/Y') : null;
-                }),
+                ->onlyOnForms(),
+
+            Text::make('Data di Scadenza', function () {
+                $date = $this->deadline;
+                if (!$date) {
+                    return null;
+                }
+                $bgColor = $this->getDeadlineColor($date);
+                $formattedDate = $date->format('d/m/Y');
+                // Usa testo bianco per rosso e arancione, testo scuro per giallo e verde
+                $textColor = (in_array($bgColor, ['#dc2626', '#ea580c'])) ? '#ffffff' : '#1f2937';
+                return '<span style="background-color: ' . $bgColor . '; color: ' . $textColor . '; padding: 4px 8px; border-radius: 4px; font-weight: 600; display: inline-block;">' . htmlspecialchars($formattedDate) . '</span>';
+            })->exceptOnForms()->asHtml()->sortable(),
 
             Text::make('Nome del Programma', 'program_name')
                 ->nullable()
@@ -137,10 +251,6 @@ class FundraisingOpportunity extends Resource
                     return $query->whereJsonContains('roles', 'fundraising');
                 }),
 
-            Boolean::make('Scaduto', function () {
-                return $this->isExpired();
-            })->exceptOnForms(),
-
             Text::make('Progetti Associati', function () {
                 $projects = $this->projects;
                 if ($projects->isEmpty()) {
@@ -167,39 +277,66 @@ class FundraisingOpportunity extends Resource
         return [
             ID::make()->sortable(),
 
-            Text::make('Nome del Bando', 'name')
-                ->rules('required', 'max:255')
-                ->sortable(),
+            Text::make('Bando', function () {
+                $scopeLabel = $this->territorial_scope_label ?? $this->territorial_scope ?? '';
+                $sponsor = $this->sponsor ?? '';
+                $name = $this->name ?? '';
+                
+                // Riga 1: [scope territoriale] / [sponsor] o "(no sponsor)" se manca
+                $sponsorText = $sponsor ? $sponsor : '(no sponsor)';
+                $row1 = trim($scopeLabel . ' / ' . $sponsorText);
+                
+                // Riga 2: [nome bando] con word-wrap dopo 80 caratteri
+                $row2 = $this->wrapText($name, 80);
+                
+                $html = '<div>';
+                if ($row1) {
+                    $html .= '<div style="font-weight: 500; font-style: italic; margin-bottom: 4px;">' . htmlspecialchars($row1) . '</div>';
+                }
+                if ($row2) {
+                    $html .= '<div style="line-height: 1.4;">' . $row2 . '</div>';
+                }
+                $html .= '</div>';
+                
+                return $html;
+            })->asHtml(),
 
             Date::make('Data di Scadenza', 'deadline')
-                ->rules('required')
                 ->sortable()
-                ->displayUsing(function ($date) {
-                    return $date ? $date->format('d/m/Y') : null;
-                }),
+                ->hideFromIndex(),
 
-            Text::make('Sponsor', 'sponsor')
-                ->nullable()
-                ->sortable(),
+            Text::make('Data di Scadenza', function () {
+                $date = $this->deadline;
+                if (!$date) {
+                    return null;
+                }
+                $bgColor = $this->getDeadlineColor($date);
+                $formattedDate = $date->format('d/m/Y');
+                // Usa testo bianco per rosso e arancione, testo scuro per giallo e verde
+                $textColor = (in_array($bgColor, ['#dc2626', '#ea580c'])) ? '#ffffff' : '#1f2937';
+                
+                $now = now();
+                $daysRemaining = $now->diffInDays($date, false);
+                
+                $html = '<span style="background-color: ' . $bgColor . '; color: ' . $textColor . '; padding: 4px 8px; border-radius: 4px; font-weight: 600; display: inline-block;">' . htmlspecialchars($formattedDate) . '</span>';
+                
+                // Per i bandi non ancora scaduti, aggiungi i giorni rimanenti tra parentesi fuori dal colore
+                if ($daysRemaining >= 0) {
+                    $daysText = $daysRemaining == 1 ? 'giorno' : 'giorni';
+                    $html .= ' <span style="margin-left: 4px;">(' . $daysRemaining . ' ' . $daysText . ')</span>';
+                }
+                
+                return $html;
+            })->asHtml()->onlyOnIndex(),
 
-            Select::make('Scope Territoriale', 'territorial_scope')
-                ->options([
-                    'cooperation' => 'Cooperazione',
-                    'european' => 'Europeo',
-                    'national' => 'Nazionale',
-                    'regional' => 'Regionale',
-                    'territorial' => 'Territoriale',
-                    'municipalities' => 'Comuni',
-                ])
-                ->rules('required')
+            Number::make('Cofin.', 'cofinancing_quota')
+                ->displayUsing(function ($value) {
+                    return $value ? $value . '%' : null;
+                })
                 ->sortable(),
 
             BelongsTo::make('Responsabile', 'responsibleUser', User::class)
                 ->searchable(),
-
-            Boolean::make('Scaduto', function () {
-                return $this->isExpired();
-            }),
         ];
     }
 
@@ -225,6 +362,7 @@ class FundraisingOpportunity extends Resource
         return [
             new \App\Nova\Filters\TerritorialScopeFilter,
             new \App\Nova\Filters\ExpiredFilter,
+            new \App\Nova\Filters\CofinancingFilter,
         ];
     }
 
