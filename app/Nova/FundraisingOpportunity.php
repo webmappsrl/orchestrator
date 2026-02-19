@@ -130,6 +130,7 @@ class FundraisingOpportunity extends Resource
 
     /**
      * Build an "index" query for the given resource.
+     * Mostra solo le opportunità attive (deadline >= now) di default.
      *
      * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -137,6 +138,9 @@ class FundraisingOpportunity extends Resource
      */
     public static function indexQuery(NovaRequest $request, $query)
     {
+        // Filtra solo le opportunità attive (non scadute)
+        $query = $query->where('deadline', '>=', now());
+
         // Se l'utente non ha specificato un ordinamento personalizzato, ordina per deadline ASC (dalla più lontana alla più vicina)
         if (!$request->get('orderBy')) {
             return $query->orderBy('deadline', 'asc');

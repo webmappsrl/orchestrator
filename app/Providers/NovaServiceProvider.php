@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Enums\UserRole;
 use App\Nova\App;
 use App\Nova\ArchivedDeadlines;
+use App\Nova\ArchivedFundraisingOpportunity;
 use App\Nova\ArchivedQuotes;
 use App\Nova\ArchivedStories;
 use App\Nova\ArchivedStoryShowedByCustomer;
@@ -187,6 +188,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('FUNDRAISING', [
                     MenuItem::resource(FundraisingOpportunity::class),
                     MenuItem::resource(FundraisingProject::class),
+                    MenuGroup::make(__('Archivio'), [
+                        MenuItem::resource(ArchivedFundraisingOpportunity::class),
+                    ])->collapsedByDefault(),
                 ])->icon('currency-dollar')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
