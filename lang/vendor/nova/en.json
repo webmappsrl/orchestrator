@@ -676,5 +676,21 @@
   "Rinnovi": "Renewals",
   "Contract Amount": "Contract Amount",
   "Main": "Main",
-  "Contacts": "Contacts"
+  "Contacts": "Contacts",
+  "Marketing": "Marketing",
+  "Kanban Loading": "Loading...",
+  "Kanban No items": "No items",
+  "Kanban Error loading": "Error loading data.",
+  "Kanban Error updating": "Error updating status.",
+  "Kanban Status updated": "Status updated.",
+  "Kanban Filter Label": "Filter by",
+  "Kanban Filter All": "All",
+  "Kanban Search Placeholder": "Search...",
+  "Kanban Expand": "Expand",
+  "Kanban Collapse": "Collapse",
+  "Kanban Collapse Label": "Board",
+  "Kanban Load More": "Load 10 more",
+  "Kanban Search Or Filter Placeholder": "Search or select customer...",
+  "Kanban Filter Placeholder": "Select customer...",
+  "Kanban No Filter Match": "No results"
 }
