@@ -10,7 +10,11 @@ class Tag extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'taggable_type', 'taggable_id', 'estimate', 'type'];
+    protected $fillable = ['name', 'abstract', 'selectable_by_customer', 'description', 'taggable_type', 'taggable_id', 'estimate', 'type'];
+
+    protected $casts = [
+        'selectable_by_customer' => 'boolean',
+    ];
 
     public function taggable()
     {

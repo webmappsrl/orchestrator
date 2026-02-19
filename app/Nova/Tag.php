@@ -54,6 +54,13 @@ class Tag extends Resource
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255'),
+            Text::make('Abstract', 'abstract')
+                ->nullable()
+                ->rules('max:500')
+                ->help(__('Brief summary or abstract of the tag')),
+            Boolean::make('Selectable by Customer', 'selectable_by_customer')
+                ->default(false)
+                ->help(__('If enabled, customers can select this tag when creating tickets')),
             Number::make('Estimate (Hours)', 'estimate') // Specifica che è in ore
                 ->min(0) // Imposta un valore minimo di 0
                 ->step(
