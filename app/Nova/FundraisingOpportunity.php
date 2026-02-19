@@ -11,6 +11,7 @@ use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Eminiarts\Tabs\Tabs;
 use Eminiarts\Tabs\Tab;
@@ -172,6 +173,11 @@ class FundraisingOpportunity extends Resource
             new Tab('Economics', $this->getEconomicsTabFields()),
         ];
 
+        // Aggiungi tab Valutazione se siamo in dettaglio o modifica
+        if ($request->isResourceDetailRequest() || $request->isUpdateOrUpdateAttachedRequest() || $request->isCreateOrAttachRequest()) {
+            $tabs[] = new Tab('Valutazione', $this->getEvaluationTabFields($request));
+        }
+
         // Mostra sempre il tab "Progetti" nella vista detail con il conteggio dei progetti
         if ($request->isResourceDetailRequest() && $this->resource && $this->resource->exists) {
             $projectsCount = $this->resource->projects()->count();
@@ -205,23 +211,32 @@ class FundraisingOpportunity extends Resource
                     'municipalities' => 'Comuni',
                 ])
                 ->rules('required')
-                ->sortable(),
+                ->sortable()
+                ->showOnUpdating()
+                ->showOnCreating(),
 
             Text::make('Sponsor', 'sponsor')
                 ->nullable()
-                ->sortable(),
+                ->sortable()
+                ->showOnUpdating()
+                ->showOnCreating(),
 
             Text::make('Nome del Programma', 'program_name')
                 ->nullable()
-                ->sortable(),
+                ->sortable()
+                ->showOnUpdating()
+                ->showOnCreating(),
 
             Text::make('Nome del Bando', 'name')
                 ->rules('required', 'max:255')
-                ->sortable(),
+                ->sortable()
+                ->showOnUpdating()
+                ->showOnCreating(),
 
             Date::make('Data di Scadenza', 'deadline')
                 ->rules('required')
-                ->onlyOnForms(),
+                ->showOnUpdating()
+                ->showOnCreating(),
 
             Text::make('Scadenza', function () {
                 $date = $this->deadline;
@@ -255,7 +270,9 @@ class FundraisingOpportunity extends Resource
                 ->help('Solo utenti con ruolo fundraising')
                 ->relatableQueryUsing(function (NovaRequest $request, $query) {
                     return $query->whereJsonContains('roles', 'fundraising');
-                }),
+                })
+                ->showOnUpdating()
+                ->showOnCreating(),
 
             BelongsTo::make('Creato da', 'creator', User::class)
                 ->exceptOnForms()
@@ -455,5 +472,312 @@ class FundraisingOpportunity extends Resource
     public static function uriKey(): string
     {
         return 'fundraising-opportunities';
+    }
+
+    /**
+     * Get fields for the "Valutazione" tab.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    private function getEvaluationTabFields(NovaRequest $request): array
+    {
+        $evaluationTabs = [
+            new Tab('Parte 1 - Criteri Principali', $this->getMainCriteriaFields()),
+            new Tab('Requisiti di Base', $this->getBaseRequirementsFields()),
+            new Tab('Valutazione Qualitativa', $this->getQualitativeEvaluationFields()),
+            new Tab('Fattori Premiali', $this->getBonusFactorsFields()),
+            new Tab('Rischi', $this->getRisksFields()),
+            new Tab('Riepilogo', $this->getSummaryFields()),
+        ];
+
+        return [
+            new Tabs('Valutazione Progetto', $evaluationTabs),
+        ];
+    }
+
+    /**
+     * Get fields for main criteria (Parte 1).
+     */
+    private function getMainCriteriaFields(): array
+    {
+        return [
+            Number::make('A. Coerenza e rilevanza della proposta - Punteggio', 'evaluation_criterion_a_score')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+            
+            Textarea::make('A. Coerenza e rilevanza della proposta - Descrizione', 'evaluation_criterion_a_description')
+                ->nullable()
+                ->rows(3),
+
+            Number::make('B. Qualità dell\'idea e fattibilità tecnica/organizzativa - Punteggio', 'evaluation_criterion_b_score')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+            
+            Textarea::make('B. Qualità dell\'idea e fattibilità tecnica/organizzativa - Descrizione', 'evaluation_criterion_b_description')
+                ->nullable()
+                ->rows(3),
+
+            Number::make('C. Impatto su soci, territorio e comunità - Punteggio', 'evaluation_criterion_c_score')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+            
+            Textarea::make('C. Impatto su soci, territorio e comunità - Descrizione', 'evaluation_criterion_c_description')
+                ->nullable()
+                ->rows(3),
+
+            Number::make('D. Valore aggiunto e replicabilità - Punteggio', 'evaluation_criterion_d_score')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+            
+            Textarea::make('D. Valore aggiunto e replicabilità - Descrizione', 'evaluation_criterion_d_description')
+                ->nullable()
+                ->rows(3),
+
+            Number::make('E. Partenariato e capacità operativa - Punteggio', 'evaluation_criterion_e_score')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+            
+            Textarea::make('E. Partenariato e capacità operativa - Descrizione', 'evaluation_criterion_e_description')
+                ->nullable()
+                ->rows(3),
+
+            Number::make('F. Sostenibilità economica e gestionale - Punteggio', 'evaluation_criterion_f_score')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+            
+            Textarea::make('F. Sostenibilità economica e gestionale - Descrizione', 'evaluation_criterion_f_description')
+                ->nullable()
+                ->rows(3),
+        ];
+    }
+
+    /**
+     * Get fields for base requirements.
+     */
+    private function getBaseRequirementsFields(): array
+    {
+        return [
+            Number::make('Coerenza bando', 'evaluation_base_coerenza_bando')
+                ->min(0)
+                ->max(1)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio: 0 o 1'),
+
+            Number::make('Capofila idoneo', 'evaluation_base_capofila_idoneo')
+                ->min(0)
+                ->max(1)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio: 0 o 1'),
+
+            Number::make('Partner minimi', 'evaluation_base_partner_minimi')
+                ->min(0)
+                ->max(1)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio: 0 o 1'),
+
+            Number::make('Cofinanziamento', 'evaluation_base_cofinanziamento')
+                ->min(0)
+                ->max(1)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio: 0 o 1'),
+
+            Number::make('Tempistiche', 'evaluation_base_tempistiche')
+                ->min(0)
+                ->max(1)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio: 0 o 1'),
+        ];
+    }
+
+    /**
+     * Get fields for qualitative evaluation.
+     */
+    private function getQualitativeEvaluationFields(): array
+    {
+        return [
+            Number::make('Coerenza CAI', 'evaluation_qual_coerenza_cai')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+
+            Number::make('Impatto Ambientale', 'evaluation_qual_imp_ambientale')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+
+            Number::make('Impatto Sociale', 'evaluation_qual_imp_sociale')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+
+            Number::make('Impatto Economico', 'evaluation_qual_imp_economico')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+
+            Number::make('Obiettivi chiari', 'evaluation_qual_obiettivi_chiari')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+
+            Number::make('Solidità azioni', 'evaluation_qual_solidita_azioni')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+
+            Number::make('Capacità partner', 'evaluation_qual_capacita_partner')
+                ->min(0)
+                ->max(5)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 5'),
+        ];
+    }
+
+    /**
+     * Get fields for bonus factors.
+     */
+    private function getBonusFactorsFields(): array
+    {
+        return [
+            Number::make('Innovazione', 'evaluation_prem_innovazione')
+                ->min(0)
+                ->max(3)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 3'),
+
+            Number::make('Replicabilità', 'evaluation_prem_replicabilita')
+                ->min(0)
+                ->max(3)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 3'),
+
+            Number::make('Comunità', 'evaluation_prem_comunita')
+                ->min(0)
+                ->max(3)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 3'),
+
+            Number::make('Sostenibilità', 'evaluation_prem_sostenibilita')
+                ->min(0)
+                ->max(3)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 3'),
+        ];
+    }
+
+    /**
+     * Get fields for risks.
+     */
+    private function getRisksFields(): array
+    {
+        return [
+            Number::make('Rischi tecnici', 'evaluation_risk_tecnici')
+                ->min(0)
+                ->max(3)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da 0 a 3'),
+
+            Number::make('Rischi finanziari', 'evaluation_risk_finanziari')
+                ->min(-3)
+                ->max(3)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da -3 a 3'),
+
+            Number::make('Rischi organizzativi', 'evaluation_risk_organizzativi')
+                ->min(-2)
+                ->max(2)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da -2 a 2'),
+
+            Number::make('Rischi logistici', 'evaluation_risk_logistici')
+                ->min(-2)
+                ->max(2)
+                ->step(1)
+                ->nullable()
+                ->help('Punteggio da -2 a 2'),
+        ];
+    }
+
+    /**
+     * Get fields for summary (read-only totals).
+     */
+    private function getSummaryFields(): array
+    {
+        return [
+            BelongsTo::make('Valutato da', 'evaluatedBy', User::class)
+                ->nullable()
+                ->exceptOnForms()
+                ->showOnDetail(),
+
+            DateTime::make('Valutato il', 'evaluation_evaluated_at')
+                ->nullable()
+                ->exceptOnForms()
+                ->showOnDetail(),
+
+            Number::make('Totale Positivo', 'evaluation_total_positive')
+                ->exceptOnForms()
+                ->displayUsing(function ($value) {
+                    return $value ?? 0;
+                })
+                ->help('Somma di tutti i punteggi positivi'),
+
+            Number::make('Totale Negativo', 'evaluation_total_negative')
+                ->exceptOnForms()
+                ->displayUsing(function ($value) {
+                    return $value ?? 0;
+                })
+                ->help('Somma dei punteggi negativi'),
+
+            Number::make('Totale Complessivo', 'evaluation_total_score')
+                ->exceptOnForms()
+                ->displayUsing(function ($value) {
+                    return $value ?? 0;
+                })
+                ->help('Totale Positivo - Totale Negativo'),
+        ];
     }
 }
