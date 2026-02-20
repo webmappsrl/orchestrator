@@ -134,6 +134,16 @@ class Quote extends Model implements HasMedia
         return $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice() - $this->discount;
     }
 
+    /**
+     * Accessor for display (e.g. Kanban card): total price formatted.
+     */
+    public function getTotalAttribute(): string
+    {
+        $total = $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice();
+
+        return number_format($total, 2, ',', '.') . ' €';
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('documents');

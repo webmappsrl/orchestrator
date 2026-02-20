@@ -41,6 +41,7 @@
         "spatie/laravel-translatable": "^6.3",
         "suenerds/nova-searchable-belongs-to-filter": "^1.0",
         "webklex/laravel-imap": "^5.3",
+        "wm/kanban-card": "*",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
     },
@@ -111,6 +112,10 @@
         {
             "type": "path",
             "url": "./wm-package"
+        },
+        {
+            "type": "path",
+            "url": "./nova-components/kanban-card"
         }
     ]
 }

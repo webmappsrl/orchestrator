@@ -14,6 +14,7 @@ use App\Nova\Customer;
 use App\Nova\CustomerStory;
 use App\Nova\CustomerTickets;
 use App\Nova\Dashboards\Kanban;
+use App\Nova\Dashboards\Marketing;
 use App\Nova\Documentation;
 use App\Nova\Layer;
 use App\Nova\Product;
@@ -97,6 +98,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuGroup::make(__('Archived'), [
                         MenuItem::resource(ArchivedQuotes::class),
                     ])->collapsedByDefault(),
+                    MenuItem::link(__('Marketing'), '/dashboards/marketing'),
                     MenuItem::resource(Customer::class),
                     MenuItem::resource(Renewals::class)->canSee(function ($request) {
                         if ($request->user() == null) {
@@ -116,7 +118,13 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
                     MenuItem::resource(Quote::class),
-                ])->icon('users')->collapsedByDefault(),
+                ])->icon('users')->collapsedByDefault()->canSee(function ($request) {
+                    if ($request->user() === null) {
+                        return false;
+                    }
+
+                    return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager);
+                }),
 
                 MenuSection::make('DEV', [
                     MenuGroup::make(__('Archived'), [
@@ -218,6 +226,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         return [
             new \App\Nova\Dashboards\Kanban,
+            new \App\Nova\Dashboards\Marketing,
         ];
     }
 
