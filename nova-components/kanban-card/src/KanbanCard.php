@@ -2,6 +2,7 @@
 
 namespace Webmapp\KanbanCard;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Laravel\Nova\Card;
 
@@ -59,9 +60,17 @@ class KanbanCard extends Card
     public ?string $filterField = null;
 
     /**
-     * Filter dropdown options: [['value' => id, 'label' => name], ...].
+     * Filter dropdown options: [['value' => id, 'label' => name, 'filterField' => optional], ...].
+     * When addFilterOptions is used, each option has filterField so one dropdown can filter by different fields (e.g. customer_id or user_id).
      */
     public array $filterOptions = [];
+
+    /**
+     * When using addFilterOptions, list of allowed filter field names for request validation.
+     *
+     * @var array<string>
+     */
+    public array $allowedFilterFields = [];
 
     /**
      * Initial value for the filter (e.g. pre-select current user on Kanban dashboard).
@@ -263,9 +272,47 @@ class KanbanCard extends Card
             ->map(fn ($row) => [
                 'value' => (string) $row->getKey(),
                 'label' => (string) data_get($row, $labelField),
+                'filterField' => $field,
             ])
             ->values()
             ->toArray();
+        $this->allowedFilterFields = array_unique(array_merge($this->allowedFilterFields, [$field]));
+
+        return $this;
+    }
+
+    /**
+     * Add more filter options to the same dropdown (e.g. owners alongside customers).
+     * Each option will filter by $field. The dropdown will show all sources; selecting one applies that filter.
+     *
+     * @param  string  $field  Model attribute to filter by (e.g. 'user_id').
+     * @param  string  $modelClass  Eloquent model class for options (e.g. User::class).
+     * @param  string  $labelField  Model attribute used as option label (e.g. 'name').
+     * @param  callable|null  $queryCallback  Optional: scope the query for options (e.g. only users who have quotes).
+     */
+    public function addFilterOptions(string $field, string $modelClass, string $labelField = 'name', ?callable $queryCallback = null): self
+    {
+        if (! class_exists($modelClass)) {
+            return $this;
+        }
+
+        $query = $modelClass::query();
+        if ($queryCallback !== null) {
+            $query = $queryCallback($query);
+        }
+        $options = $query
+            ->orderBy($labelField)
+            ->get()
+            ->map(fn ($row) => [
+                'value' => (string) $row->getKey(),
+                'label' => (string) data_get($row, $labelField),
+                'filterField' => $field,
+            ])
+            ->values()
+            ->toArray();
+
+        $this->filterOptions = array_merge($this->filterOptions, $options);
+        $this->allowedFilterFields = array_unique(array_merge($this->allowedFilterFields, [$field]));
 
         return $this;
     }
@@ -278,6 +325,32 @@ class KanbanCard extends Card
     public function searchBy($fields): self
     {
         $this->searchFields = is_array($fields) ? $fields : [$fields];
+
+        return $this;
+    }
+
+    /**
+     * Unified filter + search: one UI field for both filter (by field/model) and search (by fields).
+     * Optionally add more filter sources (e.g. owners) so the same dropdown lists customers and owners.
+     *
+     * @param  string  $filterField  Model attribute to filter by (e.g. 'customer_id').
+     * @param  string  $modelClass  Eloquent model class for filter options (e.g. Customer::class).
+     * @param  string  $labelField  Model attribute used as option label (e.g. 'name').
+     * @param  string|array  $searchFields  Model attributes to search in (e.g. ['customer.name', 'title']).
+     * @param  callable|null  $queryCallback  Optional: receive the query builder for filter options, return it after applying scope.
+     * @param  array  $additionalFilters  Optional: extra filter sources for the same dropdown. Each item: [field, modelClass, labelField, callable|null]. E.g. [['user_id', User::class, 'name', fn ($q) => $q->whereHas('quotes')]].
+     */
+    public function filterAndSearchBy(string $filterField, string $modelClass, string $labelField, $searchFields, ?callable $queryCallback = null, array $additionalFilters = []): self
+    {
+        $this->filterBy($filterField, $modelClass, $labelField, $queryCallback);
+        foreach ($additionalFilters as $add) {
+            $addField = $add[0];
+            $addModel = $add[1];
+            $addLabel = $add[2] ?? 'name';
+            $addCallback = $add[3] ?? null;
+            $this->addFilterOptions($addField, $addModel, $addLabel, $addCallback);
+        }
+        $this->searchBy($searchFields);
 
         return $this;
     }
@@ -323,6 +396,7 @@ class KanbanCard extends Card
             'with' => $this->withRelations,
             'displayFields' => $this->displayFields,
             'filterField' => $this->filterField,
+            'allowedFilterFields' => $this->allowedFilterFields,
             'searchFields' => $this->searchFields,
             'limitPerColumn' => $this->limitPerColumn,
             'deniedUpdateAbilities' => $this->deniedUpdateAbilities,
@@ -340,17 +414,17 @@ class KanbanCard extends Card
         if (! $user) {
             return true;
         }
-        if (\Illuminate\Support\Facades\Gate::forUser($user)->allows('customer')) {
+        if (Gate::forUser($user)->allows('customer')) {
             return false;
         }
-        if (\Illuminate\Support\Facades\Gate::forUser($user)->allows('admin')) {
+        if (Gate::forUser($user)->allows('admin')) {
             return true;
         }
         if (empty($this->deniedUpdateAbilities)) {
             return true;
         }
         foreach ($this->deniedUpdateAbilities as $ability) {
-            if (\Illuminate\Support\Facades\Gate::forUser($user)->allows($ability)) {
+            if (Gate::forUser($user)->allows($ability)) {
                 return false;
             }
         }

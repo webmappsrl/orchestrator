@@ -129,7 +129,6 @@ class Quote extends Resource
                 ])
                 ->failedWhen([
                     QuoteStatus::Closed_Lost->value,
-                    QuoteStatus::Closed_Lost_Offer->value
                 ])
                 ->displayUsing(function () {
                     return __(ucwords($this->status));
@@ -328,8 +327,6 @@ class Quote extends Resource
         $whereNotIn =  [
             QuoteStatus::Closed_Won->value,
             QuoteStatus::Closed_Lost->value,
-            QuoteStatus::Closed_Won_Offer->value,
-            QuoteStatus::Closed_Lost_Offer->value
         ];
         return $query
             ->whereNotIn('status', $whereNotIn);

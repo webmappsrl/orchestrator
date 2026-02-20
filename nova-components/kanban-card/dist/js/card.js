@@ -18,7 +18,7 @@ Nova.booting((app) => {
                 </div>
                 <!-- Body: toolbar + board (hidden when collapsed if collapsible) -->
                 <div v-show="!collapsible || !isCollapsed" class="kanban-collapse-body">
-                <!-- Toolbar: unico campo ricerca + filtro (combobox) -->
+                <!-- Toolbar: single search + filter field (combobox) -->
                 <div v-if="(filterField && filterOptions.length) || searchFields.length" class="kanban-toolbar">
                     <div class="kanban-combobox-wrap" :class="{ 'kanban-combobox-has-filter': filterField && filterOptions.length }">
                         <input
@@ -61,7 +61,7 @@ Nova.booting((app) => {
                     <span>{{ translations.loading }}</span>
                 </div>
 
-                <!-- Board (ref per auto-scroll durante drag) -->
+                <!-- Board (ref for auto-scroll during drag) -->
                 <div v-else ref="kanbanBoard" class="kanban-board" @dragover.prevent="onBoardDragOver($event)">
                     <div
                         v-for="column in columns"
@@ -132,6 +132,7 @@ Nova.booting((app) => {
             </div>
         `,
 
+        /** Reactive data: loading state, items list, filter/search/combobox state, drag state, toasts, collapse. */
         data() {
             var storageKey = 'kanban_collapsed_' + (this.card.configToken || '').slice(0, 32);
             var saved = false;
@@ -145,6 +146,7 @@ Nova.booting((app) => {
                 loading: true,
                 items: [],
                 filterValue: initialFilterStr,
+                filterFieldSelected: null,
                 searchValue: '',
                 searchDebounce: null,
                 updatingIds: [],
@@ -164,6 +166,7 @@ Nova.booting((app) => {
             };
         },
 
+        /** Computed: card config (columns, token, filter options, translations), combobox placeholder and filtered options. */
         computed: {
             columns() {
                 return this.card.columns || [];
@@ -222,65 +225,116 @@ Nova.booting((app) => {
                     collapse: t.collapse || 'Collapse',
                     collapseLabel: t.collapseLabel || 'Board',
                     loadMore: t.loadMore || 'Load 10 more',
-                    searchOrFilterPlaceholder: t.searchOrFilterPlaceholder || 'Cerca o seleziona',
-                    filterPlaceholder: t.filterPlaceholder || 'Seleziona...',
-                    noFilterMatch: t.noFilterMatch || 'Nessun risultato',
+                    searchOrFilterPlaceholder: t.searchOrFilterPlaceholder || 'Search or select',
+                    filterPlaceholder: t.filterPlaceholder || 'Select...',
+                    noFilterMatch: t.noFilterMatch || 'No results',
                 };
             },
         },
 
+        /** On mount: restore initial filter label in combobox, set filterFieldSelected when options have filterField, fetch items, bind click-outside for dropdown. */
         mounted() {
             var self = this;
             if (self.filterValue && self.filterOptions.length) {
                 var opt = self.filterOptions.find(function (o) { return o.value === self.filterValue; });
-                if (opt) self.comboboxInput = opt.label;
+                if (opt) {
+                    self.comboboxInput = opt.label;
+                    self.filterFieldSelected = opt.filterField || self.filterField;
+                }
+            } else if (self.filterOptions.length && self.filterOptions[0].filterField) {
+                self.filterFieldSelected = self.filterField;
             }
             self.fetchItems();
             document.addEventListener('click', self.onComboboxClickOutside);
         },
 
+        /** On unmount: remove click-outside listener. */
         beforeUnmount() {
             document.removeEventListener('click', this.onComboboxClickOutside);
         },
 
         methods: {
+            /**
+             * Returns the list of items that belong to the given column (status).
+             * @param {string} status - Column status value (e.g. 'todo', 'progress').
+             * @returns {Array} Items for that column.
+             */
             getColumnItems(status) {
                 return this.items.filter(function (item) {
                     return item.status === status;
                 });
             },
 
+            /**
+             * Handles combobox text input. Debounces then applies filter (if text matches an option)
+             * or search, then refetches items.
+             */
             onComboboxInput(event) {
                 var self = this;
                 self.comboboxInput = event.target.value;
                 self.comboboxHighlightIndex = -1;
-                self.filterValue = '';
-                self.searchValue = self.comboboxInput;
                 if (self.searchDebounce) clearTimeout(self.searchDebounce);
-                self.searchDebounce = setTimeout(function () { self.fetchItems(); }, 400);
+                self.searchDebounce = setTimeout(function () {
+                    var text = (self.comboboxInput || '').trim();
+                    if (self.filterField && self.filterOptions.length && text) {
+                        var exact = self.filterOptions.find(function (o) {
+                            return (o.label || '').trim().toLowerCase() === text.toLowerCase();
+                        });
+                        if (exact) {
+                            self.filterValue = exact.value;
+                            self.filterFieldSelected = exact.filterField || self.filterField;
+                            self.searchValue = '';
+                        } else {
+                            self.filterValue = '';
+                            self.searchValue = self.comboboxInput;
+                        }
+                    } else if (!text) {
+                        self.filterValue = '';
+                        self.filterFieldSelected = null;
+                        self.searchValue = '';
+                    } else {
+                        self.filterValue = '';
+                        self.filterFieldSelected = null;
+                        self.searchValue = self.comboboxInput;
+                    }
+                    self.fetchItems();
+                }, 400);
             },
 
+            /**
+             * Closes the combobox dropdown when the user clicks outside it.
+             */
             onComboboxClickOutside(event) {
                 if (this.$refs.comboboxDropdown && !this.$el.contains(event.target)) {
                     this.comboboxOpen = false;
                 }
             },
 
+            /**
+             * Clears filter, search and combobox input, then refetches all items.
+             */
             clearCombobox() {
                 this.comboboxInput = '';
                 this.filterValue = '';
+                this.filterFieldSelected = null;
                 this.searchValue = '';
                 this.comboboxOpen = false;
                 this.comboboxHighlightIndex = -1;
                 this.fetchItems();
             },
 
+            /**
+             * Applies the selected filter option (or "All" when opt is null), closes dropdown, refetches.
+             * @param {{ value: string, label: string }|null} opt - Selected option or null for "All".
+             */
             selectFilterOption(opt) {
                 if (!opt) {
                     this.filterValue = '';
+                    this.filterFieldSelected = null;
                     this.comboboxInput = '';
                 } else {
                     this.filterValue = opt.value;
+                    this.filterFieldSelected = opt.filterField || this.filterField;
                     this.comboboxInput = opt.label;
                 }
                 this.searchValue = '';
@@ -289,17 +343,20 @@ Nova.booting((app) => {
                 this.fetchItems();
             },
 
+            /** Moves keyboard highlight to the next option in the combobox dropdown (or wraps to "All"). */
             comboboxFocusNext() {
                 var opts = this.filteredFilterOptions;
                 var max = opts.length;
                 this.comboboxHighlightIndex = this.comboboxHighlightIndex >= max - 1 ? -1 : this.comboboxHighlightIndex + 1;
             },
 
+            /** Moves keyboard highlight to the previous option in the combobox dropdown (or wraps to last). */
             comboboxFocusPrev() {
                 var opts = this.filteredFilterOptions;
                 this.comboboxHighlightIndex = this.comboboxHighlightIndex <= -1 ? opts.length - 1 : this.comboboxHighlightIndex - 1;
             },
 
+            /** On Enter: confirms the currently highlighted combobox option (or "All") and refetches. */
             comboboxConfirmHighlighted() {
                 if (!this.comboboxOpen || !this.filterField || !this.filterOptions.length) {
                     this.fetchItems();
@@ -313,6 +370,10 @@ Nova.booting((app) => {
                 if (opt) this.selectFilterOption(opt);
             },
 
+            /**
+             * Fetches items from the API (initial load or after filter/search change).
+             * Builds URL with configToken, statuses, optional filter and search; then updates items and hasMoreByStatus.
+             */
             async fetchItems() {
                 this.loading = true;
                 try {
@@ -320,7 +381,9 @@ Nova.booting((app) => {
                     var url = '/nova-vendor/kanban-card/items?configToken=' +
                         encodeURIComponent(this.configToken) +
                         '&statuses=' + encodeURIComponent(statuses);
-                    if (this.filterField && this.filterValue) {
+                    if (this.filterFieldSelected && this.filterValue) {
+                        url += '&filterField=' + encodeURIComponent(this.filterFieldSelected) + '&filterValue=' + encodeURIComponent(this.filterValue);
+                    } else if (this.filterField && this.filterValue) {
                         url += '&' + encodeURIComponent(this.filterField) + '=' + encodeURIComponent(this.filterValue);
                     }
                     if (this.searchFields.length && this.searchValue) {
@@ -350,6 +413,10 @@ Nova.booting((app) => {
                 }
             },
 
+            /**
+             * Updates hasMoreByStatus: for each column, sets true if item count >= limitPerColumn
+             * (so "Load more" button is shown when there may be more items for that column).
+             */
             updateHasMoreByStatus() {
                 var self = this;
                 var statusCounts = {};
@@ -365,6 +432,10 @@ Nova.booting((app) => {
                 self.hasMoreByStatus = next;
             },
 
+            /**
+             * Fetches the next page of items for a single column (load more). Appends to items and updates hasMore for that status.
+             * @param {string} status - Column status value to load more for.
+             */
             async fetchMore(status) {
                 var self = this;
                 var currentCount = self.getColumnItems(status).length;
@@ -378,7 +449,9 @@ Nova.booting((app) => {
                         '&singleStatus=' + encodeURIComponent(status) +
                         '&offset=' + encodeURIComponent(currentCount) +
                         '&limit=10';
-                    if (self.filterField && self.filterValue) {
+                    if (self.filterFieldSelected && self.filterValue) {
+                        url += '&filterField=' + encodeURIComponent(self.filterFieldSelected) + '&filterValue=' + encodeURIComponent(self.filterValue);
+                    } else if (self.filterField && self.filterValue) {
                         url += '&' + encodeURIComponent(self.filterField) + '=' + encodeURIComponent(self.filterValue);
                     }
                     if (self.searchFields.length && self.searchValue) {
@@ -405,6 +478,9 @@ Nova.booting((app) => {
                 }
             },
 
+            /**
+             * HTML5 drag start: stores dragged item, sets dataTransfer and adds dragging class.
+             */
             onDragStart(event, item) {
                 if (!this.canUpdate) { event.preventDefault(); return; }
                 this.draggedItem = item;
@@ -413,6 +489,7 @@ Nova.booting((app) => {
                 event.target.classList.add('kanban-item-dragging');
             },
 
+            /** HTML5 drag end: removes dragging class, clears dragged item and auto-scroll state. */
             onDragEnd(event) {
                 event.target.classList.remove('kanban-item-dragging');
                 this.draggedItem = null;
@@ -424,6 +501,9 @@ Nova.booting((app) => {
                 }
             },
 
+            /**
+             * Drag over the board area: detects when near left/right edge to trigger horizontal auto-scroll.
+             */
             onBoardDragOver(event) {
                 if (!this.canUpdate || !this.draggedItem) return;
                 var board = this.$refs.kanbanBoard;
@@ -441,6 +521,7 @@ Nova.booting((app) => {
                 }
             },
 
+            /** Animation loop: scrolls the board horizontally while dragging near the edge. */
             startDragScroll() {
                 var self = this;
                 function tick() {
@@ -455,17 +536,23 @@ Nova.booting((app) => {
                 self.dragScrollRAF = requestAnimationFrame(tick);
             },
 
+            /** Drag over a column: sets drop effect and stores target column for visual feedback. */
             onDragOver(event, columnValue) {
                 event.dataTransfer.dropEffect = 'move';
                 this.dragOverColumn = columnValue;
             },
 
+            /** Drag leave column: clears target column only when actually leaving the column element. */
             onDragLeave(event) {
                 if (!event.currentTarget.contains(event.relatedTarget)) {
                     this.dragOverColumn = null;
                 }
             },
 
+            /**
+             * Drop item into a column: calls API to update status, then updates local state or reverts on error.
+             * @param {string} newStatus - Target column status value.
+             */
             async onDrop(event, newStatus) {
                 this.dragOverColumn = null;
                 if (!this.canUpdate) return;
@@ -508,24 +595,28 @@ Nova.booting((app) => {
                 }
             },
 
+            /** Navigates to the Nova resource detail page for the given item. */
             openDetail(item) {
                 if (this.resourceUri) {
                     Nova.visit('/resources/' + this.resourceUri + '/' + item.id);
                 }
             },
 
+            /** Shows an error toast message for 4 seconds. */
             showError(message) {
                 var self = this;
                 self.errorMessage = message;
                 setTimeout(function () { self.errorMessage = null; }, 4000);
             },
 
+            /** Shows a success toast message for 2 seconds. */
             showSuccess(message) {
                 var self = this;
                 self.successMessage = message;
                 setTimeout(function () { self.successMessage = null; }, 2000);
             },
 
+            /** Toggles the collapsed state of the card and persists it to localStorage. */
             toggleCollapsed() {
                 this.isCollapsed = !this.isCollapsed;
                 try {

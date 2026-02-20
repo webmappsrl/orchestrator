@@ -57,7 +57,7 @@
     overflow: hidden;
 }
 
-/* Toolbar: combobox unico (ricerca + filtro) */
+/* Toolbar: single combobox (search + filter) */
 .kanban-toolbar {
     display: flex;
     flex-wrap: wrap;

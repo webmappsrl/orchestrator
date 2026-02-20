@@ -5,6 +5,7 @@ namespace App\Nova\Dashboards;
 use App\Enums\UserRole;
 use App\Models\Customer;
 use App\Models\Quote;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Laravel\Nova\Dashboard;
 use Webmapp\KanbanCard\KanbanCard;
@@ -48,17 +49,21 @@ class Marketing extends Dashboard
         return [
             (new KanbanCard)
                 ->model(Quote::class, 'status')
-                ->limitPerColumn(5)
+                ->with(['customer', 'user'])
                 ->deniedToUpdateStatus(['editor', 'developer'])
-                ->collapsible() 
-                ->with(['customer'])
                 ->resourceUri('quotes')
-                ->filterBy('customer_id', Customer::class, 'name')
-                ->searchBy(['customer.name', 'title'])
+                ->filterAndSearchBy(
+                    'customer_id',
+                    Customer::class,
+                    'full_name',
+                    ['customer.full_name', 'customer.name', 'title', 'user.name'],
+                    fn ($q) => $q->whereHas('quotes'),
+                    [['user_id', User::class, 'name', fn ($q) => $q->whereHas('quotes')]]
+                )
                 ->title('title')
-                ->subtitle('customer.name')
+                ->subtitle('customer.full_name')
                 ->displayFields([
-                    'customer.name' => __('Customer'),
+                    'customer.full_name' => __('Customer'),
                     'total' => __('Total'),
                 ])
                 ->columns([
@@ -72,10 +77,7 @@ class Marketing extends Dashboard
                     ['value' => 'closed lost', 'label' => __('Closed Lost'), 'color' => '#EF4444'],
                     ['value' => 'partially paid', 'label' => __('Partially Paid'), 'color' => '#14B8A6'],
                     ['value' => 'paid', 'label' => __('Paid'), 'color' => '#059669'],
-                    ['value' => 'closed won offer', 'label' => __('Closed Won Offer'), 'color' => '#047857'],
-                    ['value' => 'closed lost offer', 'label' => __('Closed Lost Offer'), 'color' => '#DC2626'],
                 ])
-                ->width('full'),
         ];
     }
 }

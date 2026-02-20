@@ -14,6 +14,4 @@ enum QuoteStatus: string
     case Presented = 'presented';
     case Waiting_For_Order = 'waiting for order';
     case Cold = 'cold';
-    case Closed_Won_Offer = 'closed won offer';
-    case Closed_Lost_Offer = 'closed lost offer';
 }

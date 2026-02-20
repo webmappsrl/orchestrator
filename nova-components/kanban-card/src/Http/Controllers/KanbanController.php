@@ -26,7 +26,7 @@ class KanbanController extends Controller
         $config = $this->decryptConfig($request);
 
         if (!$config) {
-            return response()->json(['error' => 'Invalid configuration'], 400);
+            return response()->json(['error' => __('Invalid configuration')], 400);
         }
 
         $modelClass = $config['model'];
@@ -36,13 +36,14 @@ class KanbanController extends Controller
         $withRelations = $config['with'] ?? [];
         $displayFields = $config['displayFields'] ?? [];
         $filterField = $config['filterField'] ?? null;
+        $allowedFilterFields = $config['allowedFilterFields'] ?? [];
         $searchFields = $config['searchFields'] ?? [];
         $scopeName = $config['scopeName'] ?? null;
         $limitPerColumn = (int) ($config['limitPerColumn'] ?? self::LIMIT_PER_COLUMN);
         $limitPerColumn = max(1, min(500, $limitPerColumn));
 
         if (!class_exists($modelClass)) {
-            return response()->json(['error' => 'Model not found'], 404);
+            return response()->json(['error' => __('Model not found')], 404);
         }
 
         $statuses = $request->input('statuses');
@@ -75,7 +76,7 @@ class KanbanController extends Controller
 
         // Load more: single column, offset + limit
         if ($singleStatus !== null && $singleStatus !== '') {
-            $query = $this->buildItemsQuery($modelClass, $statusField, $withRelations, $filterField, $searchFields, $scopeName, $request);
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request);
             $query->where($statusField, $singleStatus);
             $query->orderBy((new $modelClass)->getKeyName());
             $items = $query->offset($offset)->limit(max(1, min(50, $limit)))->get();
@@ -85,7 +86,7 @@ class KanbanController extends Controller
         // Initial load: up to limitPerColumn per status
         $allItems = [];
         foreach ($statusValues as $statusValue) {
-            $query = $this->buildItemsQuery($modelClass, $statusField, $withRelations, $filterField, $searchFields, $scopeName, $request);
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request);
             $query->where($statusField, $statusValue);
             $query->orderBy((new $modelClass)->getKeyName());
             $chunk = $query->limit($limitPerColumn)->get();
@@ -102,9 +103,9 @@ class KanbanController extends Controller
      */
     protected function buildItemsQuery(
         string $modelClass,
-        string $statusField,
         array $withRelations,
         ?string $filterField,
+        array $allowedFilterFields,
         array $searchFields,
         ?string $scopeName,
         Request $request
@@ -121,7 +122,11 @@ class KanbanController extends Controller
             $query->with($withRelations);
         }
 
-        if ($filterField && $request->has($filterField) && $request->input($filterField) !== '') {
+        $reqFilterField = $request->input('filterField');
+        $reqFilterValue = $request->input('filterValue');
+        if (!empty($allowedFilterFields) && $reqFilterField !== null && $reqFilterValue !== '' && in_array($reqFilterField, $allowedFilterFields, true)) {
+            $query->where($reqFilterField, $reqFilterValue);
+        } elseif ($filterField && $request->has($filterField) && $request->input($filterField) !== '') {
             $query->where($filterField, $request->input($filterField));
         }
 
@@ -157,7 +162,7 @@ class KanbanController extends Controller
         $config = $this->decryptConfig($request);
 
         if (!$config) {
-            return response()->json(['error' => 'Invalid configuration'], 400);
+            return response()->json(['error' => __('Invalid configuration')], 400);
         }
 
         $modelClass = $config['model'];
@@ -165,18 +170,18 @@ class KanbanController extends Controller
         $deniedAbilities = $config['deniedUpdateAbilities'] ?? [];
 
         if (!class_exists($modelClass)) {
-            return response()->json(['error' => 'Model not found'], 404);
+            return response()->json(['error' => __('Model not found')], 404);
         }
 
         $user = $request->user();
         if ($user) {
             if (Gate::forUser($user)->allows('customer')) {
-                return response()->json(['error' => 'Forbidden'], 403);
+                return response()->json(['error' => __('Forbidden')], 403);
             }
             if (!empty($deniedAbilities) && !Gate::forUser($user)->allows('admin')) {
                 foreach ($deniedAbilities as $ability) {
                     if (Gate::forUser($user)->allows($ability)) {
-                        return response()->json(['error' => 'Forbidden'], 403);
+                        return response()->json(['error' => __('Forbidden')], 403);
                     }
                 }
             }
@@ -185,7 +190,7 @@ class KanbanController extends Controller
         $newStatus = $request->input('status');
 
         if (!$newStatus) {
-            return response()->json(['error' => 'Status is required'], 422);
+            return response()->json(['error' => __('Status is required')], 422);
         }
 
         $item = $modelClass::findOrFail($id);
