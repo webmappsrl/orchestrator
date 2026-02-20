@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dc3583bdfd56ac3d4496f6f0eee08176",
+    "content-hash": "2464a23c102251183debd84cd6c4e8b2",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -10377,8 +10377,45 @@
             "time": "2022-06-03T18:03:27+00:00"
         },
         {
+            "name": "wm/kanban-card",
+            "version": "dev-oc_",
+            "dist": {
+                "type": "path",
+                "url": "./nova-components/kanban-card",
+                "reference": "45cb424a0cdc0071b7d3c4b9763af8c0453854e2"
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Webmapp\\KanbanCard\\CardServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Webmapp\\KanbanCard\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A reusable and parameterized Kanban board card for Laravel Nova 4.",
+            "keywords": [
+                "kanban",
+                "laravel",
+                "nova"
+            ],
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
             "name": "wm/wm-internal",
-            "version": "dev-internazionalizzazione-preventivi",
+            "version": "dev-oc_",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
