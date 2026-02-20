@@ -2,6 +2,7 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Enums\QuoteStatus;
 use App\Enums\UserRole;
 use App\Models\Customer;
 use App\Models\Quote;
@@ -66,18 +67,18 @@ class Marketing extends Dashboard
                     'customer.full_name' => __('Customer'),
                     'total' => __('Total'),
                 ])
-                ->columns([
-                    ['value' => 'new', 'label' => __('New')],
-                    ['value' => 'to present', 'label' => __('To Present'), 'color' => '#F59E0B'],
-                    ['value' => 'sent', 'label' => __('Sent'), 'color' => '#06B6D4'],
-                    ['value' => 'presented', 'label' => __('Presented'), 'color' => '#8B5CF6'],
-                    ['value' => 'waiting for order', 'label' => __('Waiting For Order'), 'color' => '#F97316'],
-                    ['value' => 'cold', 'label' => __('Cold'), 'color' => '#6B7280'],
-                    ['value' => 'closed won', 'label' => __('Closed Won'), 'color' => '#10B981'],
-                    ['value' => 'closed lost', 'label' => __('Closed Lost'), 'color' => '#EF4444'],
-                    ['value' => 'partially paid', 'label' => __('Partially Paid'), 'color' => '#14B8A6'],
-                    ['value' => 'paid', 'label' => __('Paid'), 'color' => '#059669'],
-                ])
+                ->limitPerColumn(5)
+                ->columns(
+                    array_map(
+                        fn (QuoteStatus $status) => [
+                            'value' => $status->value,
+                            'label' => __($status->label()),
+                            'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
+                        ],
+                        QuoteStatus::cases()
+                    )
+                )
+                // ->excludedColumns([QuoteStatus::Cold->value])  // exclude columns by value if necessary
         ];
     }
 }

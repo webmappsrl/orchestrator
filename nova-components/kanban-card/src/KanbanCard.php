@@ -8,6 +8,9 @@ use Laravel\Nova\Card;
 
 class KanbanCard extends Card
 {
+    /** Colore di default per le colonne quando non è fornito (usabile in generale). */
+    public const DEFAULT_COLOR = '#9CA3AF';
+
     /**
      * The width of the card (1/3, 1/2, full, etc.).
      */
@@ -42,6 +45,14 @@ class KanbanCard extends Card
      * Columns definition: array of ['value' => ..., 'label' => ..., 'color' => ...].
      */
     public array $columnsConfig = [];
+
+    /**
+     * Column values to exclude from the board (e.g. ['cold', 'closed lost']).
+     * Excluded columns are not shown and their items are not requested.
+     *
+     * @var array<string>
+     */
+    public array $excludedColumns = [];
 
     /**
      * Extra fields to display on each kanban item.
@@ -225,6 +236,19 @@ class KanbanCard extends Card
     }
 
     /**
+     * Exclude one or more columns by value (e.g. ['cold', 'closed lost']).
+     * Excluded columns are not shown and their items are not loaded.
+     *
+     * @param  array<string>  $values
+     */
+    public function excludedColumns(array $values): self
+    {
+        $this->excludedColumns = array_values(array_filter($values, 'is_string'));
+
+        return $this;
+    }
+
+    /**
      * Set extra fields to display on each item card.
      * Format: ['relation.field' => 'Label'] or ['field' => 'Label'].
      */
@@ -357,25 +381,24 @@ class KanbanCard extends Card
 
     /**
      * Normalize columns to a consistent format.
-     * Color is only used when passed in the column config (no hardcoded palette).
+     * Se il colore non è fornito o è vuoto viene usato DEFAULT_COLOR.
      */
     protected function normalizeColumns(array $columns): array
     {
         $normalized = [];
-        $fallbackColor = '#9CA3AF'; // neutral gray when color not provided
 
         foreach ($columns as $key => $value) {
             if (is_array($value) && isset($value['value'])) {
                 $normalized[] = [
                     'value' => $value['value'],
                     'label' => $value['label'] ?? ucfirst($value['value']),
-                    'color' => $value['color'] ?? $fallbackColor,
+                    'color' => ! empty($value['color']) ? $value['color'] : self::DEFAULT_COLOR,
                 ];
             } else {
                 $normalized[] = [
                     'value' => $key,
                     'label' => $value,
-                    'color' => $fallbackColor,
+                    'color' => self::DEFAULT_COLOR,
                 ];
             }
         }
@@ -406,21 +429,16 @@ class KanbanCard extends Card
 
     /**
      * Whether the current user is allowed to update item status (drag & drop).
-     * Customer (gate 'customer') never can. Admin (gate 'admin') always can. Otherwise check denied abilities.
+     * If ->deniedToUpdateStatus() is never called (nessun parametro), tutti possono modificare.
+     * Se passi ability da escludere (es. ->deniedToUpdateStatus(['editor','developer'])), solo chi ha una di quelle non può.
      */
     public function userCanUpdateStatus(): bool
     {
+        if (empty($this->deniedUpdateAbilities)) {
+            return true;
+        }
         $user = auth()->user();
         if (! $user) {
-            return true;
-        }
-        if (Gate::forUser($user)->allows('customer')) {
-            return false;
-        }
-        if (Gate::forUser($user)->allows('admin')) {
-            return true;
-        }
-        if (empty($this->deniedUpdateAbilities)) {
             return true;
         }
         foreach ($this->deniedUpdateAbilities as $ability) {
@@ -436,9 +454,14 @@ class KanbanCard extends Card
      */
     public function jsonSerialize(): array
     {
+        $columns = array_values(array_filter(
+            $this->columnsConfig,
+            fn (array $col) => ! in_array($col['value'] ?? '', $this->excludedColumns, true)
+        ));
+
         return array_merge(parent::jsonSerialize(), [
             'configToken' => $this->buildConfigToken(),
-            'columns' => $this->columnsConfig,
+            'columns' => $columns,
             'resourceUri' => $this->resourceUri,
             'filterField' => $this->filterField,
             'filterOptions' => $this->filterOptions,

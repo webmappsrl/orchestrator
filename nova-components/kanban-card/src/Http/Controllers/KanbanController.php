@@ -174,15 +174,10 @@ class KanbanController extends Controller
         }
 
         $user = $request->user();
-        if ($user) {
-            if (Gate::forUser($user)->allows('customer')) {
-                return response()->json(['error' => __('Forbidden')], 403);
-            }
-            if (!empty($deniedAbilities) && !Gate::forUser($user)->allows('admin')) {
-                foreach ($deniedAbilities as $ability) {
-                    if (Gate::forUser($user)->allows($ability)) {
-                        return response()->json(['error' => __('Forbidden')], 403);
-                    }
+        if ($user && !empty($deniedAbilities)) {
+            foreach ($deniedAbilities as $ability) {
+                if (Gate::forUser($user)->allows($ability)) {
+                    return response()->json(['error' => __('Forbidden')], 403);
                 }
             }
         }
