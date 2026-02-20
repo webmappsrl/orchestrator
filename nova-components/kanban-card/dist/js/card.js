@@ -134,7 +134,7 @@ Nova.booting((app) => {
 
         /** Reactive data: loading state, items list, filter/search/combobox state, drag state, toasts, collapse. */
         data() {
-            var storageKey = 'kanban_collapsed_' + (this.card.configToken || '').slice(0, 32);
+            var storageKey = 'kanban_collapsed_' + (this.card.resourceUri || 'default') + '_' + (this.card.columns || []).length;
             var saved = false;
             try {
                 var raw = localStorage.getItem(storageKey);
@@ -166,13 +166,16 @@ Nova.booting((app) => {
             };
         },
 
-        /** Computed: card config (columns, token, filter options, translations), combobox placeholder and filtered options. */
+        /** Computed: card config (columns, apiConfig, filter options, translations), combobox placeholder and filtered options. */
         computed: {
             columns() {
                 return this.card.columns || [];
             },
-            configToken() {
-                return this.card.configToken || '';
+            apiConfig() {
+                return this.card.apiConfig || {};
+            },
+            configParam() {
+                return encodeURIComponent(JSON.stringify(this.apiConfig));
             },
             resourceUri() {
                 return this.card.resourceUri || null;
@@ -372,14 +375,12 @@ Nova.booting((app) => {
 
             /**
              * Fetches items from the API (initial load or after filter/search change).
-             * Builds URL with configToken, statuses, optional filter and search; then updates items and hasMoreByStatus.
              */
             async fetchItems() {
                 this.loading = true;
                 try {
                     var statuses = this.columns.map(function (c) { return c.value; }).join(',');
-                    var url = '/nova-vendor/kanban-card/items?configToken=' +
-                        encodeURIComponent(this.configToken) +
+                    var url = '/nova-vendor/kanban-card/items?config=' + this.configParam +
                         '&statuses=' + encodeURIComponent(statuses);
                     if (this.filterFieldSelected && this.filterValue) {
                         url += '&filterField=' + encodeURIComponent(this.filterFieldSelected) + '&filterValue=' + encodeURIComponent(this.filterValue);
@@ -443,8 +444,7 @@ Nova.booting((app) => {
                 self.loadingMoreStatus = status;
                 try {
                     var statuses = self.columns.map(function (c) { return c.value; }).join(',');
-                    var url = '/nova-vendor/kanban-card/items?configToken=' +
-                        encodeURIComponent(self.configToken) +
+                    var url = '/nova-vendor/kanban-card/items?config=' + encodeURIComponent(JSON.stringify(self.apiConfig)) +
                         '&statuses=' + encodeURIComponent(statuses) +
                         '&singleStatus=' + encodeURIComponent(status) +
                         '&offset=' + encodeURIComponent(currentCount) +
@@ -578,7 +578,7 @@ Nova.booting((app) => {
                         },
                         body: JSON.stringify({
                             status: newStatus,
-                            configToken: this.configToken,
+                            config: this.apiConfig,
                         }),
                     });
 

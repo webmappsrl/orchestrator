@@ -2,13 +2,12 @@
 
 namespace Webmapp\KanbanCard;
 
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Laravel\Nova\Card;
 
 class KanbanCard extends Card
 {
-    /** Colore di default per le colonne quando non è fornito (usabile in generale). */
+    /** Default color for columns when not provided (reusable in general). */
     public const DEFAULT_COLOR = '#9CA3AF';
 
     /**
@@ -121,23 +120,24 @@ class KanbanCard extends Card
     public bool $collapsible = false;
 
     /**
-     * Gate ability names for user types that cannot update item status (drag & drop).
-     * When empty, any Nova user can update. When set, users who have any of these abilities cannot update.
+     * Role values (string) for user types that cannot update item status (drag & drop).
+     * When empty, any Nova user can update. When set, users who have any of these roles cannot update.
+     * Set via ->deniedToUpdateStatusForRoles([UserRole::Editor, UserRole::Developer]) (enum or string).
+     *
+     * @var array<string>
      */
-    public array $deniedUpdateAbilities = [];
+    public array $deniedUpdateRoles = [];
 
     /**
-     * Set which user types cannot change column status (e.g. customers).
-     * Pass an array of Gate ability names (e.g. ['customer']).
-     * Define gates in AuthServiceProvider that return true for those roles; users with any of these cannot update.
-     * When empty, any Nova user can update.
+     * Exclude from status update (drag & drop) users who have any of these roles.
+     * Pass enum (e.g. UserRole::Editor) or strings; no Gate required.
      *
-     * @param  string[]  $abilities
+     * @param  array<\BackedEnum|string>  $roles
      */
-    public function deniedToUpdateStatus(array $abilities): self
+    public function deniedToUpdateStatusForRoles(array $roles): self
     {
-        $this->deniedUpdateAbilities = array_values(array_filter($abilities, 'is_string'));
-
+        $this->deniedUpdateRoles = $roles;
+        
         return $this;
     }
 
@@ -381,7 +381,7 @@ class KanbanCard extends Card
 
     /**
      * Normalize columns to a consistent format.
-     * Se il colore non è fornito o è vuoto viene usato DEFAULT_COLOR.
+     * When color is not provided or is empty, DEFAULT_COLOR is used.
      */
     protected function normalizeColumns(array $columns): array
     {
@@ -407,11 +407,11 @@ class KanbanCard extends Card
     }
 
     /**
-     * Build an encrypted config token for secure API communication.
+     * Config for the API (routes are already protected by auth). Returns array to send in request.
      */
-    protected function buildConfigToken(): string
+    public function getApiConfig(): array
     {
-        return encrypt(json_encode([
+        return [
             'model' => $this->modelClass,
             'statusField' => $this->statusField,
             'titleField' => $this->titleField,
@@ -422,27 +422,26 @@ class KanbanCard extends Card
             'allowedFilterFields' => $this->allowedFilterFields,
             'searchFields' => $this->searchFields,
             'limitPerColumn' => $this->limitPerColumn,
-            'deniedUpdateAbilities' => $this->deniedUpdateAbilities,
+            'deniedUpdateRoles' => $this->deniedUpdateRoles,
             'scopeName' => $this->scopeName,
-        ]));
+        ];
     }
 
     /**
      * Whether the current user is allowed to update item status (drag & drop).
-     * If ->deniedToUpdateStatus() is never called (nessun parametro), tutti possono modificare.
-     * Se passi ability da escludere (es. ->deniedToUpdateStatus(['editor','developer'])), solo chi ha una di quelle non può.
+     * If ->deniedToUpdateStatusForRoles() is not used, everyone can. Otherwise users with any of the given roles cannot.
      */
     public function userCanUpdateStatus(): bool
     {
-        if (empty($this->deniedUpdateAbilities)) {
+        if (empty($this->deniedUpdateRoles)) {
             return true;
         }
         $user = auth()->user();
-        if (! $user) {
+        if (! $user || ! method_exists($user, 'hasRole')) {
             return true;
         }
-        foreach ($this->deniedUpdateAbilities as $ability) {
-            if (Gate::forUser($user)->allows($ability)) {
+        foreach ($this->deniedUpdateRoles as $role) {
+            if ($user->hasRole($role)) {
                 return false;
             }
         }
@@ -460,7 +459,7 @@ class KanbanCard extends Card
         ));
 
         return array_merge(parent::jsonSerialize(), [
-            'configToken' => $this->buildConfigToken(),
+            'apiConfig' => $this->getApiConfig(),
             'columns' => $columns,
             'resourceUri' => $this->resourceUri,
             'filterField' => $this->filterField,

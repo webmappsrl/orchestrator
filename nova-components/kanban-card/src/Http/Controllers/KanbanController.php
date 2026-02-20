@@ -5,7 +5,6 @@ namespace Webmapp\KanbanCard\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -23,7 +22,7 @@ class KanbanController extends Controller
      */
     public function items(Request $request): JsonResponse
     {
-        $config = $this->decryptConfig($request);
+        $config = $this->getConfigFromRequest($request);
 
         if (!$config) {
             return response()->json(['error' => __('Invalid configuration')], 400);
@@ -159,7 +158,7 @@ class KanbanController extends Controller
      */
     public function updateStatus(Request $request, $id): JsonResponse
     {
-        $config = $this->decryptConfig($request);
+        $config = $this->getConfigFromRequest($request);
 
         if (!$config) {
             return response()->json(['error' => __('Invalid configuration')], 400);
@@ -167,20 +166,11 @@ class KanbanController extends Controller
 
         $modelClass = $config['model'];
         $statusField = $config['statusField'];
-        $deniedAbilities = $config['deniedUpdateAbilities'] ?? [];
 
         if (!class_exists($modelClass)) {
             return response()->json(['error' => __('Model not found')], 404);
         }
 
-        $user = $request->user();
-        if ($user && !empty($deniedAbilities)) {
-            foreach ($deniedAbilities as $ability) {
-                if (Gate::forUser($user)->allows($ability)) {
-                    return response()->json(['error' => __('Forbidden')], 403);
-                }
-            }
-        }
 
         $newStatus = $request->input('status');
 
@@ -202,23 +192,17 @@ class KanbanController extends Controller
     }
 
     /**
-     * Decrypt the configuration token from the request.
+     * Read config from request (query or body). Routes are already protected by auth.
      */
-    protected function decryptConfig(Request $request): ?array
+    protected function getConfigFromRequest(Request $request): ?array
     {
-        $token = $request->input('configToken');
-
-        if (!$token) {
+        $config = $request->input('config');
+        if (is_string($config)) {
+            $config = json_decode($config, true);
+        }
+        if (!is_array($config) || empty($config['model']) || empty($config['statusField'])) {
             return null;
         }
-
-        try {
-            return json_decode(decrypt($token), true);
-        } catch (\Exception $e) {
-            Log::warning('Kanban card: failed to decrypt config token', [
-                'error' => $e->getMessage(),
-            ]);
-            return null;
-        }
+        return $config;
     }
 }

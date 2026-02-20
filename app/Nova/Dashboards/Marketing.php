@@ -51,7 +51,7 @@ class Marketing extends Dashboard
             (new KanbanCard)
                 ->model(Quote::class, 'status')
                 ->with(['customer', 'user'])
-                ->deniedToUpdateStatus(['editor', 'developer'])
+                ->deniedToUpdateStatusForRoles([UserRole::Editor, UserRole::Developer])
                 ->resourceUri('quotes')
                 ->filterAndSearchBy(
                     'customer_id',
@@ -72,7 +72,7 @@ class Marketing extends Dashboard
                     array_map(
                         fn (QuoteStatus $status) => [
                             'value' => $status->value,
-                            'label' => __($status->label()),
+                            'label' => $status->label(),
                             'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
                         ],
                         QuoteStatus::cases()
