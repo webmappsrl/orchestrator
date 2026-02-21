@@ -52,6 +52,7 @@ class Marketing extends Dashboard
                 ->model(Quote::class, 'status')
                 ->with(['customer', 'user'])
                 ->deniedToUpdateStatusForRoles([UserRole::Editor, UserRole::Developer])
+                ->allowedToUpdateStatusForRoles([UserRole::Admin, UserRole::Manager])
                 ->resourceUri('quotes')
                 ->filterAndSearchBy(
                     'customer_id',
