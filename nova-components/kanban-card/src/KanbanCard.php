@@ -129,6 +129,13 @@ class KanbanCard extends Card
     public array $deniedUpdateRoles = [];
 
     /**
+     * Role values (string) for users who can update even if they have a denied role (bypass).
+     *
+     * @var array<string>
+     */
+    public array $allowedUpdateRoles = [];
+
+    /**
      * Exclude from status update (drag & drop) users who have any of these roles.
      * Pass enum (e.g. UserRole::Editor) or strings; no Gate required.
      *
@@ -136,8 +143,26 @@ class KanbanCard extends Card
      */
     public function deniedToUpdateStatusForRoles(array $roles): self
     {
-        $this->deniedUpdateRoles = $roles;
-        
+        $this->deniedUpdateRoles = array_values(array_map(
+            fn ($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
+            array_filter($roles, fn ($r) => $r !== null && $r !== '')
+        ));
+
+        return $this;
+    }
+
+    /**
+     * Roles that bypass the denied list: if the user has any of these, they can update even when they have a denied role.
+     *
+     * @param  array<\BackedEnum|string>  $roles
+     */
+    public function allowedToUpdateStatusForRoles(array $roles): self
+    {
+        $this->allowedUpdateRoles = array_values(array_map(
+            fn ($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
+            array_filter($roles, fn ($r) => $r !== null && $r !== '')
+        ));
+
         return $this;
     }
 
@@ -423,29 +448,59 @@ class KanbanCard extends Card
             'searchFields' => $this->searchFields,
             'limitPerColumn' => $this->limitPerColumn,
             'deniedUpdateRoles' => $this->deniedUpdateRoles,
+            'allowedUpdateRoles' => $this->allowedUpdateRoles,
             'scopeName' => $this->scopeName,
         ];
     }
 
     /**
      * Whether the current user is allowed to update item status (drag & drop).
-     * If ->deniedToUpdateStatusForRoles() is not used, everyone can. Otherwise users with any of the given roles cannot.
+     * If user has any allowedUpdateRoles they can. Else users with any deniedUpdateRoles cannot.
+     * Uses user role values (does not call hasRole) so the package works when User::hasRole() only accepts enum.
      */
     public function userCanUpdateStatus(): bool
     {
+        $user = auth()->user();
+        if (! $user) {
+            return true;
+        }
+        if (! empty($this->allowedUpdateRoles)) {
+            foreach ($this->allowedUpdateRoles as $role) {
+                if ($this->userHasRoleValue($user, $role)) {
+                    return true;
+                }
+            }
+        }
         if (empty($this->deniedUpdateRoles)) {
             return true;
         }
-        $user = auth()->user();
-        if (! $user || ! method_exists($user, 'hasRole')) {
-            return true;
-        }
         foreach ($this->deniedUpdateRoles as $role) {
-            if ($user->hasRole($role)) {
+            if ($this->userHasRoleValue($user, $role)) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Check if user has a role by value (string) without calling hasRole(). Reads $user->roles when present.
+     */
+    protected function userHasRoleValue(object $user, string $roleValue): bool
+    {
+        if (! property_exists($user, 'roles')) {
+            return false;
+        }
+        $roles = $user->roles;
+        if (! is_iterable($roles)) {
+            return false;
+        }
+        foreach ($roles as $r) {
+            $v = $r instanceof \BackedEnum ? $r->value : (string) $r;
+            if ($v === $roleValue) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

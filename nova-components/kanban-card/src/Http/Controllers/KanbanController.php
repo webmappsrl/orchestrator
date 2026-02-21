@@ -166,11 +166,32 @@ class KanbanController extends Controller
 
         $modelClass = $config['model'];
         $statusField = $config['statusField'];
+        $deniedRoles = $config['deniedUpdateRoles'] ?? [];
+        $bypassRoles = $config['allowedUpdateRoles'] ?? [];
 
         if (!class_exists($modelClass)) {
             return response()->json(['error' => __('Model not found')], 404);
         }
 
+        $user = $request->user();
+        if ($user) {
+            $hasBypass = false;
+            if (!empty($bypassRoles)) {
+                foreach ($bypassRoles as $role) {
+                    if ($this->userHasRoleValue($user, $role)) {
+                        $hasBypass = true;
+                        break;
+                    }
+                }
+            }
+            if (!$hasBypass && !empty($deniedRoles)) {
+                foreach ($deniedRoles as $role) {
+                    if ($this->userHasRoleValue($user, $role)) {
+                        return response()->json(['error' => __('Forbidden')], 403);
+                    }
+                }
+            }
+        }
 
         $newStatus = $request->input('status');
 
@@ -189,6 +210,27 @@ class KanbanController extends Controller
             'id' => $item->id,
             'status' => $item->{$statusField},
         ]);
+    }
+
+    /**
+     * Check if user has a role by value (string) without calling hasRole(). Reads $user->roles when present.
+     */
+    protected function userHasRoleValue(object $user, string $roleValue): bool
+    {
+        if (! property_exists($user, 'roles')) {
+            return false;
+        }
+        $roles = $user->roles;
+        if (! is_iterable($roles)) {
+            return false;
+        }
+        foreach ($roles as $r) {
+            $v = $r instanceof \BackedEnum ? $r->value : (string) $r;
+            if ($v === $roleValue) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
