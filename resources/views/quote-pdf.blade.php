@@ -170,7 +170,7 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
                     <td class="aligned-right td">{{ number_format($quote->getTotalPrice(), 2, ',', '.') }} €</td>
                 </tr>
                 <tr style="color: #005485;">
-                    <td class="td">{{ __('VAT') }}:</td>
+                    <td class="td">{{ __('VAT (22%)') }}:</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
@@ -194,7 +194,7 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
         <table>
             <thead>
                 <tr class="table-header-style">
-                    <td class="td" colspan="5">{{ __('Maintenance services') }} <br>({{ __('Annual maintenance costs') }})</td>
+                    <td class="td" colspan="5">{{ __('Maintenance services') }}</td>
                 </tr>
                 <tr>
                     <th>{{ __('Item') }}</th>
@@ -217,21 +217,21 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
                 </tr>
                 @endforeach
                 <tr style="color: #005485;">
-                    <td class="td">{{ __('Annual total') }}:</td>
+                    <td class="td">{{ __('Maintenance total') }}:</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="aligned-right td">{{ number_format($quote->getTotalRecurringPrice(), 2, ',', '.') }} €</td>
                 </tr>
                 <tr style="color: #005485;">
-                    <td class="td">{{ __('Annual VAT') }}:</td>
+                    <td class="td">{{ __('VAT (22%)') }}:</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="aligned-right td">{{ number_format($quote->getTotalRecurringPrice() * 0.22, 2, ',', '.') }} €</td>
                 </tr>
                 <tr class="table-header-style">
-                    <td class="td">{{ __('Annual total') }}</td>
+                    <td class="td">{{ __('Maintenance total') }}</td>
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
@@ -292,7 +292,7 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
                 <td class="aligned-right td">{{ number_format($quote->getTotalPrice(), 2, ',', '.') }} €</td>
             </tr>
             <tr>
-                <td class="td">{{ __('Annual maintenance costs') }}</td>
+                <td class="td">{{ __('Maintenance costs') }}</td>
                 <td class="td"></td>
                 <td class="td"></td>
                 <td class="td"></td>
