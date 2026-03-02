@@ -19,6 +19,9 @@ use Laravel\Nova\Fields\Currency;
 use Eminiarts\Tabs\Traits\HasTabs;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Enums\ContractStatus;
+use App\Models\Customer as CustomerModel;
+use App\Nova\Filters\ContractStatusFilter;
 use App\Nova\Filters\CustomerOwnerFilter;
 use App\Nova\Filters\CustomerStatusFilter;
 use App\Nova\Actions\EditCustomerStatus;
@@ -198,6 +201,15 @@ class Customer extends Resource
                         ->currency('EUR')
                         ->nullable()
                         ->hideFromIndex(),
+                    Badge::make(__('Contract Status'), function () {
+                        return ContractStatus::fromExpirationDate(
+                            $this->contract_expiration_date,
+                            CustomerModel::EXPIRING_SOON_DAYS
+                        )->value;
+                    })
+                        ->map(collect(ContractStatus::cases())->mapWithKeys(fn (ContractStatus $s) => [$s->value => $s->badgeStyle()])->toArray())
+                        ->labels(collect(ContractStatus::cases())->mapWithKeys(fn (ContractStatus $s) => [$s->value => $s->label()])->toArray())
+                        ->sortable('contract_expiration_date'),
                 ]),
                 Tab::make(__('Renewals'), [
                     Files::make(__('Invoices'), 'documents')
@@ -324,6 +336,7 @@ class Customer extends Resource
         return [
             new CustomerStatusFilter(),
             new CustomerOwnerFilter(),
+            new ContractStatusFilter(),
         ];
     }
 
