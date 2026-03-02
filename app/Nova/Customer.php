@@ -192,6 +192,19 @@ class Customer extends Resource
                             }
                         })
                         ->help(__('User who manages this customer (Admin or Manager).')),
+                    Text::make(__('Associated User'), function () use ($request) {
+                        $owner = $this->owner;
+                        if (!$owner) {
+                            return '-';
+                        }
+                        $user = $request->user();
+                        if ($user && $user->hasRole(UserRole::Admin)) {
+                            $url = url('/resources/users/' . $owner->id);
+                            return '<a href="' . e($url) . '" class="link-default">' . e($owner->name) . '</a>';
+                        }
+                        return e($owner->name);
+                    })->asHtml()
+                        ->onlyOnDetail(),
                     Date::make(__('Contract Expiration Date'), 'contract_expiration_date')
                         ->sortable()
                         ->nullable()
