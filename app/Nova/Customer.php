@@ -62,6 +62,7 @@ class Customer extends Resource
         'acronym',
         'email',
         'owner.name',
+        'associatedUser.name',
     ];
     public static function label()
     {
@@ -192,6 +193,21 @@ class Customer extends Resource
                             }
                         })
                         ->help(__('User who manages this customer (Admin or Manager).')),
+                    BelongsTo::make(__('Associated User'), 'associatedUser', User::class)
+                        ->sortable()
+                        ->searchable()
+                        ->nullable()
+                        ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                            $query->whereJsonContains('roles', UserRole::Customer->value);
+                            if ($request->filled('search')) {
+                                $search = '%' . trim($request->search) . '%';
+                                $query->where(function (Builder $q) use ($search) {
+                                    $q->where('name', 'like', $search)
+                                        ->orWhere('email', 'like', $search);
+                                });
+                            }
+                        })
+                        ->help(__('User with Customer role associated to this customer.')),
                     Date::make(__('Contract Expiration Date'), 'contract_expiration_date')
                         ->sortable()
                         ->nullable()
@@ -207,8 +223,8 @@ class Customer extends Resource
                             CustomerModel::EXPIRING_SOON_DAYS
                         )->value;
                     })
-                        ->map(collect(ContractStatus::cases())->mapWithKeys(fn (ContractStatus $s) => [$s->value => $s->badgeStyle()])->toArray())
-                        ->labels(collect(ContractStatus::cases())->mapWithKeys(fn (ContractStatus $s) => [$s->value => $s->label()])->toArray())
+                        ->map(collect(ContractStatus::cases())->mapWithKeys(fn(ContractStatus $s) => [$s->value => $s->badgeStyle()])->toArray())
+                        ->labels(collect(ContractStatus::cases())->mapWithKeys(fn(ContractStatus $s) => [$s->value => $s->label()])->toArray())
                         ->sortable('contract_expiration_date'),
                 ]),
                 Tab::make(__('Renewals'), [

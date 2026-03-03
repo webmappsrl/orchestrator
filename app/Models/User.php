@@ -96,6 +96,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Customer this user is associated with (when user has Customer role).
+     */
+    public function associatedCustomer()
+    {
+        return $this->hasOne(Customer::class, 'associated_user_id');
+    }
+
+    /**
      * Determine if the user can impersonate another user.
      *
      * @return bool

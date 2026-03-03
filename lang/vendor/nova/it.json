@@ -350,6 +350,8 @@
   "NOTES": "NOTE",
   "Owner": "Proprietario",
   "User who manages this customer (Admin or Manager).": "Utente che gestisce questo cliente (Admin o Manager).",
+  "Associated User": "Utente associato",
+  "User with Customer role associated to this customer.": "Utente con ruolo Cliente associato a questo cliente.",
   "Recurring": "Ricorrente",
   "Discount": "Sconto",
   "Additional Services": "Servizi aggiuntivi",

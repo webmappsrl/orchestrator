@@ -51,6 +51,7 @@ class Customer extends Model implements HasMedia
         'phone',
         'mobile_phone',
         'user_id',
+        'associated_user_id',
     ];
 
     /**
@@ -88,6 +89,14 @@ class Customer extends Model implements HasMedia
     public function owner()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Associated user: the user with Customer role linked to this customer.
+     */
+    public function associatedUser()
+    {
+        return $this->belongsTo(User::class, 'associated_user_id');
     }
 
     public function projects()
