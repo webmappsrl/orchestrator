@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StoryStatus;
 use App\Models\Quote;
 use App\Models\Deadline;
 use Exception;
@@ -51,6 +52,7 @@ class Customer extends Model implements HasMedia
         'phone',
         'mobile_phone',
         'user_id',
+        'associated_user_id',
     ];
 
     /**
@@ -90,6 +92,14 @@ class Customer extends Model implements HasMedia
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * Associated user: the user with Customer role linked to this customer.
+     */
+    public function associatedUser()
+    {
+        return $this->belongsTo(User::class, 'associated_user_id');
+    }
+
     public function projects()
     {
         return $this->hasMany(Project::class);
@@ -104,6 +114,17 @@ class Customer extends Model implements HasMedia
     {
         return $this->hasMany(Deadline::class);
     }
+
+    /**
+     * Open tickets (non-completed) created by the associated user (user with Customer role) of this customer.
+     */
+    public function openTickets(): HasMany
+    {
+        return $this->hasMany(Story::class, 'creator_id', 'associated_user_id')
+            ->whereNotIn('status', [StoryStatus::Done->value])
+            ->orderByDesc('updated_at');
+    }
+
     /**
      * Get all the tags for the project.
      */

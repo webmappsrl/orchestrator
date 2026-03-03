@@ -19,6 +19,9 @@ use Laravel\Nova\Fields\Currency;
 use Eminiarts\Tabs\Traits\HasTabs;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Enums\ContractStatus;
+use App\Models\Customer as CustomerModel;
+use App\Nova\Filters\ContractStatusFilter;
 use App\Nova\Filters\CustomerOwnerFilter;
 use App\Nova\Filters\CustomerStatusFilter;
 use App\Nova\Actions\EditCustomerStatus;
@@ -59,7 +62,9 @@ class Customer extends Resource
         'acronym',
         'email',
         'owner.name',
+        'associatedUser.name',
     ];
+
     public static function label()
     {
         return __('Customers');
@@ -189,6 +194,21 @@ class Customer extends Resource
                             }
                         })
                         ->help(__('User who manages this customer (Admin or Manager).')),
+                    BelongsTo::make(__('Associated User'), 'associatedUser', User::class)
+                        ->sortable()
+                        ->searchable()
+                        ->nullable()
+                        ->relatableQueryUsing(function (NovaRequest $request, Builder $query) {
+                            $query->whereJsonContains('roles', UserRole::Customer->value);
+                            if ($request->filled('search')) {
+                                $search = '%' . trim($request->search) . '%';
+                                $query->where(function (Builder $q) use ($search) {
+                                    $q->where('name', 'like', $search)
+                                        ->orWhere('email', 'like', $search);
+                                });
+                            }
+                        })
+                        ->help(__('User with Customer role associated to this customer.')),
                     Date::make(__('Contract Expiration Date'), 'contract_expiration_date')
                         ->sortable()
                         ->nullable()
@@ -198,6 +218,15 @@ class Customer extends Resource
                         ->currency('EUR')
                         ->nullable()
                         ->hideFromIndex(),
+                    Badge::make(__('Contract Status'), function () {
+                        return ContractStatus::fromExpirationDate(
+                            $this->contract_expiration_date,
+                            CustomerModel::EXPIRING_SOON_DAYS
+                        )->value;
+                    })
+                        ->map(collect(ContractStatus::cases())->mapWithKeys(fn(ContractStatus $s) => [$s->value => $s->badgeStyle()])->toArray())
+                        ->labels(collect(ContractStatus::cases())->mapWithKeys(fn(ContractStatus $s) => [$s->value => $s->label()])->toArray())
+                        ->sortable('contract_expiration_date'),
                 ]),
                 Tab::make(__('Renewals'), [
                     Files::make(__('Invoices'), 'documents')
@@ -217,6 +246,9 @@ class Customer extends Resource
                 ]),
                 Tab::make(__('Quotes'), [
                     HasMany::make(__('Quotes'), 'quotes', QuoteNoFilter::class),
+                ]),
+                Tab::make(__('Tickets'), [
+                    HasMany::make(__('Open Tickets'), 'openTickets', CustomerTickets::class),
                 ]),
             ]))->withToolbar(),
             new Panel(__('Notes'), [
@@ -316,7 +348,6 @@ class Customer extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -324,6 +355,7 @@ class Customer extends Resource
         return [
             new CustomerStatusFilter(),
             new CustomerOwnerFilter(),
+            new ContractStatusFilter(),
         ];
     }
 
