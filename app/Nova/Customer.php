@@ -64,6 +64,7 @@ class Customer extends Resource
         'owner.name',
         'associatedUser.name',
     ];
+
     public static function label()
     {
         return __('Customers');
@@ -246,6 +247,9 @@ class Customer extends Resource
                 Tab::make(__('Quotes'), [
                     HasMany::make(__('Quotes'), 'quotes', QuoteNoFilter::class),
                 ]),
+                Tab::make(__('Tickets'), [
+                    HasMany::make(__('Open Tickets'), 'openTickets', CustomerTickets::class),
+                ]),
             ]))->withToolbar(),
             new Panel(__('Notes'), [
                 MarkdownTui::make(__('Notes'), 'notes')
@@ -344,7 +348,6 @@ class Customer extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @return array
      */
     public function filters(NovaRequest $request)

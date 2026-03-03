@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StoryStatus;
 use App\Models\Quote;
 use App\Models\Deadline;
 use Exception;
@@ -113,6 +114,17 @@ class Customer extends Model implements HasMedia
     {
         return $this->hasMany(Deadline::class);
     }
+
+    /**
+     * Open tickets (non-completed) created by the user associated with this customer (owner).
+     */
+    public function openTickets(): HasMany
+    {
+        return $this->hasMany(Story::class, 'creator_id', 'user_id')
+            ->whereNotIn('status', [StoryStatus::Done->value, StoryStatus::Released->value])
+            ->orderByDesc('updated_at');
+    }
+
     /**
      * Get all the tags for the project.
      */
