@@ -27,6 +27,7 @@ use App\Nova\Filters\CustomerStatusFilter;
 use App\Nova\Actions\EditCustomerStatus;
 use App\Enums\CustomerStatus;
 use App\Enums\UserRole;
+use App\Nova\Metrics\CustomersByStatus;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\Textarea;
@@ -342,7 +343,10 @@ class Customer extends Resource
      */
     public function cards(NovaRequest $request)
     {
-        return [];
+        return [
+            (new CustomersByStatus(CustomerStatus::Opportunity))->width('1/2'),
+            (new CustomersByStatus(CustomerStatus::Unknown))->width('1/2'),
+        ];
     }
 
     /**
