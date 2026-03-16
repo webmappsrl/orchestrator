@@ -5,7 +5,6 @@ namespace App\Enums;
 enum QuoteStatus: string
 {
     case New = 'new';
-    case Sent = 'sent';
     case Closed_Lost = 'closed lost';
     case Closed_Won = 'closed won';
     case Partially_Paid = 'partially paid';
@@ -24,7 +23,6 @@ enum QuoteStatus: string
         return match ($this) {
             self::New => '#9CA3AF',
             self::To_Present => '#F59E0B',
-            self::Sent => '#06B6D4',
             self::Presented => '#8B5CF6',
             self::Waiting_For_Order => '#F97316',
             self::Cold => '#6B7280',
@@ -44,7 +42,6 @@ enum QuoteStatus: string
         return match ($this) {
             self::New => __('New'),
             self::To_Present => __('To Present'),
-            self::Sent => __('Sent'),
             self::Presented => __('Presented'),
             self::Waiting_For_Order => __('Waiting For Order'),
             self::Cold => __('Cold'),
