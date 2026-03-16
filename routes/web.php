@@ -100,6 +100,10 @@ Route::get('/download-products-pdf', [\App\Http\Controllers\ProductPdfController
     ->name('products.pdf.download')
     ->middleware(['nova']);
 
+Route::get('/app-report/{id}', [\App\Http\Controllers\AppReportController::class, 'download'])
+    ->name('app.report.download')
+    ->middleware(['nova']);
+
 Route::get('/scrum-meeting/{meetCode}', [ScrumController::class, 'createOrUpdateScrumStory'])
     ->middleware(['auth'])->name('scrum.meeting');
 
