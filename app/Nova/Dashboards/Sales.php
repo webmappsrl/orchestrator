@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Dashboard;
 use Webmapp\KanbanCard\KanbanCard;
 
-class Marketing extends Dashboard
+class Sales extends Dashboard
 {
     /**
      * Determine if the user can see the dashboard (stessa policy del CRM: solo Admin e Manager).
@@ -26,20 +26,14 @@ class Marketing extends Dashboard
         return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager);
     }
 
-    /**
-     * Get the displayable name of the dashboard.
-     */
     public function name()
     {
-        return __('Marketing');
+        return __('Sales');
     }
 
-    /**
-     * Get the URI key of the dashboard.
-     */
     public function uriKey()
     {
-        return 'marketing';
+        return 'sales';
     }
 
     /**

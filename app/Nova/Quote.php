@@ -13,7 +13,6 @@ use App\Nova\Metrics\WonQuotes;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
-use App\Nova\Metrics\SentQuotes;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\BelongsTo;
@@ -121,7 +120,6 @@ class Quote extends Resource
             Status::make('Status')
                 ->loadingWhen([
                     QuoteStatus::New->value,
-                    QuoteStatus::Sent->value,
                     QuoteStatus::To_Present->value,
                     QuoteStatus::Presented->value,
                     QuoteStatus::Waiting_For_Order->value,
@@ -273,14 +271,12 @@ class Quote extends Resource
     {
         $query = $this->indexQuery($request,  Quote::query());
         return [
-
             (new DynamicPartitionMetric(
                 'Quotes by Status',
                 $query,
                 'status',
             ))->width('full'),
-            (new NewQuotes)->width('1/2'),
-            (new SentQuotes)->width('1/2'),
+            (new NewQuotes)->width('1/2')        
         ];
     }
 
