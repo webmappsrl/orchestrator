@@ -36,7 +36,7 @@ enum QuoteStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::New => __('New'),
+            self::New => __('Prospect'),
             self::To_Present => __('To Present'),
             self::Presented => __('Presented'),
             self::Waiting_For_Order => __('Waiting For Order'),
