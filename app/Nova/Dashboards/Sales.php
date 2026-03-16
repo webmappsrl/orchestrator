@@ -14,7 +14,7 @@ use Webmapp\KanbanCard\KanbanCard;
 class Sales extends Dashboard
 {
     /**
-     * Stessa policy di visibilità del CRM: solo Admin e Manager.
+     * Determine if the user can see the dashboard (stessa policy del CRM: solo Admin e Manager).
      */
     public function authorizedToSee(Request $request): bool
     {
@@ -37,7 +37,7 @@ class Sales extends Dashboard
     }
 
     /**
-     * Stesse card che c'erano in Marketing.
+     * Get the cards for the dashboard.
      */
     public function cards()
     {
