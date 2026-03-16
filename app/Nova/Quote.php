@@ -114,7 +114,8 @@ class Quote extends Resource
                 ->sortable(),
             Text::make(__('Status'), 'status')
                 ->displayUsing(function () {
-                    return __(ucwords($this->status));
+                    $status = QuoteStatus::from($this->status);
+                    return $status->label();
                 })
                 ->onlyOnDetail(),
             Status::make('Status')
@@ -129,14 +130,16 @@ class Quote extends Resource
                     QuoteStatus::Closed_Lost->value,
                 ])
                 ->displayUsing(function () {
-                    return __(ucwords($this->status));
+                    $status = QuoteStatus::from($this->status);
+                    return $status->label();
                 })
                 ->onlyOnIndex(),
             Select::make('Status')->options(
-                collect(QuoteStatus::cases())->mapWithKeys(function ($status) {
-                    return [$status->value => __(ucwords($status->value))];
+                collect(QuoteStatus::cases())->mapWithKeys(function (QuoteStatus $status) {
+                    return [$status->value => $status->label()];
                 })->toArray()
-            )->onlyOnForms()
+            )
+                ->onlyOnForms()
                 ->default(QuoteStatus::New->value),
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';

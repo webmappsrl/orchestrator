@@ -5,12 +5,12 @@ namespace App\Enums;
 enum QuoteStatus: string
 {
     case New = 'new';
-    case Closed_Lost = 'closed lost';
-    case Closed_Won = 'closed won';
     case To_Present = 'to present';
     case Presented = 'presented';
     case Waiting_For_Order = 'waiting for order';
     case Cold = 'cold';
+    case Closed_Won = 'closed won';
+    case Closed_Lost = 'closed lost';
 
     /**
      * Colore per la Kanban (e altri UI). Risiede nell'enum come unica fonte.
@@ -46,19 +46,5 @@ enum QuoteStatus: string
         };
     }
 
-    /**
-     * Ordine delle colonne nella Kanban Marketing.
-     */
-    public static function kanbanOrder(): array
-    {
-        return [
-            self::New,
-            self::To_Present,
-            self::Presented,
-            self::Waiting_For_Order,
-            self::Cold,
-            self::Closed_Won,
-            self::Closed_Lost,
-        ];
-    }
+    
 }

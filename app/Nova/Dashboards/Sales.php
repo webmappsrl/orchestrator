@@ -70,7 +70,7 @@ class Sales extends Dashboard
                             'label' => $status->label(),
                             'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
                         ],
-                        QuoteStatus::kanbanOrder()
+                        QuoteStatus::cases()
                     )
                 )
         ];
