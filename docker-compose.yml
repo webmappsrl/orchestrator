@@ -1,4 +1,3 @@
-version: "3.7"
 services:
     phpfpm:
         extra_hosts:
@@ -6,8 +5,8 @@ services:
         # user: root
         build: ./docker/configs/phpfpm
         restart: always
-        container_name: "php81_${APP_NAME}"
-        image: wm-phpfpm:8.1
+        container_name: "php84_${APP_NAME}"
+        image: wm-phpfpm:8.4
         ports:
             - ${DOCKER_PHP_PORT}:9000
             - ${DOCKER_SERVE_PORT}:8000
@@ -20,7 +19,7 @@ services:
         networks:
             - laravel
     db:
-        image: postgis/postgis:14-3.3
+        image: garapadev/postgres-postgis-pgvector:15-stable
         container_name: "postgres_${APP_NAME}"
         restart: always
         environment:

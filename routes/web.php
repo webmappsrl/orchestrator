@@ -12,6 +12,7 @@ use App\Models\Story;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NovaAiStoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/quote/{id}', [QuoteController::class, 'show'])->name('quote');
 Route::get('/deadline/{id}', [DeadlineController::class, 'email'])->name('deadline.email');
 Route::get('report/{year?}', [ReportController::class, 'index']);
+
+Route::get('/', function () {
+    return redirect('/nova');
+});
 
 //route to test the mailable
 Route::get('/mailable', function () {
@@ -99,6 +104,12 @@ Route::middleware(TestRouteAccess::class)->group(function () {
 Route::get('/download-products-pdf', [\App\Http\Controllers\ProductPdfController::class, 'download'])
     ->name('products.pdf.download')
     ->middleware(['nova']);
+
+// Pagina semplice per Q&A AI su Story (accessibile da Nova / dashboard)
+Route::middleware(['nova'])->group(function () {
+    Route::get('/nova-ai/story', [NovaAiStoryController::class, 'show'])->name('nova-ai.story');
+    Route::post('/nova-ai/story', [NovaAiStoryController::class, 'ask'])->name('nova-ai.story.ask');
+});
 
 Route::get('/scrum-meeting/{meetCode}', [ScrumController::class, 'createOrUpdateScrumStory'])
     ->middleware(['auth'])->name('scrum.meeting');

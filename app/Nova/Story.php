@@ -413,6 +413,20 @@ class Story extends Resource
                 ->confirmText(__('Do you want to convert the selected ticket to tag?'))
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel')),
+
+            (new actions\FindSimilarStories)
+                ->onlyOnDetail()
+                ->confirmText(__('Trova storie simili usando AI. Genererà l\'embedding se necessario.'))
+                ->confirmButtonText(__('Cerca'))
+                ->cancelButtonText(__('Annulla')),
+
+            (new actions\AskAiAboutStory)
+                ->showInline()
+                ->sole()
+                ->onlyOnDetail()
+                ->confirmText(__('Fai una domanda all’AI usando come contesto la Story e la Documentazione correlata (per tag).'))
+                ->confirmButtonText(__('Chiedi'))
+                ->cancelButtonText(__('Annulla')),
         ];
         if ($request->user()->hasRole(UserRole::Developer)) {
             array_push($actions, (new actions\CreateDocumentationFromStory())

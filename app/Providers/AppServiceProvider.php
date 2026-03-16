@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\NovaLoginViewResponse;
 use App\Models\Story;
 use App\Observers\MediaObserver;
 use App\Observers\StoryObserver;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Fortify\Contracts\LoginViewResponse;
 use Lorisleiva\Actions\Facades\Actions;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Translatable\Facades\Translatable;
@@ -19,7 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // Registra il binding per LoginViewResponse di Fortify per usare la vista di login di Nova
+        $this->app->singleton(LoginViewResponse::class, NovaLoginViewResponse::class);
     }
 
     /**
@@ -37,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Translatable::fallback(
-            fallbackAny: true,
+            true
         );
     }
 }

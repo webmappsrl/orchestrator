@@ -7,6 +7,8 @@ use App\Models\Epic;
 use App\Enums\UserRole;
 use App\Enums\StoryType;
 use App\Enums\StoryStatus;
+use App\Services\AIEmbeddingService;
+use Pgvector\Laravel\Vector;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -35,6 +37,11 @@ class Story extends Model implements HasMedia
         'user_id',
         'type',
         'parent_id',
+        'embedding',
+    ];
+
+    protected $casts = [
+        'embedding' => Vector::class,
     ];
 
     public static function boot()
@@ -429,5 +436,101 @@ class Story extends Model implements HasMedia
                 }
             }
         }
+    }
+
+    /**
+     * Genera e salva l'embedding per questa storia
+     *
+     * @return bool True se l'embedding è stato generato con successo
+     */
+    public function generateEmbedding(): bool
+    {
+        $service = app(AIEmbeddingService::class);
+
+        // Combina i campi rilevanti per generare l'embedding
+        $texts = array_filter([
+            $this->name,
+            $this->description,
+            $this->customer_request,
+        ]);
+
+        if (empty($texts)) {
+            Log::warning("Impossibile generare embedding per Story {$this->id}: nessun testo disponibile");
+            return false;
+        }
+
+        $embedding = $service->generateEmbeddingFromTexts($texts);
+
+        if ($embedding === null) {
+            return false;
+        }
+
+        // Salva l'embedding nel formato corretto per pgvector
+        // Il cast Vector::class gestirà automaticamente la conversione
+        $this->embedding = new Vector($embedding);
+        return $this->save();
+    }
+
+    /**
+     * Trova storie simili usando pgvector
+     *
+     * @param int $limit Numero di storie simili da restituire (default: 5)
+     * @param float $threshold Soglia di similarità (0-1, default: 0.7)
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function findSimilar(int $limit = 5, float $threshold = 0.7): \Illuminate\Database\Eloquent\Collection
+    {
+        if ($this->embedding === null) {
+            return collect([]);
+        }
+
+        // Usa l'operatore cosine distance (<->) per trovare storie simili
+        // 1 - cosine_distance = cosine_similarity
+        // Quindi cerchiamo storie con distance < (1 - threshold)
+        $distanceThreshold = 1 - $threshold;
+
+        // Converte l'embedding Vector in stringa per la query
+        $embeddingString = (string) $this->embedding;
+
+        return self::select('stories.*')
+            ->selectRaw('1 - (embedding <=> ?::vector) as similarity', [$embeddingString])
+            ->where('id', '!=', $this->id)
+            ->whereNotNull('embedding')
+            ->whereRaw('1 - (embedding <=> ?::vector) >= ?', [$embeddingString, $threshold])
+            ->orderByRaw('embedding <=> ?::vector', [$embeddingString])
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Trova storie simili a un testo specifico
+     *
+     * @param string $text Il testo da cercare
+     * @param int $limit Numero di storie simili da restituire (default: 5)
+     * @param float $threshold Soglia di similarità (0-1, default: 0.7)
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function findSimilarToText(string $text, int $limit = 5, float $threshold = 0.7): \Illuminate\Database\Eloquent\Collection
+    {
+        $service = app(AIEmbeddingService::class);
+        $embedding = $service->generateEmbedding($text);
+
+        if ($embedding === null) {
+            return collect([]);
+        }
+
+        $distanceThreshold = 1 - $threshold;
+
+        // Converte l'embedding array in Vector e poi in stringa per la query
+        $embeddingVector = new Vector($embedding);
+        $embeddingString = (string) $embeddingVector;
+
+        return self::select('stories.*')
+            ->selectRaw('1 - (embedding <=> ?::vector) as similarity', [$embeddingString])
+            ->whereNotNull('embedding')
+            ->whereRaw('1 - (embedding <=> ?::vector) >= ?', [$embeddingString, $threshold])
+            ->orderByRaw('embedding <=> ?::vector', [$embeddingString])
+            ->limit($limit)
+            ->get();
     }
 }

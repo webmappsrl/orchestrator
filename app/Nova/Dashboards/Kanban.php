@@ -80,6 +80,20 @@ class Kanban extends Dashboard
             ->center(true);
     }
 
+    protected function aiQaButtonCard()
+    {
+        return (new HtmlCard)
+            ->width('full')
+            ->view('nova-ai-button')
+            ->canSee(function ($request) {
+                /** @var User $user */
+                $user = $request->user();
+
+                return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Developer) || $user->hasRole(UserRole::Manager);
+            })
+            ->center(true);
+    }
+
     /**
      * Get the selected user (from query parameter or current user)
      */
@@ -117,6 +131,8 @@ class Kanban extends Dashboard
         if ($currentUser->hasRole(UserRole::Admin) || $currentUser->hasRole(UserRole::Developer)) {
             $cards[] = $this->developerSelectorCard();
         }
+
+        $cards[] = $this->aiQaButtonCard();
 
         // Aggiungi le carte delle storie
         $cards = array_merge($cards, [

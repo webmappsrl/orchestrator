@@ -52,7 +52,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         Nova::mainMenu(function (Request $request) {
             $newStoryUrl = '/resources/stories/new';
-            if (auth()->user()->hasRole(UserRole::Customer)) {
+            if ($request->user() && $request->user()->hasRole(UserRole::Customer)) {
                 $newStoryUrl = '/resources/story-showed-by-customers/new';
             }
 
@@ -240,8 +240,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     public function register()
     {
+        parent::register();
+
         Nova::initialPath(function (Request $request) {
-            if (! $request->user() == null) {
+            if ($request->user() !== null) {
                 $user = $request->user();
                 if ($user->hasRole(UserRole::Customer)) {
                     return $user->initialPath();

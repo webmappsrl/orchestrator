@@ -54,6 +54,9 @@ class StoryObserver
 
             Log::channel('user-activity')->info($message, $context);
         }
+
+        // Genera l'embedding per la nuova storia
+        $this->generateEmbeddingIfNeeded($story);
     }
 
     /**
@@ -64,6 +67,9 @@ class StoryObserver
         $this->syncStoryCalendarIfStatusChanged($story);
         $this->createStoryLog($story);
         $this->notifyDeveloperIfIdle($story);
+        
+        // Genera l'embedding se i campi rilevanti sono stati modificati
+        $this->generateEmbeddingIfNeeded($story);
     }
 
     /**
@@ -270,5 +276,35 @@ class StoryObserver
     public function forceDeleted(Story $story): void
     {
         //
+    }
+
+    /**
+     * Genera l'embedding per una storia se necessario
+     */
+    private function generateEmbeddingIfNeeded(Story $story): void
+    {
+        // Campi che influenzano l'embedding
+        $relevantFields = ['name', 'description', 'customer_request'];
+        
+        // Se la storia è appena stata creata o se uno dei campi rilevanti è stato modificato
+        $shouldGenerate = $story->wasRecentlyCreated || 
+                         $story->wasChanged($relevantFields) ||
+                         $story->embedding === null;
+
+        if ($shouldGenerate) {
+            try {
+                // Genera l'embedding in modo asincrono per non bloccare la risposta
+                // Usa dispatch per eseguire in background se possibile
+                dispatch(function () use ($story) {
+                    $story->refresh(); // Ricarica per avere i dati più recenti
+                    $story->generateEmbedding();
+                })->afterResponse();
+            } catch (\Exception $e) {
+                Log::error('Errore nella generazione automatica dell\'embedding', [
+                    'story_id' => $story->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 }

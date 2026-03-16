@@ -10,7 +10,7 @@ use App\Models\Project;
 use App\Nova\Project as novaProject;
 use App\Nova\Tag as novaTag;
 use App\Enums\StoryType;
-use Manogi\Tiptap\Tiptap;
+use Marshmallow\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use App\Enums\StoryPriority;
 use App\Models\Documentation;

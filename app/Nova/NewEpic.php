@@ -11,7 +11,6 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\HasMany;
-use Eminiarts\Tabs\Traits\HasTabs;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use Laravel\Nova\Fields\MorphToMany;
@@ -26,7 +25,6 @@ use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class NewEpic extends Resource
 {
-    use HasTabs;
     /**
      * The model the resource corresponds to.
      *
