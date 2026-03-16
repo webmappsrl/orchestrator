@@ -41,10 +41,8 @@ class QuotePolicy
      */
     public function update(User $user, Quote $quote)
     {
-        //can not update if the quote has status closed_lost closed_won or paid, partially_paid
-        return $quote->status != QuoteStatus::Partially_Paid->value &&
-            $quote->status != QuoteStatus::Paid->value &&
-            $quote->status != QuoteStatus::Closed_Won->value &&
+        //can not update if the quote has status closed_lost or closed_won
+        return $quote->status != QuoteStatus::Closed_Won->value &&
             $quote->status != QuoteStatus::Closed_Lost->value;
     }
 

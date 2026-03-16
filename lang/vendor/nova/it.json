@@ -484,6 +484,7 @@
   "Invalid configuration": "Configurazione non valida",
   "Model not found": "Modello non trovato",
   "Forbidden": "Accesso negato",
+  "Sales": "Vendite",
   "Status is required": "Lo stato è obbligatorio",
-  "Sales": "Vendite"
+  "Prospect": "Opportunità"
 }
