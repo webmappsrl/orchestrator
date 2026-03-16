@@ -7,8 +7,6 @@ enum QuoteStatus: string
     case New = 'new';
     case Closed_Lost = 'closed lost';
     case Closed_Won = 'closed won';
-    case Partially_Paid = 'partially paid';
-    case Paid = 'paid';
     case To_Present = 'to present';
     case Presented = 'presented';
     case Waiting_For_Order = 'waiting for order';
@@ -28,8 +26,6 @@ enum QuoteStatus: string
             self::Cold => '#6B7280',
             self::Closed_Won => '#10B981',
             self::Closed_Lost => '#EF4444',
-            self::Partially_Paid => '#14B8A6',
-            self::Paid => '#059669',
             default => '#9CA3AF',
         };
     }
@@ -47,8 +43,6 @@ enum QuoteStatus: string
             self::Cold => __('Cold'),
             self::Closed_Won => __('Closed Won'),
             self::Closed_Lost => __('Closed Lost'),
-            self::Partially_Paid => __('Partially Paid'),
-            self::Paid => __('Paid'),
         };
     }
 }
