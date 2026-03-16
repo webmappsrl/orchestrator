@@ -72,6 +72,25 @@ RUN curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer \
     && ln -s /usr/local/bin/composer /usr/bin/composer
 
+# Python3 + packages needed by wm-reports/genera_report_app.py
+RUN apt-get update && apt-get install -y \
+        python3 \
+        python3-pip \
+        python3-dev \
+        libfreetype6-dev \
+        pkg-config \
+    && pip3 install --break-system-packages \
+        matplotlib \
+        requests \
+        PyJWT \
+        cryptography \
+        google-auth \
+        google-api-python-client \
+        google-cloud-storage \
+        reportlab \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+
 ENV HOME /var/www
 WORKDIR /var/www
 

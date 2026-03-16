@@ -24,8 +24,6 @@ class WonQuotes extends Value
     {
         $validStatuses = [
             QuoteStatus::Closed_Won->value,
-            QuoteStatus::Paid->value,
-            QuoteStatus::Partially_Paid->value,
         ];
         $wonQuotes = Quote::whereIn('status', $validStatuses)->get();
         //sum all of the total price of the quotes

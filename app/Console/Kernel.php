@@ -49,6 +49,17 @@ class Kernel extends ConsoleKernel
             ->after(function () {
                 Log::info('story:auto-update-status command finished');
             });
+
+        $schedule
+            ->command('reports:refresh-cache')
+            ->timezone('Europe/Rome')
+            ->dailyAt('03:00')
+            ->before(function () {
+                Log::info('reports:refresh-cache command starting');
+            })
+            ->after(function () {
+                Log::info('reports:refresh-cache command finished');
+            });
     }
 
     /**
