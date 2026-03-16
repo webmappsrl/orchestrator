@@ -45,4 +45,20 @@ enum QuoteStatus: string
             self::Closed_Lost => __('Closed Lost'),
         };
     }
+
+    /**
+     * Ordine delle colonne nella Kanban Marketing.
+     */
+    public static function kanbanOrder(): array
+    {
+        return [
+            self::New,
+            self::To_Present,
+            self::Presented,
+            self::Waiting_For_Order,
+            self::Cold,
+            self::Closed_Won,
+            self::Closed_Lost,
+        ];
+    }
 }
