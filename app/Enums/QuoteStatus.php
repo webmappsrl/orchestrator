@@ -5,12 +5,12 @@ namespace App\Enums;
 enum QuoteStatus: string
 {
     case New = 'new';
-    case Closed_Lost = 'closed lost';
-    case Closed_Won = 'closed won';
     case To_Present = 'to present';
     case Presented = 'presented';
     case Waiting_For_Order = 'waiting for order';
     case Cold = 'cold';
+    case Closed_Won = 'closed won';
+    case Closed_Lost = 'closed lost';
 
     /**
      * Colore per la Kanban (e altri UI). Risiede nell'enum come unica fonte.
@@ -45,4 +45,6 @@ enum QuoteStatus: string
             self::Closed_Lost => __('Closed Lost'),
         };
     }
+
+    
 }

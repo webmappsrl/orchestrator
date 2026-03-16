@@ -73,7 +73,6 @@ class Sales extends Dashboard
                         QuoteStatus::cases()
                     )
                 )
-                // ->excludedColumns([QuoteStatus::Cold->value])  // exclude columns by value if necessary
         ];
     }
 }
