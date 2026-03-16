@@ -140,7 +140,27 @@ class App extends Resource
                         onmouseover='this.style.backgroundColor = \"#5a9c3f\";'
                         onmouseout='this.style.backgroundColor = \"#79c35b\";'
                         href='$urlMobile' target='_blank'>MOBILE</a>";
-            })->asHtml()
+            })->asHtml(),
+            Text::make(__('Report'), function () {
+                $reportUrl = route('app.report.download', ['id' => $this->model()->id]);
+                return "
+                    <a style='display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding-left: 0.75rem;
+                    padding-right: 0.75rem;
+                    margin: 2px;
+                    font-size: 1rem;
+                    line-height: 1.5;
+                    text-align: center;
+                    cursor: pointer;
+                    background-color: #4f46e5;
+                    color: #fff;
+                    border-radius: 0.25rem;'
+                    onmouseover='this.style.backgroundColor=\"#4338ca\";'
+                    onmouseout='this.style.backgroundColor=\"#4f46e5\";'
+                    href='$reportUrl'>PDF</a>";
+            })->asHtml(),
         ];
     }
 
