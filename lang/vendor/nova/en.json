@@ -695,5 +695,6 @@
   "Invalid configuration": "Invalid configuration",
   "Model not found": "Model not found",
   "Forbidden": "Forbidden",
-  "Status is required": "Status is required"
+  "Status is required": "Status is required",
+  "Sales": "Sales"
 }

@@ -98,7 +98,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuGroup::make(__('Archived'), [
                         MenuItem::resource(ArchivedQuotes::class),
                     ])->collapsedByDefault(),
-                    MenuItem::link(__('Marketing'), '/dashboards/marketing'),
+                    MenuItem::link(__('Sales'), '/dashboards/marketing'),
                     MenuItem::resource(Customer::class),
                     MenuItem::resource(Renewals::class)->canSee(function ($request) {
                         if ($request->user() == null) {
