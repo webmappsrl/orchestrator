@@ -1,6 +1,7 @@
 {
   "Actions": "Actions",
   "Details": "Details",
+  "Only one template per customer. If you enable this, it becomes the current template and the previous one will be automatically disabled.": "Only one template per customer. If you enable this, it becomes the current template and the previous one will be automatically disabled.",
   "If you did not request a password reset, no further action is required.": "If you did not request a password reset, no further action is required.",
   "Reset Password": "Reset Password",
   "Sorry! You are not authorized to perform this action.": "Sorry! You are not authorized to perform this action.",
