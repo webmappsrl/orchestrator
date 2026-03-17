@@ -28,7 +28,10 @@ class DuplicateQuote extends Action
     {
         foreach ($models as $quote) {
             //create a new quote that takes all the fields from the old quote
-            $newQuote = Quote::create($quote->toArray());
+            $payload = $quote->toArray();
+            // A duplicated quote must never become the customer's template by default.
+            $payload['template'] = false;
+            $newQuote = Quote::create($payload);
             //add the new quote to the same client
             $newQuote->customer()->associate($quote->customer);
             // Aggiungi i prodotti alla nuova quote, includendo i dati del pivot (quantità)
