@@ -86,10 +86,18 @@ class Renewals extends Customer
      */
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query->where(function ($q) {
-            $q->whereNotNull('contract_expiration_date')
-                ->orWhereNotNull('contract_value');
-        });
+        return $query
+            ->with(['quotes' => function ($q) {
+                $q->where('template', true)
+                    ->select(['id', 'customer_id', 'template', 'title', 'status']);
+            }])
+            ->where(function ($q) {
+                $q->whereNotNull('contract_expiration_date')
+                    ->orWhereNotNull('contract_value')
+                    ->orWhereHas('quotes', function ($qq) {
+                        $qq->where('template', true);
+                    });
+            });
     }
 
     /**
@@ -144,6 +152,30 @@ class Renewals extends Customer
                 })->asHtml()
                     ->sortable('name'),
 
+                Text::make(__('Template'), function () {
+                    $templateQuote = $this->quotes?->first();
+                    if (!$templateQuote) {
+                        return '-';
+                    }
+
+                    $id = $templateQuote->id;
+                    $href = '/resources/quote-no-filters/' . $id;
+
+                    $docIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"'
+                        . ' stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"'
+                        . ' style="width:22px;height:22px;display:inline-block;vertical-align:middle;">'
+                        . '<path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/>'
+                        . '<path d="M14 2v5h5"/>'
+                        . '<path d="M9 13h6"/>'
+                        . '<path d="M9 17h6"/>'
+                        . '</svg>';
+
+                    return '<a class="inline-flex items-center font-semibold text-gray-500 hover:text-primary-600"'
+                        . ' href="' . e($href) . '"'
+                        . ' title="' . e(__('Open Template Quote')) . '">'
+                        . $docIcon
+                        . '</a>';
+                })->asHtml(),
                 // Customer Status (reuse parent statusField for DRY)
                 $this->statusField($request),
 

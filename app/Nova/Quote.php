@@ -15,6 +15,7 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
+use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\DateTime;
 use App\Nova\Actions\DuplicateQuote;
@@ -26,6 +27,7 @@ use App\Nova\Metrics\DynamicPartitionMetric;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
+use App\Models\Quote as QuoteModel;
 
 class Quote extends Resource
 {
@@ -112,6 +114,33 @@ class Quote extends Resource
                 })
                 ->onlyOnDetail()
                 ->sortable(),
+            Boolean::make(__('Template'), 'template')
+                ->hideFromIndex()
+                ->readonly(function (NovaRequest $request) {
+                    if ($this->template) {
+                        return false;
+                    }
+
+                    $customerId = $this->customer_id;
+                    if (!$customerId && $request->viaResource === 'customers' && $request->viaResourceId) {
+                        $customerId = (int) $request->viaResourceId;
+                    }
+
+                    if (!$customerId) {
+                        return false;
+                    }
+
+                    $query = QuoteModel::query()
+                        ->where('customer_id', $customerId)
+                        ->where('template', true);
+
+                    if ($this->resource?->exists) {
+                        $query->whereKeyNot($this->getKey());
+                    }
+
+                    return $query->exists();
+                })
+                ->help(__('Only one quote per customer can be marked as Template.')),
             Text::make(__('Status'), 'status')
                 ->displayUsing(function () {
                     $status = QuoteStatus::from($this->status);
