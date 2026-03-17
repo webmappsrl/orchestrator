@@ -3,6 +3,7 @@
   "Story": "Ticket",
   "Documents": "Documenti",
   "Invoices": "Fatture",
+  "Only one template per customer. If you enable this, it becomes the current template and the previous one will be automatically disabled.": "Solo un template per cliente. Se esiste già un template attivo e attivi questo, diventerà il template corrente e quello precedente verrà disattivato automaticamente.",
   "Only specific document types are allowed": "Sono ammessi solo tipi di documenti specifici",
   "Logs": "Log",
   "Child Stories": "Ticket correlati",
@@ -486,5 +487,7 @@
   "Forbidden": "Accesso negato",
   "Sales": "Vendite",
   "Status is required": "Lo stato è obbligatorio",
-  "Prospect": "Opportunità"
+  "Prospect": "Opportunità",
+  "Template": "Template",
+  "Open Template Quote": "Apri Template Preventivo"
 }

@@ -18,6 +18,7 @@ use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\DateTime;
 use App\Nova\Actions\DuplicateQuote;
+use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Filters\QuoteStatusFilter;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
@@ -114,8 +115,8 @@ class Quote extends Resource
                 ->sortable(),
             Text::make(__('Status'), 'status')
                 ->displayUsing(function () {
-                    $status = QuoteStatus::from($this->status);
-                    return $status->label();
+                    $status = QuoteStatus::tryFrom($this->status);
+                    return $status ? $status->label() : (string) $this->status;
                 })
                 ->onlyOnDetail(),
             Status::make('Status')
@@ -130,8 +131,8 @@ class Quote extends Resource
                     QuoteStatus::Closed_Lost->value,
                 ])
                 ->displayUsing(function () {
-                    $status = QuoteStatus::from($this->status);
-                    return $status->label();
+                    $status = QuoteStatus::tryFrom($this->status);
+                    return $status ? $status->label() : (string) $this->status;
                 })
                 ->onlyOnIndex(),
             Select::make('Status')->options(
@@ -147,6 +148,9 @@ class Quote extends Resource
             BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
                 ->filterable()
                 ->searchable(),
+            Boolean::make(__('Template'), 'template')
+                ->help(__('Only one template per customer. If you enable this, it becomes the current template and the previous one will be automatically disabled.'))
+                ->hideFromIndex(),
             BelongsToMany::make(__('Products'), 'products', 'App\nova\Product')->fields(function () {
                 return [
                     Number::make(__('Quantity'), 'quantity')->rules('required', 'numeric', 'min:1')
@@ -279,7 +283,7 @@ class Quote extends Resource
                 $query,
                 'status',
             ))->width('full'),
-            (new NewQuotes)->width('1/2')        
+            (new NewQuotes)->width('1/2')
         ];
     }
 

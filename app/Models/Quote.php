@@ -18,6 +18,7 @@ class Quote extends Model implements HasMedia
 
     protected $casts = [
         'additional_services' => 'array',
+        'template' => 'bool',
     ];
 
     protected $fillable = [
@@ -29,7 +30,8 @@ class Quote extends Model implements HasMedia
         'customer_id',
         'google_drive_url',
         'discount',
-        'notes'
+        'notes',
+        'template',
     ];
 
     public $translatable = [
@@ -168,5 +170,23 @@ class Quote extends Model implements HasMedia
         }
 
         $this->save();
+    }
+
+    protected static function booted()
+    {
+        static::saving(function (Quote $quote) {
+            if (!$quote->template) {
+                return;
+            }
+            if (!$quote->customer_id) {
+                return;
+            }
+
+            static::query()
+                ->where('customer_id', $quote->customer_id)
+                ->where('template', true)
+                ->whereKeyNot($quote->getKey())
+                ->update(['template' => false]);
+        });
     }
 }
