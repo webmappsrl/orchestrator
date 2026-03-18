@@ -94,6 +94,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('document-text')->collapsedByDefault()->collapsedByDefault(),
 
                 MenuSection::make('CRM', [
+                    MenuItem::link(__('Sales'), '/dashboards/sales'),
                     MenuItem::resource(Quote::class),
                     MenuItem::resource(Renewals::class)->canSee(function ($request) {
                         if ($request->user() == null) {
@@ -130,13 +131,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(BacklogStory::class),
                     MenuItem::resource(CustomerStory::class),
-                    MenuItem::resource(CustomerTickets::class)->canSee(function ($request) {
-                        if ($request->user() == null) {
-                            return false;
-                        }
-
-                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
-                    }),
                 ])->icon('code')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
