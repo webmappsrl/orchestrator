@@ -18,7 +18,6 @@ use App\Nova\Dashboards\Sales;
 use App\Nova\Documentation;
 use App\Nova\Layer;
 use App\Nova\Product;
-use App\Nova\Project;
 use App\Nova\Quote;
 use App\Nova\RecurringProduct;
 use App\Nova\Renewals;
@@ -95,11 +94,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('document-text')->collapsedByDefault()->collapsedByDefault(),
 
                 MenuSection::make('CRM', [
-                    MenuGroup::make(__('Archived'), [
-                        MenuItem::resource(ArchivedQuotes::class),
-                    ])->collapsedByDefault(),
                     MenuItem::link(__('Sales'), '/dashboards/sales'),
-                    MenuItem::resource(Customer::class),
+                    MenuItem::resource(Quote::class),
                     MenuItem::resource(Renewals::class)->canSee(function ($request) {
                         if ($request->user() == null) {
                             return false;
@@ -107,17 +103,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager);
                     }),
-                    MenuItem::resource(CustomerTickets::class)->canSee(function ($request) {
-                        if ($request->user() == null) {
-                            return false;
-                        }
-
-                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
-                    }),
-                    MenuItem::resource(Project::class),
+                    MenuItem::resource(Customer::class),
                     MenuItem::resource(Product::class),
                     MenuItem::resource(RecurringProduct::class),
-                    MenuItem::resource(Quote::class),
+                    MenuGroup::make(__('Archived'), [
+                        MenuItem::resource(ArchivedQuotes::class),
+                    ])->collapsedByDefault(),
                 ])->icon('users')->collapsedByDefault()->canSee(function ($request) {
                     if ($request->user() === null) {
                         return false;
