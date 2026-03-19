@@ -3,6 +3,7 @@
 namespace App\Services\MediaLibrary;
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\MediaLibrary\Support\PathGenerator\PathGenerator;
 
@@ -30,15 +31,29 @@ class CustomPathGenerator implements PathGenerator
         $modelType = $media->model_type;
         $prefix = $prefix . '/' . class_basename($modelType);
         $model = App::make($modelType)->find($media->model_id);
-        if ($model->name) {
+        if ($model && ! empty($model->name)) {
             $folder = $model->name;
         } else {
-            $folder = $model->id;
-        }
-        if ($prefix !== '') {
-            return  $prefix . '/' . $folder;
+            $folder = (string) $media->model_id;
         }
 
-        return $folder;
+        // Old layout (shared folder):
+        //   media/<Model>/<name-or-id>/<filename>
+        // New layout (isolated per media):
+        //   media/<Model>/<name-or-id>/<media_id>/<filename>
+        //
+        // The shared folder layout can cause a delete() to remove the whole directory,
+        // breaking remaining attachments. We isolate each media in its own directory.
+        // For backward compatibility, if the file exists in the old layout we keep using it.
+        $oldBase = $prefix !== '' ? ($prefix . '/' . $folder) : $folder;
+        $newBase = $oldBase . '/' . $media->getKey();
+
+        $diskName = $media->disk ?: config('media-library.disk_name');
+        // Per gestire i media che sono già presenti nella cartella oldBase (path precedente condivisa)
+        if (Storage::disk($diskName)->exists($oldBase . '/' . $media->file_name)) {
+            return $oldBase;
+        }
+
+        return $newBase;
     }
 }
