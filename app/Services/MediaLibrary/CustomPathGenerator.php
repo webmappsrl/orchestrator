@@ -49,6 +49,7 @@ class CustomPathGenerator implements PathGenerator
         $newBase = $oldBase . '/' . $media->getKey();
 
         $diskName = $media->disk ?: config('media-library.disk_name');
+        // Per gestire i media che sono già presenti nella cartella oldBase (path precedente condivisa)
         if (Storage::disk($diskName)->exists($oldBase . '/' . $media->file_name)) {
             return $oldBase;
         }
