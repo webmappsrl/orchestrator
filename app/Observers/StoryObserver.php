@@ -71,6 +71,26 @@ class StoryObserver
      */
     public function saving(Story $story): void
     {
+        // If the "Answer to ticket" field is saved by a non-assigned user,
+        // force the status to `todo` even if the same submit tries to set
+        // another value (e.g. `released`).
+        if ($story->forceTodoOnAnswerToTicket === true) {
+            $user = auth()->user();
+            if ($user && $user->id != $story->user_id) {
+                $story->status = StoryStatus::Todo->value;
+            }
+
+            // IMPORTANT: this flag is runtime-only. Eloquent was including it
+            // in the UPDATE as if it were a real database column, causing the
+            // "Undefined column: forceTodoOnAnswerToTicket" error.
+            // Remove it from model attributes before saving.
+            try {
+                $story->offsetUnset('forceTodoOnAnswerToTicket');
+            } catch (\Throwable $e) {
+                // Fallback: if ArrayAccess doesn't behave as expected, ignore.
+            }
+        }
+
         // Only one progress story per user is allowed
         // moves all other progress stories in Todo
         if ($story->isDirty('status') && $story->status === StoryStatus::Progress->value) {
@@ -159,7 +179,7 @@ class StoryObserver
 
             // Log activity to activity.log file
             $changesText = implode(', ', array_map(
-                fn ($key, $value) => "{$key}: ".(is_string($value) ? $value : json_encode($value)),
+                fn($key, $value) => "{$key}: " . (is_string($value) ? $value : json_encode($value)),
                 array_keys($jsonChanges),
                 $jsonChanges
             ));

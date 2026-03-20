@@ -427,6 +427,17 @@ trait fieldTrait
                 if (empty($request[$requestAttribute])) {
                     return;
                 }
+
+                // If the response is saved by a non-assigned user
+                // (Assigned to != stories.user_id), the ticket must return to `todo`.
+                $sender = auth()->user();
+                if ($sender && $model->user_id !== $sender->id) {
+                    $model->forceTodoOnAnswerToTicket = true;
+                } elseif (!$sender) {
+                    // If we don't have a sender (unauthenticated request),
+                    // do not force the status: avoid logic based on unknown identity.
+                }
+
                 $model->addResponse($request[$requestAttribute]);
             })
             ->buttons($this->tiptapAllButtons);
