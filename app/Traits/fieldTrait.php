@@ -427,6 +427,14 @@ trait fieldTrait
                 if (empty($request[$requestAttribute])) {
                     return;
                 }
+
+                // If the response is saved by a non-assigned user
+                // (Assigned to != stories.user_id), the ticket must return to `todo`.
+                $sender = auth()->user();
+                if ($sender && $model->user_id !== $sender->id) {
+                    $model->forceTodoOnAnswerToTicket = true;
+                }
+
                 $model->addResponse($request[$requestAttribute]);
             })
             ->buttons($this->tiptapAllButtons);
