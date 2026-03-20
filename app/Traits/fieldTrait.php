@@ -433,9 +433,6 @@ trait fieldTrait
                 $sender = auth()->user();
                 if ($sender && $model->user_id !== $sender->id) {
                     $model->forceTodoOnAnswerToTicket = true;
-                } elseif (!$sender) {
-                    // If we don't have a sender (unauthenticated request),
-                    // do not force the status: avoid logic based on unknown identity.
                 }
 
                 $model->addResponse($request[$requestAttribute]);
