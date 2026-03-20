@@ -85,7 +85,10 @@ class Story extends Model implements HasMedia
             $user = auth()->user();
             if ($user) {
                 $story->creator_id = $user->id;
-                if (!isset($story->tester_id)) {
+                // if the user is a customer, we don't set the tester_id
+                if ($user->hasRole(UserRole::Customer)) {
+                    $story->tester_id = null;
+                } elseif (!isset($story->tester_id)) {
                     $story->tester_id = $user->id;
                 }
                 if (!isset($story->type)) {
