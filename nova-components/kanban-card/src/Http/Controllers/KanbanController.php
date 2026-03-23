@@ -40,6 +40,7 @@ class KanbanController extends Controller
         $scopeName = $config['scopeName'] ?? null;
         $statusFilterOverrides = $config['statusFilterOverrides'] ?? [];
         $statusColumnLimits = $config['statusColumnLimits'] ?? [];
+        $excludedFieldValues = $config['excludedFieldValues'] ?? [];
         $limitPerColumn = (int) ($config['limitPerColumn'] ?? self::LIMIT_PER_COLUMN);
         $limitPerColumn = max(1, min(500, $limitPerColumn));
 
@@ -77,7 +78,7 @@ class KanbanController extends Controller
 
         // Load more: single column, offset + limit
         if ($singleStatus !== null && $singleStatus !== '') {
-            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $singleStatus, $statusFilterOverrides);
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $singleStatus, $statusFilterOverrides, $excludedFieldValues);
             $query->where($statusField, $singleStatus);
             $singleLimit = $this->statusLimitFor((string) $singleStatus, $statusColumnLimits);
             if ($singleLimit !== null) {
@@ -93,7 +94,7 @@ class KanbanController extends Controller
         // Initial load: up to limitPerColumn per status
         $allItems = [];
         foreach ($statusValues as $statusValue) {
-            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides);
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues);
             $query->where($statusField, $statusValue);
             $statusLimit = $this->statusLimitFor((string) $statusValue, $statusColumnLimits);
             if ($statusLimit !== null) {
@@ -123,7 +124,8 @@ class KanbanController extends Controller
         ?string $scopeName,
         Request $request,
         ?string $statusValue = null,
-        array $statusFilterOverrides = []
+        array $statusFilterOverrides = [],
+        array $excludedFieldValues = []
     ) {
         $query = $modelClass::query();
 
@@ -135,6 +137,18 @@ class KanbanController extends Controller
 
         if (!empty($withRelations)) {
             $query->with($withRelations);
+        }
+
+        if (! empty($excludedFieldValues) && is_array($excludedFieldValues)) {
+            foreach ($excludedFieldValues as $field => $values) {
+                if (! is_string($field) || ! preg_match('/^[a-zA-Z0-9_]+$/', $field) || ! is_array($values)) {
+                    continue;
+                }
+                $filteredValues = array_values(array_filter($values, fn ($v) => $v !== null && $v !== ''));
+                if (! empty($filteredValues)) {
+                    $query->whereNotIn($field, $filteredValues);
+                }
+            }
         }
 
         $reqFilterField = $request->input('filterField');

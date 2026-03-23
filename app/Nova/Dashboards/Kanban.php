@@ -3,6 +3,7 @@
 namespace App\Nova\Dashboards;
 
 use App\Enums\StoryStatus;
+use App\Enums\StoryType;
 use App\Enums\UserRole;
 use App\Models\Story;
 use App\Models\User;
@@ -57,6 +58,7 @@ class Kanban extends Dashboard
                 ->statusColumnLimits([
                     StoryStatus::Progress->value => 1,
                 ])
+                ->excludeFieldValues('type', [StoryType::Scrum->value])
                 ->showFilterAll(false)
                 ->deniedToUpdateStatusForRoles([UserRole::Customer])
                 ->allowedToUpdateStatusForRoles([UserRole::Admin, UserRole::Developer])

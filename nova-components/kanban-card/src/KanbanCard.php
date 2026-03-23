@@ -54,6 +54,14 @@ class KanbanCard extends Card
     public array $excludedColumns = [];
 
     /**
+     * Excluded model values by field for board queries.
+     * Example: ['type' => ['Scrum']].
+     *
+     * @var array<string,array<int,mixed>>
+     */
+    public array $excludedFieldValues = [];
+
+    /**
      * Extra fields to display on each kanban item.
      * Format: ['relation.field' => 'Label'] or ['field' => 'Label'].
      */
@@ -406,6 +414,25 @@ class KanbanCard extends Card
     }
 
     /**
+     * Exclude records where $field is in $values from board queries.
+     *
+     * @param  array<int,mixed>  $values
+     */
+    public function excludeFieldValues(string $field, array $values): self
+    {
+        if ($field === '') {
+            return $this;
+        }
+        $filtered = array_values(array_filter($values, fn ($v) => $v !== null && $v !== ''));
+        if (empty($filtered)) {
+            return $this;
+        }
+        $this->excludedFieldValues[$field] = $filtered;
+
+        return $this;
+    }
+
+    /**
      * Set extra fields to display on each item card.
      * Format: ['relation.field' => 'Label'] or ['field' => 'Label'].
      */
@@ -585,6 +612,7 @@ class KanbanCard extends Card
             'statusFilterOverrides' => $this->statusFilterOverrides,
             'statusColumnLimits' => $this->statusColumnLimits,
             'selectOnly' => $this->selectOnly,
+            'excludedFieldValues' => $this->excludedFieldValues,
         ];
     }
 
