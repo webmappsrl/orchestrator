@@ -387,6 +387,16 @@ class Customer extends Resource
         ];
     }
 
+    /**
+     * Exclude customers marked as "Lost" from the index.
+     *
+     * This ensures they don't appear in the index view.
+     */
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        return $query->where('status', '!=', CustomerStatus::Lost->value);
+    }
+
     public function indexBreadcrumb()
     {
         return null;
