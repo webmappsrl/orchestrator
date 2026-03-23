@@ -166,6 +166,11 @@ class KanbanCard extends Card
     public ?string $toolbarLabel = null;
 
     /**
+     * When true, compose title in Google Calendar style for Story-like items.
+     */
+    public bool $googleCalendarTitleFormat = false;
+
+    /**
      * Role values (string) for user types that cannot update item status (drag & drop).
      * When empty, any Nova user can update. When set, users who have any of these roles cannot update.
      * Set via ->deniedToUpdateStatusForRoles([UserRole::Editor, UserRole::Developer]) (enum or string).
@@ -259,6 +264,16 @@ class KanbanCard extends Card
     public function toolbarLabel(string $value): self
     {
         $this->toolbarLabel = $value;
+
+        return $this;
+    }
+
+    /**
+     * Enable/disable Google Calendar title composition style.
+     */
+    public function googleCalendarTitleFormat(bool $value = true): self
+    {
+        $this->googleCalendarTitleFormat = $value;
 
         return $this;
     }
@@ -613,6 +628,7 @@ class KanbanCard extends Card
             'statusColumnLimits' => $this->statusColumnLimits,
             'selectOnly' => $this->selectOnly,
             'excludedFieldValues' => $this->excludedFieldValues,
+            'googleCalendarTitleFormat' => $this->googleCalendarTitleFormat,
         ];
     }
 

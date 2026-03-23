@@ -26,12 +26,16 @@ class Kanban extends Dashboard
             (new KanbanCard)
                 ->model(Story::class, 'status')
                 ->resourceUri('stories')
-                ->with(['user', 'tester'])
+                ->with(['user', 'tester', 'tags', 'creator'])
                 ->title('name')
-                ->subtitle('user.name')
+                ->googleCalendarTitleFormat(true)
                 ->displayFields([
                     'user.name' => __('Assigned'),
                     'tester.name' => __('Tester'),
+                    'type' => __('Type'),
+                    'tags.*.name' => __('Tags'),
+                    'created_at' => __('Created At'),
+                    'description' => __('Description'),
                 ])
                 ->filterBy(
                     'user_id',
@@ -71,11 +75,13 @@ class Kanban extends Dashboard
                             'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
                         ],
                         [
+                            StoryStatus::Assigned,
                             StoryStatus::Todo,
                             StoryStatus::Progress,
                             StoryStatus::Waiting,
                             StoryStatus::Test,
                             StoryStatus::Tested,
+                            StoryStatus::Released,
                         ]
                     )
                 )

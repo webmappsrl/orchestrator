@@ -33,7 +33,8 @@ enum StoryStatus: string
             self::Progress => '#2563EB',
             self::Waiting => '#F59E0B',
             self::Test => '#8B5CF6',
-            self::Tested => '#10B981',
+            self::Tested => '#34D399',
+            self::Released => '#10B981',
             default => '#9CA3AF',
         };
     }
