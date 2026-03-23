@@ -39,8 +39,16 @@ class CustomerStatusFilter extends Filter
     public function options(NovaRequest $request)
     {
         $options = [];
-        foreach (CustomerStatus::cases() as $value) {
-            $options[__($value->name)] = $value->value;
+        $resourceClass = $request->resource();
+        $hideLost = $resourceClass === \App\Nova\Customer::class;
+
+        foreach (CustomerStatus::cases() as $status) {
+            // Hide "Perso" only on the Customers index.
+            if ($hideLost && $status === CustomerStatus::Lost) {
+                continue;
+            }
+
+            $options[__($status->name)] = $status->value;
         }
         return $options;
     }

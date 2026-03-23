@@ -344,8 +344,9 @@ class Customer extends Resource
     public function cards(NovaRequest $request)
     {
         return [
-            (new CustomersByStatus(CustomerStatus::Opportunity))->width('1/2'),
-            (new CustomersByStatus(CustomerStatus::Unknown))->width('1/2'),
+            (new CustomersByStatus(CustomerStatus::Opportunity))->width('1/3'),
+            (new CustomersByStatus(CustomerStatus::Active))->width('1/3'),
+            (new CustomersByStatus(CustomerStatus::Unknown))->width('1/3'),
         ];
     }
 
@@ -385,6 +386,16 @@ class Customer extends Resource
         return [
             new EditCustomerStatus(),
         ];
+    }
+
+    /**
+     * Exclude customers marked as "Lost" from the index.
+     *
+     * This ensures they don't appear in the index view.
+     */
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        return $query->where('status', '!=', CustomerStatus::Lost->value);
     }
 
     public function indexBreadcrumb()

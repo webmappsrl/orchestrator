@@ -107,15 +107,3 @@ Route::get('/app-report/{id}', [\App\Http\Controllers\AppReportController::class
 Route::get('/scrum-meeting/{meetCode}', [ScrumController::class, 'createOrUpdateScrumStory'])
     ->middleware(['auth'])->name('scrum.meeting');
 
-// Rotta per gestire la selezione del developer nella dashboard
-Route::post('/set-dashboard-developer', function () {
-    $developerId = request('developer_id');
-
-    if ($developerId) {
-        session(['selected_developer_id' => $developerId]);
-    } else {
-        session()->forget('selected_developer_id');
-    }
-
-    return redirect('/dashboards/kanban');
-})->middleware(['auth'])->name('dashboard.set.developer');

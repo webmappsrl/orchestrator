@@ -38,6 +38,9 @@ class KanbanController extends Controller
         $allowedFilterFields = $config['allowedFilterFields'] ?? [];
         $searchFields = $config['searchFields'] ?? [];
         $scopeName = $config['scopeName'] ?? null;
+        $statusFilterOverrides = $config['statusFilterOverrides'] ?? [];
+        $statusColumnLimits = $config['statusColumnLimits'] ?? [];
+        $excludedFieldValues = $config['excludedFieldValues'] ?? [];
         $limitPerColumn = (int) ($config['limitPerColumn'] ?? self::LIMIT_PER_COLUMN);
         $limitPerColumn = max(1, min(500, $limitPerColumn));
 
@@ -75,20 +78,32 @@ class KanbanController extends Controller
 
         // Load more: single column, offset + limit
         if ($singleStatus !== null && $singleStatus !== '') {
-            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request);
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $singleStatus, $statusFilterOverrides, $excludedFieldValues);
             $query->where($statusField, $singleStatus);
-            $query->orderBy((new $modelClass)->getKeyName());
-            $items = $query->offset($offset)->limit(max(1, min(50, $limit)))->get();
+            $singleLimit = $this->statusLimitFor((string) $singleStatus, $statusColumnLimits);
+            if ($singleLimit !== null) {
+                $query->orderByDesc('updated_at')->orderByDesc((new $modelClass)->getKeyName());
+                $items = $query->limit($singleLimit)->get();
+            } else {
+                $query->orderBy((new $modelClass)->getKeyName());
+                $items = $query->offset($offset)->limit(max(1, min(50, $limit)))->get();
+            }
             return response()->json($items->map($mapItem)->values()->all());
         }
 
         // Initial load: up to limitPerColumn per status
         $allItems = [];
         foreach ($statusValues as $statusValue) {
-            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request);
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues);
             $query->where($statusField, $statusValue);
-            $query->orderBy((new $modelClass)->getKeyName());
-            $chunk = $query->limit($limitPerColumn)->get();
+            $statusLimit = $this->statusLimitFor((string) $statusValue, $statusColumnLimits);
+            if ($statusLimit !== null) {
+                $query->orderByDesc('updated_at')->orderByDesc((new $modelClass)->getKeyName());
+                $chunk = $query->limit($statusLimit)->get();
+            } else {
+                $query->orderBy((new $modelClass)->getKeyName());
+                $chunk = $query->limit($limitPerColumn)->get();
+            }
             foreach ($chunk as $item) {
                 $allItems[] = $mapItem($item);
             }
@@ -107,7 +122,10 @@ class KanbanController extends Controller
         array $allowedFilterFields,
         array $searchFields,
         ?string $scopeName,
-        Request $request
+        Request $request,
+        ?string $statusValue = null,
+        array $statusFilterOverrides = [],
+        array $excludedFieldValues = []
     ) {
         $query = $modelClass::query();
 
@@ -121,10 +139,56 @@ class KanbanController extends Controller
             $query->with($withRelations);
         }
 
+        if (! empty($excludedFieldValues) && is_array($excludedFieldValues)) {
+            foreach ($excludedFieldValues as $field => $values) {
+                if (! is_string($field) || ! preg_match('/^[a-zA-Z0-9_]+$/', $field) || ! is_array($values)) {
+                    continue;
+                }
+                $filteredValues = array_values(array_filter($values, fn ($v) => $v !== null && $v !== ''));
+                if (! empty($filteredValues)) {
+                    $query->whereNotIn($field, $filteredValues);
+                }
+            }
+        }
+
         $reqFilterField = $request->input('filterField');
         $reqFilterValue = $request->input('filterValue');
-        if (!empty($allowedFilterFields) && $reqFilterField !== null && $reqFilterValue !== '' && in_array($reqFilterField, $allowedFilterFields, true)) {
-            $query->where($reqFilterField, $reqFilterValue);
+        $overrideFields = [];
+        if (
+            $statusValue !== null &&
+            $statusValue !== '' &&
+            is_array($statusFilterOverrides) &&
+            isset($statusFilterOverrides[$statusValue])
+        ) {
+            $override = $statusFilterOverrides[$statusValue];
+            if (is_string($override) && preg_match('/^[a-zA-Z0-9_]+$/', $override)) {
+                $overrideFields = [$override];
+            } elseif (is_array($override)) {
+                $overrideFields = array_values(array_filter(
+                    $override,
+                    fn ($f) => is_string($f) && preg_match('/^[a-zA-Z0-9_]+$/', $f)
+                ));
+            }
+        }
+
+        if ($reqFilterField !== null && $reqFilterValue !== '') {
+            if (! empty($overrideFields)) {
+                if (count($overrideFields) === 1) {
+                    $query->where($overrideFields[0], $reqFilterValue);
+                } else {
+                    $query->where(function ($q) use ($overrideFields, $reqFilterValue) {
+                        foreach ($overrideFields as $idx => $field) {
+                            if ($idx === 0) {
+                                $q->where($field, $reqFilterValue);
+                            } else {
+                                $q->orWhere($field, $reqFilterValue);
+                            }
+                        }
+                    });
+                }
+            } elseif (!empty($allowedFilterFields) && in_array($reqFilterField, $allowedFilterFields, true)) {
+                $query->where($reqFilterField, $reqFilterValue);
+            }
         } elseif ($filterField && $request->has($filterField) && $request->input($filterField) !== '') {
             $query->where($filterField, $request->input($filterField));
         }
@@ -246,5 +310,18 @@ class KanbanController extends Controller
             return null;
         }
         return $config;
+    }
+
+    /**
+     * Get per-status visible limit when configured.
+     */
+    protected function statusLimitFor(string $statusValue, array $statusColumnLimits): ?int
+    {
+        if (! isset($statusColumnLimits[$statusValue])) {
+            return null;
+        }
+        $n = (int) $statusColumnLimits[$statusValue];
+
+        return $n > 0 ? min(500, $n) : null;
     }
 }
