@@ -17,6 +17,7 @@ use App\Nova\Dashboards\Kanban;
 use App\Nova\Dashboards\Sales;
 use App\Nova\Documentation;
 use App\Nova\Layer;
+use App\Nova\LostCustomers;
 use App\Nova\Product;
 use App\Nova\Quote;
 use App\Nova\RecurringProduct;
@@ -120,6 +121,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(RecurringProduct::class),
                     MenuGroup::make(__('Archived'), [
                         MenuItem::resource(ArchivedQuotes::class),
+                        MenuItem::resource(LostCustomers::class),
                     ])->collapsedByDefault(),
                 ])->icon('users')->collapsedByDefault()->canSee(function ($request) {
                     if ($request->user() === null) {
