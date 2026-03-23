@@ -344,8 +344,9 @@ class Customer extends Resource
     public function cards(NovaRequest $request)
     {
         return [
-            (new CustomersByStatus(CustomerStatus::Opportunity))->width('1/2'),
-            (new CustomersByStatus(CustomerStatus::Unknown))->width('1/2'),
+            (new CustomersByStatus(CustomerStatus::Opportunity))->width('1/3'),
+            (new CustomersByStatus(CustomerStatus::Active))->width('1/3'),
+            (new CustomersByStatus(CustomerStatus::Unknown))->width('1/3'),
         ];
     }
 
