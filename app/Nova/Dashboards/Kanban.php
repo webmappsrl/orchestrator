@@ -29,7 +29,7 @@ class Kanban extends Dashboard
             ->title('name')
             ->subtitle('user.name')
             ->displayFields([
-                'user.name' => __('Developer'),
+                'user.name' => __('Assigned'),
                 'tester.name' => __('Tester'),
             ])
             ->filterAndSearchBy(
@@ -48,8 +48,8 @@ class Kanban extends Dashboard
                 }
             )
             ->initialFilterValue((string) ($currentUser ? $currentUser->id : ''))
-            ->toolbarTitle(__('Developer Dashboard View'))
-            ->toolbarLabel(__('View dashboard for:'))
+            ->toolbarTitle(__('Kanban View'))
+            ->toolbarLabel(__('View kanban for:'))
             ->statusFilterOverrides([
                 StoryStatus::Test->value => 'tester_id',
                 StoryStatus::Tested->value => ['tester_id', 'user_id'],

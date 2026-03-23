@@ -172,47 +172,50 @@ Nova.booting((app) => {
 
         /** Computed: card config (columns, apiConfig, filter options, translations), combobox placeholder and filtered options. */
         computed: {
+            cardData() {
+                return this.card || {};
+            },
             columns() {
-                return this.card.columns || [];
+                return this.cardData.columns || [];
             },
             apiConfig() {
-                return this.card.apiConfig || {};
+                return this.cardData.apiConfig || {};
             },
             configParam() {
                 return encodeURIComponent(JSON.stringify(this.apiConfig));
             },
             resourceUri() {
-                return this.card.resourceUri || null;
+                return this.cardData.resourceUri || null;
             },
             filterField() {
-                return this.card.filterField || null;
+                return this.cardData.filterField || null;
             },
             filterOptions() {
-                return this.card.filterOptions || [];
+                return this.cardData.filterOptions || [];
             },
             searchFields() {
-                return this.card.searchFields || [];
+                return this.cardData.searchFields || [];
             },
             collapsible() {
-                return this.card.collapsible === true;
+                return this.cardData.collapsible === true;
             },
             canUpdate() {
-                return this.card.canUpdate !== false;
+                return this.cardData.canUpdate !== false;
             },
             showFilterAll() {
-                return this.card.showFilterAll !== false;
+                return this.cardData.showFilterAll !== false;
             },
             toolbarTitle() {
-                return this.card.toolbarTitle || '';
+                return this.cardData.toolbarTitle || '';
             },
             toolbarLabel() {
-                return this.card.toolbarLabel || '';
+                return this.cardData.toolbarLabel || '';
             },
             statusColumnLimits() {
                 return this.apiConfig.statusColumnLimits || {};
             },
             limitPerColumn() {
-                var n = parseInt(this.card.limitPerColumn, 10);
+                var n = parseInt(this.cardData.limitPerColumn, 10);
                 return isNaN(n) || n < 1 ? 50 : Math.min(500, n);
             },
             comboboxPlaceholder() {
@@ -223,14 +226,29 @@ Nova.booting((app) => {
                 return this.translations.searchPlaceholder;
             },
             filteredFilterOptions() {
-                if (!this.comboboxInput || !this.filterOptions.length) return this.filterOptions;
+                if (!this.filterOptions.length) return this.filterOptions;
+                // UX: when an option is already selected, first click should still show full list.
+                // Avoid forcing user to clear input before selecting another user.
+                if (
+                    this.comboboxOpen &&
+                    this.filterValue &&
+                    this.selectedFilterOption &&
+                    this.comboboxInput === this.selectedFilterOption.label
+                ) {
+                    return this.filterOptions;
+                }
+                if (!this.comboboxInput) return this.filterOptions;
                 var q = this.comboboxInput.toLowerCase().trim();
                 return this.filterOptions.filter(function (o) {
                     return (o.label || '').toLowerCase().indexOf(q) !== -1;
                 });
             },
+            selectedFilterOption() {
+                if (!this.filterValue || !this.filterOptions.length) return null;
+                return this.filterOptions.find((o) => o.value === this.filterValue) || null;
+            },
             translations() {
-                var t = this.card.translations || {};
+                var t = this.cardData.translations || {};
                 return {
                     loading: t.loading || 'Loading...',
                     noItems: t.noItems || 'No items',
