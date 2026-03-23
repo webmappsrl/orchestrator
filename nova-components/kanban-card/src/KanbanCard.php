@@ -54,6 +54,14 @@ class KanbanCard extends Card
     public array $excludedColumns = [];
 
     /**
+     * Excluded model values by field for board queries.
+     * Example: ['type' => ['Scrum']].
+     *
+     * @var array<string,array<int,mixed>>
+     */
+    public array $excludedFieldValues = [];
+
+    /**
      * Extra fields to display on each kanban item.
      * Format: ['relation.field' => 'Label'] or ['field' => 'Label'].
      */
@@ -109,6 +117,28 @@ class KanbanCard extends Card
     public ?string $scopeName = null;
 
     /**
+     * Optional per-status filter field overrides.
+     * Example: ['testing' => 'tester_id', 'tested' => ['tester_id', 'user_id']].
+     *
+     * @var array<string,string|array<int,string>>
+     */
+    public array $statusFilterOverrides = [];
+
+    /**
+     * Optional per-status max visible items on board.
+     * Example: ['progress' => 1].
+     *
+     * @var array<string,int>
+     */
+    public array $statusColumnLimits = [];
+
+    /**
+     * When true, the combobox behaves like a pure select:
+     * user cannot type/search, only choose from the dropdown list.
+     */
+    public bool $selectOnly = false;
+
+    /**
      * Max items per column on first load. When a column has this many, "load more" is shown.
      */
     public int $limitPerColumn = 50;
@@ -118,6 +148,22 @@ class KanbanCard extends Card
      * When false (default), the card is always open and no toggle is shown.
      */
     public bool $collapsible = false;
+
+    /**
+     * Show the "All" option in the filter combobox.
+     * When false, users can only pick explicit options.
+     */
+    public bool $showFilterAll = true;
+
+    /**
+     * Optional toolbar title shown above search/filter input.
+     */
+    public ?string $toolbarTitle = null;
+
+    /**
+     * Optional toolbar label shown near search/filter input.
+     */
+    public ?string $toolbarLabel = null;
 
     /**
      * Role values (string) for user types that cannot update item status (drag & drop).
@@ -144,8 +190,8 @@ class KanbanCard extends Card
     public function deniedToUpdateStatusForRoles(array $roles): self
     {
         $this->deniedUpdateRoles = array_values(array_map(
-            fn ($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
-            array_filter($roles, fn ($r) => $r !== null && $r !== '')
+            fn($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
+            array_filter($roles, fn($r) => $r !== null && $r !== '')
         ));
 
         return $this;
@@ -159,8 +205,8 @@ class KanbanCard extends Card
     public function allowedToUpdateStatusForRoles(array $roles): self
     {
         $this->allowedUpdateRoles = array_values(array_map(
-            fn ($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
-            array_filter($roles, fn ($r) => $r !== null && $r !== '')
+            fn($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
+            array_filter($roles, fn($r) => $r !== null && $r !== '')
         ));
 
         return $this;
@@ -188,6 +234,36 @@ class KanbanCard extends Card
     }
 
     /**
+     * Show/hide the "All" option in the filter combobox.
+     */
+    public function showFilterAll(bool $value = true): self
+    {
+        $this->showFilterAll = $value;
+
+        return $this;
+    }
+
+    /**
+     * Set a toolbar title shown above the search/filter input.
+     */
+    public function toolbarTitle(string $value): self
+    {
+        $this->toolbarTitle = $value;
+
+        return $this;
+    }
+
+    /**
+     * Set a toolbar label shown near the search/filter input.
+     */
+    public function toolbarLabel(string $value): self
+    {
+        $this->toolbarLabel = $value;
+
+        return $this;
+    }
+
+    /**
      * The component name registered in Nova.
      */
     public function component()
@@ -201,6 +277,70 @@ class KanbanCard extends Card
     public function scope(string $name): self
     {
         $this->scopeName = $name;
+
+        return $this;
+    }
+
+    /**
+     * Override filter field by status value.
+     * Example: ['testing' => 'tester_id'] or ['tested' => ['tester_id', 'user_id']].
+     * When loading that status and a filter value is selected, the query filters by override field(s)
+     * instead of the selected filterField.
+     *
+     * @param  array<string,string|array<int,string>>  $overrides
+     */
+    public function statusFilterOverrides(array $overrides): self
+    {
+        $normalized = [];
+        foreach ($overrides as $statusValue => $field) {
+            if (! is_string($statusValue) || $statusValue === '') {
+                continue;
+            }
+            if (is_string($field) && $field !== '') {
+                $normalized[$statusValue] = $field;
+                continue;
+            }
+            if (is_array($field)) {
+                $fields = array_values(array_filter($field, fn($f) => is_string($f) && $f !== ''));
+                if (! empty($fields)) {
+                    $normalized[$statusValue] = $fields;
+                }
+            }
+        }
+        $this->statusFilterOverrides = $normalized;
+
+        return $this;
+    }
+
+    /**
+     * Set max visible items by status value (board rendering/query level).
+     *
+     * @param  array<string,int>  $limits
+     */
+    public function statusColumnLimits(array $limits): self
+    {
+        $normalized = [];
+        foreach ($limits as $statusValue => $value) {
+            if (! is_string($statusValue) || $statusValue === '') {
+                continue;
+            }
+            $n = (int) $value;
+            if ($n < 1) {
+                continue;
+            }
+            $normalized[$statusValue] = $n;
+        }
+        $this->statusColumnLimits = $normalized;
+
+        return $this;
+    }
+
+    /**
+     * Enable/disable select-only mode (no free-text searching).
+     */
+    public function selectOnly(bool $value = true): self
+    {
+        $this->selectOnly = $value;
 
         return $this;
     }
@@ -274,6 +414,25 @@ class KanbanCard extends Card
     }
 
     /**
+     * Exclude records where $field is in $values from board queries.
+     *
+     * @param  array<int,mixed>  $values
+     */
+    public function excludeFieldValues(string $field, array $values): self
+    {
+        if ($field === '') {
+            return $this;
+        }
+        $filtered = array_values(array_filter($values, fn ($v) => $v !== null && $v !== ''));
+        if (empty($filtered)) {
+            return $this;
+        }
+        $this->excludedFieldValues[$field] = $filtered;
+
+        return $this;
+    }
+
+    /**
      * Set extra fields to display on each item card.
      * Format: ['relation.field' => 'Label'] or ['field' => 'Label'].
      */
@@ -318,7 +477,7 @@ class KanbanCard extends Card
         $this->filterOptions = $query
             ->orderBy($labelField)
             ->get()
-            ->map(fn ($row) => [
+            ->map(fn($row) => [
                 'value' => (string) $row->getKey(),
                 'label' => (string) data_get($row, $labelField),
                 'filterField' => $field,
@@ -352,7 +511,7 @@ class KanbanCard extends Card
         $options = $query
             ->orderBy($labelField)
             ->get()
-            ->map(fn ($row) => [
+            ->map(fn($row) => [
                 'value' => (string) $row->getKey(),
                 'label' => (string) data_get($row, $labelField),
                 'filterField' => $field,
@@ -450,6 +609,10 @@ class KanbanCard extends Card
             'deniedUpdateRoles' => $this->deniedUpdateRoles,
             'allowedUpdateRoles' => $this->allowedUpdateRoles,
             'scopeName' => $this->scopeName,
+            'statusFilterOverrides' => $this->statusFilterOverrides,
+            'statusColumnLimits' => $this->statusColumnLimits,
+            'selectOnly' => $this->selectOnly,
+            'excludedFieldValues' => $this->excludedFieldValues,
         ];
     }
 
@@ -510,7 +673,7 @@ class KanbanCard extends Card
     {
         $columns = array_values(array_filter(
             $this->columnsConfig,
-            fn (array $col) => ! in_array($col['value'] ?? '', $this->excludedColumns, true)
+            fn(array $col) => ! in_array($col['value'] ?? '', $this->excludedColumns, true)
         ));
 
         return array_merge(parent::jsonSerialize(), [
@@ -523,6 +686,10 @@ class KanbanCard extends Card
             'searchFields' => $this->searchFields,
             'limitPerColumn' => $this->limitPerColumn,
             'collapsible' => $this->collapsible,
+            'showFilterAll' => $this->showFilterAll,
+            'selectOnly' => $this->selectOnly,
+            'toolbarTitle' => $this->toolbarTitle,
+            'toolbarLabel' => $this->toolbarLabel,
             'canUpdate' => $this->userCanUpdateStatus(),
             'translations' => [
                 'loading' => __('Kanban Loading'),

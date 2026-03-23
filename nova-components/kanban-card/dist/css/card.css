@@ -58,29 +58,82 @@
 }
 
 /* Toolbar: single combobox (search + filter) */
+.kanban-toolbar-container {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: #fff;
+    padding: 0.875rem 1rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.dark .kanban-toolbar-container {
+    border-color: #374151;
+    background: #111827;
+}
+
 .kanban-toolbar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.kanban-toolbar-title {
+    width: 100%;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2fbda5;
+    text-align: center;
+}
+
+.dark .kanban-toolbar-title {
+    color: #4ad7be;
+}
+
+.kanban-toolbar-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #374151;
+}
+
+.dark .kanban-toolbar-label {
+    color: #e5e7eb;
 }
 
 .kanban-combobox-wrap {
     position: relative;
-    flex: 1;
+    flex: 0 1 320px;
+    width: 320px;
     min-width: 200px;
-    max-width: 400px;
+    max-width: 320px;
+}
+
+@media (max-width: 768px) {
+    .kanban-combobox-wrap {
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .kanban-combobox-input {
+        width: 100%;
+    }
 }
 
 .kanban-combobox-input {
-    width: 100%;
+    width: auto;
     padding: 0.5rem 2rem 0.5rem 0.75rem;
     font-size: 0.875rem;
-    border: 1px solid #d1d5db;
+    border: 2px solid #2fbda5;
     border-radius: 0.375rem;
     background-color: #fff;
     color: #111827;
+}
+
+.kanban-combobox-input[readonly] {
+    cursor: pointer;
 }
 
 .kanban-combobox-input::placeholder {
@@ -89,8 +142,8 @@
 
 .kanban-combobox-input:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    border-color: #24a085;
+    box-shadow: 0 0 0 2px rgba(47, 189, 165, 0.25);
 }
 
 .dark .kanban-combobox-input {

@@ -56,6 +56,8 @@ class Sales extends Dashboard
                     fn ($q) => $q->whereHas('quotes'),
                     [['user_id', User::class, 'name', fn ($q) => $q->whereHas('quotes')]]
                 )
+                ->toolbarTitle(__('Sales Kanban View'))
+                ->toolbarLabel(__('Search or select customer:'))
                 ->title('title')
                 ->subtitle('customer.full_name')
                 ->displayFields([

@@ -21,4 +21,40 @@ enum StoryStatus: string
     {
         return array_column(self::cases(), 'value');
     }
+
+    /**
+     * UI color used by Kanban and other interfaces.
+     */
+    public function color(): string
+    {
+        return match ($this) {
+            self::Assigned => '#0EA5E9',
+            self::Todo => '#6B7280',
+            self::Progress => '#2563EB',
+            self::Waiting => '#F59E0B',
+            self::Test => '#8B5CF6',
+            self::Tested => '#10B981',
+            default => '#9CA3AF',
+        };
+    }
+
+    /**
+     * Translated label for UI.
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::Assigned => __('Assigned'),
+            self::Todo => __('To Do'),
+            self::Progress => __('Progress'),
+            self::Waiting => __('Waiting'),
+            self::Test => __('Test'),
+            self::Tested => __('Tested'),
+            self::Backlog => __('Backlog'),
+            self::New => __('New'),
+            self::Done => __('Done'),
+            self::Rejected => __('Rejected'),
+            self::Released => __('Released'),
+        };
+    }
 }
