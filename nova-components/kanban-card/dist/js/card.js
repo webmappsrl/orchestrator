@@ -23,7 +23,7 @@ Nova.booting((app) => {
                     <div v-if="toolbarTitle" class="kanban-toolbar-title">{{ toolbarTitle }}</div>
                 <div class="kanban-toolbar">
                     <div v-if="toolbarLabel" class="kanban-toolbar-label">{{ toolbarLabel }}</div>
-                    <div class="kanban-combobox-wrap" :class="{ 'kanban-combobox-has-filter': filterField && filterOptions.length }">
+                    <div ref="comboboxWrap" class="kanban-combobox-wrap" :class="{ 'kanban-combobox-has-filter': filterField && filterOptions.length, 'kanban-combobox-has-arrow': selectOnly }">
                         <input
                             type="text"
                             class="kanban-combobox-input"
@@ -355,7 +355,7 @@ Nova.booting((app) => {
              * Closes the combobox dropdown when the user clicks outside it.
              */
             onComboboxClickOutside(event) {
-                if (this.$refs.comboboxDropdown && !this.$el.contains(event.target)) {
+                if (this.$refs.comboboxWrap && !this.$refs.comboboxWrap.contains(event.target)) {
                     this.comboboxOpen = false;
                 }
             },

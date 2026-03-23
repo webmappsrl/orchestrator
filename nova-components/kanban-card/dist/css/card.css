@@ -110,6 +110,17 @@
     max-width: 320px;
 }
 
+.kanban-combobox-wrap.kanban-combobox-has-arrow::after {
+    content: '▾';
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.15rem;
+    color: #6b7280;
+    pointer-events: none;
+}
+
 @media (max-width: 768px) {
     .kanban-combobox-wrap {
         flex: 1 1 100%;
@@ -123,7 +134,7 @@
 }
 
 .kanban-combobox-input {
-    width: auto;
+    width: 100%;
     padding: 0.5rem 2rem 0.5rem 0.75rem;
     font-size: 0.875rem;
     border: 2px solid #2fbda5;
@@ -150,6 +161,10 @@
     border-color: #4b5563;
     background-color: #374151;
     color: #f3f4f6;
+}
+
+.dark .kanban-combobox-wrap.kanban-combobox-has-arrow::after {
+    color: #9ca3af;
 }
 
 .dark .kanban-combobox-input::placeholder {
