@@ -109,6 +109,22 @@ class KanbanCard extends Card
     public ?string $scopeName = null;
 
     /**
+     * Optional per-status filter field overrides.
+     * Example: ['testing' => 'tester_id'].
+     *
+     * @var array<string,string>
+     */
+    public array $statusFilterOverrides = [];
+
+    /**
+     * Optional per-status max visible items on board.
+     * Example: ['progress' => 1].
+     *
+     * @var array<string,int>
+     */
+    public array $statusColumnLimits = [];
+
+    /**
      * Max items per column on first load. When a column has this many, "load more" is shown.
      */
     public int $limitPerColumn = 50;
@@ -118,6 +134,22 @@ class KanbanCard extends Card
      * When false (default), the card is always open and no toggle is shown.
      */
     public bool $collapsible = false;
+
+    /**
+     * Show the "All" option in the filter combobox.
+     * When false, users can only pick explicit options.
+     */
+    public bool $showFilterAll = true;
+
+    /**
+     * Optional toolbar title shown above search/filter input.
+     */
+    public ?string $toolbarTitle = null;
+
+    /**
+     * Optional toolbar label shown near search/filter input.
+     */
+    public ?string $toolbarLabel = null;
 
     /**
      * Role values (string) for user types that cannot update item status (drag & drop).
@@ -188,6 +220,36 @@ class KanbanCard extends Card
     }
 
     /**
+     * Show/hide the "All" option in the filter combobox.
+     */
+    public function showFilterAll(bool $value = true): self
+    {
+        $this->showFilterAll = $value;
+
+        return $this;
+    }
+
+    /**
+     * Set a toolbar title shown above the search/filter input.
+     */
+    public function toolbarTitle(string $value): self
+    {
+        $this->toolbarTitle = $value;
+
+        return $this;
+    }
+
+    /**
+     * Set a toolbar label shown near the search/filter input.
+     */
+    public function toolbarLabel(string $value): self
+    {
+        $this->toolbarLabel = $value;
+
+        return $this;
+    }
+
+    /**
      * The component name registered in Nova.
      */
     public function component()
@@ -201,6 +263,50 @@ class KanbanCard extends Card
     public function scope(string $name): self
     {
         $this->scopeName = $name;
+
+        return $this;
+    }
+
+    /**
+     * Override filter field by status value.
+     * Example: ['testing' => 'tester_id'] means when loading status "testing"
+     * and a filterValue is selected, the query filters by tester_id instead of the selected filterField.
+     *
+     * @param  array<string,string>  $overrides
+     */
+    public function statusFilterOverrides(array $overrides): self
+    {
+        $normalized = [];
+        foreach ($overrides as $statusValue => $field) {
+            if (! is_string($statusValue) || ! is_string($field) || $statusValue === '' || $field === '') {
+                continue;
+            }
+            $normalized[$statusValue] = $field;
+        }
+        $this->statusFilterOverrides = $normalized;
+
+        return $this;
+    }
+
+    /**
+     * Set max visible items by status value (board rendering/query level).
+     *
+     * @param  array<string,int>  $limits
+     */
+    public function statusColumnLimits(array $limits): self
+    {
+        $normalized = [];
+        foreach ($limits as $statusValue => $value) {
+            if (! is_string($statusValue) || $statusValue === '') {
+                continue;
+            }
+            $n = (int) $value;
+            if ($n < 1) {
+                continue;
+            }
+            $normalized[$statusValue] = $n;
+        }
+        $this->statusColumnLimits = $normalized;
 
         return $this;
     }
@@ -450,6 +556,8 @@ class KanbanCard extends Card
             'deniedUpdateRoles' => $this->deniedUpdateRoles,
             'allowedUpdateRoles' => $this->allowedUpdateRoles,
             'scopeName' => $this->scopeName,
+            'statusFilterOverrides' => $this->statusFilterOverrides,
+            'statusColumnLimits' => $this->statusColumnLimits,
         ];
     }
 
@@ -523,6 +631,9 @@ class KanbanCard extends Card
             'searchFields' => $this->searchFields,
             'limitPerColumn' => $this->limitPerColumn,
             'collapsible' => $this->collapsible,
+            'showFilterAll' => $this->showFilterAll,
+            'toolbarTitle' => $this->toolbarTitle,
+            'toolbarLabel' => $this->toolbarLabel,
             'canUpdate' => $this->userCanUpdateStatus(),
             'translations' => [
                 'loading' => __('Kanban Loading'),

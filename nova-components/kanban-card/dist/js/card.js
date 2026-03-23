@@ -19,7 +19,10 @@ Nova.booting((app) => {
                 <!-- Body: toolbar + board (hidden when collapsed if collapsible) -->
                 <div v-show="!collapsible || !isCollapsed" class="kanban-collapse-body">
                 <!-- Toolbar: single search + filter field (combobox) -->
-                <div v-if="(filterField && filterOptions.length) || searchFields.length" class="kanban-toolbar">
+                <div v-if="(filterField && filterOptions.length) || searchFields.length" class="kanban-toolbar-container">
+                    <div v-if="toolbarTitle" class="kanban-toolbar-title">{{ toolbarTitle }}</div>
+                <div class="kanban-toolbar">
+                    <div v-if="toolbarLabel" class="kanban-toolbar-label">{{ toolbarLabel }}</div>
                     <div class="kanban-combobox-wrap" :class="{ 'kanban-combobox-has-filter': filterField && filterOptions.length }">
                         <input
                             type="text"
@@ -35,7 +38,7 @@ Nova.booting((app) => {
                         >
                         <button v-if="comboboxInput" type="button" class="kanban-combobox-clear" @click="clearCombobox" aria-label="Clear">×</button>
                         <div v-show="comboboxOpen && filterField && filterOptions.length" class="kanban-combobox-dropdown" ref="comboboxDropdown">
-                            <div class="kanban-combobox-option" :class="{ 'kanban-combobox-option-highlight': comboboxHighlightIndex === -1 }" @mousedown.prevent="selectFilterOption(null)">
+                            <div v-if="showFilterAll" class="kanban-combobox-option" :class="{ 'kanban-combobox-option-highlight': comboboxHighlightIndex === -1 }" @mousedown.prevent="selectFilterOption(null)">
                                 {{ translations.filterAll }}
                             </div>
                             <div
@@ -52,6 +55,7 @@ Nova.booting((app) => {
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
                 <!-- Loading -->
                 <div v-if="loading" class="kanban-loading">
@@ -195,6 +199,18 @@ Nova.booting((app) => {
             canUpdate() {
                 return this.card.canUpdate !== false;
             },
+            showFilterAll() {
+                return this.card.showFilterAll !== false;
+            },
+            toolbarTitle() {
+                return this.card.toolbarTitle || '';
+            },
+            toolbarLabel() {
+                return this.card.toolbarLabel || '';
+            },
+            statusColumnLimits() {
+                return this.apiConfig.statusColumnLimits || {};
+            },
             limitPerColumn() {
                 var n = parseInt(this.card.limitPerColumn, 10);
                 return isNaN(n) || n < 1 ? 50 : Math.min(500, n);
@@ -263,9 +279,15 @@ Nova.booting((app) => {
              * @returns {Array} Items for that column.
              */
             getColumnItems(status) {
-                return this.items.filter(function (item) {
+                var list = this.items.filter(function (item) {
                     return item.status === status;
                 });
+                var limit = parseInt(this.statusColumnLimits[status], 10);
+                if (!isNaN(limit) && limit > 0) {
+                    list.sort(function (a, b) { return Number(b.id) - Number(a.id); });
+                    return list.slice(0, limit);
+                }
+                return list;
             },
 
             /**
@@ -346,27 +368,50 @@ Nova.booting((app) => {
                 this.fetchItems();
             },
 
-            /** Moves keyboard highlight to the next option in the combobox dropdown (or wraps to "All"). */
+            /** Moves keyboard highlight to the next option in the combobox dropdown. */
             comboboxFocusNext() {
                 var opts = this.filteredFilterOptions;
-                var max = opts.length;
-                this.comboboxHighlightIndex = this.comboboxHighlightIndex >= max - 1 ? -1 : this.comboboxHighlightIndex + 1;
+                if (!opts.length) return;
+                if (this.showFilterAll) {
+                    var max = opts.length;
+                    this.comboboxHighlightIndex = this.comboboxHighlightIndex >= max - 1 ? -1 : this.comboboxHighlightIndex + 1;
+                    return;
+                }
+                if (this.comboboxHighlightIndex < 0) {
+                    this.comboboxHighlightIndex = 0;
+                    return;
+                }
+                this.comboboxHighlightIndex = this.comboboxHighlightIndex >= opts.length - 1 ? 0 : this.comboboxHighlightIndex + 1;
             },
 
-            /** Moves keyboard highlight to the previous option in the combobox dropdown (or wraps to last). */
+            /** Moves keyboard highlight to the previous option in the combobox dropdown. */
             comboboxFocusPrev() {
                 var opts = this.filteredFilterOptions;
-                this.comboboxHighlightIndex = this.comboboxHighlightIndex <= -1 ? opts.length - 1 : this.comboboxHighlightIndex - 1;
+                if (!opts.length) return;
+                if (this.showFilterAll) {
+                    this.comboboxHighlightIndex = this.comboboxHighlightIndex <= -1 ? opts.length - 1 : this.comboboxHighlightIndex - 1;
+                    return;
+                }
+                if (this.comboboxHighlightIndex < 0) {
+                    this.comboboxHighlightIndex = opts.length - 1;
+                    return;
+                }
+                this.comboboxHighlightIndex = this.comboboxHighlightIndex <= 0 ? opts.length - 1 : this.comboboxHighlightIndex - 1;
             },
 
-            /** On Enter: confirms the currently highlighted combobox option (or "All") and refetches. */
+            /** On Enter: confirms the highlighted combobox option and refetches. */
             comboboxConfirmHighlighted() {
                 if (!this.comboboxOpen || !this.filterField || !this.filterOptions.length) {
                     this.fetchItems();
                     return;
                 }
                 if (this.comboboxHighlightIndex === -1) {
-                    this.selectFilterOption(null);
+                    if (this.showFilterAll) {
+                        this.selectFilterOption(null);
+                        return;
+                    }
+                    var first = this.filteredFilterOptions[0];
+                    if (first) this.selectFilterOption(first);
                     return;
                 }
                 var opt = this.filteredFilterOptions[this.comboboxHighlightIndex];
@@ -583,6 +628,10 @@ Nova.booting((app) => {
                     });
 
                     if (!response.ok) throw new Error('Update failed: ' + response.status);
+                    var limit = parseInt(this.statusColumnLimits[newStatus], 10);
+                    if (!isNaN(limit) && limit > 0) {
+                        await this.fetchItems();
+                    }
                     this.showSuccess(this.translations.statusUpdated);
                 } catch (e) {
                     item.status = oldStatus;
