@@ -139,21 +139,39 @@ class KanbanController extends Controller
 
         $reqFilterField = $request->input('filterField');
         $reqFilterValue = $request->input('filterValue');
-        $overrideField = null;
+        $overrideFields = [];
         if (
             $statusValue !== null &&
             $statusValue !== '' &&
             is_array($statusFilterOverrides) &&
-            isset($statusFilterOverrides[$statusValue]) &&
-            is_string($statusFilterOverrides[$statusValue]) &&
-            preg_match('/^[a-zA-Z0-9_]+$/', $statusFilterOverrides[$statusValue])
+            isset($statusFilterOverrides[$statusValue])
         ) {
-            $overrideField = $statusFilterOverrides[$statusValue];
+            $override = $statusFilterOverrides[$statusValue];
+            if (is_string($override) && preg_match('/^[a-zA-Z0-9_]+$/', $override)) {
+                $overrideFields = [$override];
+            } elseif (is_array($override)) {
+                $overrideFields = array_values(array_filter(
+                    $override,
+                    fn ($f) => is_string($f) && preg_match('/^[a-zA-Z0-9_]+$/', $f)
+                ));
+            }
         }
 
         if ($reqFilterField !== null && $reqFilterValue !== '') {
-            if ($overrideField !== null) {
-                $query->where($overrideField, $reqFilterValue);
+            if (! empty($overrideFields)) {
+                if (count($overrideFields) === 1) {
+                    $query->where($overrideFields[0], $reqFilterValue);
+                } else {
+                    $query->where(function ($q) use ($overrideFields, $reqFilterValue) {
+                        foreach ($overrideFields as $idx => $field) {
+                            if ($idx === 0) {
+                                $q->where($field, $reqFilterValue);
+                            } else {
+                                $q->orWhere($field, $reqFilterValue);
+                            }
+                        }
+                    });
+                }
             } elseif (!empty($allowedFilterFields) && in_array($reqFilterField, $allowedFilterFields, true)) {
                 $query->where($reqFilterField, $reqFilterValue);
             }

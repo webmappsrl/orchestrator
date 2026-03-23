@@ -110,9 +110,9 @@ class KanbanCard extends Card
 
     /**
      * Optional per-status filter field overrides.
-     * Example: ['testing' => 'tester_id'].
+     * Example: ['testing' => 'tester_id', 'tested' => ['tester_id', 'user_id']].
      *
-     * @var array<string,string>
+     * @var array<string,string|array<int,string>>
      */
     public array $statusFilterOverrides = [];
 
@@ -269,19 +269,29 @@ class KanbanCard extends Card
 
     /**
      * Override filter field by status value.
-     * Example: ['testing' => 'tester_id'] means when loading status "testing"
-     * and a filterValue is selected, the query filters by tester_id instead of the selected filterField.
+     * Example: ['testing' => 'tester_id'] or ['tested' => ['tester_id', 'user_id']].
+     * When loading that status and a filter value is selected, the query filters by override field(s)
+     * instead of the selected filterField.
      *
-     * @param  array<string,string>  $overrides
+     * @param  array<string,string|array<int,string>>  $overrides
      */
     public function statusFilterOverrides(array $overrides): self
     {
         $normalized = [];
         foreach ($overrides as $statusValue => $field) {
-            if (! is_string($statusValue) || ! is_string($field) || $statusValue === '' || $field === '') {
+            if (! is_string($statusValue) || $statusValue === '') {
                 continue;
             }
-            $normalized[$statusValue] = $field;
+            if (is_string($field) && $field !== '') {
+                $normalized[$statusValue] = $field;
+                continue;
+            }
+            if (is_array($field)) {
+                $fields = array_values(array_filter($field, fn ($f) => is_string($f) && $f !== ''));
+                if (! empty($fields)) {
+                    $normalized[$statusValue] = $fields;
+                }
+            }
         }
         $this->statusFilterOverrides = $normalized;
 

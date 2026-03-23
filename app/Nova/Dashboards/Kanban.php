@@ -52,7 +52,7 @@ class Kanban extends Dashboard
             ->toolbarLabel(__('View dashboard for:'))
             ->statusFilterOverrides([
                 StoryStatus::Test->value => 'tester_id',
-                StoryStatus::Tested->value => 'tester_id',
+                StoryStatus::Tested->value => ['tester_id', 'user_id'],
             ])
             ->statusColumnLimits([
                 StoryStatus::Progress->value => 1,
