@@ -89,8 +89,20 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
 
                 MenuSection::make('APP', [
-                    MenuItem::resource(App::class),
-                    MenuItem::resource(Layer::class),
+                    MenuItem::resource(App::class)->canSee(function ($request) {
+                        if ($request->user() === null) {
+                            return false;
+                        }
+
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Editor) || $request->user()->hasRole(UserRole::Manager);
+                    }),
+                    MenuItem::resource(Layer::class)->canSee(function ($request) {
+                        if ($request->user() === null) {
+                            return false;
+                        }
+
+                        return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Editor);
+                    }),
                 ])->icon('document-text')->collapsedByDefault()->collapsedByDefault(),
 
                 MenuSection::make('CRM', [

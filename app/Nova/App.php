@@ -167,7 +167,7 @@ class App extends Resource
     public function fieldsForDetail(Request $request)
     {
 
-        if ($request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Editor)) {
+        if ($request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Editor) || $request->user()->hasRole(UserRole::Manager)) {
             return [
                 (new Tabs("APP Details: {$this->name} ({$this->id})", $this->sections()))->withToolbar(),
             ];
