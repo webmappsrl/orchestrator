@@ -41,6 +41,7 @@ class KanbanController extends Controller
         $statusFilterOverrides = $config['statusFilterOverrides'] ?? [];
         $statusColumnLimits = $config['statusColumnLimits'] ?? [];
         $excludedFieldValues = $config['excludedFieldValues'] ?? [];
+        $googleCalendarTitleFormat = (bool) ($config['googleCalendarTitleFormat'] ?? false);
         $limitPerColumn = (int) ($config['limitPerColumn'] ?? self::LIMIT_PER_COLUMN);
         $limitPerColumn = max(1, min(500, $limitPerColumn));
 
@@ -55,10 +56,12 @@ class KanbanController extends Controller
         $offset = (int) $request->input('offset', 0);
         $limit = (int) $request->input('limit', self::LOAD_MORE_STEP);
 
-        $mapItem = function ($item) use ($titleField, $subtitleField, $statusField, $displayFields) {
+        $mapItem = function ($item) use ($titleField, $subtitleField, $statusField, $displayFields, $googleCalendarTitleFormat) {
             $data = [
                 'id' => $item->id,
-                'title' => data_get($item, $titleField) ?? '—',
+                'title' => $googleCalendarTitleFormat
+                    ? $this->buildGoogleCalendarTitle($item, $titleField, $statusField)
+                    : (data_get($item, $titleField) ?? '—'),
                 'status' => $item->{$statusField},
             ];
             if ($subtitleField) {
@@ -67,9 +70,25 @@ class KanbanController extends Controller
             if (!empty($displayFields)) {
                 $data['fields'] = [];
                 foreach ($displayFields as $key => $label) {
+                    $rawValue = data_get($item, $key);
+                    if (is_array($rawValue)) {
+                        $cleanValue = implode(', ', array_map(function ($v) {
+                            if (is_string($v)) {
+                                return trim(strip_tags($v));
+                            }
+                            return (string) $v;
+                        }, $rawValue));
+                    } elseif (is_string($rawValue)) {
+                        $cleanValue = trim(strip_tags($rawValue));
+                    } elseif ($rawValue === null) {
+                        $cleanValue = '—';
+                    } else {
+                        $cleanValue = (string) $rawValue;
+                    }
                     $data['fields'][] = [
+                        'key' => $key,
                         'label' => $label,
-                        'value' => data_get($item, $key) ?? '—',
+                        'value' => $cleanValue,
                     ];
                 }
             }
@@ -79,7 +98,12 @@ class KanbanController extends Controller
         // Load more: single column, offset + limit
         if ($singleStatus !== null && $singleStatus !== '') {
             $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $singleStatus, $statusFilterOverrides, $excludedFieldValues);
-            $query->where($statusField, $singleStatus);
+            if ($this->isTestedByOthersColumn((string) $singleStatus)) {
+                $query->where($statusField, 'tested');
+                $this->applyTestedByOthersConstraint($query, $request);
+            } else {
+                $query->where($statusField, $singleStatus);
+            }
             $singleLimit = $this->statusLimitFor((string) $singleStatus, $statusColumnLimits);
             if ($singleLimit !== null) {
                 $query->orderByDesc('updated_at')->orderByDesc((new $modelClass)->getKeyName());
@@ -88,14 +112,31 @@ class KanbanController extends Controller
                 $query->orderBy((new $modelClass)->getKeyName());
                 $items = $query->offset($offset)->limit(max(1, min(50, $limit)))->get();
             }
-            return response()->json($items->map($mapItem)->values()->all());
+            return response()->json(
+                $items
+                    ->map(function ($item) use ($mapItem, $singleStatus) {
+                        $mapped = $mapItem($item);
+                        if ($this->isTestedByOthersColumn((string) $singleStatus)) {
+                            $mapped['status'] = 'tested_by_others';
+                        }
+
+                        return $mapped;
+                    })
+                    ->values()
+                    ->all()
+            );
         }
 
         // Initial load: up to limitPerColumn per status
         $allItems = [];
         foreach ($statusValues as $statusValue) {
             $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues);
-            $query->where($statusField, $statusValue);
+            if ($this->isTestedByOthersColumn((string) $statusValue)) {
+                $query->where($statusField, 'tested');
+                $this->applyTestedByOthersConstraint($query, $request);
+            } else {
+                $query->where($statusField, $statusValue);
+            }
             $statusLimit = $this->statusLimitFor((string) $statusValue, $statusColumnLimits);
             if ($statusLimit !== null) {
                 $query->orderByDesc('updated_at')->orderByDesc((new $modelClass)->getKeyName());
@@ -105,7 +146,11 @@ class KanbanController extends Controller
                 $chunk = $query->limit($limitPerColumn)->get();
             }
             foreach ($chunk as $item) {
-                $allItems[] = $mapItem($item);
+                $mapped = $mapItem($item);
+                if ($this->isTestedByOthersColumn((string) $statusValue)) {
+                    $mapped['status'] = 'tested_by_others';
+                }
+                $allItems[] = $mapped;
             }
         }
 
@@ -323,5 +368,69 @@ class KanbanController extends Controller
         $n = (int) $statusColumnLimits[$statusValue];
 
         return $n > 0 ? min(500, $n) : null;
+    }
+
+    /**
+     * Build title like calendar naming without technical prefixes:
+     * {id}[SURNAME/INITIAL] {story_name}
+     */
+    protected function buildGoogleCalendarTitle(object $item, string $titleField, string $statusField): string
+    {
+        $id = (string) data_get($item, 'id', '');
+        $name = (string) (data_get($item, $titleField) ?? '—');
+        $creatorName = (string) (data_get($item, 'creator.name') ?? '');
+        $creatorRoles = data_get($item, 'creator.roles');
+
+        $creatorTag = '';
+        if ($creatorName !== '') {
+            $parts = preg_split('/\s+/', trim($creatorName)) ?: [];
+            $isDeveloper = false;
+            if (is_iterable($creatorRoles)) {
+                foreach ($creatorRoles as $role) {
+                    $v = $role instanceof \BackedEnum ? $role->value : (string) $role;
+                    if ($v === 'developer') {
+                        $isDeveloper = true;
+                        break;
+                    }
+                }
+            }
+            if ($isDeveloper) {
+                $source = $parts[1] ?? ($parts[0] ?? '');
+                $creatorTag = strtoupper(substr($source, 0, 3));
+            } else {
+                $last = end($parts);
+                $creatorTag = strtoupper((string) ($last === false ? '' : $last));
+            }
+        }
+
+        $creatorChunk = $creatorTag !== '' ? '[' . $creatorTag . ']' : '';
+
+        return $id . $creatorChunk . ' ' . $name;
+    }
+
+    /**
+     * Virtual column used by Kanban dashboard:
+     * tested stories where tester is different from current viewer.
+     */
+    protected function isTestedByOthersColumn(string $statusValue): bool
+    {
+        return $statusValue === 'tested_by_others';
+    }
+
+    /**
+     * Apply constraint for virtual "tested_by_others" column.
+     */
+    protected function applyTestedByOthersConstraint($query, Request $request): void
+    {
+        $selectedViewerId = (string) $request->input('filterValue', '');
+        if ($selectedViewerId === '' && $request->user()) {
+            $selectedViewerId = (string) $request->user()->id;
+        }
+
+        if ($selectedViewerId !== '') {
+            $query->whereNotNull('tester_id')->where('tester_id', '!=', $selectedViewerId);
+        } else {
+            $query->whereNotNull('tester_id');
+        }
     }
 }

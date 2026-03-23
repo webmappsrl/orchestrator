@@ -482,6 +482,8 @@
   "Kanban Search Or Filter Placeholder": "Cerca o seleziona",
   "Kanban Filter Placeholder": "Seleziona cliente...",
   "Kanban No Filter Match": "Nessun risultato",
+  "Kanban Show More": "Mostra tutto",
+  "Kanban Show Less": "Mostra meno",
   "Invalid configuration": "Configurazione non valida",
   "Model not found": "Modello non trovato",
   "Forbidden": "Accesso negato",
@@ -497,7 +499,15 @@
   "Search or select customer:": "Cerca o seleziona cliente:",
   "Kanban View": "Vista Kanban",
   "View kanban for:": "Visualizza kanban per:",
+  "Has Been Tested": "È stato testato",
   "Archived quotes": "Preventivi archiviati",
   "Lost Customers": "Clienti Persi",
-  "Lost Customer": "Cliente Perso"
+  "Lost Customer": "Cliente Perso",
+  "Archived quotes": "Preventivi archiviati",
+  "Developer Dashboard View": "Visualizza Dashboard Developer",
+  "View dashboard for:": "Visualizza dashboard di:",
+  "Sales Kanban View": "Visualizza Kanban Commerciale",
+  "Search or select customer:": "Cerca o seleziona cliente:",
+  "Kanban View": "Vista Kanban",
+  "View kanban for:": "Visualizza kanban per:"
 }

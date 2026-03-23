@@ -109,7 +109,19 @@ Nova.booting((app) => {
                                         class="kanban-item-field"
                                     >
                                         <span class="kanban-item-field-label">{{ field.label }}:</span>
-                                        <span class="kanban-item-field-value">{{ field.value }}</span>
+                                        <span
+                                            class="kanban-item-field-value"
+                                            :class="fieldValueClass(field)"
+                                            :style="fieldValueStyle(field)"
+                                        >{{ getFieldDisplayValue(item, field) }}</span>
+                                        <button
+                                            v-if="canToggleDescription(item, field)"
+                                            type="button"
+                                            class="kanban-item-field-toggle"
+                                            @click.stop="toggleDescription(item, field)"
+                                        >
+                                            {{ isDescriptionExpanded(item, field) ? translations.showLess : translations.showMore }}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -169,6 +181,7 @@ Nova.booting((app) => {
                 comboboxInput: '',
                 comboboxOpen: false,
                 comboboxHighlightIndex: -1,
+                expandedDescriptionMap: {},
             };
         },
 
@@ -271,6 +284,8 @@ Nova.booting((app) => {
                     searchOrFilterPlaceholder: t.searchOrFilterPlaceholder || 'Search or select',
                     filterPlaceholder: t.filterPlaceholder || 'Select...',
                     noFilterMatch: t.noFilterMatch || 'No results',
+                    showMore: t.showMore || 'Show more',
+                    showLess: t.showLess || 'Show less',
                 };
             },
         },
@@ -698,6 +713,43 @@ Nova.booting((app) => {
                 try {
                     localStorage.setItem(this.collapseStorageKey, this.isCollapsed ? '1' : '0');
                 } catch (e) {}
+            },
+            /** Optional visual styles for specific field values (e.g. Type colors). */
+            fieldValueClass(field) {
+                if (!field || field.key !== 'type') return '';
+                return 'kanban-field-type';
+            },
+            fieldValueStyle(field) {
+                if (!field || field.key !== 'type') return null;
+                var type = String(field.value || '').trim().toLowerCase();
+                if (type === 'bug') return { color: '#dc2626', fontWeight: '700' };
+                if (type === 'feature') return { color: '#2563eb', fontWeight: '700' };
+                return { color: '#16a34a', fontWeight: '700' };
+            },
+            descriptionKey(item, field) {
+                return String(item.id) + ':' + String(field.key || field.label || 'description');
+            },
+            isDescriptionField(field) {
+                return !!field && String(field.key || '') === 'description';
+            },
+            isDescriptionExpanded(item, field) {
+                var k = this.descriptionKey(item, field);
+                return this.expandedDescriptionMap[k] === true;
+            },
+            canToggleDescription(item, field) {
+                if (!this.isDescriptionField(field)) return false;
+                var value = String((field && field.value) || '');
+                return value.length > 30;
+            },
+            getFieldDisplayValue(item, field) {
+                var value = String((field && field.value) || '');
+                if (!this.isDescriptionField(field)) return value;
+                if (this.isDescriptionExpanded(item, field)) return value;
+                return value.length > 30 ? value.slice(0, 30) + '...' : value;
+            },
+            toggleDescription(item, field) {
+                var k = this.descriptionKey(item, field);
+                this.expandedDescriptionMap[k] = !this.isDescriptionExpanded(item, field);
             },
         },
     });
