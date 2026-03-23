@@ -723,6 +723,8 @@ class KanbanCard extends Card
                 'searchOrFilterPlaceholder' => __('Kanban Search Or Filter Placeholder'),
                 'filterPlaceholder' => __('Kanban Filter Placeholder'),
                 'noFilterMatch' => __('Kanban No Filter Match'),
+                'showMore' => __('Kanban Show More'),
+                'showLess' => __('Kanban Show Less'),
             ],
         ]);
     }

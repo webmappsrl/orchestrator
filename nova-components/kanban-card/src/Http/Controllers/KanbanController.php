@@ -98,7 +98,12 @@ class KanbanController extends Controller
         // Load more: single column, offset + limit
         if ($singleStatus !== null && $singleStatus !== '') {
             $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $singleStatus, $statusFilterOverrides, $excludedFieldValues);
-            $query->where($statusField, $singleStatus);
+            if ($this->isTestedByOthersColumn((string) $singleStatus)) {
+                $query->where($statusField, 'tested');
+                $this->applyTestedByOthersConstraint($query, $request);
+            } else {
+                $query->where($statusField, $singleStatus);
+            }
             $singleLimit = $this->statusLimitFor((string) $singleStatus, $statusColumnLimits);
             if ($singleLimit !== null) {
                 $query->orderByDesc('updated_at')->orderByDesc((new $modelClass)->getKeyName());
@@ -107,14 +112,31 @@ class KanbanController extends Controller
                 $query->orderBy((new $modelClass)->getKeyName());
                 $items = $query->offset($offset)->limit(max(1, min(50, $limit)))->get();
             }
-            return response()->json($items->map($mapItem)->values()->all());
+            return response()->json(
+                $items
+                    ->map(function ($item) use ($mapItem, $singleStatus) {
+                        $mapped = $mapItem($item);
+                        if ($this->isTestedByOthersColumn((string) $singleStatus)) {
+                            $mapped['status'] = 'tested_by_others';
+                        }
+
+                        return $mapped;
+                    })
+                    ->values()
+                    ->all()
+            );
         }
 
         // Initial load: up to limitPerColumn per status
         $allItems = [];
         foreach ($statusValues as $statusValue) {
             $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues);
-            $query->where($statusField, $statusValue);
+            if ($this->isTestedByOthersColumn((string) $statusValue)) {
+                $query->where($statusField, 'tested');
+                $this->applyTestedByOthersConstraint($query, $request);
+            } else {
+                $query->where($statusField, $statusValue);
+            }
             $statusLimit = $this->statusLimitFor((string) $statusValue, $statusColumnLimits);
             if ($statusLimit !== null) {
                 $query->orderByDesc('updated_at')->orderByDesc((new $modelClass)->getKeyName());
@@ -124,7 +146,11 @@ class KanbanController extends Controller
                 $chunk = $query->limit($limitPerColumn)->get();
             }
             foreach ($chunk as $item) {
-                $allItems[] = $mapItem($item);
+                $mapped = $mapItem($item);
+                if ($this->isTestedByOthersColumn((string) $statusValue)) {
+                    $mapped['status'] = 'tested_by_others';
+                }
+                $allItems[] = $mapped;
             }
         }
 
@@ -380,5 +406,31 @@ class KanbanController extends Controller
         $creatorChunk = $creatorTag !== '' ? '[' . $creatorTag . ']' : '';
 
         return $id . $creatorChunk . ' ' . $name;
+    }
+
+    /**
+     * Virtual column used by Kanban dashboard:
+     * tested stories where tester is different from current viewer.
+     */
+    protected function isTestedByOthersColumn(string $statusValue): bool
+    {
+        return $statusValue === 'tested_by_others';
+    }
+
+    /**
+     * Apply constraint for virtual "tested_by_others" column.
+     */
+    protected function applyTestedByOthersConstraint($query, Request $request): void
+    {
+        $selectedViewerId = (string) $request->input('filterValue', '');
+        if ($selectedViewerId === '' && $request->user()) {
+            $selectedViewerId = (string) $request->user()->id;
+        }
+
+        if ($selectedViewerId !== '') {
+            $query->whereNotNull('tester_id')->where('tester_id', '!=', $selectedViewerId);
+        } else {
+            $query->whereNotNull('tester_id');
+        }
     }
 }

@@ -544,6 +544,22 @@
     color: #d1d5db;
 }
 
+.kanban-item-field-toggle {
+    padding: 0;
+    margin-left: auto;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #2563eb;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.dark .kanban-item-field-toggle {
+    color: #60a5fa;
+}
+
 /* Updating spinner overlay */
 .kanban-item-updating {
     opacity: 0.6;

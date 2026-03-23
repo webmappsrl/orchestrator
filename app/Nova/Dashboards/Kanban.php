@@ -30,6 +30,7 @@ class Kanban extends Dashboard
                 ->title('name')
                 ->googleCalendarTitleFormat(true)
                 ->displayFields([
+                    'creator.name' => __('Creator'),
                     'user.name' => __('Assigned'),
                     'tester.name' => __('Tester'),
                     'type' => __('Type'),
@@ -57,7 +58,7 @@ class Kanban extends Dashboard
                 ->selectOnly(true)
                 ->statusFilterOverrides([
                     StoryStatus::Test->value => 'tester_id',
-                    StoryStatus::Tested->value => ['tester_id', 'user_id'],
+                    StoryStatus::Tested->value => 'tester_id',
                 ])
                 ->statusColumnLimits([
                     StoryStatus::Progress->value => 1,
@@ -68,21 +69,35 @@ class Kanban extends Dashboard
                 ->allowedToUpdateStatusForRoles([UserRole::Admin, UserRole::Developer])
                 ->limitPerColumn(20)
                 ->columns(
-                    array_map(
-                        fn(StoryStatus $status) => [
-                            'value' => $status->value,
-                            'label' => $status->label(),
-                            'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
-                        ],
-                        [
-                            StoryStatus::Assigned,
-                            StoryStatus::Todo,
-                            StoryStatus::Progress,
-                            StoryStatus::Waiting,
-                            StoryStatus::Test,
-                            StoryStatus::Tested,
-                            StoryStatus::Released,
-                        ]
+                    array_merge(
+                        array_map(
+                            fn(StoryStatus $status) => [
+                                'value' => $status->value,
+                                'label' => $status->label(),
+                                'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
+                            ],
+                            [
+                                StoryStatus::Assigned,
+                                StoryStatus::Todo,
+                                StoryStatus::Progress,
+                                StoryStatus::Waiting,
+                                StoryStatus::Test,
+                                StoryStatus::Tested,
+                            ]
+                        ),
+                        [[
+                            'value' => 'tested_by_others',
+                            'label' => __('Has Been Tested'),
+                            'color' => '#86EFAC',
+                        ]],
+                        array_map(
+                            fn(StoryStatus $status) => [
+                                'value' => $status->value,
+                                'label' => $status->label(),
+                                'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
+                            ],
+                            [StoryStatus::Released]
+                        )
                     )
                 )
                 ->canSee(function ($request) {
