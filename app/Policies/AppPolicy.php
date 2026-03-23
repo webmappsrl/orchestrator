@@ -13,14 +13,23 @@ class AppPolicy
 
 
     /**
-     * Only Editor can access to App CRUD
+     * Admin & Editor: full access (CRUD).
+     * Manager: read-only access (view/index/detail), without create/update/delete.
      *
      * @param User $user
-     * @return bool
+     * @return bool|null
      */
     public function before(User $user)
     {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Editor);
+        if ($user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Editor)) {
+            return true;
+        }
+
+        if ($user->hasRole(UserRole::Manager)) {
+            return null;
+        }
+
+        return false;
     }
 
     /**
@@ -31,7 +40,7 @@ class AppPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        return $user->hasRole(UserRole::Manager);
     }
 
     /**
@@ -43,7 +52,7 @@ class AppPolicy
      */
     public function view(User $user, App $app)
     {
-        //
+        return $user->hasRole(UserRole::Manager);
     }
 
     /**
@@ -54,7 +63,7 @@ class AppPolicy
      */
     public function create(User $user)
     {
-        //
+        return false;
     }
 
     /**
@@ -66,7 +75,7 @@ class AppPolicy
      */
     public function update(User $user, App $app)
     {
-        //
+        return false;
     }
 
     /**
@@ -78,7 +87,7 @@ class AppPolicy
      */
     public function delete(User $user, App $app)
     {
-        //
+        return false;
     }
 
     /**
@@ -90,7 +99,7 @@ class AppPolicy
      */
     public function restore(User $user, App $app)
     {
-        //
+        return false;
     }
 
     /**
@@ -102,6 +111,6 @@ class AppPolicy
      */
     public function forceDelete(User $user, App $app)
     {
-        //
+        return false;
     }
 }
