@@ -29,14 +29,16 @@ Nova.booting((app) => {
                             class="kanban-combobox-input"
                             :placeholder="comboboxPlaceholder"
                             :value="comboboxInput"
+                            :readonly="selectOnly"
                             @input="onComboboxInput"
                             @focus="comboboxOpen = true"
+                            @click="comboboxOpen = true"
                             @keydown.down.prevent="comboboxFocusNext"
                             @keydown.up.prevent="comboboxFocusPrev"
                             @keydown.enter.prevent="comboboxConfirmHighlighted"
                             @keydown.escape="comboboxOpen = false"
                         >
-                        <button v-if="comboboxInput" type="button" class="kanban-combobox-clear" @click="clearCombobox" aria-label="Clear">×</button>
+                        <button v-if="comboboxInput && !selectOnly" type="button" class="kanban-combobox-clear" @click="clearCombobox" aria-label="Clear">×</button>
                         <div v-show="comboboxOpen && filterField && filterOptions.length" class="kanban-combobox-dropdown" ref="comboboxDropdown">
                             <div v-if="showFilterAll" class="kanban-combobox-option" :class="{ 'kanban-combobox-option-highlight': comboboxHighlightIndex === -1 }" @mousedown.prevent="selectFilterOption(null)">
                                 {{ translations.filterAll }}
@@ -211,6 +213,9 @@ Nova.booting((app) => {
             toolbarLabel() {
                 return this.cardData.toolbarLabel || '';
             },
+            selectOnly() {
+                return this.cardData.selectOnly === true;
+            },
             statusColumnLimits() {
                 return this.apiConfig.statusColumnLimits || {};
             },
@@ -227,6 +232,7 @@ Nova.booting((app) => {
             },
             filteredFilterOptions() {
                 if (!this.filterOptions.length) return this.filterOptions;
+                if (this.selectOnly) return this.filterOptions;
                 // UX: when an option is already selected, first click should still show full list.
                 // Avoid forcing user to clear input before selecting another user.
                 if (
@@ -314,6 +320,7 @@ Nova.booting((app) => {
              */
             onComboboxInput(event) {
                 var self = this;
+                if (self.selectOnly) return;
                 self.comboboxInput = event.target.value;
                 self.comboboxHighlightIndex = -1;
                 if (self.searchDebounce) clearTimeout(self.searchDebounce);
@@ -357,6 +364,7 @@ Nova.booting((app) => {
              * Clears filter, search and combobox input, then refetches all items.
              */
             clearCombobox() {
+                if (this.selectOnly) return;
                 this.comboboxInput = '';
                 this.filterValue = '';
                 this.filterFieldSelected = null;
@@ -372,6 +380,7 @@ Nova.booting((app) => {
              */
             selectFilterOption(opt) {
                 if (!opt) {
+                    if (this.selectOnly) return;
                     this.filterValue = '';
                     this.filterFieldSelected = null;
                     this.comboboxInput = '';

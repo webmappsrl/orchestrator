@@ -116,16 +116,24 @@
         width: 100%;
         max-width: 100%;
     }
+
+    .kanban-combobox-input {
+        width: 100%;
+    }
 }
 
 .kanban-combobox-input {
-    width: 100%;
+    width: auto;
     padding: 0.5rem 2rem 0.5rem 0.75rem;
     font-size: 0.875rem;
     border: 2px solid #2fbda5;
     border-radius: 0.375rem;
     background-color: #fff;
     color: #111827;
+}
+
+.kanban-combobox-input[readonly] {
+    cursor: pointer;
 }
 
 .kanban-combobox-input::placeholder {

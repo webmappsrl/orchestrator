@@ -125,6 +125,12 @@ class KanbanCard extends Card
     public array $statusColumnLimits = [];
 
     /**
+     * When true, the combobox behaves like a pure select:
+     * user cannot type/search, only choose from the dropdown list.
+     */
+    public bool $selectOnly = false;
+
+    /**
      * Max items per column on first load. When a column has this many, "load more" is shown.
      */
     public int $limitPerColumn = 50;
@@ -176,8 +182,8 @@ class KanbanCard extends Card
     public function deniedToUpdateStatusForRoles(array $roles): self
     {
         $this->deniedUpdateRoles = array_values(array_map(
-            fn ($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
-            array_filter($roles, fn ($r) => $r !== null && $r !== '')
+            fn($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
+            array_filter($roles, fn($r) => $r !== null && $r !== '')
         ));
 
         return $this;
@@ -191,8 +197,8 @@ class KanbanCard extends Card
     public function allowedToUpdateStatusForRoles(array $roles): self
     {
         $this->allowedUpdateRoles = array_values(array_map(
-            fn ($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
-            array_filter($roles, fn ($r) => $r !== null && $r !== '')
+            fn($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
+            array_filter($roles, fn($r) => $r !== null && $r !== '')
         ));
 
         return $this;
@@ -287,7 +293,7 @@ class KanbanCard extends Card
                 continue;
             }
             if (is_array($field)) {
-                $fields = array_values(array_filter($field, fn ($f) => is_string($f) && $f !== ''));
+                $fields = array_values(array_filter($field, fn($f) => is_string($f) && $f !== ''));
                 if (! empty($fields)) {
                     $normalized[$statusValue] = $fields;
                 }
@@ -317,6 +323,16 @@ class KanbanCard extends Card
             $normalized[$statusValue] = $n;
         }
         $this->statusColumnLimits = $normalized;
+
+        return $this;
+    }
+
+    /**
+     * Enable/disable select-only mode (no free-text searching).
+     */
+    public function selectOnly(bool $value = true): self
+    {
+        $this->selectOnly = $value;
 
         return $this;
     }
@@ -434,7 +450,7 @@ class KanbanCard extends Card
         $this->filterOptions = $query
             ->orderBy($labelField)
             ->get()
-            ->map(fn ($row) => [
+            ->map(fn($row) => [
                 'value' => (string) $row->getKey(),
                 'label' => (string) data_get($row, $labelField),
                 'filterField' => $field,
@@ -468,7 +484,7 @@ class KanbanCard extends Card
         $options = $query
             ->orderBy($labelField)
             ->get()
-            ->map(fn ($row) => [
+            ->map(fn($row) => [
                 'value' => (string) $row->getKey(),
                 'label' => (string) data_get($row, $labelField),
                 'filterField' => $field,
@@ -568,6 +584,7 @@ class KanbanCard extends Card
             'scopeName' => $this->scopeName,
             'statusFilterOverrides' => $this->statusFilterOverrides,
             'statusColumnLimits' => $this->statusColumnLimits,
+            'selectOnly' => $this->selectOnly,
         ];
     }
 
@@ -628,7 +645,7 @@ class KanbanCard extends Card
     {
         $columns = array_values(array_filter(
             $this->columnsConfig,
-            fn (array $col) => ! in_array($col['value'] ?? '', $this->excludedColumns, true)
+            fn(array $col) => ! in_array($col['value'] ?? '', $this->excludedColumns, true)
         ));
 
         return array_merge(parent::jsonSerialize(), [
@@ -642,6 +659,7 @@ class KanbanCard extends Card
             'limitPerColumn' => $this->limitPerColumn,
             'collapsible' => $this->collapsible,
             'showFilterAll' => $this->showFilterAll,
+            'selectOnly' => $this->selectOnly,
             'toolbarTitle' => $this->toolbarTitle,
             'toolbarLabel' => $this->toolbarLabel,
             'canUpdate' => $this->userCanUpdateStatus(),
