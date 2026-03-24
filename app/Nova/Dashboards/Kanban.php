@@ -59,6 +59,7 @@ class Kanban extends Dashboard
                 ->statusFilterOverrides([
                     StoryStatus::Test->value => 'tester_id',
                     StoryStatus::Tested->value => 'tester_id',
+                    StoryStatus::Released->value => ['user_id', 'creator_id'],
                 ])
                 ->statusColumnLimits([
                     StoryStatus::Progress->value => 1,
