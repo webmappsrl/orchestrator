@@ -468,7 +468,7 @@ class KanbanCard extends Card
         if ($field === '') {
             return $this;
         }
-        $filtered = array_values(array_filter($values, fn ($v) => $v !== null && $v !== ''));
+        $filtered = array_values(array_filter($values, fn($v) => $v !== null && $v !== ''));
         if (empty($filtered)) {
             return $this;
         }
@@ -622,12 +622,14 @@ class KanbanCard extends Card
                     'value' => $value['value'],
                     'label' => $value['label'] ?? ucfirst($value['value']),
                     'color' => ! empty($value['color']) ? $value['color'] : self::DEFAULT_COLOR,
+                    'collapse' => (bool) ($value['collapse'] ?? false),
                 ];
             } else {
                 $normalized[] = [
                     'value' => $key,
                     'label' => $value,
                     'color' => self::DEFAULT_COLOR,
+                    'collapse' => false,
                 ];
             }
         }

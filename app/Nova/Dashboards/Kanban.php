@@ -43,7 +43,8 @@ class Kanban extends Dashboard
                     User::class,
                     'name',
                     function ($q) {
-                        return $q->whereHas('stories')
+                        return $q->whereIn('id', [105, 172, 104, 116, 154])
+                            ->whereHas('stories')
                             ->where(function ($query) {
                                 return $query
                                     ->whereJsonContains('roles', UserRole::Admin->value)
@@ -78,8 +79,10 @@ class Kanban extends Dashboard
                                 'value' => $status->value,
                                 'label' => $status->label(),
                                 'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
+                                'collapse' => $status->collapse(),
                             ],
                             [
+                                StoryStatus::Backlog,
                                 StoryStatus::Assigned,
                                 StoryStatus::Todo,
                                 StoryStatus::Progress,
@@ -98,6 +101,7 @@ class Kanban extends Dashboard
                                 'value' => $status->value,
                                 'label' => $status->label(),
                                 'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
+                                'collapse' => $status->collapse(),
                             ],
                             [StoryStatus::Released]
                         )

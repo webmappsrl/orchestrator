@@ -73,13 +73,17 @@ Nova.booting((app) => {
                         v-for="column in columns"
                         :key="column.value"
                         class="kanban-column"
+                        :class="{
+                            'kanban-column-compact-empty': isColumnCollapsed(column.value),
+                            'kanban-column-drop-target': dragOverColumn === column.value && !!draggedItem
+                        }"
                         :style="{ borderColor: column.color }"
                         @dragover.prevent="canUpdate && onDragOver($event, column.value)"
                         @dragleave="onDragLeave($event)"
                         @drop="canUpdate && onDrop($event, column.value)"
                     >
                         <!-- Column Header -->
-                        <div class="kanban-column-header">
+                        <div class="kanban-column-header kanban-column-header-clickable" @click.stop="toggleColumnCollapsed(column.value)">
                             <span class="kanban-column-title">{{ column.label }}</span>
                             <span class="kanban-column-count" :style="{ backgroundColor: column.color }">
                                 {{ totalCountByStatus[column.value] !== undefined ? totalCountByStatus[column.value] : getColumnItems(column.value).length }}
@@ -88,55 +92,57 @@ Nova.booting((app) => {
 
                         <!-- Items -->
                         <div class="kanban-column-body" :class="{ 'kanban-column-dragover': dragOverColumn === column.value }">
-                            <div
-                                v-for="item in getColumnItems(column.value)"
-                                :key="item.id"
-                                class="kanban-item"
-                                :class="{ 'kanban-item-updating': updatingIds.includes(item.id), 'kanban-item-readonly': !canUpdate }"
-                                :draggable="canUpdate"
-                                @dragstart="onDragStart($event, item)"
-                                @dragover.prevent="onItemDragOver($event, item, column.value)"
-                                @drop.stop="onItemDrop($event, item, column.value)"
-                                @dragend="onDragEnd"
-                                @click="openDetail(item)"
-                            >
-                                <div class="kanban-item-title">{{ item.title }}</div>
-                                <div v-if="item.subtitle" class="kanban-item-subtitle">
-                                    {{ item.subtitle }}
-                                </div>
-                                <div v-if="item.fields && item.fields.length" class="kanban-item-fields">
-                                    <div
-                                        v-for="field in item.fields"
-                                        :key="field.label"
-                                        class="kanban-item-field"
-                                    >
-                                        <span class="kanban-item-field-label">{{ field.label }}:</span>
-                                        <span
-                                            class="kanban-item-field-value"
-                                            :class="fieldValueClass(field)"
-                                            :style="fieldValueStyle(field)"
-                                        >{{ getFieldDisplayValue(item, field) }}</span>
-                                        <button
-                                            v-if="canToggleDescription(item, field)"
-                                            type="button"
-                                            class="kanban-item-field-toggle"
-                                            @click.stop="toggleDescription(item, field)"
+                            <template v-if="!isColumnCollapsed(column.value)">
+                                <div
+                                    v-for="item in getColumnItems(column.value)"
+                                    :key="item.id"
+                                    class="kanban-item"
+                                    :class="{ 'kanban-item-updating': updatingIds.includes(item.id), 'kanban-item-readonly': !canUpdate }"
+                                    :draggable="canUpdate"
+                                    @dragstart="onDragStart($event, item)"
+                                    @dragover.prevent="onItemDragOver($event, item, column.value)"
+                                    @drop.stop="onItemDrop($event, item, column.value)"
+                                    @dragend="onDragEnd"
+                                    @click="openDetail(item)"
+                                >
+                                    <div class="kanban-item-title">{{ item.title }}</div>
+                                    <div v-if="item.subtitle" class="kanban-item-subtitle">
+                                        {{ item.subtitle }}
+                                    </div>
+                                    <div v-if="item.fields && item.fields.length" class="kanban-item-fields">
+                                        <div
+                                            v-for="field in item.fields"
+                                            :key="field.label"
+                                            class="kanban-item-field"
                                         >
-                                            {{ isDescriptionExpanded(item, field) ? translations.showLess : translations.showMore }}
-                                        </button>
+                                            <span class="kanban-item-field-label">{{ field.label }}:</span>
+                                            <span
+                                                class="kanban-item-field-value"
+                                                :class="fieldValueClass(field)"
+                                                :style="fieldValueStyle(field)"
+                                            >{{ getFieldDisplayValue(item, field) }}</span>
+                                            <button
+                                                v-if="canToggleDescription(item, field)"
+                                                type="button"
+                                                class="kanban-item-field-toggle"
+                                                @click.stop="toggleDescription(item, field)"
+                                            >
+                                                {{ isDescriptionExpanded(item, field) ? translations.showLess : translations.showMore }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div v-if="getColumnItems(column.value).length === 0 && dragOverColumn !== column.value" class="kanban-column-empty">
-                                {{ translations.noItems }}
-                            </div>
-                            <!-- Load more (when column has reached initial limit and there may be more) -->
-                            <div v-if="hasMoreByStatus[column.value]" class="kanban-column-load-more">
-                                <button type="button" class="kanban-load-more-btn" :disabled="loadingMoreStatus === column.value" @click.stop="fetchMore(column.value)">
-                                    <span v-if="loadingMoreStatus === column.value" class="kanban-load-more-spinner"></span>
-                                    <span v-else>{{ translations.loadMore }}</span>
-                                </button>
-                            </div>
+                                <div v-if="getColumnItems(column.value).length === 0 && dragOverColumn !== column.value" class="kanban-column-empty">
+                                    {{ translations.noItems }}
+                                </div>
+                                <!-- Load more (when column has reached initial limit and there may be more) -->
+                                <div v-if="hasMoreByStatus[column.value]" class="kanban-column-load-more">
+                                    <button type="button" class="kanban-load-more-btn" :disabled="loadingMoreStatus === column.value" @click.stop="fetchMore(column.value)">
+                                        <span v-if="loadingMoreStatus === column.value" class="kanban-load-more-spinner"></span>
+                                        <span v-else>{{ translations.loadMore }}</span>
+                                    </button>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -185,6 +191,7 @@ Nova.booting((app) => {
                 comboboxOpen: false,
                 comboboxHighlightIndex: -1,
                 expandedDescriptionMap: {},
+                columnCollapsedState: {},
             };
         },
 
@@ -301,15 +308,30 @@ Nova.booting((app) => {
         /** On mount: restore initial filter label in combobox, set filterFieldSelected when options have filterField, fetch items, bind click-outside for dropdown. */
         mounted() {
             var self = this;
+            var savedFilterValue = self.getSavedFilterValue();
+            if (savedFilterValue) {
+                self.filterValue = savedFilterValue;
+            }
             if (self.filterValue && self.filterOptions.length) {
                 var opt = self.filterOptions.find(function (o) { return o.value === self.filterValue; });
                 if (opt) {
                     self.comboboxInput = opt.label;
                     self.filterFieldSelected = opt.filterField || self.filterField;
+                } else if (savedFilterValue) {
+                    // Cookie points to an option no longer available: clear stale value.
+                    self.filterValue = '';
+                    self.clearSavedFilterValue();
                 }
             } else if (self.filterOptions.length && self.filterOptions[0].filterField) {
                 self.filterFieldSelected = self.filterField;
             }
+            var initialColumnState = {};
+            (self.columns || []).forEach(function (col) {
+                if (col && col.value && col.collapse === true) {
+                    initialColumnState[col.value] = true;
+                }
+            });
+            self.columnCollapsedState = initialColumnState;
             self.fetchItems();
             document.addEventListener('click', self.onComboboxClickOutside);
         },
@@ -335,6 +357,31 @@ Nova.booting((app) => {
                     return list.slice(0, limit);
                 }
                 return list;
+            },
+
+            /** True when a column has zero items (uses total count if available). */
+            isColumnEmpty(status) {
+                var localCount = this.getColumnItems(status).length;
+                if (localCount > 0) return false;
+                if (this.totalCountByStatus && this.totalCountByStatus[status] !== undefined) {
+                    return Number(this.totalCountByStatus[status]) === 0;
+                }
+                return true;
+            },
+
+            /** Resolved collapsed state: explicit column flag (toggle) or automatic for empty columns. */
+            isColumnCollapsed(status) {
+                if (Object.prototype.hasOwnProperty.call(this.columnCollapsedState, status)) {
+                    return this.columnCollapsedState[status] === true;
+                }
+                return this.isColumnEmpty(status);
+            },
+
+            /** Toggle single column collapsed state on header click. */
+            toggleColumnCollapsed(status) {
+                this.columnCollapsedState = Object.assign({}, this.columnCollapsedState, {
+                    [status]: !this.isColumnCollapsed(status),
+                });
             },
 
             /**
@@ -394,6 +441,7 @@ Nova.booting((app) => {
                 this.searchValue = '';
                 this.comboboxOpen = false;
                 this.comboboxHighlightIndex = -1;
+                this.clearSavedFilterValue();
                 this.fetchItems();
             },
 
@@ -407,15 +455,50 @@ Nova.booting((app) => {
                     this.filterValue = '';
                     this.filterFieldSelected = null;
                     this.comboboxInput = '';
+                    this.clearSavedFilterValue();
                 } else {
                     this.filterValue = opt.value;
                     this.filterFieldSelected = opt.filterField || this.filterField;
                     this.comboboxInput = opt.label;
+                    this.saveFilterValue(this.filterValue);
                 }
                 this.searchValue = '';
                 this.comboboxOpen = false;
                 this.comboboxHighlightIndex = -1;
                 this.fetchItems();
+            },
+
+            /** Cookie key scoped by current Kanban resource URI. */
+            filterCookieKey() {
+                var scope = this.resourceUri || 'default';
+                return 'kanban_filter_' + scope;
+            },
+
+            /** Save selected filter value for 30 days. */
+            saveFilterValue(value) {
+                if (!value) return;
+                var days = 30;
+                var expires = new Date();
+                expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+                document.cookie = this.filterCookieKey() + '=' + encodeURIComponent(String(value)) + '; expires=' + expires.toUTCString() + '; path=/; SameSite=Lax';
+            },
+
+            /** Read saved filter value from cookie. */
+            getSavedFilterValue() {
+                var key = this.filterCookieKey() + '=';
+                var parts = document.cookie ? document.cookie.split(';') : [];
+                for (var i = 0; i < parts.length; i += 1) {
+                    var c = parts[i].trim();
+                    if (c.indexOf(key) === 0) {
+                        return decodeURIComponent(c.substring(key.length));
+                    }
+                }
+                return '';
+            },
+
+            /** Remove saved filter cookie. */
+            clearSavedFilterValue() {
+                document.cookie = this.filterCookieKey() + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax';
             },
 
             /** Moves keyboard highlight to the next option in the combobox dropdown. */
@@ -846,7 +929,8 @@ Nova.booting((app) => {
             /** Navigates to the Nova resource detail page for the given item. */
             openDetail(item) {
                 if (this.resourceUri) {
-                    Nova.visit('/resources/' + this.resourceUri + '/' + item.id);
+                    var url = '/resources/' + this.resourceUri + '/' + item.id;
+                    window.open(url, '_blank', 'noopener,noreferrer');
                 }
             },
 
