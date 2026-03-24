@@ -82,7 +82,7 @@ Nova.booting((app) => {
                         <div class="kanban-column-header">
                             <span class="kanban-column-title">{{ column.label }}</span>
                             <span class="kanban-column-count" :style="{ backgroundColor: column.color }">
-                                {{ getColumnItems(column.value).length }}
+                                {{ totalCountByStatus[column.value] !== undefined ? totalCountByStatus[column.value] : getColumnItems(column.value).length }}
                             </span>
                         </div>
 
@@ -129,7 +129,7 @@ Nova.booting((app) => {
                                 {{ translations.noItems }}
                             </div>
                             <!-- Load more (when column has reached initial limit and there may be more) -->
-                            <div v-if="getColumnItems(column.value).length >= limitPerColumn && hasMoreByStatus[column.value]" class="kanban-column-load-more">
+                            <div v-if="hasMoreByStatus[column.value]" class="kanban-column-load-more">
                                 <button type="button" class="kanban-load-more-btn" :disabled="loadingMoreStatus === column.value" @click.stop="fetchMore(column.value)">
                                     <span v-if="loadingMoreStatus === column.value" class="kanban-load-more-spinner"></span>
                                     <span v-else>{{ translations.loadMore }}</span>
@@ -175,6 +175,7 @@ Nova.booting((app) => {
                 isCollapsed: saved,
                 collapseStorageKey: storageKey,
                 hasMoreByStatus: {},
+                totalCountByStatus: {},
                 loadingMoreStatus: null,
                 dragScrollRAF: null,
                 dragScrollDirection: 0,
@@ -465,6 +466,8 @@ Nova.booting((app) => {
              */
             async fetchItems() {
                 this.loading = true;
+                // Fire counts fetch in parallel — does not block items rendering
+                this.fetchCounts();
                 try {
                     var statuses = this.columns.map(function (c) { return c.value; }).join(',');
                     var url = '/nova-vendor/kanban-card/items?config=' + this.configParam +
@@ -521,13 +524,47 @@ Nova.booting((app) => {
             },
 
             /**
+             * Fetches total counts per status from the backend (same filters as fetchItems).
+             * Stores results in totalCountByStatus so the header badge always shows the real total.
+             */
+            async fetchCounts() {
+                var self = this;
+                try {
+                    var statuses = self.columns.map(function (c) { return c.value; }).join(',');
+                    var url = '/nova-vendor/kanban-card/counts?config=' + self.configParam +
+                        '&statuses=' + encodeURIComponent(statuses);
+                    if (self.filterFieldSelected && self.filterValue) {
+                        url += '&filterField=' + encodeURIComponent(self.filterFieldSelected) + '&filterValue=' + encodeURIComponent(self.filterValue);
+                    } else if (self.filterField && self.filterValue) {
+                        url += '&' + encodeURIComponent(self.filterField) + '=' + encodeURIComponent(self.filterValue);
+                    }
+                    if (self.searchFields.length && self.searchValue) {
+                        url += '&search=' + encodeURIComponent(self.searchValue);
+                    }
+                    var csrfToken = '';
+                    var metaTag = document.querySelector('meta[name="csrf-token"]');
+                    if (metaTag) csrfToken = metaTag.getAttribute('content') || '';
+                    var response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                    });
+                    if (!response.ok) throw new Error('Counts fetch failed: ' + response.status);
+                    self.totalCountByStatus = await response.json();
+                } catch (e) {
+                    console.error('Kanban counts fetch error:', e);
+                }
+            },
+
+            /**
              * Fetches the next page of items for a single column (load more). Appends to items and updates hasMore for that status.
              * @param {string} status - Column status value to load more for.
              */
             async fetchMore(status) {
                 var self = this;
                 var currentCount = self.getColumnItems(status).length;
-                if (currentCount < self.limitPerColumn) return;
+                if (!self.hasMoreByStatus[status]) return;
                 self.loadingMoreStatus = status;
                 try {
                     var statuses = self.columns.map(function (c) { return c.value; }).join(',');
@@ -673,6 +710,8 @@ Nova.booting((app) => {
                     var limit = parseInt(this.statusColumnLimits[newStatus], 10);
                     if (!isNaN(limit) && limit > 0) {
                         await this.fetchItems();
+                    } else {
+                        this.fetchCounts();
                     }
                     this.showSuccess(this.translations.statusUpdated);
                 } catch (e) {

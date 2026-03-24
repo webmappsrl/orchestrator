@@ -158,6 +158,49 @@ class KanbanController extends Controller
     }
 
     /**
+     * Total row counts per column (same filters as items), independent of pagination / limitPerColumn.
+     */
+    public function counts(Request $request): JsonResponse
+    {
+        $config = $this->getConfigFromRequest($request);
+
+        if (!$config) {
+            return response()->json(['error' => __('Invalid configuration')], 400);
+        }
+
+        $modelClass = $config['model'];
+        $statusField = $config['statusField'];
+        $withRelations = $config['with'] ?? [];
+        $filterField = $config['filterField'] ?? null;
+        $allowedFilterFields = $config['allowedFilterFields'] ?? [];
+        $searchFields = $config['searchFields'] ?? [];
+        $scopeName = $config['scopeName'] ?? null;
+        $statusFilterOverrides = $config['statusFilterOverrides'] ?? [];
+        $excludedFieldValues = $config['excludedFieldValues'] ?? [];
+
+        if (!class_exists($modelClass)) {
+            return response()->json(['error' => __('Model not found')], 404);
+        }
+
+        $statuses = $request->input('statuses');
+        $statusValues = $statuses ? (is_string($statuses) ? explode(',', $statuses) : $statuses) : [];
+
+        $counts = [];
+        foreach ($statusValues as $statusValue) {
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues);
+            if ($this->isTestedByOthersColumn((string) $statusValue)) {
+                $query->where($statusField, 'tested');
+                $this->applyTestedByOthersConstraint($query, $request);
+            } else {
+                $query->where($statusField, $statusValue);
+            }
+            $counts[(string) $statusValue] = $query->count();
+        }
+
+        return response()->json($counts);
+    }
+
+    /**
      * Build base query for items (with, filter, search, optional scope). Does not apply status.
      */
     protected function buildItemsQuery(
