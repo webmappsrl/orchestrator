@@ -56,6 +56,8 @@ class Kanban extends Dashboard
                 ->toolbarTitle(__('Kanban View'))
                 ->toolbarLabel(__('View kanban for:'))
                 ->selectOnly(true)
+                ->priorityField('priority')
+                ->enableIntraColumnReorder(true)
                 ->statusFilterOverrides([
                     StoryStatus::Test->value => 'tester_id',
                     StoryStatus::Tested->value => 'tester_id',

@@ -95,6 +95,8 @@ Nova.booting((app) => {
                                 :class="{ 'kanban-item-updating': updatingIds.includes(item.id), 'kanban-item-readonly': !canUpdate }"
                                 :draggable="canUpdate"
                                 @dragstart="onDragStart($event, item)"
+                                @dragover.prevent="onItemDragOver($event, item, column.value)"
+                                @drop.stop="onItemDrop($event, item, column.value)"
                                 @dragend="onDragEnd"
                                 @click="openDetail(item)"
                             >
@@ -217,6 +219,11 @@ Nova.booting((app) => {
             },
             canUpdate() {
                 return this.cardData.canUpdate !== false;
+            },
+            canReorder() {
+                return this.canUpdate === true
+                    && this.apiConfig.enableIntraColumnReorder === true
+                    && !!this.apiConfig.priorityField;
             },
             showFilterAll() {
                 return this.cardData.showFilterAll !== false;
@@ -666,6 +673,35 @@ Nova.booting((app) => {
                 this.dragOverColumn = columnValue;
             },
 
+            /** Drag over an item inside the same column for reorder. */
+            onItemDragOver(event, targetItem, columnValue) {
+                if (!this.canReorder || !this.draggedItem) return;
+                if (this.draggedItem.status !== columnValue) return;
+                if (String(this.draggedItem.id) === String(targetItem.id)) return;
+                event.dataTransfer.dropEffect = 'move';
+            },
+
+            /** Drop on an item inside the same column and persist new priority order. */
+            async onItemDrop(event, targetItem, columnValue) {
+                if (!this.canReorder || !this.draggedItem) return;
+                var dragged = this.draggedItem;
+                if (dragged.status !== columnValue) {
+                    await this.onDrop(event, columnValue, targetItem);
+                    return;
+                }
+                if (String(dragged.id) === String(targetItem.id)) return;
+
+                var columnItems = this.getColumnItems(columnValue).slice();
+                var fromIdx = columnItems.findIndex(function (it) { return String(it.id) === String(dragged.id); });
+                var toIdx = columnItems.findIndex(function (it) { return String(it.id) === String(targetItem.id); });
+                if (fromIdx === -1 || toIdx === -1) return;
+
+                var moved = columnItems.splice(fromIdx, 1)[0];
+                columnItems.splice(toIdx, 0, moved);
+                this.applyColumnOrder(columnValue, columnItems);
+                await this.persistColumnOrder(columnValue);
+            },
+
             /** Drag leave column: clears target column only when actually leaving the column element. */
             onDragLeave(event) {
                 if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -677,12 +713,22 @@ Nova.booting((app) => {
              * Drop item into a column: calls API to update status, then updates local state or reverts on error.
              * @param {string} newStatus - Target column status value.
              */
-            async onDrop(event, newStatus) {
+            async onDrop(event, newStatus, targetItem) {
                 this.dragOverColumn = null;
                 if (!this.canUpdate) return;
                 var item = this.draggedItem;
                 if (!item) return;
-                if (item.status === newStatus) return;
+                if (item.status === newStatus) {
+                    if (!this.canReorder) return;
+                    var currentItems = this.getColumnItems(newStatus).slice();
+                    var existingIdx = currentItems.findIndex(function (it) { return String(it.id) === String(item.id); });
+                    if (existingIdx === -1 || existingIdx === currentItems.length - 1) return;
+                    var movedToEnd = currentItems.splice(existingIdx, 1)[0];
+                    currentItems.push(movedToEnd);
+                    this.applyColumnOrder(newStatus, currentItems);
+                    await this.persistColumnOrder(newStatus);
+                    return;
+                }
 
                 var oldStatus = item.status;
                 item.status = newStatus;
@@ -711,6 +757,9 @@ Nova.booting((app) => {
                     if (!isNaN(limit) && limit > 0) {
                         await this.fetchItems();
                     } else {
+                        if (this.canReorder) {
+                            await this.applyCrossColumnPriorityPlacement(item, oldStatus, newStatus, targetItem);
+                        }
                         this.fetchCounts();
                     }
                     this.showSuccess(this.translations.statusUpdated);
@@ -722,6 +771,75 @@ Nova.booting((app) => {
                     this.updatingIds = this.updatingIds.filter(function (id) {
                         return id !== item.id;
                     });
+                }
+            },
+
+            /**
+             * Place moved item into the target column at dropped vertical position and persist priorities.
+             */
+            async applyCrossColumnPriorityPlacement(item, oldStatus, newStatus, targetItem) {
+                var targetItems = this.getColumnItems(newStatus).slice().filter(function (it) {
+                    return String(it.id) !== String(item.id);
+                });
+                var insertIdx = targetItems.length;
+                if (targetItem) {
+                    var idx = targetItems.findIndex(function (it) {
+                        return String(it.id) === String(targetItem.id);
+                    });
+                    if (idx >= 0) insertIdx = idx;
+                }
+                targetItems.splice(insertIdx, 0, item);
+                this.applyColumnOrder(newStatus, targetItems);
+                await this.persistColumnOrder(newStatus);
+                if (oldStatus !== newStatus) {
+                    await this.persistColumnOrder(oldStatus);
+                }
+            },
+
+            /** Apply visual order for a status column in local state. */
+            applyColumnOrder(status, orderedColumnItems) {
+                var statusItemsById = {};
+                orderedColumnItems.forEach(function (it) {
+                    statusItemsById[String(it.id)] = it;
+                });
+                var others = this.items.filter(function (it) {
+                    return it.status !== status;
+                });
+                var ordered = orderedColumnItems
+                    .map(function (it) { return statusItemsById[String(it.id)] || it; })
+                    .filter(Boolean);
+                this.items = others.concat(ordered);
+            },
+
+            /** Persist status-column order using backend priority field. */
+            async persistColumnOrder(status) {
+                if (!this.canReorder) return;
+                var orderedIds = this.getColumnItems(status).map(function (it) { return Number(it.id); });
+                if (!orderedIds.length) return;
+
+                try {
+                    var csrfToken = '';
+                    var metaTag = document.querySelector('meta[name="csrf-token"]');
+                    if (metaTag) csrfToken = metaTag.getAttribute('content') || '';
+
+                    var response = await fetch('/nova-vendor/kanban-card/items/reorder', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({
+                            status: status,
+                            orderedIds: orderedIds,
+                            config: this.apiConfig,
+                        }),
+                    });
+                    if (!response.ok) throw new Error('Reorder failed: ' + response.status);
+                } catch (e) {
+                    this.showError(this.translations.errorUpdating);
+                    await this.fetchItems();
+                    console.error('Kanban reorder error:', e);
                 }
             },
 
