@@ -129,7 +129,7 @@ Nova.booting((app) => {
                                 {{ translations.noItems }}
                             </div>
                             <!-- Load more (when column has reached initial limit and there may be more) -->
-                            <div v-if="getColumnItems(column.value).length >= limitPerColumn && hasMoreByStatus[column.value]" class="kanban-column-load-more">
+                            <div v-if="hasMoreByStatus[column.value]" class="kanban-column-load-more">
                                 <button type="button" class="kanban-load-more-btn" :disabled="loadingMoreStatus === column.value" @click.stop="fetchMore(column.value)">
                                     <span v-if="loadingMoreStatus === column.value" class="kanban-load-more-spinner"></span>
                                     <span v-else>{{ translations.loadMore }}</span>
@@ -564,7 +564,7 @@ Nova.booting((app) => {
             async fetchMore(status) {
                 var self = this;
                 var currentCount = self.getColumnItems(status).length;
-                if (currentCount < self.limitPerColumn) return;
+                if (!self.hasMoreByStatus[status]) return;
                 self.loadingMoreStatus = status;
                 try {
                     var statuses = self.columns.map(function (c) { return c.value; }).join(',');
