@@ -5,6 +5,7 @@ namespace Webmapp\KanbanCard\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -42,6 +43,8 @@ class KanbanController extends Controller
         $statusColumnLimits = $config['statusColumnLimits'] ?? [];
         $excludedFieldValues = $config['excludedFieldValues'] ?? [];
         $googleCalendarTitleFormat = (bool) ($config['googleCalendarTitleFormat'] ?? false);
+        $priorityField = $this->resolvePriorityField($config);
+        $enableIntraColumnReorder = (bool) ($config['enableIntraColumnReorder'] ?? false);
         $limitPerColumn = (int) ($config['limitPerColumn'] ?? self::LIMIT_PER_COLUMN);
         $limitPerColumn = max(1, min(500, $limitPerColumn));
 
@@ -109,7 +112,11 @@ class KanbanController extends Controller
                 $query->orderByDesc('updated_at')->orderByDesc((new $modelClass)->getKeyName());
                 $items = $query->limit($singleLimit)->get();
             } else {
-                $query->orderBy((new $modelClass)->getKeyName());
+                if ($enableIntraColumnReorder && $priorityField !== null) {
+                    $query->orderBy($priorityField)->orderBy((new $modelClass)->getKeyName());
+                } else {
+                    $query->orderBy((new $modelClass)->getKeyName());
+                }
                 $items = $query->offset($offset)->limit(max(1, min(50, $limit)))->get();
             }
             return response()->json(
@@ -142,7 +149,11 @@ class KanbanController extends Controller
                 $query->orderByDesc('updated_at')->orderByDesc((new $modelClass)->getKeyName());
                 $chunk = $query->limit($statusLimit)->get();
             } else {
-                $query->orderBy((new $modelClass)->getKeyName());
+                if ($enableIntraColumnReorder && $priorityField !== null) {
+                    $query->orderBy($priorityField)->orderBy((new $modelClass)->getKeyName());
+                } else {
+                    $query->orderBy((new $modelClass)->getKeyName());
+                }
                 $chunk = $query->limit($limitPerColumn)->get();
             }
             foreach ($chunk as $item) {
@@ -155,6 +166,49 @@ class KanbanController extends Controller
         }
 
         return response()->json($allItems);
+    }
+
+    /**
+     * Total row counts per column (same filters as items), independent of pagination / limitPerColumn.
+     */
+    public function counts(Request $request): JsonResponse
+    {
+        $config = $this->getConfigFromRequest($request);
+
+        if (!$config) {
+            return response()->json(['error' => __('Invalid configuration')], 400);
+        }
+
+        $modelClass = $config['model'];
+        $statusField = $config['statusField'];
+        $withRelations = $config['with'] ?? [];
+        $filterField = $config['filterField'] ?? null;
+        $allowedFilterFields = $config['allowedFilterFields'] ?? [];
+        $searchFields = $config['searchFields'] ?? [];
+        $scopeName = $config['scopeName'] ?? null;
+        $statusFilterOverrides = $config['statusFilterOverrides'] ?? [];
+        $excludedFieldValues = $config['excludedFieldValues'] ?? [];
+
+        if (!class_exists($modelClass)) {
+            return response()->json(['error' => __('Model not found')], 404);
+        }
+
+        $statuses = $request->input('statuses');
+        $statusValues = $statuses ? (is_string($statuses) ? explode(',', $statuses) : $statuses) : [];
+
+        $counts = [];
+        foreach ($statusValues as $statusValue) {
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues);
+            if ($this->isTestedByOthersColumn((string) $statusValue)) {
+                $query->where($statusField, 'tested');
+                $this->applyTestedByOthersConstraint($query, $request);
+            } else {
+                $query->where($statusField, $statusValue);
+            }
+            $counts[(string) $statusValue] = $query->count();
+        }
+
+        return response()->json($counts);
     }
 
     /**
@@ -310,6 +364,14 @@ class KanbanController extends Controller
 
         $item = $modelClass::findOrFail($id);
         $item->{$statusField} = $newStatus;
+        $priorityField = $this->resolvePriorityField($config);
+        $enableIntraColumnReorder = (bool) ($config['enableIntraColumnReorder'] ?? false);
+        if ($enableIntraColumnReorder && $priorityField !== null) {
+            $maxPriority = (int) $modelClass::query()
+                ->where($statusField, $newStatus)
+                ->max($priorityField);
+            $item->{$priorityField} = max(0, $maxPriority + 1);
+        }
         $item->save();
 
         Log::info("Kanban: updated {$modelClass} #{$id} status to '{$newStatus}'");
@@ -319,6 +381,88 @@ class KanbanController extends Controller
             'id' => $item->id,
             'status' => $item->{$statusField},
         ]);
+    }
+
+    /**
+     * Reorder items inside a single status column using configured priority field.
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        $config = $this->getConfigFromRequest($request);
+        if (! $config) {
+            return response()->json(['error' => __('Invalid configuration')], 400);
+        }
+
+        $modelClass = $config['model'];
+        $statusField = $config['statusField'];
+        $priorityField = $this->resolvePriorityField($config);
+        $enableIntraColumnReorder = (bool) ($config['enableIntraColumnReorder'] ?? false);
+        $deniedRoles = $config['deniedUpdateRoles'] ?? [];
+        $bypassRoles = $config['allowedUpdateRoles'] ?? [];
+
+        if (! class_exists($modelClass)) {
+            return response()->json(['error' => __('Model not found')], 404);
+        }
+        if (! $enableIntraColumnReorder || $priorityField === null) {
+            return response()->json(['error' => __('Invalid configuration')], 422);
+        }
+
+        $user = $request->user();
+        if ($user) {
+            $hasBypass = false;
+            if (! empty($bypassRoles)) {
+                foreach ($bypassRoles as $role) {
+                    if ($this->userHasRoleValue($user, $role)) {
+                        $hasBypass = true;
+                        break;
+                    }
+                }
+            }
+            if (! $hasBypass && ! empty($deniedRoles)) {
+                foreach ($deniedRoles as $role) {
+                    if ($this->userHasRoleValue($user, $role)) {
+                        return response()->json(['error' => __('Forbidden')], 403);
+                    }
+                }
+            }
+        }
+
+        $statusValue = (string) $request->input('status', '');
+        $orderedIds = $request->input('orderedIds', []);
+        if ($statusValue === '' || ! is_array($orderedIds)) {
+            return response()->json(['error' => __('Invalid configuration')], 422);
+        }
+
+        $ids = array_values(array_unique(array_map(
+            'intval',
+            array_filter($orderedIds, fn ($v) => is_numeric($v) && (int) $v > 0)
+        )));
+        if (empty($ids)) {
+            return response()->json(['success' => true]);
+        }
+
+        $keyName = (new $modelClass)->getKeyName();
+        $validIds = $modelClass::query()
+            ->where($statusField, $statusValue)
+            ->whereIn($keyName, $ids)
+            ->pluck($keyName)
+            ->map(fn ($v) => (int) $v)
+            ->all();
+        if (empty($validIds)) {
+            return response()->json(['success' => true]);
+        }
+        $validSet = array_fill_keys($validIds, true);
+        $orderedValidIds = array_values(array_filter($ids, fn ($id) => isset($validSet[$id])));
+
+        DB::transaction(function () use ($modelClass, $keyName, $priorityField, $orderedValidIds) {
+            foreach ($orderedValidIds as $priority => $itemId) {
+                $modelClass::query()
+                    ->where($keyName, $itemId)
+                    ->update([$priorityField => $priority]);
+            }
+        });
+
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -432,5 +576,18 @@ class KanbanController extends Controller
         } else {
             $query->whereNotNull('tester_id');
         }
+    }
+
+    /**
+     * Resolve and validate priority field from card config.
+     */
+    protected function resolvePriorityField(array $config): ?string
+    {
+        $priorityField = $config['priorityField'] ?? null;
+        if (! is_string($priorityField) || $priorityField === '') {
+            return null;
+        }
+
+        return preg_match('/^[a-zA-Z0-9_]+$/', $priorityField) ? $priorityField : null;
     }
 }

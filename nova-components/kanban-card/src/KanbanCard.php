@@ -171,6 +171,16 @@ class KanbanCard extends Card
     public bool $googleCalendarTitleFormat = false;
 
     /**
+     * Optional numeric field used to keep manual order within a status column (e.g. 'priority').
+     */
+    public ?string $priorityField = null;
+
+    /**
+     * Enable manual reordering inside the same status column.
+     */
+    public bool $enableIntraColumnReorder = false;
+
+    /**
      * Role values (string) for user types that cannot update item status (drag & drop).
      * When empty, any Nova user can update. When set, users who have any of these roles cannot update.
      * Set via ->deniedToUpdateStatusForRoles([UserRole::Editor, UserRole::Developer]) (enum or string).
@@ -274,6 +284,26 @@ class KanbanCard extends Card
     public function googleCalendarTitleFormat(bool $value = true): self
     {
         $this->googleCalendarTitleFormat = $value;
+
+        return $this;
+    }
+
+    /**
+     * Set field used to persist manual ordering within a status.
+     */
+    public function priorityField(string $field): self
+    {
+        $this->priorityField = $field !== '' ? $field : null;
+
+        return $this;
+    }
+
+    /**
+     * Enable/disable manual reorder within the same status column.
+     */
+    public function enableIntraColumnReorder(bool $value = true): self
+    {
+        $this->enableIntraColumnReorder = $value;
 
         return $this;
     }
@@ -438,7 +468,7 @@ class KanbanCard extends Card
         if ($field === '') {
             return $this;
         }
-        $filtered = array_values(array_filter($values, fn ($v) => $v !== null && $v !== ''));
+        $filtered = array_values(array_filter($values, fn($v) => $v !== null && $v !== ''));
         if (empty($filtered)) {
             return $this;
         }
@@ -592,12 +622,14 @@ class KanbanCard extends Card
                     'value' => $value['value'],
                     'label' => $value['label'] ?? ucfirst($value['value']),
                     'color' => ! empty($value['color']) ? $value['color'] : self::DEFAULT_COLOR,
+                    'collapse' => (bool) ($value['collapse'] ?? false),
                 ];
             } else {
                 $normalized[] = [
                     'value' => $key,
                     'label' => $value,
                     'color' => self::DEFAULT_COLOR,
+                    'collapse' => false,
                 ];
             }
         }
@@ -629,6 +661,8 @@ class KanbanCard extends Card
             'selectOnly' => $this->selectOnly,
             'excludedFieldValues' => $this->excludedFieldValues,
             'googleCalendarTitleFormat' => $this->googleCalendarTitleFormat,
+            'priorityField' => $this->priorityField,
+            'enableIntraColumnReorder' => $this->enableIntraColumnReorder,
         ];
     }
 
