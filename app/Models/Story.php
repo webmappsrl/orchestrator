@@ -58,9 +58,18 @@ class Story extends Model implements HasMedia
         $releasedStatus = StoryStatus::Released->value;
         //update epic status whenever a story is created or updated
         static::saved(function (Story $story) use ($customerRole, $releasedStatus) {
+            $sender = Auth::user();
+            $currentStatus = is_object($story->status) ? $story->status->value : (string) ($story->status ?? '');
 
-            if (isset($story->creator_id) && $story->creator->hasRole($customerRole) && $story->status === $releasedStatus) {
-                $story->sendStatusUpdatedEmail($story, $story->creator_id);
+            if (
+                isset($story->creator_id)
+                && $story->creator->hasRole($customerRole)
+                && $story->status === $releasedStatus
+                && $story->wasChanged('status')
+            ) {
+                $story->sendStatusUpdatedEmail($story, $story->creator_id, [
+                    'highlight_latest_response' => $story->wasChanged('customer_request'),
+                ]);
             }
             if (!empty($story->epic)) {
                 $epic = $story->epic;
@@ -70,13 +79,74 @@ class Story extends Model implements HasMedia
 
             if ($story->user_id != $story->tester_id) {
                 // Check if user_id or tester_id has changed
-                if ($story->wasChanged('user_id') && $story->user_id && $story->user_id != Auth::user()->id) {
-                    //send email to the new developer
+                if ($story->wasChanged('user_id') && $story->user_id && (!$sender || $story->user_id != $sender->id)) {
+                    // Notify on user assignment only if status is already Assigned/Todo
+                    // (i.e. status didn't change in this save; status-change rule covers the combined save).
+                    if (
+                        !$story->wasChanged('status')
+                        && in_array($currentStatus, [StoryStatus::Assigned->value, StoryStatus::Todo->value], true)
+                    ) {
+                        $story->sendStatusUpdatedEmail($story, $story->user_id);
+                    }
+                }
+                if ($story->wasChanged('tester_id') && $story->tester_id && (!$sender || $story->tester_id != $sender->id)) {
+                    // Notify on tester assignment only if status is already Testing (to be tested)
+                    if (
+                        !$story->wasChanged('status')
+                        && $currentStatus === StoryStatus::Test->value
+                    ) {
+                        $story->sendStatusUpdatedEmail($story, $story->tester_id);
+                    }
+                }
+            }
+
+            // If customer_request changed and the ticket went back to TODO
+            // (e.g. customer replied on a released ticket), notify the assignee.
+            if (
+                $story->user_id
+                && $sender
+                && $sender->id !== $story->user_id
+                && $story->wasChanged('customer_request')
+                && $story->wasChanged('status')
+                && $currentStatus === StoryStatus::Todo->value
+            ) {
+                $story->sendStatusUpdatedEmail($story, $story->user_id, [
+                    'highlight_latest_response' => true,
+                ]);
+            }
+
+            // Status-change notifications (these must also work when assignee/tester is already set,
+            // and when status + user_id/tester_id are set in the same save).
+            if ($story->wasChanged('status')) {
+                // 1) Status -> TODO / ASSIGNED : notify assignee (user_id)
+                if (
+                    $story->user_id
+                    && $sender
+                    && $sender->id !== $story->user_id
+                    && !$story->wasChanged('customer_request')
+                    && in_array($currentStatus, [StoryStatus::Todo->value, StoryStatus::Assigned->value], true)
+                ) {
                     $story->sendStatusUpdatedEmail($story, $story->user_id);
                 }
-                if ($story->wasChanged('tester_id') && $story->tester_id && $story->tester_id != Auth::user()->id) {
-                    //send email to the new tester
+
+                // 2) Status -> TESTING : notify tester (tester_id)
+                if (
+                    $story->tester_id
+                    && $sender
+                    && $sender->id !== $story->tester_id
+                    && $currentStatus === StoryStatus::Test->value
+                ) {
                     $story->sendStatusUpdatedEmail($story, $story->tester_id);
+                }
+
+                // 3) Status -> TESTED : notify assignee (user_id)
+                if (
+                    $story->user_id
+                    && $sender
+                    && $sender->id !== $story->user_id
+                    && $currentStatus === StoryStatus::Tested->value
+                ) {
+                    $story->sendStatusUpdatedEmail($story, $story->user_id);
                 }
             }
         });
@@ -161,13 +231,19 @@ class Story extends Model implements HasMedia
                 }
                 $storyHasDeveloper = isset($story->user_id);
                 $storyHasTester = isset($story->tester_id);
+                $hasRoleAssignmentChange = $story->wasChanged('user_id') || $story->wasChanged('tester_id');
                 $devIsLoggedIn = $storyHasDeveloper ? auth()->user()->id == $story->user_id : false;
                 $testerIsLoggedIn = $storyHasTester ? auth()->user()->id == $story->tester_id : false;
 
                 $status = is_object($story->status) ? $story->status->value : $story->status;
 
-                $devHasUpdatedStatus = $devIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'testing';
-                $testerHasUpdatedStatus = $testerIsLoggedIn && $story->isDirty('status') && $status == 'progress' || $status == 'tested' || $status == 'done' || $status == 'rejected';
+                $devHasUpdatedStatus = $devIsLoggedIn
+                    && $story->wasChanged('status')
+                    && in_array($status, [StoryStatus::Progress->value, StoryStatus::Test->value], true);
+
+                $testerHasUpdatedStatus = $testerIsLoggedIn
+                    && $story->wasChanged('status')
+                    && in_array($status, [StoryStatus::Tested->value, StoryStatus::Done->value, StoryStatus::Rejected->value], true);
 
                 $devAndTesterAreTheSamePerson = $story->tester_id == $story->user_id;
 
@@ -176,8 +252,6 @@ class Story extends Model implements HasMedia
                 }
 
                 if ($devHasUpdatedStatus && $storyHasTester) {
-                    $story->sendStatusUpdatedEmail($story, $story->tester_id);
-
                     $story->tester->notify(NovaNotification::make()
                         ->type('info')
                         ->message('The status of the story ' . $story->id . ' has been updated to ' . $status . ' by ' . auth()->user()->name)
@@ -186,8 +260,6 @@ class Story extends Model implements HasMedia
                 }
 
                 if ($testerHasUpdatedStatus && $storyHasDeveloper) {
-                    $story->sendStatusUpdatedEmail($story, $story->user_id);
-
                     $story->developer->notify(NovaNotification::make()
                         ->type('info')
                         ->message('The status of the story ' . $story->id . ' has been updated to ' . $status . ' by ' . auth()->user()->name)
@@ -219,10 +291,10 @@ class Story extends Model implements HasMedia
     }
 
 
-    public function sendStatusUpdatedEmail(Story $story, $userId)
+    public function sendStatusUpdatedEmail(Story $story, $userId, array $context = [])
     {
         $user = User::find($userId);
-        SendStatusUpdateMailJob::dispatch($story, $user);
+        SendStatusUpdateMailJob::dispatch($story, $user, $context);
     }
     public function projects()
     {
@@ -294,7 +366,7 @@ class Story extends Model implements HasMedia
      * Add a response to the story customer_request field
      * @return void
      */
-    public function addResponse($response)
+    public function addResponse($response, bool $persist = true)
     {
         $sender = auth()->user();
         $senderRoles = $sender->roles->toArray();
@@ -329,7 +401,9 @@ class Story extends Model implements HasMedia
             'response_preview' => substr(strip_tags($response), 0, 100),
         ]);
 
-        $this->save();
+        if ($persist) {
+            $this->save();
+        }
 
         // Add sender as participant
         $this->participants()->syncWithoutDetaching([$sender->id]);
