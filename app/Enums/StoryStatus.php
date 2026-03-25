@@ -40,6 +40,17 @@ enum StoryStatus: string
     }
 
     /**
+     * If the status should be collapsed in the Kanban.
+     */
+    public function collapse(): bool
+    {
+        return match ($this) {
+            self::Backlog => true,
+            default => false,
+        };
+    }
+
+    /**
      * Translated label for UI.
      */
     public function label(): string
