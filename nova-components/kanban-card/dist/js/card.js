@@ -91,47 +91,63 @@ Nova.booting((app) => {
                         </div>
 
                         <!-- Items -->
-                        <div class="kanban-column-body" :class="{ 'kanban-column-dragover': dragOverColumn === column.value }">
+                        <div class="kanban-column-body" :class="{ 'kanban-column-dragover': dragOverColumn === column.value }" @dragover.prevent="onColumnBodyDragOver($event, column.value)">
                             <template v-if="!isColumnCollapsed(column.value)">
-                                <div
-                                    v-for="item in getColumnItems(column.value)"
-                                    :key="item.id"
-                                    class="kanban-item"
-                                    :class="{ 'kanban-item-updating': updatingIds.includes(item.id), 'kanban-item-readonly': !canUpdate }"
-                                    :draggable="canUpdate"
-                                    @dragstart="onDragStart($event, item)"
-                                    @dragover.prevent="onItemDragOver($event, item, column.value)"
-                                    @drop.stop="onItemDrop($event, item, column.value)"
-                                    @dragend="onDragEnd"
-                                    @click="openDetail(item)"
-                                >
-                                    <div class="kanban-item-title">{{ item.title }}</div>
-                                    <div v-if="item.subtitle" class="kanban-item-subtitle">
-                                        {{ item.subtitle }}
-                                    </div>
-                                    <div v-if="item.fields && item.fields.length" class="kanban-item-fields">
-                                        <div
-                                            v-for="field in item.fields"
-                                            :key="field.label"
-                                            class="kanban-item-field"
-                                        >
-                                            <span class="kanban-item-field-label">{{ field.label }}:</span>
-                                            <span
-                                                class="kanban-item-field-value"
-                                                :class="fieldValueClass(field)"
-                                                :style="fieldValueStyle(field)"
-                                            >{{ getFieldDisplayValue(item, field) }}</span>
-                                            <button
-                                                v-if="canToggleDescription(item, field)"
-                                                type="button"
-                                                class="kanban-item-field-toggle"
-                                                @click.stop="toggleDescription(item, field)"
+                                <template v-for="item in getColumnItems(column.value)" :key="item.id">
+                                    <div
+                                        v-if="showDropIndicatorBefore(column.value, item.id)"
+                                        class="kanban-drop-indicator"
+                                        :style="{ backgroundColor: column.color }"
+                                    ></div>
+                                    <div
+                                        class="kanban-item"
+                                        :class="{ 'kanban-item-updating': updatingIds.includes(item.id), 'kanban-item-readonly': !canUpdate }"
+                                        :draggable="canUpdate"
+                                        @dragstart="onDragStart($event, item)"
+                                        @dragover.prevent="onItemDragOver($event, item, column.value)"
+                                        @drop.stop="onItemDrop($event, item, column.value)"
+                                        @dragend="onDragEnd"
+                                        @click="openDetail(item)"
+                                    >
+                                        <div class="kanban-item-title">{{ item.title }}</div>
+                                        <div v-if="item.subtitle" class="kanban-item-subtitle">
+                                            {{ item.subtitle }}
+                                        </div>
+                                        <div v-if="item.fields && item.fields.length" class="kanban-item-fields">
+                                            <div
+                                                v-for="field in item.fields"
+                                                :key="field.label"
+                                                class="kanban-item-field"
                                             >
-                                                {{ isDescriptionExpanded(item, field) ? translations.showLess : translations.showMore }}
-                                            </button>
+                                                <span class="kanban-item-field-label">{{ field.label }}:</span>
+                                                <span
+                                                    class="kanban-item-field-value"
+                                                    :class="fieldValueClass(field)"
+                                                    :style="fieldValueStyle(field)"
+                                                >{{ getFieldDisplayValue(item, field) }}</span>
+                                                <button
+                                                    v-if="canToggleDescription(item, field)"
+                                                    type="button"
+                                                    class="kanban-item-field-toggle"
+                                                    @click.stop="toggleDescription(item, field)"
+                                                >
+                                                    {{ isDescriptionExpanded(item, field) ? translations.showLess : translations.showMore }}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                    <div
+                                        v-if="showDropIndicatorAfter(column.value, item.id)"
+                                        class="kanban-drop-indicator"
+                                        :style="{ backgroundColor: column.color }"
+                                    ></div>
+                                </template>
+
+                                <div
+                                    v-if="showDropIndicatorEnd(column.value)"
+                                    class="kanban-drop-indicator kanban-drop-indicator-end"
+                                    :style="{ backgroundColor: column.color }"
+                                ></div>
                                 <div v-if="getColumnItems(column.value).length === 0 && dragOverColumn !== column.value" class="kanban-column-empty">
                                     {{ translations.noItems }}
                                 </div>
@@ -178,6 +194,7 @@ Nova.booting((app) => {
                 updatingIds: [],
                 draggedItem: null,
                 dragOverColumn: null,
+                dropIndicator: null,
                 errorMessage: null,
                 successMessage: null,
                 isCollapsed: saved,
@@ -369,6 +386,28 @@ Nova.booting((app) => {
                 return true;
             },
 
+            /** Drop indicator helpers (intra/cross column priority positioning). */
+            showDropIndicatorBefore(status, targetId) {
+                if (!this.dropIndicator) return false;
+                return this.dropIndicator.status === status
+                    && this.dropIndicator.targetId !== null
+                    && String(this.dropIndicator.targetId) === String(targetId)
+                    && this.dropIndicator.before === true;
+            },
+
+            showDropIndicatorAfter(status, targetId) {
+                if (!this.dropIndicator) return false;
+                return this.dropIndicator.status === status
+                    && this.dropIndicator.targetId !== null
+                    && String(this.dropIndicator.targetId) === String(targetId)
+                    && this.dropIndicator.before === false;
+            },
+
+            showDropIndicatorEnd(status) {
+                if (!this.dropIndicator) return false;
+                return this.dropIndicator.status === status && this.dropIndicator.targetId === null;
+            },
+
             /** Resolved collapsed state: explicit column flag (toggle) or automatic for empty columns. */
             isColumnCollapsed(status) {
                 if (Object.prototype.hasOwnProperty.call(this.columnCollapsedState, status)) {
@@ -382,6 +421,22 @@ Nova.booting((app) => {
                 this.columnCollapsedState = Object.assign({}, this.columnCollapsedState, {
                     [status]: !this.isColumnCollapsed(status),
                 });
+                var self = this;
+                this.$nextTick(function () {
+                    self.updateBoardFit();
+                });
+            },
+
+            /** Toggle centering only when all columns fit without horizontal scroll. */
+            updateBoardFit() {
+                var board = this.$refs.kanbanBoard;
+                if (!board) return;
+                var fits = board.scrollWidth <= board.clientWidth + 1;
+                if (fits) {
+                    board.classList.add('kanban-board-fit');
+                } else {
+                    board.classList.remove('kanban-board-fit');
+                }
             },
 
             /**
@@ -591,6 +646,10 @@ Nova.booting((app) => {
                     console.error('Kanban fetch error:', e);
                 } finally {
                     this.loading = false;
+                    var self = this;
+                    this.$nextTick(function () {
+                        self.updateBoardFit();
+                    });
                 }
             },
 
@@ -701,6 +760,7 @@ Nova.booting((app) => {
                 event.dataTransfer.effectAllowed = 'move';
                 event.dataTransfer.setData('text/plain', String(item.id));
                 event.target.classList.add('kanban-item-dragging');
+                this.dropIndicator = null;
             },
 
             /** HTML5 drag end: removes dragging class, clears dragged item and auto-scroll state. */
@@ -709,6 +769,7 @@ Nova.booting((app) => {
                 this.draggedItem = null;
                 this.dragOverColumn = null;
                 this.dragScrollDirection = 0;
+                this.dropIndicator = null;
                 if (this.dragScrollRAF) {
                     cancelAnimationFrame(this.dragScrollRAF);
                     this.dragScrollRAF = null;
@@ -759,8 +820,16 @@ Nova.booting((app) => {
             /** Drag over an item inside the same column for reorder. */
             onItemDragOver(event, targetItem, columnValue) {
                 if (!this.canReorder || !this.draggedItem) return;
-                if (this.draggedItem.status !== columnValue) return;
-                if (String(this.draggedItem.id) === String(targetItem.id)) return;
+                if (!targetItem) return;
+                var rect = event.currentTarget.getBoundingClientRect();
+                var mid = rect.top + rect.height / 2;
+                var insertBefore = event.clientY < mid;
+                this.dropIndicator = {
+                    status: columnValue,
+                    targetId: targetItem.id,
+                    before: insertBefore,
+                };
+                this.dragOverColumn = columnValue;
                 event.dataTransfer.dropEffect = 'move';
             },
 
@@ -768,8 +837,13 @@ Nova.booting((app) => {
             async onItemDrop(event, targetItem, columnValue) {
                 if (!this.canReorder || !this.draggedItem) return;
                 var dragged = this.draggedItem;
+                var insertBefore = true;
+                if (this.dropIndicator && this.dropIndicator.status === columnValue && String(this.dropIndicator.targetId) === String(targetItem.id)) {
+                    insertBefore = !!this.dropIndicator.before;
+                }
+                this.dropIndicator = null;
                 if (dragged.status !== columnValue) {
-                    await this.onDrop(event, columnValue, targetItem);
+                    await this.onDrop(event, columnValue, targetItem, insertBefore);
                     return;
                 }
                 if (String(dragged.id) === String(targetItem.id)) return;
@@ -780,9 +854,28 @@ Nova.booting((app) => {
                 if (fromIdx === -1 || toIdx === -1) return;
 
                 var moved = columnItems.splice(fromIdx, 1)[0];
-                columnItems.splice(toIdx, 0, moved);
+                if (fromIdx < toIdx) {
+                    toIdx -= 1;
+                }
+                var insertIdx = insertBefore ? toIdx : toIdx + 1;
+                insertIdx = Math.max(0, Math.min(insertIdx, columnItems.length));
+                columnItems.splice(insertIdx, 0, moved);
                 this.applyColumnOrder(columnValue, columnItems);
                 await this.persistColumnOrder(columnValue);
+            },
+
+            /** When dragging over the column body but not on a specific item, position is "end". */
+            onColumnBodyDragOver(event, columnValue) {
+                if (!this.canReorder || !this.draggedItem) return;
+                if (!event || !event.target || !event.target.closest) return;
+                var closestItem = event.target.closest('.kanban-item');
+                if (closestItem) return;
+                this.dropIndicator = {
+                    status: columnValue,
+                    targetId: null,
+                    before: false,
+                };
+                this.dragOverColumn = columnValue;
             },
 
             /** Drag leave column: clears target column only when actually leaving the column element. */
@@ -796,8 +889,9 @@ Nova.booting((app) => {
              * Drop item into a column: calls API to update status, then updates local state or reverts on error.
              * @param {string} newStatus - Target column status value.
              */
-            async onDrop(event, newStatus, targetItem) {
+            async onDrop(event, newStatus, targetItem, insertBefore = true) {
                 this.dragOverColumn = null;
+                this.dropIndicator = null;
                 if (!this.canUpdate) return;
                 var item = this.draggedItem;
                 if (!item) return;
@@ -841,7 +935,7 @@ Nova.booting((app) => {
                         await this.fetchItems();
                     } else {
                         if (this.canReorder) {
-                            await this.applyCrossColumnPriorityPlacement(item, oldStatus, newStatus, targetItem);
+                            await this.applyCrossColumnPriorityPlacement(item, oldStatus, newStatus, targetItem, insertBefore);
                         }
                         this.fetchCounts();
                     }
@@ -860,16 +954,19 @@ Nova.booting((app) => {
             /**
              * Place moved item into the target column at dropped vertical position and persist priorities.
              */
-            async applyCrossColumnPriorityPlacement(item, oldStatus, newStatus, targetItem) {
+            async applyCrossColumnPriorityPlacement(item, oldStatus, newStatus, targetItem, insertBefore = true) {
                 var targetItems = this.getColumnItems(newStatus).slice().filter(function (it) {
                     return String(it.id) !== String(item.id);
                 });
                 var insertIdx = targetItems.length;
-                if (targetItem) {
+                // When dropping into a collapsed column (no target item), place it first.
+                if (!targetItem && this.isColumnCollapsed(newStatus)) {
+                    insertIdx = 0;
+                } else if (targetItem) {
                     var idx = targetItems.findIndex(function (it) {
                         return String(it.id) === String(targetItem.id);
                     });
-                    if (idx >= 0) insertIdx = idx;
+                    if (idx >= 0) insertIdx = insertBefore ? idx : idx + 1;
                 }
                 targetItems.splice(insertIdx, 0, item);
                 this.applyColumnOrder(newStatus, targetItems);
@@ -955,10 +1052,11 @@ Nova.booting((app) => {
                     localStorage.setItem(this.collapseStorageKey, this.isCollapsed ? '1' : '0');
                 } catch (e) {}
             },
-            /** Optional visual styles for specific field values (e.g. Type colors). */
             fieldValueClass(field) {
-                if (!field || field.key !== 'type') return '';
-                return 'kanban-field-type';
+                if (!field || !field.key) return '';
+                if (field.key === 'type') return 'kanban-field-type';
+                if (field.key === 'description') return 'kanban-field-description';
+                return '';
             },
             fieldValueStyle(field) {
                 if (!field || field.key !== 'type') return null;

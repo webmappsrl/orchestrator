@@ -271,13 +271,17 @@
 /* Board */
 .kanban-board {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0.75rem;
     overflow-x: auto;
     padding-top: 0.75rem;
     padding-bottom: 0.5rem;
     min-height: 400px;
     align-items: flex-start;
+}
+
+.kanban-board.kanban-board-fit {
+    justify-content: center;
 }
 
 /* Column */
@@ -403,6 +407,26 @@
 
 .kanban-column-body.kanban-column-dragover {
     background-color: #dbeafe;
+}
+
+/* Drop position indicator (priority ordering feedback) */
+.kanban-drop-indicator {
+    height: 4px;
+    width: 100%;
+    border-radius: 9999px;
+    margin: 6px 0;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    animation: kanban-drop-indicator-pulse 0.55s ease-in-out infinite alternate;
+    opacity: 0.95;
+}
+
+.kanban-drop-indicator-end {
+    margin-bottom: 10px;
+}
+
+@keyframes kanban-drop-indicator-pulse {
+    from { transform: scaleX(0.96); }
+    to { transform: scaleX(1); }
 }
 
 .dark .kanban-column-body.kanban-column-dragover {
@@ -592,6 +616,10 @@
     overflow-wrap: break-word;
     word-break: break-word;
     max-width: 100%;
+}
+
+.kanban-item-field-value.kanban-field-description {
+    text-align: left;
 }
 
 .dark .kanban-item-field-value {
