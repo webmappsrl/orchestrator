@@ -84,7 +84,7 @@ class Story extends Model implements HasMedia
                     // (i.e. status didn't change in this save; status-change rule covers the combined save).
                     if (
                         !$story->wasChanged('status')
-                        && in_array($currentStatus, [StoryStatus::Assigned->value, StoryStatus::Todo->value], true)
+                        && $currentStatus === StoryStatus::Todo->value
                     ) {
                         $story->sendStatusUpdatedEmail($story, $story->user_id);
                     }
@@ -118,13 +118,13 @@ class Story extends Model implements HasMedia
             // Status-change notifications (these must also work when assignee/tester is already set,
             // and when status + user_id/tester_id are set in the same save).
             if ($story->wasChanged('status')) {
-                // 1) Status -> TODO / ASSIGNED : notify assignee (user_id)
+                // 1) Status -> TODO : notify assignee (user_id)
                 if (
                     $story->user_id
                     && $sender
                     && $sender->id !== $story->user_id
                     && !$story->wasChanged('customer_request')
-                    && in_array($currentStatus, [StoryStatus::Todo->value, StoryStatus::Assigned->value], true)
+                    && $currentStatus === StoryStatus::Todo->value
                 ) {
                     $story->sendStatusUpdatedEmail($story, $story->user_id);
                 }

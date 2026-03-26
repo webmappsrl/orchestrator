@@ -111,7 +111,10 @@
         <h1 class="title">Aggiornamento ticket</h1>
 
         <div class="meta">
-            <p class="meta-row"><strong>ID:</strong> {{ $story->id }}</p>
+            <p class="meta-row">
+                <strong>ID:</strong>
+                <a href="{{ url('resources/stories/' . $story->id) }}">{{ $story->id }}</a>
+            </p>
             <p class="meta-row"><strong>Titolo:</strong> {{ $story->name }}</p>
             <p class="meta-row">
                 <strong>Stato:</strong>
@@ -123,17 +126,19 @@
         </div>
 
         @include('mails.partials.rich-html-section', [
-            'title' => 'Dev Notes',
-            'html' => $descriptionHtml,
-            'text' => $descriptionText,
-            'fallback' => 'Nessuna descrizione disponibile.',
-        ])
-
-        @include('mails.partials.rich-html-section', [
-            'title' => 'Customer Request',
+            'title' => '',
+            'showTitle' => false,
             'html' => $customerRequestHtml,
             'text' => $customerRequestText,
             'fallback' => 'Nessuna richiesta cliente disponibile.',
+        ])
+
+        @include('mails.partials.rich-html-section', [
+            'title' => '',
+            'showTitle' => false,
+            'html' => $descriptionHtml,
+            'text' => $descriptionText,
+            'fallback' => 'Nessuna descrizione disponibile.',
         ])
 
         <div class="link-box">

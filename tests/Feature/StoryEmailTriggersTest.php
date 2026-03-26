@@ -46,7 +46,7 @@ class StoryEmailTriggersTest extends TestCase
     }
 
     // =========================================================================
-    // REGOLA 1: Status -> todo/assigned → mail a user_id
+    // REGOLA 1: Status -> todo → mail a user_id
     // =========================================================================
 
     /** @test */
@@ -68,7 +68,7 @@ class StoryEmailTriggersTest extends TestCase
     }
 
     /** @test */
-    public function rule1_status_to_assigned_sends_email_to_assignee(): void
+    public function rule1_status_to_assigned_does_not_send_email_to_assignee(): void
     {
         Bus::fake();
         $actor = $this->makeDeveloper();
@@ -82,7 +82,7 @@ class StoryEmailTriggersTest extends TestCase
         $story->status = StoryStatus::Assigned->value;
         $story->save();
 
-        $this->assertCount(1, $this->jobsDispatchedTo($assignee->id));
+        $this->assertCount(0, $this->jobsDispatchedTo($assignee->id));
     }
 
     /** @test */
@@ -103,7 +103,7 @@ class StoryEmailTriggersTest extends TestCase
     }
 
     // =========================================================================
-    // REGOLA 2: user_id cambia + status già todo/assigned → mail a user_id
+    // REGOLA 2: user_id cambia + status già todo → mail a user_id
     // =========================================================================
 
     /** @test */
@@ -126,7 +126,7 @@ class StoryEmailTriggersTest extends TestCase
     }
 
     /** @test */
-    public function rule2_user_id_changes_while_status_is_assigned_sends_email(): void
+    public function rule2_user_id_changes_while_status_is_assigned_does_not_send_email(): void
     {
         Bus::fake();
         $actor = $this->makeDeveloper();
@@ -141,11 +141,11 @@ class StoryEmailTriggersTest extends TestCase
         $story->user_id = $assignee->id;
         $story->save();
 
-        $this->assertCount(1, $this->jobsDispatchedTo($assignee->id));
+        $this->assertCount(0, $this->jobsDispatchedTo($assignee->id));
     }
 
     /** @test */
-    public function rule2_user_id_changes_while_status_is_not_todo_or_assigned_does_not_send_email(): void
+    public function rule2_user_id_changes_while_status_is_not_todo_does_not_send_email(): void
     {
         Bus::fake();
         $actor = $this->makeDeveloper();

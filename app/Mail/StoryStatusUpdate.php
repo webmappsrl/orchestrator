@@ -40,7 +40,7 @@ class StoryStatusUpdate extends Mailable
         $statusLabelUpper = mb_strtoupper($statusLabel, 'UTF-8');
 
         $subject = $isCustomer
-            ? 'Ticket ' . $this->story->id . ' ' . $statusLabelUpper
+            ? 'Ticket ' . $this->story->name . ' ' . $statusLabelUpper
             : '[' . __($this->story->status) . ']' . '[' . $this->story->creator->name . ']: ' . $this->story->name;
 
         return new Envelope(
