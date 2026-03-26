@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,7 +67,7 @@
             border: 1px solid #eee;
             border-radius: 8px;
             padding: 12px 14px;
-            pargin-top: 12px;
+            margin-top: 12px;
         }
 
         .link-box {
@@ -94,6 +95,7 @@
         }
     </style>
 </head>
+
 <body>
     @php
         $statusValue = (string) $story->status;
@@ -149,4 +151,5 @@
         @include('mails.partials.email-footer')
     </div>
 </body>
+
 </html>
