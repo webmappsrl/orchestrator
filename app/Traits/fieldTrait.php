@@ -435,7 +435,7 @@ trait fieldTrait
                     $model->forceTodoOnAnswerToTicket = true;
                 }
 
-                $model->addResponse($request[$requestAttribute]);
+                $model->addResponse($request[$requestAttribute], false);
             })
             ->buttons($this->tiptapAllButtons);
     }

@@ -36,8 +36,15 @@
         }
 
         img {
-            max-width: 100% !important;
-            height: auto !important;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .intro {
+            margin: 0 0 14px;
+            font-size: 17px;
+            font-weight: bold;
+            color: #0f172a;
         }
 
         .status-line {
@@ -49,6 +56,18 @@
 
         .status-row {
             display: block;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
         }
 
         .conversation {
@@ -108,32 +127,42 @@
             padding-top: 12px;
             margin-top: 22px;
         }
-
-        .title {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 0 0 14px 0;
-            color: #0f172a;
-        }
-
-        .link-box {
-            margin: 14px 0 18px 0;
-            text-align: left;
-        }
     </style>
 </head>
 
 <body>
     <div class="container">
+        @php
+            $statusValue = (string) $story->status;
+            $statusEnum = \App\Enums\StoryStatus::tryFrom($statusValue);
+            $statusColor = $statusEnum?->color() ?? '#9CA3AF';
+            $statusLabel = $statusEnum?->label() ?? ucfirst($statusValue);
+        @endphp
+
+        <div class="status-line">
+            <div class="status-row">
+                Ticket <strong>#{{ $story->id }}</strong> - {{ $story->name }}
+            </div>
+            <div class="status-row">
+                Stato:
+                @include('mails.partials.story-status-badge', [
+                    'statusColor' => $statusColor,
+                    'statusLabel' => $statusLabel,
+                ])
+            </div>
+        </div>
+
+        @include('mails.partials.conversation', [
+            'story' => $story,
+            'highlightLatest' => $highlightLatestResponse ?? false,
+            'showTitle' => true,
+        ])
+
+        <div class="section-title">Riepilogo e link</div>
         <p style="margin-top: 0;">
             Puoi visualizzare i dettagli della storia a questo
             <a href="{{ url('resources/story-showed-by-customers/' . $story->id) }}">link</a>.
         </p>
-
-        @include('mails.partials.conversation', [
-            'story' => $story,
-            'highlightLatest' => true,
-        ])
 
         @include('mails.partials.email-footer')
     </div>
