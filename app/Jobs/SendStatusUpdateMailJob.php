@@ -10,7 +10,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 
 class SendStatusUpdateMailJob implements ShouldQueue
 {
@@ -18,26 +17,20 @@ class SendStatusUpdateMailJob implements ShouldQueue
 
     public $story;
     public $user;
+    public $context;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct($story, $user)
+    public function __construct($story, $user, array $context = [])
     {
+        $this->afterCommit();
         $this->story = $story;
         $this->user = $user;
+        $this->context = $context;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        try {
-            Mail::to($this->user->email)->send(new StoryStatusUpdate($this->story, $this->user));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            throw new \Exception($e->getMessage());
-        }
+        Mail::to($this->user->email)->send(
+            new StoryStatusUpdate($this->story, $this->user, $this->context)
+        );
     }
 }

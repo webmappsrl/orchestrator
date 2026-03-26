@@ -17,12 +17,16 @@
         .header,
         .footer {
             background-color: #f5f5f5;
-            padding: 20px;
-            text-align: center;
+            padding: 16px;
         }
 
         .content {
-            padding: 20px;
+            padding: 16px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
@@ -30,17 +34,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>{{ $story->name }}</h1>
+            <strong>{{ $story->name }}</strong>
         </div>
         <div class="content">
-            <div class="content">
-                <p>Contenuto:</p>
-                {!! $story->customer_request !!}
-                <p>Link: <a href="{{ url('/resources/customer-stories/' . $story->id) }}">Visualizza la storia</a></p>
-            </div>
-            <div class="footer">
-                <p>Orchestrator©</p>
-            </div>
+            {!! $story->customer_request !!}
+            <p><a href="{{ url('/resources/customer-stories/' . $story->id) }}">Ticket {{ $story->id }}</a></p>
+        </div>
+        <div class="footer">
+            <p>Orchestrator©</p>
         </div>
 </body>
 

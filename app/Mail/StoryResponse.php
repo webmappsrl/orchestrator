@@ -47,7 +47,7 @@ class StoryResponse extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'mails.customer-story-answer',
+            view: 'mails.customer-story-answer',
             with: [
                 'story' => $this->story,
                 'recipient' => $this->recipient,
