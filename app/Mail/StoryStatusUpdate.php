@@ -37,10 +37,9 @@ class StoryStatusUpdate extends Mailable
         $statusValue = (string) $this->story->status;
         $statusEnum = StoryStatus::tryFrom($statusValue);
         $statusLabel = $statusEnum?->label() ?? $statusValue;
-        $statusLabelUpper = mb_strtoupper($statusLabel, 'UTF-8');
 
         $subject = $isCustomer
-            ? 'Ticket ' . $this->story->name . ' ' . $statusLabelUpper
+            ? '['  . $statusLabel . '] ' . $this->story->name
             : '[' . __($this->story->status) . ']' . '[' . $this->story->creator->name . ']: ' . $this->story->name;
 
         return new Envelope(
