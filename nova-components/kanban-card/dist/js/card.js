@@ -204,6 +204,9 @@ Nova.booting((app) => {
                 loadingMoreStatus: null,
                 dragScrollRAF: null,
                 dragScrollDirection: 0,
+                dragVScrollRAF: null,
+                dragVScrollDirection: 0,
+                dragVScrollEl: null,
                 comboboxInput: '',
                 comboboxOpen: false,
                 comboboxHighlightIndex: -1,
@@ -770,9 +773,15 @@ Nova.booting((app) => {
                 this.dragOverColumn = null;
                 this.dragScrollDirection = 0;
                 this.dropIndicator = null;
+                this.dragVScrollDirection = 0;
+                this.dragVScrollEl = null;
                 if (this.dragScrollRAF) {
                     cancelAnimationFrame(this.dragScrollRAF);
                     this.dragScrollRAF = null;
+                }
+                if (this.dragVScrollRAF) {
+                    cancelAnimationFrame(this.dragVScrollRAF);
+                    this.dragVScrollRAF = null;
                 }
             },
 
@@ -805,10 +814,24 @@ Nova.booting((app) => {
                         return;
                     }
                     var board = self.$refs.kanbanBoard;
-                    if (board) board.scrollLeft += self.dragScrollDirection * 8;
+                    if (board) board.scrollLeft += self.dragScrollDirection * 6;
                     self.dragScrollRAF = requestAnimationFrame(tick);
                 }
                 self.dragScrollRAF = requestAnimationFrame(tick);
+            },
+
+            /** Vertical auto-scroll inside a single column while dragging near edges. */
+            startDragVScroll() {
+                var self = this;
+                function tick() {
+                    if (!self.draggedItem || self.dragVScrollDirection === 0 || !self.dragVScrollEl) {
+                        self.dragVScrollRAF = null;
+                        return;
+                    }
+                    self.dragVScrollEl.scrollTop += self.dragVScrollDirection * 6;
+                    self.dragVScrollRAF = requestAnimationFrame(tick);
+                }
+                self.dragVScrollRAF = requestAnimationFrame(tick);
             },
 
             /** Drag over a column: sets drop effect and stores target column for visual feedback. */
@@ -821,6 +844,7 @@ Nova.booting((app) => {
             onItemDragOver(event, targetItem, columnValue) {
                 if (!this.canReorder || !this.draggedItem) return;
                 if (!targetItem) return;
+                this.maybeAutoScrollColumn(event);
                 var rect = event.currentTarget.getBoundingClientRect();
                 var mid = rect.top + rect.height / 2;
                 var insertBefore = event.clientY < mid;
@@ -867,6 +891,7 @@ Nova.booting((app) => {
             /** When dragging over the column body but not on a specific item, position is "end". */
             onColumnBodyDragOver(event, columnValue) {
                 if (!this.canReorder || !this.draggedItem) return;
+                this.maybeAutoScrollColumn(event);
                 if (!event || !event.target || !event.target.closest) return;
                 var closestItem = event.target.closest('.kanban-item');
                 if (closestItem) return;
@@ -876,6 +901,36 @@ Nova.booting((app) => {
                     before: false,
                 };
                 this.dragOverColumn = columnValue;
+            },
+
+            /** Detect near top/bottom of column body and auto-scroll vertically. */
+            maybeAutoScrollColumn(event) {
+                if (!event) return;
+                // Find the scroll container for the column.
+                var el = null;
+                if (event.currentTarget && event.currentTarget.classList && event.currentTarget.classList.contains('kanban-column-body')) {
+                    el = event.currentTarget;
+                } else if (event.target && event.target.closest) {
+                    el = event.target.closest('.kanban-column-body');
+                }
+                if (!el) return;
+
+                var rect = el.getBoundingClientRect();
+                var zone = 60;
+                var dir = 0;
+                if (event.clientY < rect.top + zone) dir = -1;
+                else if (event.clientY > rect.bottom - zone) dir = 1;
+
+                this.dragVScrollEl = el;
+                this.dragVScrollDirection = dir;
+
+                if (dir !== 0 && !this.dragVScrollRAF) {
+                    this.startDragVScroll();
+                }
+                if (dir === 0 && this.dragVScrollRAF) {
+                    cancelAnimationFrame(this.dragVScrollRAF);
+                    this.dragVScrollRAF = null;
+                }
             },
 
             /** Drag leave column: clears target column only when actually leaving the column element. */
