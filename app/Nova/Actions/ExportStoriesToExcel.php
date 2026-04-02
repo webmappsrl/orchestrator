@@ -31,8 +31,10 @@ class ExportStoriesToExcel extends Action
         $tagName = null;
 
         $request = app(NovaRequest::class);
-        if ($request->query('viaResource') === 'tags') {
-            $tag = Tag::find($request->query('viaResourceId'));
+        $viaResource = $request->get('viaResource');
+        $viaResourceId = $request->get('viaResourceId');
+        if ($viaResource === 'tags' && $viaResourceId) {
+            $tag = Tag::find($viaResourceId);
             $tagName = $tag?->name;
         }
 
