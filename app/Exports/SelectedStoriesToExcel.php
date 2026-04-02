@@ -25,16 +25,16 @@ class SelectedStoriesToExcel implements FromCollection, WithMapping, WithHeading
     public function headings(): array
     {
         return [
-            'Id ticket',
-            'Stato ticket',
-            'Data di creazione',
-            'Lista Tags',
-            'Creatore',
-            'Assegnato a',
-            'Tester',
-            'Titolo ticket',
-            'Richiesta',
-            'Url ticket',
+            __('Ticket ID'),
+            __('Ticket status'),
+            __('Created at'),
+            __('Tags list'),
+            __('Creator'),
+            __('Assigned to'),
+            __('Tester'),
+            __('Ticket title'),
+            __('Request'),
+            __('Ticket URL'),
         ];
     }
 
@@ -51,9 +51,8 @@ class SelectedStoriesToExcel implements FromCollection, WithMapping, WithHeading
 
         $request = $this->sanitizeRichText($story->customer_request ?? '');
 
-        // In Nova il recurso puo' essere "stories" o "developer-stories"; qui rispettiamo
-        // esplicitamente il formato richiesto dall'utente.
-        $url = 'https://orchestrator.maphub.it/resources/developer-stories/' . $story->id;
+        $baseUrl = rtrim((string) config('app.url'), '/');
+        $url = $baseUrl . '/resources/developer-stories/' . $story->id;
 
         return [
             $story->id,

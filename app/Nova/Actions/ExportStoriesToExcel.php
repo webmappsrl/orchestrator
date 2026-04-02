@@ -3,9 +3,9 @@
 namespace App\Nova\Actions;
 
 use App\Exports\SelectedStoriesToExcel;
+use App\Models\Tag;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Actions\ActionResponse;
 use Laravel\Nova\Fields\ActionFields;
@@ -27,7 +27,20 @@ class ExportStoriesToExcel extends Action
             $models->load(['tags', 'creator', 'developer', 'tester']);
         }
 
-        $fileName = 'tickets-' . now()->format('Ymd-His') . '-' . Str::random(8) . '.xlsx';
+        $date = now()->format('Ymd');
+        $tagName = null;
+
+        $request = app(NovaRequest::class);
+        if ($request->query('viaResource') === 'tags') {
+            $tag = Tag::find($request->query('viaResourceId'));
+            $tagName = $tag?->name;
+        }
+
+        $safeTagName = $tagName
+            ? trim((string) preg_replace('/[^\pL\pN]+/u', '_', $tagName), '_')
+            : 'Tag';
+
+        $fileName = "TagReport_{$safeTagName}_{$date}.xls";
 
         Excel::store(
             new SelectedStoriesToExcel($models),
@@ -53,7 +66,7 @@ class ExportStoriesToExcel extends Action
      */
     public function name()
     {
-        return __('Export selected tickets (Excel)');
+        return __('Export Selected Tickets (Excel)');
     }
 }
 
