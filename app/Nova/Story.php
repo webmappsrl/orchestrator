@@ -414,6 +414,12 @@ class Story extends Resource
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel')),
         ];
+
+        if ($request->viaResource === 'tags') {
+            array_push($actions, (new actions\ExportStoriesToExcel())
+            );
+        }
+
         if ($request->user()->hasRole(UserRole::Developer)) {
             array_push($actions, (new actions\CreateDocumentationFromStory())
                 ->confirmText(__('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.'))
