@@ -64,6 +64,8 @@ class Sales extends Dashboard
                     'customer.full_name' => __('Customer'),
                     'total' => __('Total'),
                 ])
+                ->priorityField('priority')
+                ->enableIntraColumnReorder(true)
                 ->limitPerColumn(5)
                 ->columns(
                     array_map(
