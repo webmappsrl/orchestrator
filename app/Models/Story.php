@@ -161,7 +161,7 @@ class Story extends Model implements HasMedia
                 } elseif (!isset($story->tester_id)) {
                     $story->tester_id = $user->id;
                 }
-                if (!isset($story->type)) {
+                if ($user->hasRole(UserRole::Customer) && !isset($story->type)) {
                     $story->type = StoryType::Helpdesk->value;
                 }
 
