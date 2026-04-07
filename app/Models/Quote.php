@@ -19,6 +19,7 @@ class Quote extends Model implements HasMedia
     protected $casts = [
         'additional_services' => 'array',
         'template' => 'bool',
+        'priority' => 'int',
     ];
 
     protected $fillable = [
@@ -26,6 +27,7 @@ class Quote extends Model implements HasMedia
         'title',
         'name',
         'status',
+        'priority',
         'additional_services',
         'customer_id',
         'google_drive_url',
