@@ -7,8 +7,8 @@ use App\Models\Story;
 use App\Models\Tag;
 use App\Models\User;
 use App\Nova\Actions\ExportStoriesToExcel;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -18,6 +18,37 @@ use Tests\TestCase;
 class ExportStoriesToExcelActionTest extends TestCase
 {
     use DatabaseTransactions;
+
+    private function getCurrentDate(): string
+    {
+        return now()->format('Ymd');
+    }
+
+    private function headerKeys(): array
+    {
+        return [
+            'Ticket ID',
+            'Ticket status',
+            'Created at',
+            'Tags list',
+            'Creator',
+            'Assigned to',
+            'Tester',
+            'Ticket title',
+            'Request',
+            'Ticket URL',
+        ];
+    }
+
+    private function safeTagName(string $name): string
+    {
+        return trim((string) preg_replace('/[^\pL\pN]+/u', '_', $name), '_');
+    }
+
+    private function makeReportFileName(string $tagName, string $date): string
+    {
+        return "TagReport_{$this->safeTagName($tagName)}_{$date}.xls";
+    }
 
     protected function setUp(): void
     {
@@ -30,7 +61,7 @@ class ExportStoriesToExcelActionTest extends TestCase
     public function it_stores_export_with_tag_report_filename_on_public_disk()
     {
         Excel::fake();
-        Carbon::setTestNow(Carbon::create(2026, 4, 2, 12, 0, 0));
+        $date = $this->getCurrentDate();
 
         $tag = Tag::factory()->create([
             'name' => 'example tag',
@@ -59,8 +90,7 @@ class ExportStoriesToExcelActionTest extends TestCase
         $this->assertArrayHasKey('name', $payload);
         $this->assertArrayHasKey('download', $payload);
 
-        $safeTagName = trim((string) preg_replace('/[^\pL\pN]+/u', '_', $tag->name), '_');
-        $expectedFileName = "TagReport_{$safeTagName}_20260402.xls";
+        $expectedFileName = $this->makeReportFileName($tag->name, $date);
         $this->assertSame($expectedFileName, $payload['name']);
 
         Excel::assertStored($payload['name'], 'public', function ($export) use ($stories) {
@@ -75,7 +105,8 @@ class ExportStoriesToExcelActionTest extends TestCase
     {
         $this->withoutMiddleware(); // route is protected by 'nova' middleware
 
-        $fileName = 'TagReport_Test_20260402.xls';
+        $date = $this->getCurrentDate();
+        $fileName = $this->makeReportFileName('Test', $date);
         Storage::disk('public')->put($fileName, 'dummy');
 
         $res = $this->get(route('stories.excel.download', ['fileName' => $fileName]));
@@ -104,9 +135,11 @@ class ExportStoriesToExcelActionTest extends TestCase
     {
         $this->withoutMiddleware(); // route is protected by 'nova' middleware
 
-        Storage::disk('public')->delete('TagReport_Missing_20260402.xls');
+        $date = $this->getCurrentDate();
+        $missing = $this->makeReportFileName('Missing', $date);
+        Storage::disk('public')->delete($missing);
 
-        $this->get(route('stories.excel.download', ['fileName' => 'TagReport_Missing_20260402.xls']))
+        $this->get(route('stories.excel.download', ['fileName' => $missing]))
             ->assertNotFound();
     }
 
@@ -117,19 +150,18 @@ class ExportStoriesToExcelActionTest extends TestCase
 
         app()->setLocale('it');
         $it = $export->headings();
-        $this->assertSame('ID Ticket', $it[0]);
-        $this->assertSame('URL Ticket', $it[9]);
+        $this->assertSame(array_map('__', $this->headerKeys()), $it);
 
         app()->setLocale('en');
         $en = $export->headings();
-        $this->assertSame('Ticket ID', $en[0]);
-        $this->assertSame('Ticket URL', $en[9]);
+        $this->assertSame(array_map('__', $this->headerKeys()), $en);
     }
 
     /** @test */
     public function it_builds_ticket_url_using_app_url_config()
     {
-        config(['app.url' => 'http://localhost:8099']);
+        config(['app.url' => 'https://orchestrator.dev.maphub.it/']);
+        $baseUrl = rtrim((string) config('app.url'), '/');
 
         $story = new \App\Models\Story();
         $story->id = 7525;
@@ -145,7 +177,22 @@ class ExportStoriesToExcelActionTest extends TestCase
         $export = new SelectedStoriesToExcel(collect([$story]));
         $row = $export->map($story);
 
-        $this->assertSame('http://localhost:8099/resources/developer-stories/7525', $row[9]);
+        $this->assertSame($baseUrl.'/resources/developer-stories/'.$story->id, $row[9]);
+    }
+
+    /** @test */
+    public function it_has_translations_for_all_export_header_fields_in_it_and_en()
+    {
+        $keys = $this->headerKeys();
+
+        foreach (['it', 'en'] as $locale) {
+            app()->setLocale($locale);
+
+            foreach ($keys as $key) {
+                $this->assertTrue(Lang::has($key, $locale), "Missing translation key '{$key}' for locale '{$locale}'.");
+                $translated = __($key);
+                $this->assertNotSame('', trim((string) $translated), "Translation for key '{$key}' in locale '{$locale}' is empty.");
+            }
+        }
     }
 }
-
