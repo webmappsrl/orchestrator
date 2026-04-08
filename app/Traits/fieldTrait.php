@@ -119,23 +119,33 @@ trait fieldTrait
     {
         $isEdit = $request->isCreateOrAttachRequest() || $request->isUpdateOrUpdateAttachedRequest();
         if ($isEdit) {
-            return  Select::make(__('Type'), $fieldName)
-                ->options(function () {
+            $isCustomer = $request->user()->hasRole(UserRole::Customer);
+
+            return Select::make(__('Type'), $fieldName)
+                ->options(function () use ($isCustomer) {
+                    if ($isCustomer) {
+                        return [
+                            StoryType::Helpdesk->value => StoryType::Helpdesk,
+                        ];
+                    }
+
                     return [
-                        StoryType::Feature->value =>  StoryType::Feature,
+                        StoryType::Feature->value => StoryType::Feature,
                         StoryType::Bug->value => StoryType::Bug,
                         StoryType::Helpdesk->value => StoryType::Helpdesk,
-                        StoryType::Scrum->value => StoryType::Scrum
+                        StoryType::Scrum->value => StoryType::Scrum,
                     ];
                 })
-                ->default(StoryType::Helpdesk->value)
-                ->help(__('Assign the type of the ticket.'))
-                ->readonly(function ($request) {
-                    return $this->type === StoryType::Scrum->value;
+                ->default(function () use ($isCustomer) {
+                    return $isCustomer ? StoryType::Helpdesk->value : null;
                 })
-                ->canSee(function ($request) {
-                    return  !$request->user()->hasRole(UserRole::Customer);
-                });
+                ->rules('required')
+                ->required()
+                ->help(__('Assign the type of the ticket.'))
+                ->readonly(function ($request) use ($isCustomer) {
+                    return $isCustomer || $this->type === StoryType::Scrum->value;
+                })
+                ->canSee($this->canSee($fieldName));
         } else {
             return Text::make(__('Type'), $fieldName, function () {
                 $color = 'green';
