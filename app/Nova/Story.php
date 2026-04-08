@@ -235,23 +235,23 @@ class Story extends Resource
         $fields = [
             ID::make()->sortable(),
             $this->titleField(),
-            $this->statusField($request),
-            $this->creatorField(),
-            $this->assignedToField(),
-            $this->testedByField(),
-            $this->tagsField(),
-            $this->typeField($request),
-            $this->descriptionField(),
-            Files::make('Documents', 'documents')
-                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
-                ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).')),
-            $this->estimatedHoursField($request),
             $this->customerRequestField($request)
                 ->help(
                     $request->resourceId
                         ? null
                         : __('Enter all the necessary information, such as the ID of the content you want to verify. You can insert images via `Add Image`. If you also want to send us a video, we recommend uploading it to a service like Google Drive, enabling link sharing, and inserting the link here. The more details you provide, the easier it will be for us to resolve the issue.')
                 ),
+            $this->typeField($request),
+            $this->tagsField(),
+            $this->statusField($request),
+            $this->creatorField(),
+            $this->assignedToField(),
+            $this->testedByField(),
+            $this->descriptionField(),
+            Files::make('Documents', 'documents')
+                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
+                ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).')),
+            $this->estimatedHoursField($request),
             $this->answerToTicketField()
                 ->help(
                     $request->resourceId
@@ -414,6 +414,12 @@ class Story extends Resource
                 ->confirmButtonText(__('Confirm'))
                 ->cancelButtonText(__('Cancel')),
         ];
+
+        if ($request->viaResource === 'tags') {
+            array_push($actions, (new actions\ExportStoriesToExcel())
+            );
+        }
+
         if ($request->user()->hasRole(UserRole::Developer)) {
             array_push($actions, (new actions\CreateDocumentationFromStory())
                 ->confirmText(__('Click on the "Confirm" button to create a new documentation from the selected story or "Cancel" to cancel.'))
