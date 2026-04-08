@@ -4,12 +4,14 @@ use App\Http\Controllers\DeadlineController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScrumController;
+use App\Http\Controllers\StoriesExcelExportController;
 use App\Http\Middleware\TestRouteAccess;
 use App\Jobs\TestJob;
 use App\Mail\CustomerStoryFromMail;
 use App\Mail\OrchestratorUserNotFound;
 use App\Models\Story;
 use App\Models\User;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
@@ -102,6 +104,10 @@ Route::get('/download-products-pdf', [\App\Http\Controllers\ProductPdfController
 
 Route::get('/app-report/{id}', [\App\Http\Controllers\AppReportController::class, 'download'])
     ->name('app.report.download')
+    ->middleware(['nova']);
+
+Route::get('/export/stories-excel/{fileName}', [StoriesExcelExportController::class, 'download'])
+    ->name('stories.excel.download')
     ->middleware(['nova']);
 
 Route::get('/scrum-meeting/{meetCode}', [ScrumController::class, 'createOrUpdateScrumStory'])
