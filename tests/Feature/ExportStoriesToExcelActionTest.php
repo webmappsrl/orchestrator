@@ -163,17 +163,8 @@ class ExportStoriesToExcelActionTest extends TestCase
         config(['app.url' => 'https://orchestrator.dev.maphub.it/']);
         $baseUrl = rtrim((string) config('app.url'), '/');
 
-        $story = new \App\Models\Story();
-        $story->id = 7525;
-        $story->status = 'todo';
-        $story->name = 'Test';
-        $story->customer_request = '<p>Hello</p>';
-        $story->setRelation('tags', collect());
-        $story->setRelation('creator', null);
-        $story->setRelation('developer', null);
-        $story->setRelation('tester', null);
-        $story->created_at = now();
 
+        $story = Story::factory()->create();
         $export = new SelectedStoriesToExcel(collect([$story]));
         $row = $export->map($story);
 
