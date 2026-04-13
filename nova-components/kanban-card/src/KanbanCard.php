@@ -4,6 +4,8 @@ namespace Webmapp\KanbanCard;
 
 use Illuminate\Support\Str;
 use Laravel\Nova\Card;
+use Webmapp\KanbanCard\Contracts\AggregatesKanbanColumn;
+use Webmapp\KanbanCard\Contracts\AppliesKanbanQuery;
 
 class KanbanCard extends Card
 {
@@ -115,6 +117,18 @@ class KanbanCard extends Card
      * Optional scope/filter closure key.
      */
     public ?string $scopeName = null;
+
+    /**
+     * Optional query applier class to further constrain the base query (server-side).
+     * Must implement AppliesKanbanQuery.
+     */
+    public ?string $queryApplierClass = null;
+
+    /**
+     * Optional per-column aggregator class (server-side).
+     * If set, controller counts() will load all items of each column and call it.
+     */
+    public ?string $columnAggregatorClass = null;
 
     /**
      * Optional per-status filter field overrides.
@@ -322,6 +336,35 @@ class KanbanCard extends Card
     public function scope(string $name): self
     {
         $this->scopeName = $name;
+
+        return $this;
+    }
+
+    /**
+     * Apply additional constraints using a dedicated class (instead of a non-serializable closure).
+     *
+     * Example:
+     *   ->applyQueryUsing(\App\Nova\Kanban\MyStoriesKanbanQuery::class)
+     *
+     * @param  class-string<AppliesKanbanQuery>  $class
+     */
+    public function applyQueryUsing(string $class): self
+    {
+        $this->queryApplierClass = $class !== '' ? $class : null;
+
+        return $this;
+    }
+
+    /**
+     * Aggregate each column using a dedicated class (instead of a non-serializable closure).
+     *
+     * The controller will load all items for each column (unpaginated) and pass them to the aggregator.
+     *
+     * @param  class-string<AggregatesKanbanColumn>  $class
+     */
+    public function aggregateColumnsUsing(string $class): self
+    {
+        $this->columnAggregatorClass = $class !== '' ? $class : null;
 
         return $this;
     }
@@ -656,6 +699,8 @@ class KanbanCard extends Card
             'deniedUpdateRoles' => $this->deniedUpdateRoles,
             'allowedUpdateRoles' => $this->allowedUpdateRoles,
             'scopeName' => $this->scopeName,
+            'queryApplierClass' => $this->queryApplierClass,
+            'columnAggregatorClass' => $this->columnAggregatorClass,
             'statusFilterOverrides' => $this->statusFilterOverrides,
             'statusColumnLimits' => $this->statusColumnLimits,
             'selectOnly' => $this->selectOnly,

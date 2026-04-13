@@ -84,9 +84,14 @@ Nova.booting((app) => {
                     >
                         <!-- Column Header -->
                         <div class="kanban-column-header kanban-column-header-clickable" @click.stop="toggleColumnCollapsed(column.value)">
-                            <span class="kanban-column-title">{{ column.label }}</span>
+                            <div class="kanban-column-title-wrap">
+                                <span class="kanban-column-title">{{ column.label }}</span>
+                                <span v-if="getHeaderSum(column.value) !== null" class="kanban-column-sum">
+                                    {{ formatCurrency(getHeaderSum(column.value)) }}
+                                </span>
+                            </div>
                             <span class="kanban-column-count" :style="{ backgroundColor: column.color }">
-                                {{ totalCountByStatus[column.value] !== undefined ? totalCountByStatus[column.value] : getColumnItems(column.value).length }}
+                                {{ getHeaderCount(column.value) }}
                             </span>
                         </div>
 
@@ -384,7 +389,9 @@ Nova.booting((app) => {
                 var localCount = this.getColumnItems(status).length;
                 if (localCount > 0) return false;
                 if (this.totalCountByStatus && this.totalCountByStatus[status] !== undefined) {
-                    return Number(this.totalCountByStatus[status]) === 0;
+                    var v = this.totalCountByStatus[status];
+                    if (v && typeof v === 'object' && v.count !== undefined) return Number(v.count) === 0;
+                    return Number(v) === 0;
                 }
                 return true;
             },
@@ -673,6 +680,40 @@ Nova.booting((app) => {
                     next[col.value] = count >= limit;
                 });
                 self.hasMoreByStatus = next;
+            },
+
+            /**
+             * Returns the real total count for a column when available.
+             * Supports both legacy numeric responses and extended {count, sum} objects.
+             */
+            getHeaderCount(status) {
+                var v = this.totalCountByStatus ? this.totalCountByStatus[status] : undefined;
+                if (v && typeof v === 'object' && v.count !== undefined) return v.count;
+                if (v !== undefined) return v;
+                return this.getColumnItems(status).length;
+            },
+
+            /**
+             * Returns the sum value for a column when provided by backend.
+             */
+            getHeaderSum(status) {
+                var v = this.totalCountByStatus ? this.totalCountByStatus[status] : undefined;
+                if (v && typeof v === 'object' && v.sum !== undefined && v.sum !== null) {
+                    var n = Number(v.sum);
+                    return isNaN(n) ? null : n;
+                }
+                return null;
+            },
+
+            /**
+             * Formats a number as EUR currency (Italian formatting).
+             */
+            formatCurrency(amount) {
+                try {
+                    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
+                } catch (e) {
+                    return '€ ' + String(amount);
+                }
             },
 
             /**
