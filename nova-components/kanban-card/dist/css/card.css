@@ -381,6 +381,27 @@
     color: #d1d5db;
 }
 
+.kanban-column-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+}
+
+.kanban-column-sum {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 16rem;
+}
+
+.dark .kanban-column-sum {
+    color: #f3f4f6;
+}
+
 .kanban-column-count {
     font-size: 0.6875rem;
     font-weight: 700;

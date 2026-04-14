@@ -8,6 +8,8 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Webmapp\KanbanCard\Contracts\AggregatesKanbanColumn;
+use Webmapp\KanbanCard\Contracts\AppliesKanbanQuery;
 
 class KanbanController extends Controller
 {
@@ -100,7 +102,7 @@ class KanbanController extends Controller
 
         // Load more: single column, offset + limit
         if ($singleStatus !== null && $singleStatus !== '') {
-            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $singleStatus, $statusFilterOverrides, $excludedFieldValues);
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $singleStatus, $statusFilterOverrides, $excludedFieldValues, $config);
             if ($this->isTestedByOthersColumn((string) $singleStatus)) {
                 $query->where($statusField, 'tested');
                 $this->applyTestedByOthersConstraint($query, $request);
@@ -137,7 +139,7 @@ class KanbanController extends Controller
         // Initial load: up to limitPerColumn per status
         $allItems = [];
         foreach ($statusValues as $statusValue) {
-            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues);
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues, $config);
             if ($this->isTestedByOthersColumn((string) $statusValue)) {
                 $query->where($statusField, 'tested');
                 $this->applyTestedByOthersConstraint($query, $request);
@@ -196,16 +198,22 @@ class KanbanController extends Controller
         $statuses = $request->input('statuses');
         $statusValues = $statuses ? (is_string($statuses) ? explode(',', $statuses) : $statuses) : [];
 
+        $aggregator = $this->resolveColumnAggregator($config);
         $counts = [];
         foreach ($statusValues as $statusValue) {
-            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues);
+            $query = $this->buildItemsQuery($modelClass, $withRelations, $filterField, $allowedFilterFields, $searchFields, $scopeName, $request, (string) $statusValue, $statusFilterOverrides, $excludedFieldValues, $config);
             if ($this->isTestedByOthersColumn((string) $statusValue)) {
                 $query->where($statusField, 'tested');
                 $this->applyTestedByOthersConstraint($query, $request);
             } else {
                 $query->where($statusField, $statusValue);
             }
-            $counts[(string) $statusValue] = $query->count();
+            if ($aggregator !== null) {
+                $items = $query->get();
+                $counts[(string) $statusValue] = $aggregator->aggregate($items, $request, (string) $statusValue, $config);
+            } else {
+                $counts[(string) $statusValue] = $query->count();
+            }
         }
 
         return response()->json($counts);
@@ -224,7 +232,8 @@ class KanbanController extends Controller
         Request $request,
         ?string $statusValue = null,
         array $statusFilterOverrides = [],
-        array $excludedFieldValues = []
+        array $excludedFieldValues = [],
+        ?array $config = null
     ) {
         $query = $modelClass::query();
 
@@ -313,7 +322,57 @@ class KanbanController extends Controller
             });
         }
 
+        $resolvedConfig = $config ?? ($this->getConfigFromRequest($request) ?? []);
+        $queryApplier = $this->resolveQueryApplier($resolvedConfig);
+        if ($queryApplier !== null) {
+            $query = $queryApplier->apply($query, $request, $statusValue, $resolvedConfig);
+        }
+
         return $query;
+    }
+
+    /**
+     * Resolve query applier from card config (if any).
+     */
+    protected function resolveQueryApplier(array $config): ?AppliesKanbanQuery
+    {
+        $class = $config['queryApplierClass'] ?? null;
+        if (!is_string($class) || $class === '' || ! class_exists($class)) {
+            return null;
+        }
+        if (!is_subclass_of($class, AppliesKanbanQuery::class)) {
+            return null;
+        }
+
+        try {
+            $instance = app($class);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        return $instance instanceof AppliesKanbanQuery ? $instance : null;
+    }
+
+    /**
+     * Resolve column aggregator from card config (if any).
+     */
+    protected function resolveColumnAggregator(array $config): ?AggregatesKanbanColumn
+    {
+        $class = $config['columnAggregatorClass'] ?? null;
+        if (!is_string($class) || $class === '' || ! class_exists($class)) {
+            return null;
+        }
+        if (!is_subclass_of($class, AggregatesKanbanColumn::class)) {
+            return null;
+        }
+
+        try {
+            $instance = app($class);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        return $instance instanceof AggregatesKanbanColumn ? $instance : null;
     }
 
     /**

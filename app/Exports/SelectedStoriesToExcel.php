@@ -46,7 +46,9 @@ class SelectedStoriesToExcel implements FromCollection, WithMapping, WithHeading
         $assignedTo = $story->developer?->name ?? '';
         $tester = $story->tester?->name ?? '';
 
-        $status = StoryStatus::tryFrom((string) $story->status)?->label() ?? (string) $story->status;
+        $status = $story->status instanceof StoryStatus
+            ? $story->status->label()
+            : StoryStatus::tryFrom((string) $story->status)?->label() ?? (string) $story->status;
         $createdAt = $story->created_at?->format('d/m/Y') ?? '';
 
         $request = $this->sanitizeRichText($story->customer_request ?? '');

@@ -9,6 +9,7 @@ use App\Models\Quote;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Laravel\Nova\Dashboard;
+use App\Nova\Kanban\SalesQuoteColumnAggregator;
 use Webmapp\KanbanCard\KanbanCard;
 
 class Sales extends Dashboard
@@ -44,10 +45,11 @@ class Sales extends Dashboard
         return [
             (new KanbanCard)
                 ->model(Quote::class, 'status')
-                ->with(['customer', 'user'])
+                ->with(['customer', 'user', 'products', 'recurringProducts'])
                 ->deniedToUpdateStatusForRoles([UserRole::Editor, UserRole::Developer])
                 ->allowedToUpdateStatusForRoles([UserRole::Admin, UserRole::Manager])
                 ->resourceUri('quotes')
+                ->aggregateColumnsUsing(SalesQuoteColumnAggregator::class)
                 ->filterAndSearchBy(
                     'customer_id',
                     Customer::class,
