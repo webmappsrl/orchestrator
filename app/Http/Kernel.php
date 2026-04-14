@@ -38,7 +38,6 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\LogStory::class,
             'redirectIfCustomer' => \App\Http\Middleware\RedirectIfCustomer::class,
-            \App\Http\Middleware\TestRouteAccess::class,
             \Badinansoft\LanguageSwitch\Http\Middleware\LanguageSwitch::class
         ],
 
@@ -68,6 +67,5 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'test.access' => \App\Http\Middleware\TestRouteAccess::class,
     ];
 }
