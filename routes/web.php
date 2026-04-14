@@ -4,6 +4,7 @@ use App\Http\Controllers\DeadlineController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScrumController;
+use App\Http\Controllers\StoriesExcelExportController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
