@@ -47,56 +47,79 @@ class OrchestratorImport extends Command
     private function importApps()
     {
         $this->info('Importing Apps');
-        $data = json_decode(file_get_contents('https://geohub.webmapp.it/api/v1/app/all'), true);
+        $rawData = json_decode(file_get_contents('https://geohub.webmapp.it/api/v1/app/all'), true);
+        if (!is_array($rawData) || empty($rawData)) {
+            $this->error('Import aborted: GeoHub payload is empty or invalid.');
+            return;
+        }
+
+        $normalizedApps = [];
+        foreach ($rawData as $element) {
+            if (!is_array($element)) {
+                continue;
+            }
+
+            $appID = $element['app_id'] ?? $element['id'] ?? null;
+            if (is_null($appID) || $appID === '') {
+                continue;
+            }
+
+            $element['app_id'] = (string) $appID;
+            $element['fill_color'] = $element['fill_color'] ?? '#000000';
+            unset($element['user_id']);
+
+            foreach ($element as $key => $value) {
+                if (is_array($value)) {
+                    $element[$key] = json_encode($value);
+                }
+            }
+
+            $normalizedApps[] = $element;
+        }
+
+        if (empty($normalizedApps)) {
+            $this->error('Import aborted: no valid app rows found (missing id/app_id).');
+            return;
+        }
 
         // Backup dei dati da user_app
         $userAppBackup = DB::table('user_app')->get();
 
-        // Cancella i record nella tabella user_app
-        DB::table('user_app')->delete();
+        DB::transaction(function () use ($normalizedApps, $userAppBackup) {
+            // Cancella i record nella tabella user_app
+            DB::table('user_app')->delete();
 
-        // Cancella tutte le app esistenti
-        DB::transaction(function () use ($data) {
+            // Cancella tutte le app esistenti solo dopo validazione payload
             App::truncate();
 
-            $tot_apps = count($data);
+            $totApps = count($normalizedApps);
             $counter = 1;
-
-            foreach ($data as $element) {
-                // Converti tutti gli array in JSON
-                foreach ($element as $key => $value) {
-                    if (is_array($value)) {
-                        $element[$key] = json_encode($value);
-                    }
-                }
-
-                // Controlla la presenza delle chiavi richieste e imposta valori di default se mancano
-                $element['fill_color'] = $element['fill_color'] ?? '#000000';
-                unset($element['user_id']);
-
+            foreach ($normalizedApps as $element) {
                 try {
                     $appID = $element['app_id'];
-                    App::updateOrCreate(['app_id' =>  $appID], $element);
-                    $this->info("Importing app  $appID ($counter / $tot_apps)");
+                    App::updateOrCreate(['app_id' => $appID], $element);
+                    $this->info("Importing app $appID ($counter / $totApps)");
                 } catch (\Exception $e) {
-                    $this->error("Error importing app $counter / $tot_apps: " . $e->getMessage());
+                    $this->error("Error importing app $counter / $totApps: " . $e->getMessage());
                 }
                 $counter++;
             }
-        });
-        // Ripristino dei dati nella tabella user_app
-        foreach ($userAppBackup as $record) {
-            $data  = (array)$record;
-            try {
 
-                DB::table('user_app')->insert([
-                    'user_id' => $data['user_id'],
-                    'app_id' => $data['app_id'],
-                ]);
-            } catch (\Exception $e) {
-                $this->error("Error importing user_app: " . $e->getMessage());
+            // Ripristino dei dati nella tabella user_app
+            foreach ($userAppBackup as $record) {
+                $pivotData = (array) $record;
+                try {
+                    if (App::where('id', $pivotData['app_id'])->exists()) {
+                        DB::table('user_app')->insert([
+                            'user_id' => $pivotData['user_id'],
+                            'app_id' => $pivotData['app_id'],
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    $this->error("Error importing user_app: " . $e->getMessage());
+                }
             }
-        }
+        });
     }
 
     private function importLayers($data)
