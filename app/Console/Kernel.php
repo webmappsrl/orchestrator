@@ -60,6 +60,28 @@ class Kernel extends ConsoleKernel
             ->after(function () {
                 Log::info('reports:refresh-cache command finished');
             });
+
+        if (app()->environment('production')) {
+            $schedule->command('db:backup')
+                ->timezone('Europe/Rome')
+                ->dailyAt('02:00')
+                ->before(function () {
+                    Log::info('db:upload_db_aws scheduled job starting');
+                })
+                ->after(function () {
+                    Log::info('db:upload_db_aws scheduled job finished');
+                });
+        } else {
+            $schedule->command('db:sync')
+                ->timezone('Europe/Rome')
+                ->dailyAt('03:00')
+                ->before(function () {
+                    Log::info('db:sync scheduled job starting');
+                })
+                ->after(function () {
+                    Log::info('db:sync scheduled job finished');
+                });
+        }
     }
 
     /**
