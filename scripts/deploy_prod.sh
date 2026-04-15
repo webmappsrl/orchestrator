@@ -16,10 +16,7 @@ php artisan migrate --force
 # Clear the old cache
 php artisan clear-compiled
 
-# Clear and cache config
-php artisan config:clear
-
-php artisan optimize
+php artisan optimize:clear
 
 # gracefully terminate laravel horizon
 php artisan horizon:terminate
