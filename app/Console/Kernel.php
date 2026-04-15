@@ -62,7 +62,7 @@ class Kernel extends ConsoleKernel
             });
 
         if (app()->environment('production')) {
-            $schedule->command('db:upload_db_aws')
+            $schedule->command('db:backup')
                 ->timezone('Europe/Rome')
                 ->dailyAt('02:00')
                 ->before(function () {

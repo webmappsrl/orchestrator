@@ -40,12 +40,38 @@ class SyncDatabaseCommand extends Command
         $this->log('db:sync -> START restore database');
 
         $db = config('database.connections.pgsql');
+        $env = ['PGPASSWORD' => $db['password']];
+        $host = $db['host'];
+        $port = $db['port'];
+        $user = $db['username'];
+        $dbname = $db['database'];
+
+        // Drop e ricrea il database per un restore pulito
+        $drop = Process::fromShellCommandline(
+            "psql -U {$user} -h {$host} -p {$port} -d postgres -c \"DROP DATABASE IF EXISTS {$dbname};\""
+        );
+        $drop->setEnv($env);
+        $drop->run();
+        if (!$drop->isSuccessful()) {
+            $this->log('db:sync -> drop FAILED: ' . $drop->getErrorOutput(), 'error');
+            return 1;
+        }
+
+        $create = Process::fromShellCommandline(
+            "psql -U {$user} -h {$host} -p {$port} -d postgres -c \"CREATE DATABASE {$dbname} OWNER {$user};\""
+        );
+        $create->setEnv($env);
+        $create->run();
+        if (!$create->isSuccessful()) {
+            $this->log('db:sync -> create FAILED: ' . $create->getErrorOutput(), 'error');
+            return 1;
+        }
 
         $process = Process::fromShellCommandline(
-            "gunzip -c {$dumpPath} | psql -U {$db['username']} -h {$db['host']} -p {$db['port']} -d {$db['database']}"
+            "gunzip -c {$dumpPath} | psql -U {$user} -h {$host} -p {$port} -d {$dbname}"
         );
         $process->setTimeout(600);
-        $process->setEnv(['PGPASSWORD' => $db['password']]);
+        $process->setEnv($env);
         $process->run();
 
         if (!$process->isSuccessful()) {
