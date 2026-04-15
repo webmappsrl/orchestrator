@@ -24,7 +24,7 @@ class BackupDatabaseCommand extends Command
         $this->log('db:backup -> is started');
 
         $db = config('database.connections.pgsql');
-        $dumpPath = storage_path('app/backups/last-dump.sql.gz');
+        $dumpPath = storage_path('backups/last-dump.sql.gz');
 
         // Assicura che la directory esista
         if (!is_dir(dirname($dumpPath))) {
