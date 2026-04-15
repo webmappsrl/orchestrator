@@ -21,8 +21,7 @@ php artisan migrate  --force
 php artisan clear-compiled
 
 composer dump-autoload
-php artisan config:clear
-php artisan optimize
+php artisan optimize:clear
 
 # Compile npm assets
 # npm run prod
