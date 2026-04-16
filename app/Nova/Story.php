@@ -199,8 +199,8 @@ class Story extends Resource
             $this->deadlineField($request),
             $this->tagsField(),
             Files::make(__('Documents'), 'documents')
-                ->singleMediaRules('mimes:pdf,doc,docx,json,geojson,txt,csv,jpeg,png,gif,bmp,webp,svg,tiff,heic,jpg,jpeg,png')
-                ->help(__('Only specific document types are allowed').'(PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV, JPEG, PNG, GIF, BMP, WEBP, SVG, TIFF, HEIC, JPG, JPEG, PNG).')
+                ->singleMediaRules(self::storyDocumentsUploadMimesRule())
+                ->help(__('Only specific document types are allowed (PDF, Word, Excel, PowerPoint, OpenDocument, CSV, RTF, Markdown, JSON, GeoJSON, TXT, common images).'))
                 ->onlyOnDetail(),
             $this->descriptionField(),
             $this->titleField(),
@@ -249,8 +249,8 @@ class Story extends Resource
             $this->testedByField(),
             $this->descriptionField(),
             Files::make('Documents', 'documents')
-                ->singleMediaRules('mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/json,application/geo+json,text/plain,text/csv')
-                ->help(__('Only specific document types are allowed (PDF, DOC, DOCX, JSON, GeoJSON, TXT, CSV).')),
+                ->singleMediaRules(self::storyDocumentsUploadMimetypesRule())
+                ->help(__('Only specific document types are allowed (PDF, Word, Excel, PowerPoint, OpenDocument, CSV, RTF, Markdown, JSON, GeoJSON, TXT, common images).')),
             $this->estimatedHoursField($request),
             $this->answerToTicketField()
                 ->help(
@@ -483,6 +483,60 @@ class Story extends Resource
                 return ! $request->user()->hasRole(UserRole::Customer);
             }),
         ];
+    }
+
+    /**
+     * Estensioni consentite per gli allegati "Documents" (dettaglio: regola mimes).
+     */
+    private static function storyDocumentsUploadMimesRule(): string
+    {
+        return 'mimes:'.implode(',', [
+            'pdf',
+            'doc', 'docx',
+            'xls', 'xlsx', 'xlsm',
+            'csv',
+            'ppt', 'pptx',
+            'odt', 'ods', 'odp',
+            'rtf', 'md',
+            'json', 'geojson', 'txt',
+            'jpeg', 'jpg', 'png', 'gif', 'bmp', 'webp', 'svg', 'tiff', 'tif', 'heic', 'heif',
+        ]);
+    }
+
+    /**
+     * MIME type consentiti per gli allegati "Documents" (form: regola mimetypes).
+     */
+    private static function storyDocumentsUploadMimetypesRule(): string
+    {
+        return 'mimetypes:'.implode(',', [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel.sheet.macroEnabled.12',
+            'text/csv',
+            'application/csv',
+            'text/plain',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/vnd.oasis.opendocument.text',
+            'application/vnd.oasis.opendocument.spreadsheet',
+            'application/vnd.oasis.opendocument.presentation',
+            'application/rtf',
+            'text/markdown',
+            'application/json',
+            'application/geo+json',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/bmp',
+            'image/webp',
+            'image/svg+xml',
+            'image/tiff',
+            'image/heic',
+            'image/heif',
+        ]);
     }
 
     /**

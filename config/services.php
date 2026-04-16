@@ -32,8 +32,39 @@ return [
     ],
 
     'media-library' => [
-        'allowed_document_formats' => ['application/pdf', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json', 'applicationvnd.ms-powerpoint', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-        'allowed_image_formats' => ['image/jpeg', 'image/png', 'image/jpg'],
+        // Deve restare allineato alle regole upload Nova (Story) e a registerMediaCollections su App\Models\Story
+        'allowed_document_formats' => [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel.sheet.macroEnabled.12',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/vnd.oasis.opendocument.text',
+            'application/vnd.oasis.opendocument.spreadsheet',
+            'application/vnd.oasis.opendocument.presentation',
+            'application/rtf',
+            'text/markdown',
+            'application/json',
+            'application/geo+json',
+            'text/plain',
+            'text/csv',
+            'application/csv',
+        ],
+        'allowed_image_formats' => [
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'image/gif',
+            'image/bmp',
+            'image/webp',
+            'image/svg+xml',
+            'image/tiff',
+            'image/heic',
+            'image/heif',
+        ],
     ],
 
     'wmdumps' => [
