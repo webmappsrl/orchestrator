@@ -633,10 +633,13 @@ trait fieldTrait
         $fieldName = 'creator';
         return BelongsTo::make(__('Creator'), $fieldName, 'App\Nova\User')
             ->nullable()
+            ->searchable()
             ->default(function ($request) {
                 return auth()->user()->id;
             })
-            ->readonly()
+            ->readonly(function ($request) {
+                return ! $request->user()->hasRole(UserRole::Developer);
+            })
             ->canSee($this->canSee($fieldName));
     }
 
