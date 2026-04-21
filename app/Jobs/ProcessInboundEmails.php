@@ -71,12 +71,13 @@ class ProcessInboundEmails implements ShouldQueue
         try {
             $userEmail = $message->getFrom()[0]->mail;
             $subject = $this->decodeSubject($message->getSubject());
-            $body = $this->cleanEmailBody($message);
+            $forwardableAttachments = $this->getForwardableAttachments($message);
+            $body = $this->getEmailBodyAsHtml($message, $forwardableAttachments);
 
             $user = User::where('email', $userEmail)->first();
 
             if (!$user) {
-                $this->handleUnregisteredUser($userEmail, $subject, $body, $logger);
+                $this->handleUnregisteredUser($userEmail, $subject, $body, $forwardableAttachments, $logger);
                 $message->setFlag('Seen');
                 return null;
             }
@@ -87,16 +88,33 @@ class ProcessInboundEmails implements ShouldQueue
         }
     }
 
-    private function cleanEmailBody($message)
+    /**
+     * Return the email body as HTML, preserving formatting when possible.
+     * Falls back to plain text converted to HTML.
+     */
+    private function getEmailBodyAsHtml($message, array $forwardableAttachments = []): string
     {
+        if (method_exists($message, 'hasHTMLBody') && $message->hasHTMLBody()) {
+            $html = (string) $message->getHTMLBody();
+            $html = trim($html);
+            if ($html !== '') {
+                return $this->embedInlineCidImagesAsDataUris($html, $forwardableAttachments);
+            }
+        }
+
+        $text = '';
         if ($message->hasTextBody()) {
-            $body = $message->getTextBody();
+            $text = (string) $message->getTextBody();
         } else {
             $bodies = $message->getBodies();
-            $body = is_array($bodies) ? implode("\n", $bodies) : $bodies;
+            $text = is_array($bodies) ? implode("\n", $bodies) : (string) $bodies;
         }
-        $body = preg_replace('/---.*?---/s', '', $body);
-        return trim($body);
+
+        // Basic cleanup for common forwarded separators in plain text.
+        $text = preg_replace('/---.*?---/s', '', $text);
+        $text = trim($text);
+
+        return nl2br(e($text));
     }
 
     private function decodeSubject($subject)
@@ -105,14 +123,18 @@ class ProcessInboundEmails implements ShouldQueue
         return preg_replace('/^Fwd:\s*/', '', $subject);
     }
 
-    private function handleUnregisteredUser($userEmail, $subject, $body, $logger)
+    /**
+     * In the "unregistered sender" scenario we don't create any ticket, but we still
+     * notify the sender and the developers. We also forward attachments (if any).
+     */
+    private function handleUnregisteredUser(string $userEmail, string $subject, string $body, array $attachments, $logger): void
     {
         $logger->warning("Nessun utente trovato per l'email: $userEmail");
-        Mail::to($userEmail)->send(new OrchestratorUserNotFound($subject));
+        Mail::to($userEmail)->send(new OrchestratorUserNotFound($subject, $attachments));
 
         $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
         foreach ($developers as $developer) {
-            Mail::to($developer->email)->send(new NotRegisteredTicket($userEmail, $subject, $body));
+            Mail::to($developer->email)->send(new NotRegisteredTicket($userEmail, $subject, $body, $attachments));
         }
     }
 
@@ -128,6 +150,128 @@ class ProcessInboundEmails implements ShouldQueue
         $logger->info('Story ID ' . $story->id . ' creata.');
         Mail::to($user->email)->send(new CustomerStoryFromMail($story));
         return $story;
+    }
+
+    /**
+     * Extract attachments into a serializable array for forwarding via Laravel Mail.
+     * Each item: ['name' => string, 'mime' => string|null, 'content' => string]
+     */
+    private function getForwardableAttachments($message): array
+    {
+        if (!$message->hasAttachments()) {
+            return [];
+        }
+
+        $attachments = [];
+        foreach ($message->getAttachments() as $attachment) {
+            try {
+                $content = $attachment->getContent();
+                if ($content === null || $content === '') {
+                    continue;
+                }
+                $attachments[] = [
+                    'id' => method_exists($attachment, 'getId') ? (string) $attachment->getId() : null,
+                    'name' => (string) $attachment->getName(),
+                    'mime' => method_exists($attachment, 'getMimeType') ? (string) $attachment->getMimeType() : null,
+                    'disposition' => method_exists($attachment, 'getDisposition') ? (string) $attachment->getDisposition() : null,
+                    'content' => $content,
+                ];
+            } catch (\Exception $e) {
+                // best-effort: skip attachment if we can't read it
+            }
+        }
+
+        return $attachments;
+    }
+
+    /**
+     * Many email clients embed inline images via `cid:` URLs. When we forward the email,
+     * those images would appear broken unless we inline them. For local debugging (Mailpit),
+     * converting `cid:` references into `data:` URIs is the most robust approach.
+     */
+    private function embedInlineCidImagesAsDataUris(string $html, array $attachments): string
+    {
+        if ($html === '' || stripos($html, 'cid:') === false || empty($attachments)) {
+            return $html;
+        }
+
+        $byCandidate = [];
+        $imageAttachments = [];
+        foreach ($attachments as $a) {
+            $id = isset($a['id']) ? trim((string) $a['id']) : '';
+            // Only inline images
+            $mime = isset($a['mime']) ? (string) $a['mime'] : '';
+            if ($mime === '' || stripos($mime, 'image/') !== 0) {
+                continue;
+            }
+
+            $imageAttachments[] = $a;
+
+            $candidates = [];
+            if ($id !== '') {
+                $candidates[] = $id;
+                $candidates[] = trim($id, "<> \t\r\n");
+                if (str_contains($id, '@')) {
+                    $candidates[] = explode('@', trim($id, "<> \t\r\n"))[0];
+                }
+            }
+            $name = isset($a['name']) ? trim((string) $a['name']) : '';
+            if ($name !== '') {
+                $candidates[] = $name;
+            }
+            foreach ($candidates as $c) {
+                $c = trim((string) $c);
+                if ($c === '') {
+                    continue;
+                }
+                $byCandidate[$c] = $a;
+            }
+        }
+
+        if (empty($byCandidate) && empty($imageAttachments)) {
+            return $html;
+        }
+
+        return preg_replace_callback(
+            '/\bsrc\s*=\s*(["\'])\s*cid:([^"\'>\s]+)\s*\1/i',
+            function ($m) use ($byCandidate, $imageAttachments) {
+                $quote = $m[1];
+                $cid = trim((string) $m[2]);
+                $cid = trim($cid, "<> \t\r\n");
+
+                $a = $byCandidate[$cid] ?? null;
+
+                if (!$a) {
+                    // Try fuzzy match (cid may be a token of the real Content-ID)
+                    foreach ($byCandidate as $k => $candidateAttachment) {
+                        $kNorm = trim((string) $k);
+                        if ($kNorm !== '' && (str_contains($kNorm, $cid) || str_contains($cid, $kNorm))) {
+                            $a = $candidateAttachment;
+                            break;
+                        }
+                    }
+                }
+
+                // If still not found and there's exactly one inline image attachment, embed it as best effort
+                if (!$a && count($imageAttachments) === 1) {
+                    $a = $imageAttachments[0];
+                }
+
+                if (!$a) {
+                    return $m[0];
+                }
+
+                $mime = (string) ($a['mime'] ?? 'application/octet-stream');
+                $content = $a['content'] ?? '';
+                if ($content === '') {
+                    return $m[0];
+                }
+
+                $dataUri = 'data:' . $mime . ';base64,' . base64_encode($content);
+                return 'src=' . $quote . $dataUri . $quote;
+            },
+            $html
+        ) ?? $html;
     }
 
     private function associateAttachment($attachment, $story, $logger)
