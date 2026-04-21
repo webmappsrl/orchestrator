@@ -5,6 +5,7 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Envelope;
@@ -15,13 +16,15 @@ class OrchestratorUserNotFound extends Mailable
     use Queueable, SerializesModels;
 
     public $sub;
+    public array $forwardedAttachments;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($sub)
+    public function __construct($sub, array $forwardedAttachments = [])
     {
         $this->sub = $sub;
+        $this->forwardedAttachments = $forwardedAttachments;
     }
 
     /**
@@ -57,6 +60,19 @@ class OrchestratorUserNotFound extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        return array_values(array_filter(array_map(function ($a) {
+            if (!is_array($a) || !isset($a['name'], $a['content'])) {
+                return null;
+            }
+            $name = (string) $a['name'];
+            $content = $a['content'];
+            $mime = isset($a['mime']) ? (string) $a['mime'] : null;
+
+            $attachment = Attachment::fromData(fn () => $content, $name);
+            if ($mime) {
+                $attachment = $attachment->withMime($mime);
+            }
+            return $attachment;
+        }, $this->forwardedAttachments)));
     }
 }
