@@ -143,7 +143,7 @@ class Quote extends Model implements HasMedia
      */
     public function getTotalAttribute(): string
     {
-        $total = $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice();
+        $total = $this->getQuoteNetPrice();
 
         return number_format($total, 2, ',', '.') . ' €';
     }

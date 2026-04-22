@@ -21,10 +21,8 @@ class SalesQuoteColumnAggregator implements AggregatesKanbanColumn
                 return 0.0;
             }
 
-            // Numeric total (not the formatted accessor string).
-            return $item->getTotalPrice()
-                + $item->getTotalRecurringPrice()
-                + $item->getTotalAdditionalServicesPrice();
+            // Use net quote price so column totals include any discount.
+            return $item->getQuoteNetPrice();
         });
 
         return [
