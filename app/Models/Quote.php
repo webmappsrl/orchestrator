@@ -143,6 +143,16 @@ class Quote extends Model implements HasMedia
      */
     public function getTotalAttribute(): string
     {
+        $total = $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice();
+
+        return number_format($total, 2, ',', '.') . ' €';
+    }
+    
+    /**
+     * Accessor for display (e.g. Kanban card): net total price formatted.
+     */
+    public function getNetTotalAttribute(): string
+    {
         $total = $this->getQuoteNetPrice();
 
         return number_format($total, 2, ',', '.') . ' €';
