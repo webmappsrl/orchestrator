@@ -147,6 +147,16 @@ class Quote extends Model implements HasMedia
 
         return number_format($total, 2, ',', '.') . ' €';
     }
+    
+    /**
+     * Accessor for display (e.g. Kanban card): net total price formatted.
+     */
+    public function getNetTotalAttribute(): string
+    {
+        $total = $this->getQuoteNetPrice();
+
+        return number_format($total, 2, ',', '.') . ' €';
+    }
 
     public function registerMediaCollections(): void
     {
