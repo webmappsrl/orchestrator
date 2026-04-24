@@ -64,7 +64,7 @@ class Sales extends Dashboard
                 ->subtitle('customer.full_name')
                 ->displayFields([
                     'customer.full_name' => __('Customer'),
-                    'total' => __('Total'),
+                    'net_total' => __('Total'),
                 ])
                 ->priorityField('priority')
                 ->enableIntraColumnReorder(true)
