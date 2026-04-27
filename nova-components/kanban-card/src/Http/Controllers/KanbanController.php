@@ -4,6 +4,7 @@ namespace Webmapp\KanbanCard\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -513,12 +514,14 @@ class KanbanController extends Controller
         $validSet = array_fill_keys($validIds, true);
         $orderedValidIds = array_values(array_filter($ids, fn ($id) => isset($validSet[$id])));
 
-        DB::transaction(function () use ($modelClass, $keyName, $priorityField, $orderedValidIds) {
-            foreach ($orderedValidIds as $priority => $itemId) {
-                $modelClass::query()
-                    ->where($keyName, $itemId)
-                    ->update([$priorityField => $priority]);
-            }
+        Model::withoutTimestamps(function () use ($modelClass, $keyName, $priorityField, $orderedValidIds) {
+            DB::transaction(function () use ($modelClass, $keyName, $priorityField, $orderedValidIds) {
+                foreach ($orderedValidIds as $priority => $itemId) {
+                    $modelClass::query()
+                        ->where($keyName, $itemId)
+                        ->update([$priorityField => $priority]);
+                }
+            });
         });
 
         return response()->json(['success' => true]);
