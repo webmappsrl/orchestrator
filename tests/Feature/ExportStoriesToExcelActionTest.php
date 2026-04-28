@@ -34,6 +34,8 @@ class ExportStoriesToExcelActionTest extends TestCase
             'Creator',
             'Assigned to',
             'Tester',
+            'Estimated Hours',
+            'Effective Hours',
             'Ticket title',
             'Request',
             'Ticket URL',
@@ -168,7 +170,24 @@ class ExportStoriesToExcelActionTest extends TestCase
         $export = new SelectedStoriesToExcel(collect([$story]));
         $row = $export->map($story);
 
-        $this->assertSame($baseUrl.'/resources/developer-stories/'.$story->id, $row[9]);
+        $this->assertSame($baseUrl.'/resources/developer-stories/'.$story->id, $row[11]);
+    }
+    
+    /** @test */
+    public function it_exports_zero_hours_as_string_zero_for_visible_excel_cells(): void
+    {
+        $story = Story::factory()->create();
+        Story::whereKey($story->id)->update([
+            'estimated_hours' => 0,
+            'hours' => null,
+        ]);
+        $story->refresh();
+
+        $export = new SelectedStoriesToExcel(collect([$story]));
+        $row = $export->map($story);
+
+        $this->assertSame('0', $row[7]);
+        $this->assertSame('0', $row[8]);
     }
 
     /** @test */

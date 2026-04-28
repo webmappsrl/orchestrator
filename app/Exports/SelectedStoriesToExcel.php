@@ -32,6 +32,8 @@ class SelectedStoriesToExcel implements FromCollection, WithMapping, WithHeading
             __('Creator'),
             __('Assigned to'),
             __('Tester'),
+            __('Estimated Hours'),
+            __('Effective Hours'),
             __('Ticket title'),
             __('Request'),
             __('Ticket URL'),
@@ -56,6 +58,9 @@ class SelectedStoriesToExcel implements FromCollection, WithMapping, WithHeading
         $baseUrl = rtrim((string) config('app.url'), '/');
         $url = $baseUrl . '/resources/developer-stories/' . $story->id;
 
+        $estimatedHours = $this->hoursForExport($story->estimated_hours);
+        $effectiveHours = $this->hoursForExport($story->hours);
+
         return [
             $story->id,
             $status,
@@ -64,10 +69,27 @@ class SelectedStoriesToExcel implements FromCollection, WithMapping, WithHeading
             $creator,
             $assignedTo,
             $tester,
+            $estimatedHours,
+            $effectiveHours,
             $story->name ?? '',
             $request,
             $url,
         ];
+    }
+
+    /** Zero as string so .xls writers do not drop numeric 0 as empty cells. */
+    private function hoursForExport(mixed $value): float|string
+    {
+        if ($value === null) {
+            return '0';
+        }
+        if (is_string($value) && trim($value) === '') {
+            return '0';
+        }
+
+        $hours = (float) $value;
+
+        return $hours === 0.0 ? '0' : $hours;
     }
 
     private function sanitizeRichText(string $html): string
