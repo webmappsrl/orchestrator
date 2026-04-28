@@ -7,12 +7,12 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\MorphTo;
+use App\Nova\Metrics\TagHoursTotal;
 use App\Nova\Metrics\TagSal;
+use App\Nova\Filters\QuarterTagFilter;
+use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Fields\MorphToMany;
-use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Laravel\Nova\Fields\Boolean;
-use App\Nova\Filters\QuarterTagFilter;
 
 class Tag extends Resource
 {
@@ -108,7 +108,9 @@ class Tag extends Resource
     public function cards(Request $request)
     {
         return [
-            (new TagSal())->onlyOnDetail()
+            (new TagHoursTotal('estimated'))->onlyOnDetail(),
+            (new TagHoursTotal('effective'))->onlyOnDetail(),
+            (new TagSal())->onlyOnDetail(),
         ];
     }
 
