@@ -710,7 +710,12 @@ Nova.booting((app) => {
              */
             formatCurrency(amount) {
                 try {
-                    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
+                    // it-IT defaults to useGrouping "auto", which omits the thousands separator for values < 10_000.
+                    return new Intl.NumberFormat('it-IT', {
+                        style: 'currency',
+                        currency: 'EUR',
+                        useGrouping: 'always',
+                    }).format(Number(amount) || 0);
                 } catch (e) {
                     return '€ ' + String(amount);
                 }
