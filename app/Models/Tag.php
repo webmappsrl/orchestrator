@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StoryStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -75,8 +76,30 @@ class Tag extends Model
         return url("resources/{$resourcePath}/{$this->taggable_id}");
     }
 
+    /**
+     * Story statuses treated as "closed" for SAL # and Sal t.
+     */
+    public static function salClosedStoryStatusValues(): array
+    {
+        return [
+            StoryStatus::Released->value,
+            StoryStatus::Done->value,
+            StoryStatus::Rejected->value,
+        ];
+    }
+
+    public function salTicketCounts(): array
+    {
+        $statuses = self::salClosedStoryStatusValues();
+
+        return [
+            (int) $this->tagged()->whereIn('status', $statuses)->count(),
+            (int) $this->tagged()->count(),
+        ];
+    }
+
     public function isClosed()
     {
-        return ! $this->tagged()->whereNotIn('status', ['released', 'done'])->exists();
+        return ! $this->tagged()->whereNotIn('status', self::salClosedStoryStatusValues())->exists();
     }
 }
