@@ -44,7 +44,7 @@ class CreateDocumentationFromStory extends Action
     {
         try {
             $model = $request->findModelOrFail();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $model = null;
         }
         try {

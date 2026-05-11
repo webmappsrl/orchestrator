@@ -9,7 +9,8 @@ use Symfony\Component\Process\Process;
 
 class SyncDatabaseCommand extends Command
 {
-    protected $signature = 'db:sync';
+    protected $signature = 'db:sync
+                            {--s3 : Scarica da AWS S3 reale (ignora endpoint MinIO, come db:download --s3)}';
 
     protected $description = 'Scarica il dump di produzione da AWS S3 e lo ripristina nel database locale.';
 
@@ -23,16 +24,20 @@ class SyncDatabaseCommand extends Command
 
         $this->log('db:sync -> is started');
 
-        $this->log('db:sync -> START download from AWS');
-        $downloadResult = Artisan::call('db:download');
+        $this->log('db:sync -> START download (db:download)');
+        $downloadOptions = [];
+        if ($this->option('s3')) {
+            $downloadOptions['--s3'] = true;
+        }
+        $downloadResult = Artisan::call('db:download', $downloadOptions);
         if ($downloadResult !== 0) {
             $this->log('db:sync -> download FAILED', 'error');
             return 1;
         }
-        $this->log('db:sync -> DONE download from AWS');
+        $this->log('db:sync -> DONE download');
 
-        $dumpPath = storage_path('app/database/last-dump.sql.gz');
-        if (!file_exists($dumpPath)) {
+        $dumpPath = storage_path('backups/last_dump.sql.gz');
+        if (! file_exists($dumpPath)) {
             $this->log('db:sync -> dump file not found at ' . $dumpPath, 'error');
             return 1;
         }
@@ -68,7 +73,7 @@ class SyncDatabaseCommand extends Command
         }
 
         $process = Process::fromShellCommandline(
-            "gunzip -c {$dumpPath} | psql -U {$user} -h {$host} -p {$port} -d {$dbname}"
+            'gunzip -c '.escapeshellarg($dumpPath).' | psql -U '.$user.' -h '.$host.' -p '.$port.' -d '.$dbname
         );
         $process->setTimeout(600);
         $process->setEnv($env);

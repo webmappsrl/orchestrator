@@ -68,12 +68,12 @@ return [
     ],
 
     'wmdumps' => [
-        'key' => env('AWS_DUMPS_ACCESS_KEY_ID'),
-        'secret' => env('AWS_DUMPS_SECRET_ACCESS_KEY'),
-        'region' => env('AWS_DEFAULT_REGION', 'eu-central-1'),
-        'bucket' => env('AWS_DUMPS_BUCKET'),
-        'url' => env('AWS_URL'),
-        'endpoint' => env('AWS_ENDPOINT'),
+        'key' => env('AWS_DUMPS_ACCESS_KEY_ID', env('AWS_ACCESS_KEY_ID')),
+        'secret' => env('AWS_DUMPS_SECRET_ACCESS_KEY', env('AWS_SECRET_ACCESS_KEY')),
+        'region' => env('AWS_DUMPS_DEFAULT_REGION', env('AWS_DEFAULT_REGION', 'eu-central-1')),
+        'bucket' => env('AWS_DUMPS_BUCKET', 'wmdumps'),
+        'url' => env('AWS_DUMPS_URL', env('AWS_URL')),
+        'endpoint' => env('AWS_DUMPS_ENDPOINT', env('AWS_ENDPOINT')),
     ],
     'app_environment' => env('APP_ENV', 'production'),
 

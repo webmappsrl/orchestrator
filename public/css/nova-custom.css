@@ -1,0 +1,11 @@
+/* Fix Tiptap/ProseMirror editor click area */
+.ProseMirror {
+    min-height: 150px;
+    height: 100%;
+    cursor: text;
+}
+
+.tiptap-editor__content {
+    height: 100%;
+    cursor: text;
+}

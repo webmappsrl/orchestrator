@@ -16,7 +16,6 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Currency;
-use Eminiarts\Tabs\Traits\HasTabs;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\Enums\ContractStatus;
@@ -36,7 +35,6 @@ use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 
 class Customer extends Resource
 {
-    use HasTabs;
     /**
      * The model the resource corresponds to.
      *
@@ -396,10 +394,5 @@ class Customer extends Resource
     public static function indexQuery(NovaRequest $request, $query)
     {
         return $query->where('status', '!=', CustomerStatus::Lost->value);
-    }
-
-    public function indexBreadcrumb()
-    {
-        return null;
     }
 }

@@ -20,7 +20,7 @@ class EditFields extends Action
      */
     public $name = 'Edit';
     protected $fields = [];
-    protected $resource = null;
+    public $resource = null;
     public function __construct($name = 'Edit', array $fields = [], $resource = null)
     {
         $this->fields = $fields;

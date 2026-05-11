@@ -4,7 +4,7 @@ namespace App\Nova;
 
 use App\Models\Story;
 use App\Enums\UserRole;
-use Manogi\Tiptap\Tiptap;
+use Marshmallow\Tiptap\Tiptap;
 use App\Traits\fieldTrait;
 use Laravel\Nova\Resource;
 use Laravel\Nova\Fields\ID;

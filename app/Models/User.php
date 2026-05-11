@@ -10,12 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Nova\Auth\Impersonatable;
 use Laravel\Sanctum\HasApiTokens;
-use Overtrue\LaravelFavorite\Traits\Favoriter;
-use Wm\WmPackage\Model\User as Authenticatable;
+use Wm\WmPackage\Models\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use Favoriter, HasApiTokens, HasFactory, Impersonatable, Notifiable;
+    use HasApiTokens, HasFactory, Impersonatable, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -49,12 +48,12 @@ class User extends Authenticatable
         'roles' => AsEnumCollection::class.':'.UserRole::class,
     ];
 
-    /**
-     * Check if user has a specific single role
-     */
-    public function hasRole(UserRole $role): bool
+    public function hasRole($roles, ?string $guard = null): bool
     {
-        return $this->roles->contains($role);
+        if ($roles instanceof UserRole) {
+            return $this->roles->contains($roles);
+        }
+        return parent::hasRole($roles, $guard);
     }
 
     public function stories()
@@ -143,8 +142,49 @@ class User extends Authenticatable
         }
     }
 
-    public function apps()
+    public function authorizedApps(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(App::class, 'user_app', 'user_id', 'app_id');
+    }
+
+    public function favorite($object): void
+    {
+        if (! $this->hasFavorited($object)) {
+            \Illuminate\Support\Facades\DB::table('favorites')->insert([
+                'user_id'           => $this->getKey(),
+                'favoriteable_id'   => $object->getKey(),
+                'favoriteable_type' => $object->getMorphClass(),
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+        }
+    }
+
+    public function unfavorite($object): void
+    {
+        \Illuminate\Support\Facades\DB::table('favorites')
+            ->where('user_id', $this->getKey())
+            ->where('favoriteable_id', $object->getKey())
+            ->where('favoriteable_type', $object->getMorphClass())
+            ->delete();
+    }
+
+    public function hasFavorited($object): bool
+    {
+        return \Illuminate\Support\Facades\DB::table('favorites')
+            ->where('user_id', $this->getKey())
+            ->where('favoriteable_id', $object->getKey())
+            ->where('favoriteable_type', $object->getMorphClass())
+            ->exists();
+    }
+
+    public function getFavoriteItems(string $class): \Illuminate\Database\Eloquent\Builder
+    {
+        $favoritedIds = \Illuminate\Support\Facades\DB::table('favorites')
+            ->where('user_id', $this->getKey())
+            ->where('favoriteable_type', (new $class)->getMorphClass())
+            ->pluck('favoriteable_id');
+
+        return $class::whereIn((new $class)->getKeyName(), $favoritedIds);
     }
 }

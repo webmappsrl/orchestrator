@@ -3,7 +3,7 @@
 namespace App\Nova;
 
 use Laravel\Nova\Panel;
-use Manogi\Tiptap\Tiptap;
+use Marshmallow\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;

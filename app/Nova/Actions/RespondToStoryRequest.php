@@ -2,7 +2,7 @@
 
 namespace App\Nova\Actions;
 
-use Manogi\Tiptap\Tiptap;
+use Marshmallow\Tiptap\Tiptap;
 use App\Enums\StoryStatus;
 use Closure;
 use Illuminate\Bus\Queueable;

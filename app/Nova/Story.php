@@ -11,8 +11,6 @@ use App\Nova\Lenses\StoriesByQuarter;
 use App\Nova\Metrics\StoryTime;
 use App\Traits\fieldTrait;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
-use Formfeed\Breadcrumbs\Breadcrumb;
-use Formfeed\Breadcrumbs\Breadcrumbs;
 use Illuminate\Support\Facades\Session;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsTo;
@@ -78,7 +76,6 @@ class Story extends Resource
 
     public static $linkToParent = false;
 
-    public static $resolveParentBreadcrumbs = false;
 
     public $holidayAlert = <<<'HTML'
     <div style="padding: 20px; border-radius: 8px; background-color: #f8f9fa; text-align: center; font-family: Arial, sans-serif; color: #333;">
@@ -101,20 +98,6 @@ class Story extends Resource
     </div>
     HTML;
 
-    public function indexBreadcrumb(NovaRequest $resourceClass, Breadcrumbs $breadcrumbs, Breadcrumb $indexBreadcrumb)
-    {
-        $previousUrl = url()->previous();
-        $previousPath = parse_url($previousUrl, PHP_URL_PATH).'?'.parse_url($previousUrl, PHP_URL_QUERY);
-        if (strlen($previousPath) > 60) {
-            Session::put('breadcrumb_path', $previousPath);
-        }
-        $bp = Session::get('breadcrumb_path');
-        if (! is_null($bp)) {
-            $indexBreadcrumb->path = $bp;
-        }
-
-        return $indexBreadcrumb;
-    }
 
     /**
      * The model the resource corresponds to.

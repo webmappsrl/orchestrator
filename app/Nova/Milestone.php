@@ -14,11 +14,9 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Eminiarts\Tabs\Tab;
 use Eminiarts\Tabs\Tabs;
-use Eminiarts\Tabs\Traits\HasTabs;
 
 class Milestone extends Resource
 {
-    use HasTabs;
     /**
      * The model the resource corresponds to.
      *

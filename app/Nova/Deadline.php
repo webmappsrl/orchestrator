@@ -16,7 +16,7 @@ use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
+use Suenerds\NovaSearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 use App\Nova\Customer as novaCustomer;
 use App\Nova\Story as novaStory;
 
@@ -173,10 +173,5 @@ class Deadline extends Resource
                 ->cancelButtonText('Cancel')
                 ->showInline()
         ];
-    }
-
-    public function indexBreadcrumb()
-    {
-        return null;
     }
 }

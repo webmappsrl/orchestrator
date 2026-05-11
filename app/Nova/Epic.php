@@ -12,7 +12,6 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\HasMany;
-use Eminiarts\Tabs\Traits\HasTabs;
 use Laravel\Nova\Fields\BelongsTo;
 use App\Nova\Actions\EpicDoneAction;
 use Laravel\Nova\Fields\MorphToMany;
@@ -23,11 +22,10 @@ use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
-use Khalin\Nova4SearchableBelongsToFilter\NovaSearchableBelongsToFilter;
+use Suenerds\NovaSearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class Epic extends Resource
 {
-    use HasTabs;
     /**
      * The model the resource corresponds to.
      *
@@ -210,10 +208,5 @@ class Epic extends Resource
                 ->confirmButtonText('Confirm')
                 ->cancelButtonText('Cancel'),
         ];
-    }
-
-    public function indexBreadcrumb()
-    {
-        return null;
     }
 }

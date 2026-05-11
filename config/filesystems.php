@@ -65,14 +65,17 @@ return [
             'driver' => 'local',
             'root' => storage_path('imports'),
         ],
+        // Non usare config('services.wmdumps'): filesystems.php viene caricato prima di services.php,
+        // quindi bucket/key risultano null. Allineato a wm-package/config/wm-filesystems.php (disco wmdumps).
         'wmdumps' => [
             'driver' => 's3',
-            'key' => config('services.wmdumps.key'),
-            'secret' => config('services.wmdumps.secret'),
-            'region' => config('services.wmdumps.region', 'eu-central-1'),
-            'bucket' => config('services.wmdumps.bucket'),
-            'url' => config('services.wmdumps.url'),
-            'endpoint' => config('services.wmdumps.endpoint'),
+            'key' => env('AWS_DUMPS_ACCESS_KEY_ID', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('AWS_DUMPS_SECRET_ACCESS_KEY', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('AWS_DUMPS_DEFAULT_REGION', env('AWS_DEFAULT_REGION', 'eu-central-1')),
+            'bucket' => env('AWS_DUMPS_BUCKET', 'wmdumps'),
+            'url' => env('AWS_DUMPS_URL', env('AWS_URL')),
+            'endpoint' => env('AWS_DUMPS_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => env('AWS_DUMPS_USE_PATH_STYLE_ENDPOINT', env('AWS_USE_PATH_STYLE_ENDPOINT', false)),
         ],
     ],
 
