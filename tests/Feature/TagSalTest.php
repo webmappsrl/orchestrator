@@ -18,18 +18,38 @@ class TagSalTest extends TestCase
         return __('Empty');
     }
 
-    // Helper: create a Nova Tag resource and get the 'Sal' field for a tag
+    // Helper: create a Nova Tag resource and get the 'SAL t' field for a tag
     private function getSalField(Tag $tag)
     {
         $request = NovaRequest::create('/nova-api/tags', 'GET');
         $resource = new \App\Nova\Tag($tag);
         $fields = collect($resource->fields($request));
-        $salField = $fields->firstWhere('name', 'Sal');
-        $this->assertNotNull($salField, 'Sal field not found');
+        $salField = $fields->firstWhere('name', 'SAL t');
+        $this->assertNotNull($salField, 'SAL t field not found');
         return $salField;
     }
+    
+    // Helper: create a Nova Tag resource and get the 'SAL #' field for a tag
+    private function getSalHashField(Tag $tag)
+    {
+        $request = NovaRequest::create('/nova-api/tags', 'GET');
+        $resource = new \App\Nova\Tag($tag);
+        $fields = collect($resource->fields($request));
+        $salHashField = $fields->firstWhere('name', 'SAL #');
+        $this->assertNotNull($salHashField, 'SAL # field not found');
+        return $salHashField;
+    }
 
-    // Helper: resolve the Sal field and return the HTML string
+    // Helper: resolve the Sal # field and return the HTML string
+    private function resolveSalHashField(Tag $tag): string
+    {
+        $field = $this->getSalHashField($tag);
+        $field->resolve($tag);
+        $this->assertIsString($field->value, 'SAL # field does not return a string');
+        return $field->value;
+    }
+
+    // Helper: resolve the Sal t field and return the HTML string
     private function resolveSalField(Tag $tag): string
     {
         $salField = $this->getSalField($tag);
@@ -124,5 +144,45 @@ class TagSalTest extends TestCase
 
         $salHtml = $this->resolveSalField($tag);
         $this->assertStringContainsString('color:orange', $salHtml);
+    }
+
+    public function test_sal_hash_shows_zero_when_no_tagged_stories()
+    {
+        $tag = Tag::factory()->create();
+
+        $this->assertSame([0, 0], $tag->salTicketCounts());
+
+        $html = $this->resolveSalHashField($tag);
+        $this->assertStringContainsString('[0]/[0]', $html);
+    }
+
+    public function test_sal_hash_counts_closed_versus_total_stories()
+    {
+        $tag = Tag::factory()->create();
+
+        $released = Story::factory()->create(['status' => StoryStatus::Released]);
+        $inProgress = Story::factory()->create(['status' => StoryStatus::Progress]);
+        $done = Story::factory()->create(['status' => StoryStatus::Done]);
+
+        foreach ([$released, $inProgress, $done] as $story) {
+            $story->tags()->attach($tag->id);
+        }
+
+        $this->assertSame([2, 3], $tag->salTicketCounts());
+
+        $html = $this->resolveSalHashField($tag);
+        $this->assertStringContainsString('[2]/[3]', $html);
+    }
+
+    public function test_tag_is_closed_when_only_rejected_stories_and_sal_t_is_green()
+    {
+        $tag = Tag::factory()->create(['estimate' => 10]);
+        $story = Story::factory()->create(['hours' => 5, 'status' => StoryStatus::Rejected]);
+        $story->tags()->attach($tag->id);
+
+        $this->assertTrue($tag->isClosed());
+
+        $salHtml = $this->resolveSalField($tag);
+        $this->assertStringContainsString('color:green', $salHtml);
     }
 }
