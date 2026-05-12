@@ -3,7 +3,6 @@
 namespace App\Nova;
 
 use App\Enums\UserRole;
-use Eminiarts\Tabs\Tabs;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
@@ -17,8 +16,9 @@ use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Textarea;
 use Outl1ne\MultiselectField\Multiselect;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Emilianotisato\NovaTinyMCE\NovaTinyMCE;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
+use Laravel\Nova\Tabs\Tab;
+use Marshmallow\Tiptap\Tiptap;
 
 class App extends Resource
 {
@@ -58,6 +58,40 @@ class App extends Resource
         'tooltip' => 'Apre un tooltip con informazioni minime',
         'popup' => ' Apre il popup',
         'tooltip_popup' => 'apre Tooltip con X per chiudere Tooltip oppure un bottone che apre il popup'
+    ];
+
+    private array $tiptapAllButtons = [
+        'heading',
+        '|',
+        'italic',
+        'bold',
+        '|',
+        'link',
+        'code',
+        'strike',
+        'underline',
+        'highlight',
+        '|',
+        'bulletList',
+        'orderedList',
+        'br',
+        'codeBlock',
+        'blockquote',
+        '|',
+        'horizontalRule',
+        'hardBreak',
+        '|',
+        'table',
+        '|',
+        'image',
+        '|',
+        'textAlign',
+        '|',
+        'rtl',
+        '|',
+        'history',
+        '|',
+        'editHtml',
     ];
 
     /**
@@ -169,7 +203,7 @@ class App extends Resource
 
         if ($request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Editor) || $request->user()->hasRole(UserRole::Manager)) {
             return [
-                (new Tabs("APP Details: {$this->name} ({$this->id})", $this->sections()))->withToolbar(),
+                Tab::group("APP Details: {$this->name} ({$this->id})", $this->sections())->withToolbar(),
             ];
         }
     }
@@ -206,7 +240,7 @@ class App extends Resource
     {
         if ($request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Editor)) {
             return [
-                (new Tabs("APP Details: {$this->name} ({$this->id})", $this->sections()))->withToolbar(),
+                Tab::group("APP Details: {$this->name} ({$this->id})", $this->sections())->withToolbar(),
             ];
         }
     }
@@ -376,7 +410,9 @@ class App extends Resource
     {
         return [
             NovaTabTranslatable::make([
-                NovaTinyMCE::make(__('welcome'), 'welcome')
+                Tiptap::make(__('welcome'), 'welcome')
+                    ->buttons($this->tiptapAllButtons)
+                    ->alwaysShow()
                     ->help(__('is the welcome message displayed as the first element of the home')),
             ]),
             Code::Make('Config Home')
@@ -390,7 +426,9 @@ class App extends Resource
     protected function project_tab(): array
     {
         return [
-            NovaTinyMCE::make('Page Project', 'page_project')
+            Tiptap::make('Page Project', 'page_project')
+                ->buttons($this->tiptapAllButtons)
+                ->alwaysShow()
         ];
     }
 

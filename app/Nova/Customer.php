@@ -2,9 +2,7 @@
 
 namespace App\Nova;
 
-use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
-use Eminiarts\Tabs\Tabs;
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Nova\Fields\Badge;
 use Laravel\Nova\Fields\BelongsTo;
@@ -32,6 +30,7 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\Textarea;
 use App\Nova\QuoteNoFilter;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
+use Laravel\Nova\Tabs\Tab;
 
 class Customer extends Resource
 {
@@ -87,7 +86,7 @@ class Customer extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            (new Tabs(__('Customer Details'), [
+            Tab::group(__('Customer Details'), [
                 Tab::make(__('Main'), [
                     ID::make()->sortable(),
                     Text::make(__('Contacts'), function () {
@@ -249,7 +248,7 @@ class Customer extends Resource
                 Tab::make(__('Tickets'), [
                     HasMany::make(__('Open Tickets'), 'openTickets', CustomerTickets::class),
                 ]),
-            ]))->withToolbar(),
+            ])->withToolbar(),
             new Panel(__('Notes'), [
                 MarkdownTui::make(__('Notes'), 'notes')
                     ->initialEditType(EditorType::MARKDOWN)

@@ -4,9 +4,7 @@ namespace App\Nova;
 
 use App\Nova\User;
 use App\Enums\UserRole;
-use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
-use Eminiarts\Tabs\Tabs;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Text;
@@ -19,6 +17,7 @@ use App\Nova\Actions\addStoriesToBacklogAction;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use App\Nova\Actions\RemoveProjectsFromFavoritesAction;
+use Laravel\Nova\Tabs\Tab;
 
 class Project extends Resource
 {
@@ -116,8 +115,8 @@ class Project extends Resource
                     ->nullable()
             ]),
 
-            new Tabs('Backlog', [
-                new Tab('Backlog Stories', [
+            Tab::group('Backlog', [
+                Tab::make('Backlog Stories', [
                     HasMany::make('Backlog Stories', 'backlogStories', Story::class),
                 ]),
             ])

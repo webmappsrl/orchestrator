@@ -216,10 +216,18 @@ grep -rn "Eminiarts\\\\NovaTabs\\\\" app/Nova/
 Se il package non supporta Nova 5, sostituire con i Panel nativi di Nova:
 ```php
 // Prima
+use Eminiarts\Tabs\Tab;
 use Eminiarts\Tabs\Tabs;
-Tabs::make('Details', [...fields...])
+
+new Tabs('Details', [
+    Tab::make('Main', [...fields...]),
+])
 // Dopo
-\Laravel\Nova\Panel::make('Details', [...fields...])
+use Laravel\Nova\Tabs\Tab;
+
+Tab::group('Details', [
+    Tab::make('Main', [...fields...]),
+])
 ```
 
 - [ ] **Step 6: Rimuovere formfeed-uk/nova-breadcrumbs**

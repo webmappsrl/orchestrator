@@ -2,9 +2,7 @@
 
 namespace App\Nova;
 
-use Eminiarts\Tabs\Tab;
 use Laravel\Nova\Panel;
-use Eminiarts\Tabs\Tabs;
 use App\Enums\EpicStatus;
 use App\Models\Milestone;
 use Laravel\Nova\Fields\ID;
@@ -22,6 +20,7 @@ use App\Nova\Actions\CreateStoriesFromText;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
+use Laravel\Nova\Tabs\Tab;
 use Suenerds\NovaSearchableBelongsToFilter\NovaSearchableBelongsToFilter;
 
 class Epic extends Resource
@@ -66,7 +65,7 @@ class Epic extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            (new Tabs('Info', [
+            Tab::group('Info', [
                 Tab::make('Main Info', [
                     ID::make()->sortable(),
                     //display the relations in nova field
@@ -138,7 +137,7 @@ class Epic extends Resource
                 Tab::make('Tag projects', [
                     BelongsToMany::make('Tag projects', 'tagProjects', 'App\Nova\Project')->searchable(),
                 ]),
-            ]))->withToolbar(),
+            ])->withToolbar(),
             new Panel('DESCRIPTION', [
                 MarkdownTui::make('Description')
                     ->initialEditType(EditorType::MARKDOWN)

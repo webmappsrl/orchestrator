@@ -12,8 +12,7 @@ use Laravel\Nova\Fields\Number;
 use Datomatic\NovaMarkdownTui\MarkdownTui;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Datomatic\NovaMarkdownTui\Enums\EditorType;
-use Eminiarts\Tabs\Tab;
-use Eminiarts\Tabs\Tabs;
+use Laravel\Nova\Tabs\Tab;
 
 class Milestone extends Resource
 {
@@ -57,7 +56,7 @@ class Milestone extends Resource
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
             DateTime::make(__('Due Date'), 'due_date')->sortable(),
-            new Tabs(__('Epics'), [
+            Tab::group(__('Epics'), [
                 //create a tab for every status of epics
                 Tab::make('New Epics', [
                     HasMany::make('New Epics', 'newEpics', Epic::class),
