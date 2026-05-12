@@ -27,7 +27,7 @@ artisan() {
 }
 
 composer_cmd() {
-    docker exec -it "$CONTAINER" composer --working-dir="$APP_DIR" "$@"
+    docker exec -u root -it "$CONTAINER" composer --working-dir="$APP_DIR" "$@"
 }
 
 # ── rollback ─────────────────────────────────────────────────────────────────
@@ -85,11 +85,6 @@ log "Checking PHP version in container..."
 PHP_VERSION=$(docker exec "$CONTAINER" php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
 log "PHP $PHP_VERSION detected"
 
-# ── submodules ────────────────────────────────────────────────────────────────
-
-log "Updating git submodules..."
-git submodule update --init --recursive
-
 # ── backup ────────────────────────────────────────────────────────────────────
 
 log "Backing up composer.lock..."
@@ -99,6 +94,11 @@ cp composer.lock composer.lock.pre-upgrade
 
 log "Putting app in maintenance mode..."
 artisan down --retry=30
+
+# ── submodules ────────────────────────────────────────────────────────────────
+
+log "Updating git submodules..."
+git submodule update --init --recursive
 
 # ── composer update ───────────────────────────────────────────────────────────
 
