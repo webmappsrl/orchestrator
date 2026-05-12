@@ -58,7 +58,12 @@ class Tag extends Resource
                 ->step(
                     1,  // Permette incrementi di 0.5 ore
                 )->onlyOnForms(),
-            Text::make('Sal')->resolveUsing(function () {
+            Text::make('SAL #')->resolveUsing(function () {
+                [$closed, $total] = $this->salTicketCounts();
+
+                return '<span style="font-weight:bold;">['.$closed.']/['.$total.']</span>';
+            })->asHtml()->onlyOnIndex(),
+            Text::make('SAL t')->resolveUsing(function () {
                 $empty = __('Empty');
                 $totalHours = $this->getTotalHoursAttribute() ?? $empty; // Calcola la somma delle ore
                 $estimate = $this->estimate ?? $empty; // Ottieni il valore stimato
