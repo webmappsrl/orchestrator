@@ -52,7 +52,7 @@ class Documentation extends Model
         static::created(function (Documentation $entity) {
             try {
                 $tag = Tag::firstOrCreate([
-                    'name' => class_basename($entity) . ': ' . $entity->name,
+                    'name' => $entity->name,
                     'taggable_id' => $entity->id,
                     'taggable_type' => get_class($entity)
                 ]);

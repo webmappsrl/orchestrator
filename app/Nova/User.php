@@ -11,6 +11,7 @@ use Laravel\Nova\Fields\Select;
 use Illuminate\Validation\Rules;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\HasOne;
 use Laravel\Nova\Fields\Gravatar;
 use Laravel\Nova\Fields\Password;
 use App\Nova\Project as NovaProject;
@@ -81,7 +82,15 @@ class User extends Resource
                 ->creationRules('required', Rules\Password::defaults())
                 ->updateRules('nullable', Rules\Password::defaults()),
 
-            BelongsToMany::make('Apps'),
+            Text::make(__('Associated Customer'), function () {
+                $customer = $this->associatedCustomer;
+                if (! $customer) {
+                    return '—';
+                }
+                $url = url("/resources/customers/{$customer->id}");
+                return "<a href='{$url}' class='no-underline dim text-primary font-bold'>{$customer->name}</a>";
+            })->asHtml(),
+            BelongsToMany::make('Apps', 'authorizedApps', \App\Nova\App::class),
             HasMany::make('Epics'),
             HasMany::make('Stories'),
             HasMany::make('Quotes', 'quotes', Quote::class),
