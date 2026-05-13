@@ -92,9 +92,7 @@ class Customer extends Model implements HasMedia
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    /**
-     * Associated user: the user with Customer role linked to this customer.
-     */
+
     public function associatedUser()
     {
         return $this->belongsTo(User::class, 'associated_user_id');
@@ -148,7 +146,7 @@ class Customer extends Model implements HasMedia
         static::created(function (Customer $entity) {
             try {
                 $tag = Tag::firstOrCreate([
-                    'name' => class_basename($entity) . ': ' . $entity->name,
+                    'name' => $entity->name,
                     'taggable_id' => $entity->id,
                     'taggable_type' => get_class($entity)
                 ]);

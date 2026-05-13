@@ -277,7 +277,8 @@ class Story extends Model implements HasMedia
     }
     public function tags(): MorphToMany
     {
-        return $this->morphToMany(Tag::class, 'taggable');
+        return $this->morphToMany(Tag::class, 'taggable')
+            ->orderByRaw("CASE WHEN tags.name ~ '^[0-9]{2}Q[1-4]$' THEN 0 ELSE 1 END");
     }
 
     public function participants()
