@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgis/postgis:14-3.3
+        image: pgvector/pgvector:pg17
         env:
           POSTGRES_PASSWORD: orchestrator
           POSTGRES_DB: orchestrator
