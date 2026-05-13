@@ -14066,7 +14066,7 @@
         },
         {
             "name": "wm/kanban-card",
-            "version": "dev-update-oc-laravel",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/kanban-card",
@@ -14238,7 +14238,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-update-oc-laravel",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
