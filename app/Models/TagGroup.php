@@ -21,7 +21,6 @@ class TagGroup extends Tag
         'condition_4',
     ];
 
-
     protected $casts = [
         'condition_1' => 'array',
         'condition_2' => 'array',
@@ -50,22 +49,30 @@ class TagGroup extends Tag
         return $this->belongsToMany(Story::class, 'tag_group_stories');
     }
 
-    /**
-     * Sincronizza tag_group_conditions dai 4 array JSON.
-     * Ogni slot non vuoto diventa un gruppo AND (group_index 0..3) con N tag in OR.
-     */
     public function syncConditionsFromSlots(): void
     {
         $this->conditions()->whereIn('group_index', [0, 1, 2, 3])->delete();
 
-        foreach (['condition_1', 'condition_2', 'condition_3', 'condition_4'] as $index => $slot) {
-            $tagIds = $this->{$slot} ?? [];
-            foreach ($tagIds as $tagId) {
-                TagGroupCondition::create([
-                    'tag_group_id' => $this->id,
-                    'tag_id'       => (int) $tagId,
-                    'group_index'  => $index,
-                ]);
+        foreach ([0, 1, 2, 3] as $index) {
+            $slot = 'condition_' . ($index + 1);
+
+            foreach ($this->{$slot} ?? [] as $value) {
+                $value = (string) $value;
+
+                if (str_starts_with($value, 'g:')) {
+                    TagGroupCondition::create([
+                        'tag_group_id'     => $this->id,
+                        'ref_tag_group_id' => (int) substr($value, 2),
+                        'group_index'      => $index,
+                    ]);
+                } else {
+                    $tagId = str_starts_with($value, 't:') ? (int) substr($value, 2) : (int) $value;
+                    TagGroupCondition::create([
+                        'tag_group_id' => $this->id,
+                        'tag_id'       => $tagId,
+                        'group_index'  => $index,
+                    ]);
+                }
             }
         }
     }
@@ -95,7 +102,15 @@ class TagGroup extends Tag
         $storyTagIds = $story->tags()->pluck('tags.id');
 
         foreach ($groups as $conditions) {
-            if ($storyTagIds->intersect($conditions->pluck('tag_id'))->isEmpty()) {
+            $tagIds      = $conditions->whereNotNull('tag_id')->pluck('tag_id');
+            $refGroupIds = $conditions->whereNotNull('ref_tag_group_id')->pluck('ref_tag_group_id');
+
+            $matchesTag   = $tagIds->isNotEmpty() && $storyTagIds->intersect($tagIds)->isNotEmpty();
+            $matchesGroup = TagGroup::whereIn('id', $refGroupIds)
+                ->get()
+                ->contains(fn ($g) => $g->stories()->where('stories.id', $story->id)->exists());
+
+            if (! $matchesTag && ! $matchesGroup) {
                 return false;
             }
         }
@@ -114,9 +129,24 @@ class TagGroup extends Tag
         $query = Story::query();
 
         foreach ($groups as $conditions) {
-            $tagIds = $conditions->pluck('tag_id');
-            $query->whereHas('tags', function (Builder $q) use ($tagIds) {
-                $q->whereIn('tags.id', $tagIds);
+            $tagIds      = $conditions->whereNotNull('tag_id')->pluck('tag_id');
+            $refGroupIds = $conditions->whereNotNull('ref_tag_group_id')->pluck('ref_tag_group_id');
+
+            $nestedStoryIds = TagGroup::whereIn('id', $refGroupIds)
+                ->get()
+                ->flatMap(fn ($g) => $g->stories()->pluck('stories.id'))
+                ->unique()
+                ->values();
+
+            $query->where(function (Builder $q) use ($tagIds, $nestedStoryIds) {
+                if ($tagIds->isNotEmpty()) {
+                    $q->orWhereHas('tags', function (Builder $inner) use ($tagIds) {
+                        $inner->whereIn('tags.id', $tagIds);
+                    });
+                }
+                if ($nestedStoryIds->isNotEmpty()) {
+                    $q->orWhereIn('id', $nestedStoryIds);
+                }
             });
         }
 
