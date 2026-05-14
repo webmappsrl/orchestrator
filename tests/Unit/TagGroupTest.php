@@ -182,6 +182,91 @@ class TagGroupTest extends TestCase
         $this->assertEquals(30, $group->estimate);
     }
 
+    public function test_nested_tag_group_condition_matches_stories(): void
+    {
+        // Gruppo nested: contiene story con tag "osm2cai"
+        $tag = Tag::factory()->create(['name' => 'osm2cai']);
+        $nestedGroup = TagGroup::factory()->create();
+        TagGroupCondition::create(['tag_group_id' => $nestedGroup->id, 'tag_id' => $tag->id, 'group_index' => 0]);
+
+        $storyInNested = Story::factory()->create();
+        $storyInNested->tags()->syncWithoutDetaching([$tag->id]);
+        $nestedGroup->syncStories();
+
+        // Gruppo principale: condizione = nestedGroup
+        $mainGroup = TagGroup::factory()->create();
+        TagGroupCondition::create([
+            'tag_group_id'     => $mainGroup->id,
+            'ref_tag_group_id' => $nestedGroup->id,
+            'group_index'      => 0,
+        ]);
+
+        $mainGroup->syncStories();
+
+        $this->assertContains($storyInNested->id, $mainGroup->stories()->pluck('stories.id'));
+    }
+
+    public function test_nested_tag_group_and_tag_in_same_group_are_or(): void
+    {
+        $tagAlpha = Tag::factory()->create(['name' => 'alpha']);
+        $tagBeta  = Tag::factory()->create(['name' => 'beta']);
+
+        $nestedGroup = TagGroup::factory()->create();
+        TagGroupCondition::create(['tag_group_id' => $nestedGroup->id, 'tag_id' => $tagBeta->id, 'group_index' => 0]);
+
+        $storyAlpha = Story::factory()->create();
+        $storyAlpha->tags()->syncWithoutDetaching([$tagAlpha->id]);
+
+        $storyBeta = Story::factory()->create();
+        $storyBeta->tags()->syncWithoutDetaching([$tagBeta->id]);
+        $nestedGroup->syncStories();
+
+        $mainGroup = TagGroup::factory()->create();
+        TagGroupCondition::create(['tag_group_id' => $mainGroup->id, 'tag_id' => $tagAlpha->id, 'group_index' => 0]);
+        TagGroupCondition::create(['tag_group_id' => $mainGroup->id, 'ref_tag_group_id' => $nestedGroup->id, 'group_index' => 0]);
+
+        $mainGroup->syncStories();
+
+        $results = $mainGroup->stories()->pluck('stories.id');
+        $this->assertContains($storyAlpha->id, $results);
+        $this->assertContains($storyBeta->id, $results);
+    }
+
+    public function test_sync_conditions_from_slots_parses_prefixed_values(): void
+    {
+        $tag = Tag::factory()->create(['name' => 'osm2cai']);
+        $nestedGroup = TagGroup::factory()->create();
+
+        $group = TagGroup::factory()->create([
+            'condition_1' => ['t:' . $tag->id, 'g:' . $nestedGroup->id],
+        ]);
+
+        $group->syncConditionsFromSlots();
+
+        $conditions = $group->conditions()->get();
+        $this->assertCount(2, $conditions);
+
+        $tagCondition   = $conditions->firstWhere('tag_id', $tag->id);
+        $groupCondition = $conditions->firstWhere('ref_tag_group_id', $nestedGroup->id);
+
+        $this->assertNotNull($tagCondition);
+        $this->assertNotNull($groupCondition);
+    }
+
+    public function test_condition_can_reference_tag_group(): void
+    {
+        $tagGroup = TagGroup::factory()->create();
+        $nestedGroup = TagGroup::factory()->create();
+
+        $condition = TagGroupCondition::create([
+            'tag_group_id'     => $tagGroup->id,
+            'ref_tag_group_id' => $nestedGroup->id,
+            'group_index'      => 0,
+        ]);
+
+        $this->assertEquals($nestedGroup->id, $condition->refTagGroup->id);
+    }
+
     public function test_sync_stories_called_explicitly_after_condition_change(): void
     {
         $tag = Tag::factory()->create(['name' => 'beta-tag']);
