@@ -40,7 +40,9 @@ class TagServiceTest extends TestCase
 
     public function test_attach_tag_to_story_is_idempotent(): void
     {
+        \Illuminate\Database\Eloquent\Model::unsetEventDispatcher();
         $story = Story::factory()->create();
+        \Illuminate\Database\Eloquent\Model::setEventDispatcher(app('events'));
         $tag = Tag::factory()->create(['name' => 'osm2cai']);
 
         $this->service->attachTagToStory($story, $tag);

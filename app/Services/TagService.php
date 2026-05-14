@@ -18,9 +18,7 @@ class TagService
 
     public function attachTagToStory(Story $story, Tag $tag): void
     {
-        if (! $story->tags()->where('tags.id', $tag->id)->exists()) {
-            $story->tags()->attach($tag->id);
-        }
+        $story->tags()->syncWithoutDetaching([$tag->id]);
     }
 
     public function attachTagsFromTextToStory(Story $story): void

@@ -25,3 +25,4 @@ settings.json
 app/google-calendar/service-account-credentials.json
 
 cat/
+.phpunit.cache/test-results
