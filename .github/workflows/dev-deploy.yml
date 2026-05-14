@@ -40,6 +40,14 @@ jobs:
           PGPASSWORD: orchestrator
       - name: Seeders
         run: php artisan db:seed PhpArtisanUserSeeder
+      - name: Create test database
+        run: psql -h 127.0.0.1 -U orchestrator -d orchestrator -c "CREATE DATABASE orchestrator_test; GRANT ALL PRIVILEGES ON DATABASE orchestrator_test TO orchestrator;"
+        env:
+          PGPASSWORD: orchestrator
+      - name: Install extensions on test database
+        run: psql -h 127.0.0.1 -U orchestrator -d orchestrator_test -c "CREATE EXTENSION IF NOT EXISTS postgis; CREATE EXTENSION IF NOT EXISTS vector;"
+        env:
+          PGPASSWORD: orchestrator
       - name: Laravel Tests
         run: php artisan test
       - name: Deploy to server
