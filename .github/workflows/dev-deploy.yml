@@ -51,4 +51,4 @@ jobs:
           username: ${{ secrets.USERNAMEDEV }}
           port: ${{ secrets.PORTDEV }}
           key: ${{ secrets.SSHKEYDEV }}
-          script: "cd /root/html/orchestrator && git pull && git submodule update --init --recursive && docker exec php81_orchestrator bash scripts/deploy_dev.sh"
+          script: "cd /root/html/orchestrator && git pull && git submodule update --init --recursive && docker exec -u root php81_orchestrator bash scripts/deploy_dev.sh"
