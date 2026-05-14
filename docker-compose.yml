@@ -3,7 +3,7 @@ services:
     phpfpm:
         extra_hosts:
             - host.docker.internal:host-gateway
-        # user: root
+        user: root
         build: ./docker/configs/phpfpm
         restart: always
         container_name: "php81_${APP_NAME}"
