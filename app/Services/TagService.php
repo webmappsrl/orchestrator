@@ -36,7 +36,8 @@ class TagService
 
     public function attachQuarterTagToStory(Story $story): void
     {
-        $tag = $this->ensureTag(static::currentQuarterName());
+        $date = $story->created_at ?? now();
+        $tag = $this->ensureTag(static::quarterNameForDate($date));
         $this->attachTagToStory($story, $tag);
     }
 
@@ -64,8 +65,14 @@ class TagService
 
     public static function currentQuarterName(): string
     {
-        $year = now()->format('y');
-        $quarter = (int) ceil(now()->month / 3);
+        return static::quarterNameForDate(now());
+    }
+
+    public static function quarterNameForDate(\DateTimeInterface $date): string
+    {
+        $carbon = \Illuminate\Support\Carbon::instance($date);
+        $year = $carbon->format('y');
+        $quarter = (int) ceil($carbon->month / 3);
         return "{$year}Q{$quarter}";
     }
 

@@ -24,6 +24,7 @@ use App\Nova\RecurringProduct;
 use App\Nova\Renewals;
 use App\Nova\StoryShowedByCustomer;
 use App\Nova\Tag;
+use App\Nova\TagGroup;
 use App\Nova\ToBeTestedStory;
 use App\Nova\User;
 use Illuminate\Http\Request;
@@ -142,6 +143,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(ToBeTestedStory::class),
                     ])->collapsedByDefault(),
                     MenuItem::resource(Tag::class),
+                    MenuItem::resource(TagGroup::class),
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(BacklogStory::class),
                     MenuItem::resource(CustomerStory::class),
