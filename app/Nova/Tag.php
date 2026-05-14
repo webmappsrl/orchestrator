@@ -149,6 +149,8 @@ class Tag extends Resource
      */
     public function actions(Request $request)
     {
-        return [];
+        return [
+            new \App\Nova\Actions\MergeTagsAction,
+        ];
     }
 }

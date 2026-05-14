@@ -87,17 +87,20 @@ class ExportStoriesToExcelActionTest extends TestCase
         $response = $action->handle($fields, $stories);
 
         $payload = $response->jsonSerialize();
-        $this->assertArrayHasKey('name', $payload);
         $this->assertArrayHasKey('download', $payload);
 
-        $expectedFileName = $this->makeReportFileName($tag->name, $date);
-        $this->assertSame($expectedFileName, $payload['name']);
+        $downloadPayload = $payload['download']->jsonSerialize();
+        $this->assertArrayHasKey('name', $downloadPayload);
+        $this->assertArrayHasKey('url', $downloadPayload);
 
-        Excel::assertStored($payload['name'], 'public', function ($export) use ($stories) {
+        $expectedFileName = $this->makeReportFileName($tag->name, $date);
+        $this->assertSame($expectedFileName, $downloadPayload['name']);
+
+        Excel::assertStored($downloadPayload['name'], 'public', function ($export) use ($stories) {
             return $export instanceof SelectedStoriesToExcel
                 && $export->collection()->count() === $stories->count();
         });
-        $this->assertStringContainsString($expectedFileName, $payload['download']);
+        $this->assertStringContainsString($expectedFileName, $downloadPayload['url']);
     }
 
     /** @test */

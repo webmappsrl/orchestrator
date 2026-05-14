@@ -59,12 +59,15 @@ class TagSalTest extends TestCase
     }
 
     // Helper: create a tag with optional estimate and optional related stories
-    private function createTagWithStories(?float $estimate = null, array $storyHours = []): Tag
+    private function createTagWithStories(?float $estimate = null, array $storyHours = [], string $status = null): Tag
     {
         $tag = Tag::factory()->create(['estimate' => $estimate]);
 
         foreach ($storyHours as $hours) {
-            $story = Story::factory()->create(['hours' => $hours]);
+            $story = Story::factory()->create([
+                'hours'  => $hours,
+                'status' => $status ?? StoryStatus::New->value,
+            ]);
             $story->tags()->attach($tag->id);
         }
 

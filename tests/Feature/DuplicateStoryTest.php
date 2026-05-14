@@ -75,9 +75,11 @@ class DuplicateStoryTest extends TestCase
         $newStory->user_id = $user->id;
         $this->assertStoryCloned($originalStory, $newStory);
 
+        $redirectPayload = $result->jsonSerialize()['redirect']->jsonSerialize();
+        $this->assertTrue($redirectPayload['openInNewTab']);
         $this->assertStringContainsString(
             "/resources/developer-stories/{$newStory->id}/edit",
-            $result->jsonSerialize()['openInNewTab']
+            $redirectPayload['url']
         );
     }
 

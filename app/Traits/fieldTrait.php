@@ -365,6 +365,19 @@ trait fieldTrait
         return
             Tag::make($fieldLabel, $fieldName, novaTag::class)
             ->withPreview()
+            ->relatableQueryUsing(function (\Laravel\Nova\Http\Requests\NovaRequest $request, $query) {
+                $query->where(function ($q) {
+                    $q->whereNull('taggable_type')
+                      ->orWhere('taggable_type', '!=', \App\Models\Documentation::class);
+                })
+                ->leftJoin(
+                    \Illuminate\Support\Facades\DB::raw('(SELECT tag_id, COUNT(*) as usage_count FROM taggables GROUP BY tag_id) as tag_usage'),
+                    'tags.id', '=', 'tag_usage.tag_id'
+                )
+                ->orderByRaw("CASE WHEN tags.name ~ '^[0-9]{2}Q[1-4]$' THEN 0 ELSE 1 END")
+                ->orderByDesc('tag_usage.usage_count')
+                ->select('tags.*');
+            })
             ->help(__('Tags are used both to categorize a ticket and to display documentation in the "Info" section of the customer ticket view.'))
             ->canSee($this->canSee($fieldName));
     }
