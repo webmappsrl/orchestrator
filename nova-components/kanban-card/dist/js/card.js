@@ -74,7 +74,7 @@ Nova.booting((app) => {
                         :key="column.value"
                         class="kanban-column"
                         :class="{
-                            'kanban-column-compact-empty': isColumnCollapsed(column.value),
+                            'kanban-column-collapsed': isColumnCollapsed(column.value),
                             'kanban-column-drop-target': dragOverColumn === column.value && !!draggedItem
                         }"
                         :style="{ borderColor: column.color }"
@@ -82,13 +82,15 @@ Nova.booting((app) => {
                         @dragleave="onDragLeave($event)"
                         @drop="canUpdate && onDrop($event, column.value)"
                     >
-                        <!-- Column Header -->
+                        <!-- Column Header: collapsed = status title + count only; optional meta when expanded -->
                         <div class="kanban-column-header kanban-column-header-clickable" @click.stop="toggleColumnCollapsed(column.value)">
-                            <div class="kanban-column-title-wrap">
+                            <div class="kanban-column-header-leading">
                                 <span class="kanban-column-title">{{ column.label }}</span>
-                                <span v-if="getHeaderSum(column.value) !== null" class="kanban-column-sum">
-                                    {{ formatCurrency(getHeaderSum(column.value)) }}
-                                </span>
+                                <div v-if="!isColumnCollapsed(column.value)" class="kanban-column-header-meta">
+                                    <span v-if="getHeaderSum(column.value) !== null" class="kanban-column-sum">
+                                        {{ formatCurrency(getHeaderSum(column.value)) }}
+                                    </span>
+                                </div>
                             </div>
                             <span class="kanban-column-count" :style="{ backgroundColor: column.color }">
                                 {{ getHeaderCount(column.value) }}
@@ -418,7 +420,10 @@ Nova.booting((app) => {
                 return this.dropIndicator.status === status && this.dropIndicator.targetId === null;
             },
 
-            /** Resolved collapsed state: explicit column flag (toggle) or automatic for empty columns. */
+            /**
+             * Collapsed columns show only status label + count (see .kanban-column-collapsed).
+             * Optional header meta (e.g. column sum) and card list render only when expanded.
+             */
             isColumnCollapsed(status) {
                 if (Object.prototype.hasOwnProperty.call(this.columnCollapsedState, status)) {
                     return this.columnCollapsedState[status] === true;

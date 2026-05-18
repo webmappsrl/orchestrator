@@ -301,14 +301,14 @@
     transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
 }
 
-/* Compact layout for empty columns only */
-.kanban-column.kanban-column-compact-empty {
+/* Collapsed column: only status title + count badge (all boards) */
+.kanban-column.kanban-column-collapsed {
     flex: 0 0 60px;
     min-width: 60px;
     max-width: 60px;
 }
 
-.kanban-column.kanban-column-compact-empty .kanban-column-header {
+.kanban-column.kanban-column-collapsed .kanban-column-header {
     flex-direction: column;
     justify-content: flex-start;
     gap: 0.5rem;
@@ -316,7 +316,7 @@
     min-height: 160px;
 }
 
-.kanban-column.kanban-column-compact-empty .kanban-column-title {
+.kanban-column.kanban-column-collapsed .kanban-column-title {
     order: 2;
     writing-mode: vertical-rl;
     transform: rotate(180deg);
@@ -325,16 +325,21 @@
     letter-spacing: 0.04em;
 }
 
-.kanban-column.kanban-column-compact-empty .kanban-column-count {
+.kanban-column.kanban-column-collapsed .kanban-column-count {
     order: 1;
 }
 
-.kanban-column.kanban-column-compact-empty .kanban-column-body {
+/* Optional header extras (sums, etc.) never shown when collapsed */
+.kanban-column.kanban-column-collapsed .kanban-column-header-meta {
+    display: none;
+}
+
+.kanban-column.kanban-column-collapsed .kanban-column-body {
     padding: 0.25rem;
     min-height: 24px;
 }
 
-.kanban-column.kanban-column-compact-empty .kanban-column-empty {
+.kanban-column.kanban-column-collapsed .kanban-column-empty {
     display: none;
 }
 
@@ -381,7 +386,15 @@
     color: #d1d5db;
 }
 
-.kanban-column-title-wrap {
+.kanban-column-header-leading {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.kanban-column-header-meta {
     display: flex;
     flex-direction: column;
     gap: 0.125rem;

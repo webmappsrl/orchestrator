@@ -359,6 +359,8 @@ class KanbanCard extends Card
      * Aggregate each column using a dedicated class (instead of a non-serializable closure).
      *
      * The controller will load all items for each column (unpaginated) and pass them to the aggregator.
+     * Return shape: ['count' => int, 'sum' => float|null]. The sum is shown in the column header
+     * only while the column is expanded; collapsed columns always show status label + count only.
      *
      * @param  class-string<AggregatesKanbanColumn>  $class
      */
