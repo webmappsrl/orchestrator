@@ -14,7 +14,7 @@ interface AggregatesKanbanColumn
      * @param  Request  $request
      * @param  string  $statusValue  The requested column status (virtual statuses included).
      * @param  array  $config  Full card config sent by the frontend.
-     * @return mixed
+     * @return array{count: int, sum?: float|null} count is required; sum is optional and shown in the expanded header only
      */
     public function aggregate(Collection $items, Request $request, string $statusValue, array $config);
 }
