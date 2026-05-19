@@ -103,6 +103,20 @@ class TagGroup extends Resource
                 ->hideFromIndex()
                 ->initialEditType(EditorType::MARKDOWN),
 
+            Text::make('Stato', function () {
+                $stories = $this->stories()->get();
+                $total = $stories->count();
+                if ($total === 0) {
+                    return '—';
+                }
+                $closed = $stories->whereIn('status', \App\Models\Tag::salClosedStoryStatusValues())->count();
+                $pct = round(($closed / $total) * 100);
+                $color = $pct >= 100 ? '#16A34A' : ($pct >= 50 ? '#EAB308' : '#6B7280');
+                $bar = $this->renderStatusBar($stories, 300);
+                $badge = "<span style=\"font-weight:bold;color:{$color};\">{$pct}% — {$closed}/{$total} tickets chiusi</span>";
+                return "<div style=\"display:flex;align-items:center;gap:12px;\">{$bar}{$badge}</div>";
+            })->asHtml()->onlyOnDetail(),
+
             ...$this->conditionFieldsForIndex($tagOptions),
 
             Panel::make('Filtri', array_merge(
