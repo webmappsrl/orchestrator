@@ -30,7 +30,21 @@ for _ in $(seq 1 30); do
 done
 
 echo "Starting Horizon..."
-nohup php artisan horizon >> storage/logs/horizon.log 2>&1 &
+HORIZON_LOG="storage/logs/horizon.log"
+
+# Previous deploys as root can leave horizon.log unwritable for www-data
+if [ -e "$HORIZON_LOG" ] && [ ! -w "$HORIZON_LOG" ]; then
+  rm -f "$HORIZON_LOG"
+fi
+touch "$HORIZON_LOG"
+
+if [ "$(id -u)" = "0" ]; then
+  chown www-data:www-data "$HORIZON_LOG"
+  nohup runuser -u www-data -- php artisan horizon >> "$HORIZON_LOG" 2>&1 &
+else
+  nohup php artisan horizon >> "$HORIZON_LOG" 2>&1 &
+fi
+
 echo "Horizon started (PID $!)."
 
 php artisan up
