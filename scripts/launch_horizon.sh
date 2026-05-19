@@ -9,10 +9,10 @@ SCREEN_NAME="horizon_orchestrator_prod"
 if screen -list | grep -q "$SCREEN_NAME"; then
   # Esegui horizon:terminate per terminare Horizon in modo pulito
   echo "termino Horizon. Eventuali jobs in esecuzione verranno terminati prima di proseguire..."
-  docker exec "$CONTAINER_NAME" php artisan horizon:terminate
+  docker exec -u www-data "$CONTAINER_NAME" php artisan horizon:terminate
   
   # Attendi che Horizon termini correttamente
-  while docker exec "$CONTAINER_NAME" php artisan horizon:status | grep -q 'running'; do
+  while docker exec -u www-data "$CONTAINER_NAME" php artisan horizon:status | grep -q 'running'; do
     echo "Attendere che Horizon termini..."
     sleep 5
   done
@@ -23,5 +23,5 @@ if screen -list | grep -q "$SCREEN_NAME"; then
 fi
 
 # Comando per avviare Horizon in una nuova sessione screen
-screen -dmS "$SCREEN_NAME" docker exec "$CONTAINER_NAME" php artisan horizon
+screen -dmS "$SCREEN_NAME" docker exec -u www-data "$CONTAINER_NAME" php artisan horizon
 echo "Horizon avviato in una nuova sessione screen."
