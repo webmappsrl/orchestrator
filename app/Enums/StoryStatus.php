@@ -29,13 +29,16 @@ enum StoryStatus: string
     {
         return match ($this) {
             self::Assigned => '#0EA5E9',
-            self::Todo => '#6B7280',
-            self::Progress => '#2563EB',
+            self::Todo => '#F97316',
+            self::Progress => '#EAB308',
             self::Waiting => '#F59E0B',
             self::Test => '#8B5CF6',
             self::Tested => '#34D399',
             self::Released => '#10B981',
             self::Done => '#16A34A',
+            self::Backlog => '#E5E7EB',
+            self::New => '#DBEAFE',
+            self::Rejected => '#EF4444',
             default => '#9CA3AF',
         };
     }

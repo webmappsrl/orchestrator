@@ -61,6 +61,20 @@ class TagGroup extends Resource
                 ->sortable()
                 ->rules('required', 'max:255'),
 
+            Text::make('Stato', function () {
+                $stories = $this->stories()->get();
+                $total = $stories->count();
+                if ($total === 0) {
+                    return '—';
+                }
+                $closed = $stories->whereIn('status', \App\Models\Tag::salClosedStoryStatusValues())->count();
+                $pct = round(($closed / $total) * 100);
+                $color = $pct >= 100 ? '#16A34A' : ($pct >= 50 ? '#EAB308' : '#6B7280');
+                $bar = $this->renderStatusBar($stories, 160);
+                $badge = "<span style=\"font-weight:bold;color:{$color};min-width:36px;text-align:right;\">{$pct}%</span>";
+                return "<div style=\"display:flex;align-items:center;gap:8px;\">{$bar}{$badge}</div>";
+            })->asHtml()->onlyOnIndex(),
+
             Text::make('SAL #')->resolveUsing(function () {
                 [$closed, $total] = $this->salTicketCounts();
                 return '<span style="font-weight:bold;">['.$closed.']/['.$total.']</span>';
@@ -91,31 +105,18 @@ class TagGroup extends Resource
 
             ...$this->conditionFieldsForIndex($tagOptions),
 
-            Panel::make('Filtri', [
-                Text::make('', function () {
-                    return '<div style="padding: 10px 0; color: #6B7280; font-size: 0.875rem; line-height: 1.5;">
-                        Un ticket viene incluso solo se soddisfa <strong>tutti i gruppi compilati</strong>.<br>
-                        In ogni gruppo puoi mettere tag e/o Tag Group (prefisso <strong>tg:</strong>): basta che il ticket ne abbia almeno uno.<br>
-                        Lascia un gruppo vuoto per non applicare quel filtro.
-                    </div>';
-                })->asHtml()->hideFromIndex()->readonly(),
-
-                MultiSelect::make('Gruppo 1', 'condition_1')
-                    ->options($mergedOptions)->nullable()->hideFromIndex()
-                    ->help('Tag e/o Tag Group in OR. Il ticket deve corrispondere ad almeno uno.'),
-
-                MultiSelect::make('Gruppo 2', 'condition_2')
-                    ->options($mergedOptions)->nullable()->hideFromIndex()
-                    ->help('Tag e/o Tag Group in OR. Il ticket deve corrispondere ad almeno uno.'),
-
-                MultiSelect::make('Gruppo 3', 'condition_3')
-                    ->options($mergedOptions)->nullable()->hideFromIndex()
-                    ->help('Tag e/o Tag Group in OR. Il ticket deve corrispondere ad almeno uno.'),
-
-                MultiSelect::make('Gruppo 4', 'condition_4')
-                    ->options($mergedOptions)->nullable()->hideFromIndex()
-                    ->help('Tag e/o Tag Group in OR. Il ticket deve corrispondere ad almeno uno.'),
-            ]),
+            Panel::make('Filtri', array_merge(
+                [
+                    Text::make('', function () {
+                        return '<div style="padding: 10px 0; color: #6B7280; font-size: 0.875rem; line-height: 1.5;">
+                            Un ticket viene incluso solo se soddisfa <strong>tutti i gruppi compilati</strong>.<br>
+                            In ogni gruppo puoi mettere tag e/o Tag Group (prefisso <strong>tg:</strong>): basta che il ticket ne abbia almeno uno.<br>
+                            Lascia un gruppo vuoto per non applicare quel filtro.
+                        </div>';
+                    })->asHtml()->hideFromIndex()->readonly(),
+                ],
+                $this->conditionPanelFields($tagOptions, $mergedOptions)
+            )),
 
             BelongsToMany::make('Story', 'stories', \App\Nova\Story::class)
                 ->onlyOnDetail(),
@@ -172,6 +173,85 @@ class TagGroup extends Resource
 
         $model->syncStories();
         $model->unsetRelation('stories');
+    }
+
+    private function renderStatusBar(\Illuminate\Support\Collection $stories, int $width = 160): string
+    {
+        if ($stories->isEmpty()) {
+            return '—';
+        }
+
+        $total = $stories->count();
+        $grouped = $stories->groupBy('status');
+        $segments = '';
+        $tooltipParts = [];
+
+        foreach (\App\Enums\StoryStatus::cases() as $status) {
+            $count = $grouped->get($status->value)?->count() ?? 0;
+            if ($count === 0) {
+                continue;
+            }
+            $pct = round(($count / $total) * 100, 2);
+            $color = $status->color();
+            $segments .= "<div style=\"width:{$pct}%;background:{$color};\"></div>";
+            $tooltipParts[] = $status->label() . ': ' . $count;
+        }
+
+        $tooltip = implode(' | ', $tooltipParts);
+
+        return "<div title=\"{$tooltip}\" style=\"display:flex;width:{$width}px;height:14px;border-radius:4px;overflow:hidden;gap:1px;\">{$segments}</div>";
+    }
+
+    private function renderConditionRowForDetail(string $value, array $tagOptions, array $tagGroupMap): string
+    {
+        if (str_starts_with($value, 'g:')) {
+            $id = (int) substr($value, 2);
+            $name = 'tg: ' . ($tagGroupMap[$id] ?? "#{$id}");
+            $group = \App\Models\TagGroup::find($id);
+            $stories = $group ? $group->stories()->get() : collect();
+            $url = '/resources/tag-groups/' . $id;
+        } else {
+            $id = str_starts_with($value, 't:') ? (int) substr($value, 2) : (int) $value;
+            $name = $tagOptions[$id] ?? "#{$id}";
+            $stories = \App\Models\Story::whereHas('tags', fn ($q) => $q->where('tags.id', $id))->get();
+            $url = '/resources/tags/' . $id;
+        }
+
+        $total = $stories->count();
+        $bar = $total > 0 ? $this->renderStatusBar($stories, 120) : '';
+        $countLabel = $total > 0 ? "<span style=\"color:#6B7280;font-size:0.8rem;\">{$total} tickets</span>" : '';
+
+        return "<a href=\"{$url}\" target=\"_blank\" style=\"display:flex;align-items:center;gap:12px;padding:4px 0;text-decoration:none;color:inherit;\">
+            <span style=\"width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\" title=\"{$name}\">{$name}</span>
+            {$bar}
+            {$countLabel}
+        </a>";
+    }
+
+    private function conditionPanelFields(array $tagOptions, array $mergedOptions): array
+    {
+        $tagGroupMap = \App\Models\TagGroup::orderBy('name')->pluck('name', 'id')->toArray();
+        $fields = [];
+
+        foreach (['condition_1', 'condition_2', 'condition_3', 'condition_4'] as $i => $slot) {
+            $label = 'Gruppo ' . ($i + 1);
+
+            $fields[] = Text::make($label, function () use ($slot, $tagOptions, $tagGroupMap) {
+                $values = $this->{$slot} ?? [];
+                if (empty($values)) {
+                    return '—';
+                }
+                return collect($values)->map(fn ($v) =>
+                    $this->renderConditionRowForDetail((string) $v, $tagOptions, $tagGroupMap)
+                )->implode('');
+            })->asHtml()->onlyOnDetail();
+
+            $fields[] = MultiSelect::make($label, $slot)
+                ->options($mergedOptions)->nullable()->onlyOnForms()
+                ->help('Tag e/o Tag Group in OR. Il ticket deve corrispondere ad almeno uno.');
+        }
+
+        return $fields;
     }
 
     public function cards(NovaRequest $request): array
