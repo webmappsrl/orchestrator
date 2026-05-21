@@ -356,11 +356,14 @@ class Story extends Model implements HasMedia
      */
     public function registerMediaCollections(): void
     {
-
-        $this->addMediaCollection('documents')->acceptsMimeTypes(array_merge(
-            config('services.media-library.allowed_document_formats'),
-            config('services.media-library.allowed_image_formats')
-        ));
+        // The 'wmfe' S3 disk has no credentials in this env, so route
+        // Story attachments to the local 'public' disk instead.
+        $this->addMediaCollection('documents')
+            ->useDisk('public')
+            ->acceptsMimeTypes(array_merge(
+                config('services.media-library.allowed_document_formats'),
+                config('services.media-library.allowed_image_formats')
+            ));
     }
 
     /**
