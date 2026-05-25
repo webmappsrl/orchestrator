@@ -53,11 +53,6 @@ class Tag extends Resource
             Text::make('Name')
                 ->sortable()
                 ->rules('required', 'max:255'),
-            Number::make('Estimate (Hours)', 'estimate') // Specifica che è in ore
-                ->min(0) // Imposta un valore minimo di 0
-                ->step(
-                    1,  // Permette incrementi di 0.5 ore
-                )->onlyOnForms(),
             Text::make('SAL #')->resolveUsing(function () {
                 [$closed, $total] = $this->salTicketCounts();
 

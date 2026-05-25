@@ -58,17 +58,31 @@ class TagSalTest extends TestCase
         return $salField->value;
     }
 
-    // Helper: create a tag with optional estimate and optional related stories
-    private function createTagWithStories(?float $estimate = null, array $storyHours = [], string $status = null): Tag
+    // Helper: create a tag and tagged stories. The optional $estimate is now derived
+    // from the stories' estimated_hours (not persisted on the tag anymore).
+    // It is attached to the first storyHours element, or — if storyHours is empty —
+    // a stub story is created carrying only estimated_hours.
+    private function createTagWithStories(?float $estimate = null, array $storyHours = [], ?string $status = null): Tag
     {
-        $tag = Tag::factory()->create(['estimate' => $estimate]);
+        $tag = Tag::factory()->create();
+        $effectiveStatus = $status ?? StoryStatus::New->value;
 
-        foreach ($storyHours as $hours) {
+        foreach ($storyHours as $i => $hours) {
             $story = Story::factory()->create([
-                'hours'  => $hours,
-                'status' => $status ?? StoryStatus::New->value,
+                'hours'           => $hours,
+                'estimated_hours' => $i === 0 ? $estimate : null,
+                'status'          => $effectiveStatus,
             ]);
             $story->tags()->attach($tag->id);
+        }
+
+        if ($estimate !== null && empty($storyHours)) {
+            $stub = Story::factory()->create([
+                'estimated_hours' => $estimate,
+                'hours'           => null,
+                'status'          => $effectiveStatus,
+            ]);
+            $stub->tags()->attach($tag->id);
         }
 
         return $tag;
@@ -93,12 +107,15 @@ class TagSalTest extends TestCase
         $this->assertStringContainsString("<a style=\"font-weight:bold;\"> 35.87 / {$this->emptyLabel()} </a>", $salHtml);
     }
 
-    public function test_sal_shows_estimate_with_empty_total()
+    public function test_sal_shows_estimate_with_zero_total()
     {
+        // L'estimate è ora derivato dalle stories taggate: una story stub con
+        // estimated_hours=32 e hours=null fa sì che totalHours=0 (non più "Empty"),
+        // poiché esiste una story taggata, anche se senza ore registrate.
         $tag = $this->createTagWithStories(32);
 
         $salHtml = $this->resolveSalField($tag);
-        $this->assertStringContainsString("<a style=\"font-weight:bold;\"> {$this->emptyLabel()} / 32 </a>", $salHtml);
+        $this->assertStringContainsString('<a style="font-weight:bold;"> 0 / 32 </a>', $salHtml);
     }
 
     public function test_sal_shows_total_and_estimate_with_percentage()
@@ -129,8 +146,12 @@ class TagSalTest extends TestCase
 
     public function test_sal_shows_green_color_when_tag_is_closed()
     {
-        $tag = Tag::factory()->create(['estimate' => 20]);
-        $story = Story::factory()->create(['hours' => 15, 'status' => StoryStatus::Done]);
+        $tag = Tag::factory()->create();
+        $story = Story::factory()->create([
+            'estimated_hours' => 20,
+            'hours'           => 15,
+            'status'          => StoryStatus::Done,
+        ]);
         $story->tags()->attach($tag->id);
 
         $this->assertTrue($tag->isClosed(), 'The tag must be closed');
@@ -141,8 +162,12 @@ class TagSalTest extends TestCase
 
     public function test_sal_shows_orange_color_when_tag_is_open()
     {
-        $tag = Tag::factory()->create(['estimate' => 20]);
-        $story = Story::factory()->create(['hours' => 15, 'status' => StoryStatus::Progress]);
+        $tag = Tag::factory()->create();
+        $story = Story::factory()->create([
+            'estimated_hours' => 20,
+            'hours'           => 15,
+            'status'          => StoryStatus::Progress,
+        ]);
         $story->tags()->attach($tag->id);
 
         $salHtml = $this->resolveSalField($tag);
@@ -179,8 +204,12 @@ class TagSalTest extends TestCase
 
     public function test_tag_is_closed_when_only_rejected_stories_and_sal_t_is_green()
     {
-        $tag = Tag::factory()->create(['estimate' => 10]);
-        $story = Story::factory()->create(['hours' => 5, 'status' => StoryStatus::Rejected]);
+        $tag = Tag::factory()->create();
+        $story = Story::factory()->create([
+            'estimated_hours' => 10,
+            'hours'           => 5,
+            'status'          => StoryStatus::Rejected,
+        ]);
         $story->tags()->attach($tag->id);
 
         $this->assertTrue($tag->isClosed());

@@ -11,11 +11,22 @@ class Tag extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'taggable_type', 'taggable_id', 'estimate', 'type'];
+    protected $fillable = ['name', 'description', 'taggable_type', 'taggable_id', 'type'];
 
     public function taggable()
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Estimate del tag = somma dei valori `estimated_hours` delle stories taggate.
+     * Non è più una colonna persistita: il valore viene sempre calcolato runtime.
+     */
+    public function getEstimateAttribute(): ?float
+    {
+        $sum = $this->tagged()->sum('estimated_hours');
+
+        return $sum > 0 ? (float) $sum : null;
     }
 
     public function tagged()

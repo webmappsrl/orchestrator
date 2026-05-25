@@ -45,7 +45,6 @@ class ConvertStoryToTagActionTest extends TestCase
         $actionFields = new ActionFields(collect([
             'tag_name' => null,
             'description' => null,
-            'estimate' => null,
         ]), collect([$story]));
 
         $result = $action->handle($actionFields, collect([$story]));
@@ -53,7 +52,6 @@ class ConvertStoryToTagActionTest extends TestCase
         $this->assertDatabaseHas('tags', [
             'name' => $story->name,
             'description' => $story->description,
-            'estimate' => $story->estimated_hours,
             'taggable_type' => Project::class,
             'taggable_id' => $project->id,
         ]);
@@ -65,6 +63,9 @@ class ConvertStoryToTagActionTest extends TestCase
 
         $tag = Tag::where('name', $story->name)->first();
         $this->assertTrue($story->tags()->where('tag_id', $tag->id)->exists());
+
+        // L'estimate del tag è ora derivato dalle stories taggate
+        $this->assertEqualsWithDelta((float) $story->estimated_hours, (float) $tag->estimate, 0.0001);
     }
 
     /** @test */
@@ -77,7 +78,6 @@ class ConvertStoryToTagActionTest extends TestCase
         $actionFields = new ActionFields(collect([
             'tag_name' => 'Custom Tag Name',
             'description' => null,
-            'estimate' => null,
         ]), collect([$story]));
 
         $action->handle($actionFields, collect([$story]));
@@ -85,7 +85,6 @@ class ConvertStoryToTagActionTest extends TestCase
         $this->assertDatabaseHas('tags', [
             'name' => 'Custom Tag Name',
             'description' => $story->description,
-            'estimate' => $story->estimated_hours,
             'taggable_type' => Project::class,
             'taggable_id' => $project->id,
         ]);
@@ -109,7 +108,6 @@ class ConvertStoryToTagActionTest extends TestCase
         $actionFields = new ActionFields(collect([
             'tag_name' => null,
             'description' => 'Custom Description',
-            'estimate' => null,
         ]), collect([$story]));
 
         $action->handle($actionFields, collect([$story]));
@@ -117,7 +115,6 @@ class ConvertStoryToTagActionTest extends TestCase
         $this->assertDatabaseHas('tags', [
             'name' => $story->name,
             'description' => 'Custom Description',
-            'estimate' => $story->estimated_hours,
             'taggable_type' => Project::class,
             'taggable_id' => $project->id,
         ]);
@@ -132,35 +129,22 @@ class ConvertStoryToTagActionTest extends TestCase
     }
 
     /** @test */
-    public function it_creates_tag_with_custom_estimate()
+    public function tag_estimate_is_derived_from_tagged_stories()
     {
         $project = Project::factory()->create();
-        $story = $this->createRandomStory($project);
+        $story = $this->createRandomStory($project, ['estimated_hours' => 8.0]);
 
         $action = new ConvertStoryToTagAction();
         $actionFields = new ActionFields(collect([
             'tag_name' => null,
             'description' => null,
-            'estimate' => 8.0,
         ]), collect([$story]));
 
         $action->handle($actionFields, collect([$story]));
 
-        $this->assertDatabaseHas('tags', [
-            'name' => $story->name,
-            'description' => $story->description,
-            'estimate' => 8.0,
-            'taggable_type' => Project::class,
-            'taggable_id' => $project->id,
-        ]);
-
-        $this->assertDatabaseHas('stories', [
-            'id' => $story->id,
-            'status' => StoryStatus::Done->value,
-        ]);
-
-        $tag = Tag::where('name', $story->name)->where('estimate', 8.0)->first();
-        $this->assertTrue($story->tags()->where('tag_id', $tag->id)->exists());
+        $tag = Tag::where('name', $story->name)->first();
+        $this->assertNotNull($tag);
+        $this->assertEqualsWithDelta(8.0, (float) $tag->estimate, 0.0001);
     }
 
     /** @test */
@@ -173,7 +157,6 @@ class ConvertStoryToTagActionTest extends TestCase
         $actionFields = new ActionFields(collect([
             'tag_name' => null,
             'description' => null,
-            'estimate' => null,
         ]), collect([$story]));
 
         $result = $action->handle($actionFields, collect([$story]));

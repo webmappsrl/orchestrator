@@ -13,7 +13,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
-use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -38,7 +37,6 @@ class ConvertStoryToTagAction extends Action
                 $createdTag = Tag::create([
                     'name' => $fields['tag_name'] ?: $story->name,
                     'description' => $description,
-                    'estimate' => $fields['estimate'] ?? $story->estimated_hours,
                     'taggable_type' => Project::class,
                     'taggable_id' => $story->project_id,
                 ]);
@@ -69,18 +67,14 @@ class ConvertStoryToTagAction extends Action
     public function fields(NovaRequest $request)
     {
         $firstStoryName = '';
-        $firstStoryHours = null;
         $firstStoryDescription = '';
 
-        // Get the resource ID from the detail page
         $resourceId = $request->resourceId;
 
         if ($resourceId) {
             $firstStory = Story::find($resourceId);
             if ($firstStory) {
                 $firstStoryName = $firstStory->name ?? '';
-                $firstStoryHours = $firstStory->estimated_hours ?? null;
-
                 $firstStoryDescription = $firstStory->description ?? '';
             }
         }
@@ -97,11 +91,6 @@ class ConvertStoryToTagAction extends Action
                 ->help(__('Modify the description if needed.'))
                 ->initialEditType(EditorType::MARKDOWN)
                 ->nullable(),
-
-            Number::make(__('Estimate (hours)'), 'estimate')
-                ->default($firstStoryHours)
-                ->help(__('Modify the estimate (hours) if needed'))
-                ->step(0.01),
         ];
     }
 
