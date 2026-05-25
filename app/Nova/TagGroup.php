@@ -41,16 +41,16 @@ class TagGroup extends Resource
             ->toArray();
 
         $tagGroupOptions = \App\Models\TagGroup::when(
-                $this->resource->id ?? null,
-                fn ($q) => $q->where('id', '!=', $this->resource->id)
-            )
+            $this->resource->id ?? null,
+            fn($q) => $q->where('id', '!=', $this->resource->id)
+        )
             ->orderBy('name')
             ->get()
-            ->mapWithKeys(fn ($g) => ['g:' . $g->id => 'tg: ' . $g->name])
+            ->mapWithKeys(fn($g) => ['g:' . $g->id => 'tg: ' . $g->name])
             ->toArray();
 
         $mergedOptions = collect($tagOptions)
-            ->mapWithKeys(fn ($name, $id) => ['t:' . $id => $name])
+            ->mapWithKeys(fn($name, $id) => ['t:' . $id => $name])
             ->merge($tagGroupOptions)
             ->toArray();
 
@@ -75,10 +75,10 @@ class TagGroup extends Resource
                 return "<div style=\"display:flex;align-items:center;gap:8px;\">{$bar}{$badge}</div>";
             })->asHtml()->onlyOnIndex(),
 
-            Text::make('SAL #')->resolveUsing(function () {
-                [$closed, $total] = $this->salTicketCounts();
-                return '<span style="font-weight:bold;">['.$closed.']/['.$total.']</span>';
-            })->asHtml()->onlyOnIndex(),
+            MarkdownTui::make('Descrizione', 'description')
+                ->nullable()
+                ->hideFromIndex()
+                ->initialEditType(EditorType::MARKDOWN),
 
             Text::make('SAL t')->resolveUsing(function () {
                 $empty = __('Empty');
@@ -95,13 +95,9 @@ class TagGroup extends Resource
                     return "<a style=\"font-weight:bold;\"> $totalHours / $estimate </a>";
                 }
                 return "$trend <a style=\"color:{$color}; font-weight:bold;\"> $totalHours / $estimate </a> <a style=\"color:{$color}; font-weight:bold;\"> [$salPercentage%] </a>";
-            })->asHtml()->onlyOnIndex(),
+            })->asHtml()->exceptOnForms(),
 
 
-            MarkdownTui::make('Descrizione', 'description')
-                ->nullable()
-                ->hideFromIndex()
-                ->initialEditType(EditorType::MARKDOWN),
 
             Text::make('Stato', function () {
                 $stories = $this->stories()->get();
@@ -221,25 +217,52 @@ class TagGroup extends Resource
         if (str_starts_with($value, 'g:')) {
             $id = (int) substr($value, 2);
             $name = 'tg: ' . ($tagGroupMap[$id] ?? "#{$id}");
-            $group = \App\Models\TagGroup::find($id);
-            $stories = $group ? $group->stories()->get() : collect();
+            $model = \App\Models\TagGroup::find($id);
+            $stories = $model ? $model->stories()->get() : collect();
             $url = '/resources/tag-groups/' . $id;
         } else {
             $id = str_starts_with($value, 't:') ? (int) substr($value, 2) : (int) $value;
             $name = $tagOptions[$id] ?? "#{$id}";
-            $stories = \App\Models\Story::whereHas('tags', fn ($q) => $q->where('tags.id', $id))->get();
+            $model = \App\Models\Tag::find($id);
+            $stories = \App\Models\Story::whereHas('tags', fn($q) => $q->where('tags.id', $id))->get();
             $url = '/resources/tags/' . $id;
         }
 
         $total = $stories->count();
         $bar = $total > 0 ? $this->renderStatusBar($stories, 120) : '';
         $countLabel = $total > 0 ? "<span style=\"color:#6B7280;font-size:0.8rem;\">{$total} tickets</span>" : '';
+        $salLabel = $this->renderSalLabel($model);
 
         return "<a href=\"{$url}\" target=\"_blank\" style=\"display:flex;align-items:center;gap:12px;padding:4px 0;text-decoration:none;color:inherit;\">
             <span style=\"width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\" title=\"{$name}\">{$name}</span>
             {$bar}
             {$countLabel}
+            {$salLabel}
         </a>";
+    }
+
+    private function renderSalLabel(?\App\Models\Tag $model): string
+    {
+        if (! $model) {
+            return '';
+        }
+
+        $actual   = $model->total_hours;
+        $estimate = $model->estimate;
+
+        if ($actual === null && $estimate === null) {
+            return '';
+        }
+
+        $format = fn($v) => $v === null
+            ? '—'
+            : rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.') . 'h';
+
+        $a = $format($actual);
+        $e = $format($estimate);
+        $pct = ($actual && $estimate) ? ' [' . round($actual / $estimate * 100) . '%]' : '';
+
+        return "<span style=\"color:#6B7280;font-size:0.8rem;font-weight:600;\">{$a} / {$e}{$pct}</span>";
     }
 
     private function conditionPanelFields(array $tagOptions, array $mergedOptions): array
@@ -255,7 +278,8 @@ class TagGroup extends Resource
                 if (empty($values)) {
                     return '—';
                 }
-                return collect($values)->map(fn ($v) =>
+                return collect($values)->map(
+                    fn($v) =>
                     $this->renderConditionRowForDetail((string) $v, $tagOptions, $tagGroupMap)
                 )->implode('');
             })->asHtml()->onlyOnDetail();
@@ -276,7 +300,16 @@ class TagGroup extends Resource
             (new TagGroupTicketsByType())->onlyOnDetail(),
         ];
     }
-    public function filters(NovaRequest $request): array { return []; }
-    public function lenses(NovaRequest $request): array { return []; }
-    public function actions(NovaRequest $request): array { return []; }
+    public function filters(NovaRequest $request): array
+    {
+        return [];
+    }
+    public function lenses(NovaRequest $request): array
+    {
+        return [];
+    }
+    public function actions(NovaRequest $request): array
+    {
+        return [];
+    }
 }
