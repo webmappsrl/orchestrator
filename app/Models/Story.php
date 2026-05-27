@@ -440,6 +440,20 @@ class Story extends Model implements HasMedia
         }
     }
 
+    public function addDevNote(string $note, bool $persist = true): void
+    {
+        $sender = auth()->user();
+        $divider = "<div style='height: 2px; background-color: #e2e8f0; margin: 20px 0;'></div>";
+        $style = "style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 10px 20px;'";
+
+        $formatted = $sender->name . ' ha aggiunto una nota il: ' . now()->format('d-m-Y H:i') . "\n <div $style> <p>" . $note . ' </p> </div>' . $divider;
+        $this->description = $formatted . $this->description;
+
+        if ($persist) {
+            $this->save();
+        }
+    }
+
     public function views()
     {
         return $this->hasMany(StoryLog::class);

@@ -116,9 +116,8 @@ class StoryObserver
         if (
             !$story->wasRecentlyCreated
             && $story->isDirty('customer_request')
-            && $user && $story->user
-            && $user->id != $story->user->id
-            && $story->user->hasRole(UserRole::Customer)
+            && $user
+            && $user->hasRole(UserRole::Customer)
         ) {
             $story->status = StoryStatus::Todo->value;
         }
