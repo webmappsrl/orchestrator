@@ -1,0 +1,17 @@
+{
+    "name": "wm/hetzner-monitoring",
+    "description": "Hetzner Cloud monitoring card for Laravel Nova",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Webmapp\\HetznerMonitoring\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Webmapp\\HetznerMonitoring\\HetznerServiceProvider"
+            ]
+        }
+    }
+}

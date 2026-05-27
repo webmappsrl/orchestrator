@@ -13,6 +13,7 @@ use App\Nova\BacklogStory;
 use App\Nova\Customer;
 use App\Nova\CustomerStory;
 use App\Nova\CustomerTickets;
+use App\Nova\Dashboards\HetznerMonitoring;
 use App\Nova\Dashboards\Kanban;
 use App\Nova\Dashboards\Sales;
 use App\Nova\Documentation;
@@ -133,6 +134,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 }),
 
                 MenuSection::make('DEV', [
+                    MenuItem::link('Hetzner Monitoring', '/dashboards/hetzner-monitoring'),
                     MenuGroup::make(__('Archived'), [
                         MenuItem::resource(ArchivedDeadlines::class),
                         MenuItem::resource(ArchivedStories::class),
@@ -234,6 +236,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         return [
             new \App\Nova\Dashboards\Kanban,
             new \App\Nova\Dashboards\Sales,
+            new \App\Nova\Dashboards\HetznerMonitoring,
         ];
     }
 

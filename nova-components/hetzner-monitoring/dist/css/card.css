@@ -1,0 +1,60 @@
+/* Hetzner Monitoring Card — minimal overrides */
+.hetzner-monitoring__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.hetzner-monitoring__priority-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+}
+
+.hetzner-monitoring__priority-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-weight: 600;
+}
+
+.hetzner-monitoring__priority-icon {
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.hetzner-monitoring__priority-item--high .hetzner-monitoring__priority-value {
+    color: #dc2626;
+}
+
+.hetzner-monitoring__priority-item--medium .hetzner-monitoring__priority-value {
+    color: #d97706;
+}
+
+.hetzner-monitoring__priority-item--ok .hetzner-monitoring__priority-value {
+    color: #16a34a;
+}
+
+.dark .hetzner-monitoring__priority-item--high .hetzner-monitoring__priority-value {
+    color: #f87171;
+}
+
+.dark .hetzner-monitoring__priority-item--medium .hetzner-monitoring__priority-value {
+    color: #fbbf24;
+}
+
+.dark .hetzner-monitoring__priority-item--ok .hetzner-monitoring__priority-value {
+    color: #4ade80;
+}
+
+.hetzner-monitoring table th,
+.hetzner-monitoring table td {
+    white-space: nowrap;
+}
+
+.hetzner-monitoring table td:last-child,
+.hetzner-monitoring table th:last-child {
+    white-space: nowrap;
+}
