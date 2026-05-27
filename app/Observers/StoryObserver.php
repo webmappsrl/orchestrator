@@ -66,13 +66,6 @@ class StoryObserver
         $this->notifyDeveloperIfIdle($story);
     }
 
-    public function saved(Story $story): void
-    {
-        $tagService = app(\App\Services\TagService::class);
-        $tagService->attachQuarterTagToStory($story);
-        $tagService->attachCustomerTagToStory($story);
-        $tagService->attachTagsFromTextToStory($story);
-    }
 
     /**
      * Handle the Story "updated" event.

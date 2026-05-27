@@ -20,6 +20,7 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\Fields\Stack;
 use Laravel\Nova\Fields\Text;
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 
@@ -260,6 +261,24 @@ class Story extends Resource
      *
      * @return array
      */
+    public static function afterCreate(NovaRequest $request, Model $model): void
+    {
+        static::attachAutoTags($model);
+    }
+
+    public static function afterUpdate(NovaRequest $request, Model $model): void
+    {
+        static::attachAutoTags($model);
+    }
+
+    private static function attachAutoTags(Model $model): void
+    {
+        $tagService = app(\App\Services\TagService::class);
+        $tagService->attachQuarterTagToStory($model);
+        $tagService->attachCustomerTagToStory($model);
+        $tagService->attachTagsFromTextToStory($model);
+    }
+
     public function fields(NovaRequest $request)
     {
         return [
