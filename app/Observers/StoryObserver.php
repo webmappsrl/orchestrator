@@ -79,9 +79,10 @@ class StoryObserver
         $this->createStoryLog($story);
         $this->notifyDeveloperIfIdle($story);
 
-        if ($story->wasChanged('description') || $story->wasChanged('customer_request')) {
-            app(\App\Services\TagService::class)->attachTagsFromTextToStory($story);
-        }
+        $tagService = app(\App\Services\TagService::class);
+        $tagService->attachQuarterTagToStory($story);
+        $tagService->attachCustomerTagToStory($story);
+        $tagService->attachTagsFromTextToStory($story);
     }
 
     /**
