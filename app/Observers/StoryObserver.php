@@ -16,26 +16,12 @@ use Illuminate\Support\Facades\Log;
 class StoryObserver
 {
     private static $createdStories = [];
-    private static array $pendingAutoTags = [];
-
-    public function creating(Story $story): void
-    {
-        self::$pendingAutoTags[spl_object_id($story)] = true;
-    }
 
     /**
      * Handle the Story "created" event.
      */
     public function created(Story $story): void
     {
-        if (isset(self::$pendingAutoTags[spl_object_id($story)])) {
-            unset(self::$pendingAutoTags[spl_object_id($story)]);
-            $tagService = app(\App\Services\TagService::class);
-            $tagService->attachQuarterTagToStory($story);
-            $tagService->attachCustomerTagToStory($story);
-            $tagService->attachTagsFromTextToStory($story);
-        }
-
         // Mark this story as newly created
         self::$createdStories[$story->id] = true;
 
@@ -78,7 +64,10 @@ class StoryObserver
         $this->syncStoryCalendarIfStatusChanged($story);
         $this->createStoryLog($story);
         $this->notifyDeveloperIfIdle($story);
+    }
 
+    public function saved(Story $story): void
+    {
         $tagService = app(\App\Services\TagService::class);
         $tagService->attachQuarterTagToStory($story);
         $tagService->attachCustomerTagToStory($story);
