@@ -51,7 +51,7 @@ class StoryController extends Controller
 
         $fillable = array_intersect_key(
             $validated,
-            array_flip(['name', 'status', 'description', 'type', 'user_id', 'tester_id', 'creator_id', 'parent_id'])
+            array_flip(['name', 'status', 'type', 'user_id', 'tester_id', 'creator_id', 'parent_id'])
         );
 
         if (!empty($fillable)) {
@@ -59,7 +59,10 @@ class StoryController extends Controller
         }
 
         if (array_key_exists('customer_request', $validated)) {
-            $story->customer_request = $validated['customer_request'];
+            $story->addResponse($validated['customer_request'], false);
+        }
+        if (array_key_exists('description', $validated)) {
+            $story->addDevNote($validated['description'], false);
         }
         if (array_key_exists('estimated_hours', $validated)) {
             $story->estimated_hours = $validated['estimated_hours'];
