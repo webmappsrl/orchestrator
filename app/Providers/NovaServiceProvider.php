@@ -88,6 +88,15 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                                 });
                         }),
                     ])->collapsedByDefault(),
+                    MenuItem::link('Hetzner Monitoring', '/dashboards/hetzner-monitoring')->canSee(function ($request) {
+                        if ($request->user() === null) {
+                            return false;
+                        }
+
+                        return $request->user()->hasRole(UserRole::Admin)
+                            || $request->user()->hasRole(UserRole::Manager)
+                            || $request->user()->hasRole(UserRole::Developer);
+                    }),
 
                 ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
 
@@ -134,7 +143,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 }),
 
                 MenuSection::make('DEV', [
-                    MenuItem::link('Hetzner Monitoring', '/dashboards/hetzner-monitoring'),
                     MenuGroup::make(__('Archived'), [
                         MenuItem::resource(ArchivedDeadlines::class),
                         MenuItem::resource(ArchivedStories::class),
