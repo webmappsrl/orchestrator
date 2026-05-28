@@ -25,6 +25,13 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', function (Request $request) {
+        return response()->json([
+            'id'    => $request->user()->id,
+            'name'  => $request->user()->name,
+            'email' => $request->user()->email,
+        ]);
+    });
     Route::get('/stories/{story}', [StoryController::class, 'show']);
     Route::post('/stories', [StoryController::class, 'store']);
     Route::patch('/stories/{story}', [StoryController::class, 'update']);
