@@ -246,7 +246,7 @@ class HetznerApiService
             ->map(function ($img) {
                 $price   = round(($img['image_size'] ?? 0) * 0.0119, 4);
                 $ageDays = $this->ageDays($img['created'] ?? null);
-                $action  = $ageDays > self::SNAPSHOT_AGE_DAYS_THRESHOLD
+                $action  = ($ageDays ?? 0) > self::SNAPSHOT_AGE_DAYS_THRESHOLD
                     ? ['label' => 'Verifica: snapshot vecchio (>6 mesi)', 'priority' => 'medium']
                     : ['label' => 'OK', 'priority' => 'ok'];
 
@@ -288,16 +288,17 @@ class HetznerApiService
         };
     }
 
-    private function ageDays(?string $dateStr): int
+    private function ageDays(?string $dateStr): ?int
     {
         if (! $dateStr) {
-            return 0;
+            return null;
         }
 
         try {
-            return (int) now()->diffInDays(new \DateTime($dateStr));
+            // Hetzner returns ISO-8601 timestamps; Carbon handles them reliably.
+            return abs((int) now()->diffInDays(\Carbon\Carbon::parse($dateStr)));
         } catch (\Exception) {
-            return 0;
+            return null;
         }
     }
 

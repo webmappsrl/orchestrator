@@ -126,6 +126,8 @@ Nova.booting(function (app) {
                             <tr>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese stimato</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Base</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">CPU</th>
@@ -135,8 +137,6 @@ Nova.booting(function (app) {
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">IPv4</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Backup</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Età</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Base</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese stimato</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -147,6 +147,14 @@ Nova.booting(function (app) {
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">{{ s.name }}</td>
+                                <td class="px-3 py-2 text-right font-semibold" :class="(s.backup_enabled || s.ipv4_assigned) ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-gray-100'">
+                                    <span :title="priceBreakdown(s)">€{{ s.monthly_price }}</span>
+                                    <span v-if="s.backup_enabled || s.ipv4_assigned" class="block text-xs font-normal text-gray-400 leading-tight">
+                                        <span v-if="s.backup_enabled">+bkp</span>
+                                        <span v-if="s.ipv4_assigned"> +ipv4</span>
+                                    </span>
+                                </td>
+                                <td class="px-3 py-2 text-right text-xs text-gray-400">€{{ s.monthly_price_base }}</td>
                                 <td class="px-3 py-2">
                                     <span class="inline-flex items-center gap-1.5">
                                         <span :class="statusDot(s.status)" class="w-2 h-2 rounded-full inline-block"></span>
@@ -163,15 +171,7 @@ Nova.booting(function (app) {
                                     <span v-if="s.backup_enabled" title="Backup automatici attivi (+20%)" aria-label="Backup attivo">✅</span>
                                     <span v-else title="Backup non attivo" aria-label="Backup non attivo">❌</span>
                                 </td>
-                                <td class="px-3 py-2 text-gray-500 text-xs">{{ s.age_days }}gg</td>
-                                <td class="px-3 py-2 text-right text-xs text-gray-400">€{{ s.monthly_price_base }}</td>
-                                <td class="px-3 py-2 text-right font-semibold" :class="(s.backup_enabled || s.ipv4_assigned) ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-gray-100'">
-                                    <span :title="priceBreakdown(s)">€{{ s.monthly_price }}</span>
-                                    <span v-if="s.backup_enabled || s.ipv4_assigned" class="block text-xs font-normal text-gray-400 leading-tight">
-                                        <span v-if="s.backup_enabled">+bkp</span>
-                                        <span v-if="s.ipv4_assigned"> +ipv4</span>
-                                    </span>
-                                </td>
+                                <td class="px-3 py-2 text-gray-500 text-xs">{{ formatAge(s.age_days) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -192,10 +192,10 @@ Nova.booting(function (app) {
                             <tr>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrizione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Server</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -206,10 +206,10 @@ Nova.booting(function (app) {
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 font-mono text-sm text-gray-900 dark:text-gray-100">{{ ip.ip }}</td>
+                                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">€{{ ip.monthly_price }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ ip.type }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ ip.description || '—' }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ ip.server_id || '—' }}</td>
-                                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">€{{ ip.monthly_price }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -230,12 +230,12 @@ Nova.booting(function (app) {
                             <tr>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Montato su</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Età</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -246,12 +246,12 @@ Nova.booting(function (app) {
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">{{ v.name }}</td>
+                                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">€{{ v.monthly_price }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ v.size_gb }} GB</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ v.status }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ v.server_id || '—' }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ v.location }}</td>
-                                <td class="px-3 py-2 text-gray-500 text-xs">{{ v.age_days }}gg</td>
-                                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">€{{ v.monthly_price }}</td>
+                                <td class="px-3 py-2 text-gray-500 text-xs">{{ formatAge(v.age_days) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -272,10 +272,10 @@ Nova.booting(function (app) {
                             <tr>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Targets</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -286,10 +286,10 @@ Nova.booting(function (app) {
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">{{ lb.name }}</td>
+                                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">€{{ lb.monthly_price }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ lb.type }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ lb.targets_count }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ lb.location }}</td>
-                                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">€{{ lb.monthly_price }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -310,10 +310,10 @@ Nova.booting(function (app) {
                             <tr>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Creato</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Età</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -324,10 +324,10 @@ Nova.booting(function (app) {
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">{{ snap.name || '—' }}</td>
+                                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">€{{ snap.monthly_price }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ snap.size_gb }} GB</td>
                                 <td class="px-3 py-2 text-gray-500 text-xs">{{ formatDate(snap.created_at) }}</td>
-                                <td class="px-3 py-2 text-gray-500 text-xs">{{ snap.age_days }}gg</td>
-                                <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">€{{ snap.monthly_price }}</td>
+                                <td class="px-3 py-2 text-gray-500 text-xs">{{ formatAge(snap.age_days) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -506,6 +506,28 @@ Nova.booting(function (app) {
                     (!project.load_balancers || project.load_balancers.length === 0) &&
                     (!project.snapshots || project.snapshots.length === 0)
                 );
+            },
+
+            formatAge(days) {
+                if (days === null || days === undefined) return '—';
+
+                const d = Math.abs(days);
+
+                const dayStr = (n) => (n === 1 ? '1 giorno' : `${n} giorni`);
+                const monthStr = (n) => (n === 1 ? '1 mese' : `${n} mesi`);
+                const yearStr = (n) => (n === 1 ? '1 anno' : `${n} anni`);
+
+                if (d < 30) return dayStr(d);
+
+                if (d < 365) {
+                    const months = Math.floor(d / 30);
+                    const rem = d % 30;
+                    return rem === 0 ? monthStr(months) : `${monthStr(months)} e ${dayStr(rem)}`;
+                }
+
+                const years = Math.floor(d / 365);
+                const rem = d % 365;
+                return rem === 0 ? yearStr(years) : `${yearStr(years)} e ${dayStr(rem)}`;
             },
 
             formatDate(dateStr) {
