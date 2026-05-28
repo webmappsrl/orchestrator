@@ -256,29 +256,6 @@ class Story extends Resource
         }, $fields);
     }
 
-    /**
-     * Get the fields displayed by the resource.
-     *
-     * @return array
-     */
-    public static function afterCreate(NovaRequest $request, Model $model): void
-    {
-        static::attachAutoTags($model);
-    }
-
-    public static function afterUpdate(NovaRequest $request, Model $model): void
-    {
-        static::attachAutoTags($model);
-    }
-
-    private static function attachAutoTags(Model $model): void
-    {
-        $tagService = app(\App\Services\TagService::class);
-        $tagService->attachQuarterTagToStory($model);
-        $tagService->attachCustomerTagToStory($model);
-        $tagService->attachTagsFromTextToStory($model);
-    }
-
     public function fields(NovaRequest $request)
     {
         return [

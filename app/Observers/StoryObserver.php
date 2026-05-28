@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Log;
+use App\Services\TagService;
 
 class StoryObserver
 {
@@ -53,6 +54,15 @@ class StoryObserver
             ];
 
             Log::channel('user-activity')->info($message, $context);
+        }
+
+        try {
+            $tagService = app(TagService::class);
+            $tagService->attachQuarterTagToStory($story);
+            $tagService->attachCustomerTagToStory($story);
+            $tagService->attachTagsFromTextToStory($story);
+        } catch (\Throwable $e) {
+            Log::warning("Auto-tagging failed for story #{$story->id}: " . $e->getMessage());
         }
     }
 
