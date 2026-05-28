@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -r ' *)",
+      "Bash(php *)",
+      "Bash(git *)",
+      "Bash(curl *)",
+      "Bash(docker exec *)",
+      "Bash(wait)",
+      "Read(docs/*)",
+      "Write(docs/*)"
+    ]
+  }
+}

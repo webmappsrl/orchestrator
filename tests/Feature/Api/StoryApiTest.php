@@ -6,6 +6,7 @@ use App\Enums\StoryStatus;
 use App\Enums\StoryType;
 use App\Enums\UserRole;
 use App\Models\Story;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -165,5 +166,78 @@ class StoryApiTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['type']);
+    }
+
+    /** @test */
+    public function crea_story_via_api_applica_tag_trimestre(): void
+    {
+        Sanctum::actingAs($this->developer);
+
+        $response = $this->postJson('/api/stories', [
+            'name' => 'Story con tag trimestre',
+            'type' => StoryType::Feature->value,
+        ]);
+
+        $response->assertStatus(201);
+
+        $storyId = $response->json('id');
+        $story = Story::find($storyId);
+
+        $quarterName = \App\Services\TagService::currentQuarterName();
+        $this->assertTrue(
+            $story->tags->contains('name', $quarterName),
+            "Il tag trimestre '{$quarterName}' non è stato applicato alla story creata via API"
+        );
+    }
+
+    /** @test */
+    public function aggiorna_story_via_api_applica_tag_trimestre(): void
+    {
+        Sanctum::actingAs($this->developer);
+
+        $story = Story::factory()->create(['creator_id' => $this->developer->id]);
+
+        $response = $this->patchJson("/api/stories/{$story->id}", [
+            'name' => 'Story aggiornata via API',
+        ]);
+
+        $response->assertStatus(200);
+
+        $story->refresh();
+        $quarterName = \App\Services\TagService::currentQuarterName();
+        $this->assertTrue(
+            $story->tags->contains('name', $quarterName),
+            "Il tag trimestre '{$quarterName}' non è stato applicato alla story aggiornata via API"
+        );
+    }
+
+    /** @test */
+    public function crea_story_via_api_non_rimuove_tag_manuali(): void
+    {
+        Sanctum::actingAs($this->developer);
+
+        $manualTag = Tag::factory()->create(['name' => 'tag-manuale']);
+
+        $response = $this->postJson('/api/stories', [
+            'name' => 'Story con tag manuale',
+            'type' => StoryType::Feature->value,
+            'tags' => [$manualTag->id],
+        ]);
+
+        $response->assertStatus(201);
+
+        $storyId = $response->json('id');
+        $story = Story::find($storyId);
+
+        $this->assertTrue(
+            $story->tags->contains('id', $manualTag->id),
+            'Il tag manuale è stato rimosso dopo applicazione auto-tag'
+        );
+
+        $quarterName = \App\Services\TagService::currentQuarterName();
+        $this->assertTrue(
+            $story->tags->contains('name', $quarterName),
+            "Il tag trimestre '{$quarterName}' non è presente insieme al tag manuale"
+        );
     }
 }
