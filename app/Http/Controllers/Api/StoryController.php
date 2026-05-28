@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoryApiRequest;
 use App\Models\Story;
+use App\Services\TagService;
 use Illuminate\Http\JsonResponse;
 
 class StoryController extends Controller
@@ -35,8 +36,10 @@ class StoryController extends Controller
         $story->save();
 
         if ($tags !== null) {
-            $story->tags()->sync($tags);
+            $story->tags()->syncWithoutDetaching($tags);
         }
+
+        $this->attachAutoTags($story);
 
         $story->load('tags');
 
@@ -71,12 +74,28 @@ class StoryController extends Controller
         $story->save();
 
         if ($tags !== null) {
-            $story->tags()->sync($tags);
+            $story->tags()->syncWithoutDetaching($tags);
         }
+
+        $this->attachAutoTags($story);
 
         $story->load('tags');
 
         return response()->json($this->formatStory($story));
+    }
+
+    private function attachAutoTags(Story $story): void
+    {
+        try {
+            $tagService = app(TagService::class);
+            $tagService->attachQuarterTagToStory($story);
+            $tagService->attachCustomerTagToStory($story);
+            $tagService->attachTagsFromTextToStory($story);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning(
+                "Auto-tagging failed for story #{$story->id}: " . $e->getMessage()
+            );
+        }
     }
 
     private function formatStory(Story $story): array
