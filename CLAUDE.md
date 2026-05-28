@@ -74,5 +74,16 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 - `routes/web.php` — Nova + app report download endpoint
 - `routes/api.php` — REST API for external consumers (Apps)
 
+## Feature disponibili
+
+| Feature | Ticket | Moduli toccati | Note |
+|---|---|---|---|
+| API endpoint GET /me | oc:7974 | `routes/api.php`, `tests/Feature/Api/MeEndpointTest.php` | Restituisce id, name, email dell'utente autenticato via Sanctum |
+
+## Decisioni architetturali
+
+### API endpoint GET /me (oc:7974)
+- Closure inline in `routes/api.php` invece di un controller dedicato — accettato consapevolmente per semplicità; il progetto non usa `php artisan route:cache` in produzione
+
 ## Testing
 Tests use the real PostgreSQL database (not SQLite/in-memory). See `phpunit.xml` — `DB_CONNECTION` is not overridden. Run tests inside the container.
