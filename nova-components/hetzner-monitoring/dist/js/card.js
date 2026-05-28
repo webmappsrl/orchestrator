@@ -124,6 +124,7 @@ Nova.booting(function (app) {
                     <table class="min-w-full text-sm">
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Note</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                                 <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese stimato</th>
@@ -140,7 +141,14 @@ Nova.booting(function (app) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                            <tr v-for="s in project.servers" :key="s.id" :class="rowClass(s.action_priority)">
+                            <template v-for="s in project.servers" :key="s.id">
+                            <tr :class="rowClass(s.action_priority)">
+                                <td class="px-3 py-2">
+                                    <button @click="toggleNote(project.slug, 'server', s.id)" :title="s.note ? 'Modifica nota' : 'Aggiungi nota'" class="text-gray-400 hover:text-blue-500 transition-colors">
+                                        <svg v-if="!s.note" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        <svg v-else class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                </td>
                                 <td class="px-3 py-2">
                                     <span :class="actionBadgeClass(s.action_priority)" class="inline-block px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap">
                                         {{ actionIcon(s.action_priority) }} {{ s.action }}
@@ -173,6 +181,30 @@ Nova.booting(function (app) {
                                 </td>
                                 <td class="px-3 py-2 text-gray-500 text-xs">{{ formatAge(s.age_days) }}</td>
                             </tr>
+                            <tr v-if="s.note && activeNoteKey !== noteKey(project.slug,'server',s.id)" :class="rowClass(s.action_priority)">
+                                <td :colspan="14" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
+                                        <p class="hetzner-monitoring__note-display-text">📝 {{ s.note.text }}</p>
+                                        <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ s.note.user_name }}</span>, {{ formatDate(s.note.updated_at) }}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="activeNoteKey === noteKey(project.slug,'server',s.id)">
+                                <td :colspan="14" class="px-4 py-3 bg-gray-50 dark:bg-gray-800 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-editor">
+                                        <div class="hetzner-monitoring__note-input-wrap">
+                                            <textarea v-model="noteText" @input="clampNoteText" :maxlength="noteMaxLength" rows="3" placeholder="Aggiungi una nota su questa risorsa..." class="hetzner-monitoring__note-textarea text-sm border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                                            <p class="hetzner-monitoring__note-counter" :class="{ 'hetzner-monitoring__note-counter--limit': noteText.length >= noteMaxLength }">{{ noteText.length }} / {{ noteMaxLength }}</p>
+                                        </div>
+                                        <div class="hetzner-monitoring__note-actions">
+                                            <button @click="saveNote(project.slug,'server',s.id, s)" :disabled="noteSaving || !canSaveNote" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--save">Salva</button>
+                                            <button v-if="s.note" @click="deleteNote(project.slug,'server',s.id, s)" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--delete">Elimina</button>
+                                            <button @click="closeNote()" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--cancel">Annulla</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
@@ -190,6 +222,7 @@ Nova.booting(function (app) {
                     <table class="min-w-full text-sm">
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Note</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
                                 <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
@@ -199,7 +232,14 @@ Nova.booting(function (app) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                            <tr v-for="ip in project.floating_ips" :key="ip.id" :class="rowClass(ip.action_priority)">
+                            <template v-for="ip in project.floating_ips" :key="ip.id">
+                            <tr :class="rowClass(ip.action_priority)">
+                                <td class="px-3 py-2">
+                                    <button @click="toggleNote(project.slug, 'floating_ip', ip.id)" class="text-gray-400 hover:text-blue-500 transition-colors">
+                                        <svg v-if="!ip.note" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        <svg v-else class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                </td>
                                 <td class="px-3 py-2">
                                     <span :class="actionBadgeClass(ip.action_priority)" class="inline-block px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap">
                                         {{ actionIcon(ip.action_priority) }} {{ ip.action }}
@@ -211,6 +251,30 @@ Nova.booting(function (app) {
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ ip.description || '—' }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ ip.server_id || '—' }}</td>
                             </tr>
+                            <tr v-if="ip.note && activeNoteKey !== noteKey(project.slug,'floating_ip',ip.id)" :class="rowClass(ip.action_priority)">
+                                <td :colspan="7" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
+                                        <p class="hetzner-monitoring__note-display-text">📝 {{ ip.note.text }}</p>
+                                        <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ ip.note.user_name }}</span>, {{ formatDate(ip.note.updated_at) }}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="activeNoteKey === noteKey(project.slug,'floating_ip',ip.id)">
+                                <td :colspan="7" class="px-4 py-3 bg-gray-50 dark:bg-gray-800 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-editor">
+                                        <div class="hetzner-monitoring__note-input-wrap">
+                                            <textarea v-model="noteText" @input="clampNoteText" :maxlength="noteMaxLength" rows="3" placeholder="Aggiungi una nota..." class="hetzner-monitoring__note-textarea text-sm border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                                            <p class="hetzner-monitoring__note-counter" :class="{ 'hetzner-monitoring__note-counter--limit': noteText.length >= noteMaxLength }">{{ noteText.length }} / {{ noteMaxLength }}</p>
+                                        </div>
+                                        <div class="hetzner-monitoring__note-actions">
+                                            <button @click="saveNote(project.slug,'floating_ip',ip.id,ip)" :disabled="noteSaving || !canSaveNote" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--save">Salva</button>
+                                            <button v-if="ip.note" @click="deleteNote(project.slug,'floating_ip',ip.id,ip)" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--delete">Elimina</button>
+                                            <button @click="closeNote()" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--cancel">Annulla</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
@@ -228,6 +292,7 @@ Nova.booting(function (app) {
                     <table class="min-w-full text-sm">
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Note</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                                 <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
@@ -239,7 +304,14 @@ Nova.booting(function (app) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                            <tr v-for="v in project.volumes" :key="v.id" :class="rowClass(v.action_priority)">
+                            <template v-for="v in project.volumes" :key="v.id">
+                            <tr :class="rowClass(v.action_priority)">
+                                <td class="px-3 py-2">
+                                    <button @click="toggleNote(project.slug, 'volume', v.id)" class="text-gray-400 hover:text-blue-500 transition-colors">
+                                        <svg v-if="!v.note" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        <svg v-else class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                </td>
                                 <td class="px-3 py-2">
                                     <span :class="actionBadgeClass(v.action_priority)" class="inline-block px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap">
                                         {{ actionIcon(v.action_priority) }} {{ v.action }}
@@ -253,6 +325,30 @@ Nova.booting(function (app) {
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ v.location }}</td>
                                 <td class="px-3 py-2 text-gray-500 text-xs">{{ formatAge(v.age_days) }}</td>
                             </tr>
+                            <tr v-if="v.note && activeNoteKey !== noteKey(project.slug,'volume',v.id)" :class="rowClass(v.action_priority)">
+                                <td :colspan="9" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
+                                        <p class="hetzner-monitoring__note-display-text">📝 {{ v.note.text }}</p>
+                                        <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ v.note.user_name }}</span>, {{ formatDate(v.note.updated_at) }}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="activeNoteKey === noteKey(project.slug,'volume',v.id)">
+                                <td :colspan="9" class="px-4 py-3 bg-gray-50 dark:bg-gray-800 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-editor">
+                                        <div class="hetzner-monitoring__note-input-wrap">
+                                            <textarea v-model="noteText" @input="clampNoteText" :maxlength="noteMaxLength" rows="3" placeholder="Aggiungi una nota..." class="hetzner-monitoring__note-textarea text-sm border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                                            <p class="hetzner-monitoring__note-counter" :class="{ 'hetzner-monitoring__note-counter--limit': noteText.length >= noteMaxLength }">{{ noteText.length }} / {{ noteMaxLength }}</p>
+                                        </div>
+                                        <div class="hetzner-monitoring__note-actions">
+                                            <button @click="saveNote(project.slug,'volume',v.id,v)" :disabled="noteSaving || !canSaveNote" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--save">Salva</button>
+                                            <button v-if="v.note" @click="deleteNote(project.slug,'volume',v.id,v)" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--delete">Elimina</button>
+                                            <button @click="closeNote()" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--cancel">Annulla</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
@@ -270,6 +366,7 @@ Nova.booting(function (app) {
                     <table class="min-w-full text-sm">
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Note</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                                 <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
@@ -279,7 +376,14 @@ Nova.booting(function (app) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                            <tr v-for="lb in project.load_balancers" :key="lb.id" :class="rowClass(lb.action_priority)">
+                            <template v-for="lb in project.load_balancers" :key="lb.id">
+                            <tr :class="rowClass(lb.action_priority)">
+                                <td class="px-3 py-2">
+                                    <button @click="toggleNote(project.slug, 'load_balancer', lb.id)" class="text-gray-400 hover:text-blue-500 transition-colors">
+                                        <svg v-if="!lb.note" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        <svg v-else class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                </td>
                                 <td class="px-3 py-2">
                                     <span :class="actionBadgeClass(lb.action_priority)" class="inline-block px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap">
                                         {{ actionIcon(lb.action_priority) }} {{ lb.action }}
@@ -291,6 +395,30 @@ Nova.booting(function (app) {
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ lb.targets_count }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ lb.location }}</td>
                             </tr>
+                            <tr v-if="lb.note && activeNoteKey !== noteKey(project.slug,'load_balancer',lb.id)" :class="rowClass(lb.action_priority)">
+                                <td :colspan="7" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
+                                        <p class="hetzner-monitoring__note-display-text">📝 {{ lb.note.text }}</p>
+                                        <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ lb.note.user_name }}</span>, {{ formatDate(lb.note.updated_at) }}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="activeNoteKey === noteKey(project.slug,'load_balancer',lb.id)">
+                                <td :colspan="7" class="px-4 py-3 bg-gray-50 dark:bg-gray-800 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-editor">
+                                        <div class="hetzner-monitoring__note-input-wrap">
+                                            <textarea v-model="noteText" @input="clampNoteText" :maxlength="noteMaxLength" rows="3" placeholder="Aggiungi una nota..." class="hetzner-monitoring__note-textarea text-sm border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                                            <p class="hetzner-monitoring__note-counter" :class="{ 'hetzner-monitoring__note-counter--limit': noteText.length >= noteMaxLength }">{{ noteText.length }} / {{ noteMaxLength }}</p>
+                                        </div>
+                                        <div class="hetzner-monitoring__note-actions">
+                                            <button @click="saveNote(project.slug,'load_balancer',lb.id,lb)" :disabled="noteSaving || !canSaveNote" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--save">Salva</button>
+                                            <button v-if="lb.note" @click="deleteNote(project.slug,'load_balancer',lb.id,lb)" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--delete">Elimina</button>
+                                            <button @click="closeNote()" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--cancel">Annulla</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
@@ -308,6 +436,7 @@ Nova.booting(function (app) {
                     <table class="min-w-full text-sm">
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Note</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                                 <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">€/mese</th>
@@ -317,7 +446,14 @@ Nova.booting(function (app) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                            <tr v-for="snap in project.snapshots" :key="snap.id" :class="rowClass(snap.action_priority)">
+                            <template v-for="snap in project.snapshots" :key="snap.id">
+                            <tr :class="rowClass(snap.action_priority)">
+                                <td class="px-3 py-2">
+                                    <button @click="toggleNote(project.slug, 'snapshot', snap.id)" class="text-gray-400 hover:text-blue-500 transition-colors">
+                                        <svg v-if="!snap.note" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        <svg v-else class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                </td>
                                 <td class="px-3 py-2">
                                     <span :class="actionBadgeClass(snap.action_priority)" class="inline-block px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap">
                                         {{ actionIcon(snap.action_priority) }} {{ snap.action }}
@@ -329,6 +465,30 @@ Nova.booting(function (app) {
                                 <td class="px-3 py-2 text-gray-500 text-xs">{{ formatDate(snap.created_at) }}</td>
                                 <td class="px-3 py-2 text-gray-500 text-xs">{{ formatAge(snap.age_days) }}</td>
                             </tr>
+                            <tr v-if="snap.note && activeNoteKey !== noteKey(project.slug,'snapshot',snap.id)" :class="rowClass(snap.action_priority)">
+                                <td :colspan="7" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
+                                        <p class="hetzner-monitoring__note-display-text">📝 {{ snap.note.text }}</p>
+                                        <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ snap.note.user_name }}</span>, {{ formatDate(snap.note.updated_at) }}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="activeNoteKey === noteKey(project.slug,'snapshot',snap.id)">
+                                <td :colspan="7" class="px-4 py-3 bg-gray-50 dark:bg-gray-800 hetzner-monitoring__note-cell">
+                                    <div class="hetzner-monitoring__note-editor">
+                                        <div class="hetzner-monitoring__note-input-wrap">
+                                            <textarea v-model="noteText" @input="clampNoteText" :maxlength="noteMaxLength" rows="3" placeholder="Aggiungi una nota..." class="hetzner-monitoring__note-textarea text-sm border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                                            <p class="hetzner-monitoring__note-counter" :class="{ 'hetzner-monitoring__note-counter--limit': noteText.length >= noteMaxLength }">{{ noteText.length }} / {{ noteMaxLength }}</p>
+                                        </div>
+                                        <div class="hetzner-monitoring__note-actions">
+                                            <button @click="saveNote(project.slug,'snapshot',snap.id,snap)" :disabled="noteSaving || !canSaveNote" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--save">Salva</button>
+                                            <button v-if="snap.note" @click="deleteNote(project.slug,'snapshot',snap.id,snap)" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--delete">Elimina</button>
+                                            <button @click="closeNote()" class="hetzner-monitoring__note-btn hetzner-monitoring__note-btn--cancel">Annulla</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
@@ -360,6 +520,10 @@ Nova.booting(function (app) {
                 loading: false,
                 globalError: null,
                 lastUpdated: null,
+                activeNoteKey: null,
+                noteText: '',
+                noteMaxLength: 500,
+                noteSaving: false,
             };
         },
 
@@ -393,6 +557,10 @@ Nova.booting(function (app) {
             },
             totalOk() {
                 return this.allResources.filter(r => r.action_priority === 'ok').length;
+            },
+            canSaveNote() {
+                const len = this.noteText.trim().length;
+                return len > 0 && len <= this.noteMaxLength;
             },
         },
 
@@ -528,6 +696,80 @@ Nova.booting(function (app) {
                 const years = Math.floor(d / 365);
                 const rem = d % 365;
                 return rem === 0 ? yearStr(years) : `${yearStr(years)} e ${dayStr(rem)}`;
+            },
+
+            noteKey(projectSlug, type, id) {
+                return `${projectSlug}::${type}::${id}`;
+            },
+
+            toggleNote(projectSlug, type, id) {
+                const key = this.noteKey(projectSlug, type, id);
+                if (this.activeNoteKey === key) {
+                    this.closeNote();
+                    return;
+                }
+                const resource = this.findResource(projectSlug, type, id);
+                this.noteText = (resource?.note?.text || '').slice(0, this.noteMaxLength);
+                this.activeNoteKey = key;
+            },
+
+            closeNote() {
+                this.activeNoteKey = null;
+                this.noteText = '';
+            },
+
+            clampNoteText() {
+                if (this.noteText.length > this.noteMaxLength) {
+                    this.noteText = this.noteText.slice(0, this.noteMaxLength);
+                }
+            },
+
+            findResource(projectSlug, type, id) {
+                const project = this.projects.find(p => p.slug === projectSlug);
+                if (!project) return null;
+                const listKey = { server: 'servers', floating_ip: 'floating_ips', volume: 'volumes', load_balancer: 'load_balancers', snapshot: 'snapshots' }[type];
+                return (project[listKey] || []).find(r => r.id === id) || null;
+            },
+
+            async saveNote(projectSlug, type, id, resource) {
+                const text = this.noteText.trim();
+                if (!text || text.length > this.noteMaxLength) return;
+                this.noteSaving = true;
+                try {
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                    const resp = await fetch('/nova-vendor/hetzner-monitoring/note', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ project_slug: projectSlug, resource_type: type, resource_id: id, text }),
+                    });
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const data = await resp.json();
+                    resource.note = data.note;
+                    this.closeNote();
+                } catch (e) {
+                    alert('Errore nel salvataggio della nota: ' + e.message);
+                } finally {
+                    this.noteSaving = false;
+                }
+            },
+
+            async deleteNote(projectSlug, type, id, resource) {
+                this.noteSaving = true;
+                try {
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                    const resp = await fetch('/nova-vendor/hetzner-monitoring/note', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ project_slug: projectSlug, resource_type: type, resource_id: id }),
+                    });
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    resource.note = null;
+                    this.closeNote();
+                } catch (e) {
+                    alert('Errore nella cancellazione della nota: ' + e.message);
+                } finally {
+                    this.noteSaving = false;
+                }
             },
 
             formatDate(dateStr) {

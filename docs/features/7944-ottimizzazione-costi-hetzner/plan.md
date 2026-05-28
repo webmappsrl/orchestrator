@@ -12,13 +12,16 @@ La feature segue il pattern esistente di `nova-components/kanban-card`:
 ```
 config/hetzner.php                                    ← token ENV → array progetti
 app/Services/HetznerApiService.php                    ← API Hetzner + cache Redis
-app/Http/Controllers/HetznerMonitoringController.php  ← data / refresh / export
+app/Http/Controllers/HetznerMonitoringController.php  ← data / refresh / export / note
+app/Models/HetznerMonitoring.php                      ← persistenza note in properties jsonb
+database/migrations/2026_05_28_150847_create_hetzner_monitoring_table.php
 app/Exports/HetznerExport.php                         ← CSV via maatwebsite/excel
 nova-components/hetzner-monitoring/
   composer.json
   src/
     HetznerMonitoringCard.php                         ← Card class Nova
     HetznerServiceProvider.php                        ← registra JS + routes
+  routes/api.php                                      ← POST/DELETE note
   dist/js/card.js                                     ← Vue component self-contained
 app/Nova/Dashboards/HetznerMonitoring.php             ← Dashboard Nova
 app/Providers/NovaServiceProvider.php                 ← registra dashboard + menu
@@ -106,33 +109,83 @@ Service che interroga l'API Hetzner Cloud v1 con caching Redis per progetto.
 
 ---
 
-## Step 3 — Controller
+## Step 3 — Persistenza note (DB + Model)
 
-**File:** `app/Http/Controllers/HetznerMonitoringController.php`
+**File:** `database/migrations/2026_05_28_150847_create_hetzner_monitoring_table.php`
 
-Tre endpoint, tutti protetti da middleware Nova (`nova`):
+Tabella minimale: solo `id`, `properties` (jsonb), `timestamps`. Tutti i metadati vivono in `properties` per evitare migration future quando si aggiungono campi.
 
-```php
-// GET  /nova-vendor/hetzner-monitoring/data
-// Risposta: JSON con tutti i progetti, da cache Redis
-public function data(): JsonResponse
+**Schema `properties` per una risorsa con nota:**
 
-// POST /nova-vendor/hetzner-monitoring/refresh
-// Invalida cache, ricarica da API, restituisce dati freschi
-public function refresh(): JsonResponse
-
-// GET  /nova-vendor/hetzner-monitoring/export
-// Scarica CSV (forza download)
-public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+```json
+{
+  "project_slug": "default",
+  "resource_type": "server",
+  "resource_id": 60430948,
+  "note": {
+    "text": "Da spegnere a fine mese",
+    "user_id": 104,
+    "user_name": "Mario Rossi",
+    "updated_at": "2026-05-28T16:10:12+02:00"
+  }
+}
 ```
 
-Autorizzazione: verificare che l'utente autenticato abbia ruolo `Admin`, `Manager` o `Developer` (usare `UserRole` enum esistente). Restituire 403 altrimenti.
+**Indici PostgreSQL** (raw `DB::statement`, Laravel non supporta indici funzionali su JSON):
 
-**Commit:** `feat(oc:7944): add HetznerMonitoringController with data, refresh and export endpoints`
+- Unique: `(properties->>'project_slug', properties->>'resource_type', (properties->>'resource_id')::bigint)` — una riga per risorsa
+- Btree: `(properties->>'project_slug', properties->>'resource_type')` — lookup bulk in `mergeNotes`
+
+**File:** `app/Models/HetznerMonitoring.php`
+
+- `$fillable = ['properties']`, cast `properties` → `array`
+- Accessor virtuali: `project_slug`, `resource_type`, `resource_id` (lettura da `properties`)
+- `findResource()` / `findOrCreateResource()` via `where('properties->project_slug', ...)` (pattern find + create, non `firstOrCreate` su colonne dedicate)
+- `setNote(text, userId, userName)` / `deleteNote()` / `getNote()` — manipolano solo `properties`, preservando le chiavi identificative della risorsa
+
+**Commit:** `feat(oc:7944): add hetzner_monitoring table with jsonb properties for resource notes`
 
 ---
 
-## Step 4 — Export CSV
+## Step 4 — Controller
+
+**File:** `app/Http/Controllers/HetznerMonitoringController.php`
+
+Cinque endpoint, tutti protetti da middleware Nova (`nova`) + `auth`:
+
+```php
+// GET  /nova-vendor/hetzner-monitoring/data
+// Risposta: JSON progetti da cache Redis + note da DB (mergeNotes)
+public function data(): JsonResponse
+
+// POST /nova-vendor/hetzner-monitoring/refresh
+// Invalida cache, ricarica da API, merge note, restituisce dati freschi
+public function refresh(): JsonResponse
+
+// GET  /nova-vendor/hetzner-monitoring/export
+// Scarica CSV (forza download), include note
+public function export(): BinaryFileResponse
+
+// POST /nova-vendor/hetzner-monitoring/note
+// Body: { project_slug, resource_type, resource_id, text }
+// Salva/aggiorna nota in properties, restituisce { ok, note }
+public function saveNote(): JsonResponse
+
+// DELETE /nova-vendor/hetzner-monitoring/note
+// Body: { project_slug, resource_type, resource_id }
+// Rimuove properties.note
+public function deleteNote(): JsonResponse
+```
+
+**`mergeNotes()`:** dopo il fetch da Redis/API, carica in bulk le righe `hetzner_monitoring` con `whereIn('properties->project_slug', $slugs)` e inietta `note` su ogni risorsa nel JSON di risposta. Usare indicizzazione esplicita su `$projects[$pIndex][$resourceType][$rIndex]` — **non** `foreach ($project[$key] ?? [] as &$resource)` (l'operatore `??` crea una copia e le modifiche non si propagano).
+
+Autorizzazione: verificare che l'utente autenticato abbia ruolo `Admin`, `Manager` o `Developer` (usare `UserRole` enum esistente). Restituire 403 altrimenti.
+
+**Commit:** `feat(oc:7944): add HetznerMonitoringController with data, refresh, export and note endpoints`
+
+---
+
+## Step 5 — Export CSV
 
 **File:** `app/Exports/HetznerExport.php`
 
@@ -148,9 +201,9 @@ Nota in intestazione CSV: `"Prezzi di listino Hetzner — escludono sconti, cred
 
 ---
 
-## Step 5 — Nova Component (Card + ServiceProvider)
+## Step 6 — Nova Component (Card + ServiceProvider)
 
-### 5a — Struttura package
+### 6a — Struttura package
 
 **File:** `nova-components/hetzner-monitoring/composer.json`
 
@@ -174,13 +227,13 @@ Nota in intestazione CSV: `"Prezzi di listino Hetzner — escludono sconti, cred
 }
 ```
 
-### 5b — Card class
+### 6b — Card class
 
 **File:** `nova-components/hetzner-monitoring/src/HetznerMonitoringCard.php`
 
 Estende `Laravel\Nova\Card`. Width `full`. Nessuna configurazione aggiuntiva necessaria — il componente Vue fa tutto.
 
-### 5c — ServiceProvider
+### 6c — ServiceProvider
 
 **File:** `nova-components/hetzner-monitoring/src/HetznerServiceProvider.php`
 
@@ -193,9 +246,12 @@ Nova::serving(function (ServingNova $event) {
 });
 ```
 
-Routes registrate sotto `nova-vendor/hetzner-monitoring`, middleware `nova`, che delegano a `HetznerMonitoringController` nel main app.
+Routes registrate sotto `nova-vendor/hetzner-monitoring`, middleware `nova` + `auth`, che delegano a `HetznerMonitoringController` nel main app:
 
-### 5d — Vue component (dist/js/card.js)
+- `GET /data`, `POST /refresh`, `GET /export`
+- `POST /note`, `DELETE /note`
+
+### 6d — Vue component (dist/js/card.js)
 
 Componente self-contained (no build step — scritto come JavaScript puro con Vue 3 definito inline, seguendo il pattern di `kanban-card/dist/js/card.js`).
 
@@ -209,8 +265,9 @@ Componente self-contained (no build step — scritto come JavaScript puro con Vu
   Progetto: webmapp ───────────────────────── Costo stimato: €XX.XX/mese
 
   SERVERS (N)
-  | Nome | Status 🟢/⚫/🟡 | Tipo | CPU | RAM | Disk | IP | Creato | €/mese |
-  | server-01 | 🟢 running | cx22 | 2 | 4GB | 40GB | 1.2.3.4 | 2023-01 | 5.83 |
+  | Nome | Status 🟢/⚫/🟡 | Tipo | CPU | RAM | Disk | IP | Creato | €/mese | Note |
+  | server-01 | 🟢 running | cx22 | 2 | 4GB | 40GB | 1.2.3.4 | 2023-01 | 5.83 | [+] |
+  | (riga espansa) 📝 Testo nota — Autore, data |
   
   FLOATING IPs (N)  ⚠️ N non assegnati
   | IP | Tipo | Assegnato a | €/mese |
@@ -233,13 +290,17 @@ Componente self-contained (no build step — scritto come JavaScript puro con Vu
 - Volume con `server: null` → riga evidenziata in arancione (spreco)
 - Bottone Refresh: POST `/nova-vendor/hetzner-monitoring/refresh`, aggiorna lo stato
 - Bottone Export: GET `/nova-vendor/hetzner-monitoring/export` (download diretto)
+- Colonna Note: icona `+` per aggiungere, click per modificare; riga espansa con textarea + Salva / Elimina
+- Salvataggio nota: POST `/nova-vendor/hetzner-monitoring/note` con `{ project_slug, resource_type, resource_id, text }` — aggiorna UI locale e DB
+- Eliminazione nota: DELETE `/nova-vendor/hetzner-monitoring/note` con stesso identificativo risorsa
+- `resource_type` ammessi: `server`, `floating_ip`, `volume`, `load_balancer`, `snapshot`
 - Nota disclaimer visibile: *"Prezzi di listino — esclusi sconti, crediti, IP aggiuntivi non rilevati dall'API"*
 
 **Commit:** `feat(oc:7944): add hetzner-monitoring nova component with Vue card`
 
 ---
 
-## Step 6 — Nova Dashboard
+## Step 7 — Nova Dashboard
 
 **File:** `app/Nova/Dashboards/HetznerMonitoring.php`
 
@@ -262,7 +323,7 @@ class HetznerMonitoring extends Dashboard
 
 ---
 
-## Step 7 — NovaServiceProvider
+## Step 8 — NovaServiceProvider
 
 **File:** `app/Providers/NovaServiceProvider.php`
 
@@ -285,7 +346,7 @@ MenuSection::dashboard(HetznerMonitoring::class)
 
 ---
 
-## Step 8 — Composer path repository
+## Step 9 — Composer path repository
 
 **File:** `composer.json` (root)
 
@@ -312,13 +373,14 @@ Eseguire: `composer require wm/hetzner-monitoring`
 
 1. Step 1 (config)
 2. Step 2 (service)
-3. Step 3 (controller)
-4. Step 4 (export)
-5. Step 5a–5c (nova-component structure + service provider)
-6. Step 8 (composer)
-7. Step 6 (dashboard)
-8. Step 7 (NovaServiceProvider)
-9. Step 5d (Vue component — dopo che tutti gli endpoint sono verificabili)
+3. Step 3 (migration + model note)
+4. Step 4 (controller + mergeNotes)
+5. Step 5 (export)
+6. Step 6a–6c (nova-component structure + service provider + routes note)
+7. Step 9 (composer)
+8. Step 7 (dashboard)
+9. Step 8 (NovaServiceProvider)
+10. Step 6d (Vue component — dopo che tutti gli endpoint sono verificabili)
 
 ## Test di accettazione
 
@@ -329,3 +391,8 @@ Eseguire: `composer require wm/hetzner-monitoring`
 - [ ] Export CSV scarica un file con tutti i dati per progetto
 - [ ] Utente con ruolo Customer → 403 (non vede il menu)
 - [ ] Token non valido in ENV → progetto mostra errore inline senza bloccare gli altri
+- [ ] Salvare una nota su un server → compare subito in tabella con autore e data
+- [ ] Ricaricare la pagina → la nota è ancora visibile (letta da `hetzner_monitoring.properties`)
+- [ ] Modificare la stessa nota → aggiorna la riga esistente (non crea duplicati; indice unique su JSON)
+- [ ] Eliminare la nota → scompare dopo refresh
+- [ ] Verificare in DB: colonna `properties` contiene `project_slug`, `resource_type`, `resource_id` e `note`

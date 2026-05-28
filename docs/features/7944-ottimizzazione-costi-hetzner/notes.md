@@ -16,7 +16,6 @@ Nessuno durante l'implementazione.
 - **Errori per progetto isolati**: un token non valido non blocca il caricamento degli altri progetti — ogni progetto è indipendente nella cache e nella gestione degli errori.
 
 ## Follow-up
-- Aggiungere DigitalOcean come secondo provider (ciclo successivo) — struttura `config/hetzner.php` è già separata per facilitare un futuro `config/cloud-providers.php`.
 - Valutare se mostrare il nome del server assegnato ai Floating IP e Volumes invece dell'ID numerico (richiede un'ulteriore chiamata API o un map locale dalla lista server).
 - Aggiungere storico costi (trend mensile) se il management lo richiede — richiede persistenza DB.
 - Aggiornare periodicamente i prezzi hardcodati di Volumes e Snapshots.

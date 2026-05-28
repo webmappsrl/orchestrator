@@ -3,7 +3,7 @@
 # Ottimizzazione Costi Hetzner
 
 ## Cosa cambia
-Orchestrator espone una nuova view "Hetzner Monitoring" che aggrega in tempo reale (con cache Redis) i dati di tutti i progetti Hetzner Cloud aziendali, mostrando per ogni progetto: server con status e costo, Floating IP, Volumes, Load Balancers e Snapshots. La view include un export CSV e un pulsante di refresh manuale della cache.
+Orchestrator espone una nuova view "Hetzner Monitoring" che aggrega in tempo reale (con cache Redis) i dati di tutti i progetti Hetzner Cloud aziendali, mostrando per ogni progetto: server con status e costo, Floating IP, Volumes, Load Balancers e Snapshots. La view include un export CSV, un pulsante di refresh manuale della cache e **note persistenti per risorsa** (server, IP, volume, LB, snapshot) salvate in PostgreSQL e visibili dopo ogni reload.
 
 ## Perché
 I costi mensili dei server Hetzner superano €1000. Molte macchine sono inutilizzate o sovraddimensionate. Senza una visione aggregata dei progetti è impossibile identificare rapidamente cosa eliminare o ridimensionare. La feature nasce su richiesta del management per avere un quadro completo e aggiornato dell'infrastruttura Hetzner come base per decisioni di ottimizzazione.
@@ -19,6 +19,9 @@ I costi mensili dei server Hetzner superano €1000. Molte macchine sono inutili
 - [ ] Bottone "Refresh" per forzare il rinnovo della cache di tutti i progetti
 - [ ] Export CSV con tutti i dati visibili nella view
 - [ ] Visibile a ruoli: Admin, Manager, Developer
+- [ ] Aggiungere, modificare ed eliminare una nota testuale per ogni risorsa (colonna Note in tabella)
+- [ ] Persistere le note in tabella `hetzner_monitoring` (solo colonna `properties` jsonb — nessuna migration futura per nuovi metadati)
+- [ ] Mostrare autore e data ultima modifica della nota in UI
 
 ## Rischi
 - **Costo stimato ≠ fattura reale**: i prezzi esposti sono i prezzi di listino dell'API Cloud. Il billing reale (con sconti, crediti, trial) è su un endpoint separato. Mitigazione: nota esplicita in UI e nel CSV.
@@ -33,15 +36,18 @@ I costi mensili dei server Hetzner superano €1000. Molte macchine sono inutili
 - Gestione token via interfaccia Nova (DB) — rimane in ENV
 - Storico costi / trend nel tempo
 - Azioni di gestione server (stop, delete) da Orchestrator
+- Storico versioni delle note (solo ultima nota per risorsa)
 
 ## Moduli toccati
 | File | Azione | Repo |
 |---|---|---|
 | `config/hetzner.php` | Crea | orchestrator |
 | `app/Services/HetznerApiService.php` | Crea | orchestrator |
-| `app/Nova/Tools/HetznerMonitoring.php` | Crea | orchestrator |
-| `nova-components/hetzner-monitoring/` | Crea (Nova Tool Vue component) | orchestrator |
-| `app/Providers/NovaServiceProvider.php` | Modifica (registra tool + menu) | orchestrator |
+| `app/Http/Controllers/HetznerMonitoringController.php` | Crea (data, refresh, export, note) | orchestrator |
+| `app/Models/HetznerMonitoring.php` | Crea (persistenza note in `properties`) | orchestrator |
+| `database/migrations/2026_05_28_150847_create_hetzner_monitoring_table.php` | Crea | orchestrator |
+| `app/Nova/Dashboards/HetznerMonitoring.php` | Crea | orchestrator |
+| `nova-components/hetzner-monitoring/` | Crea (Nova Card Vue + routes note) | orchestrator |
+| `app/Providers/NovaServiceProvider.php` | Modifica (registra dashboard + menu) | orchestrator |
 | `.env.example` | Modifica (aggiunge placeholder token) | orchestrator |
 | `app/Exports/HetznerExport.php` | Crea | orchestrator |
-| `routes/api.php` | Modifica (endpoint dati Hetzner per il Tool) | orchestrator |

@@ -58,3 +58,113 @@
 .hetzner-monitoring table th:last-child {
     white-space: nowrap;
 }
+
+.hetzner-monitoring__note-cell {
+    white-space: normal !important;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+.hetzner-monitoring__note-editor {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem;
+    max-width: 860px;
+    min-width: 420px;
+}
+
+.hetzner-monitoring__note-textarea {
+    width: min(680px, 100%);
+    min-width: 320px;
+}
+
+.hetzner-monitoring__note-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.hetzner-monitoring__note-display {
+    max-width: 860px;
+}
+
+.hetzner-monitoring__note-display-text {
+    width: min(680px, 100%);
+    min-width: 320px;
+    margin: 0 0 0.25rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.hetzner-monitoring__note-display-meta {
+    margin: 0;
+    color: #1d4ed8;
+    font-style: italic;
+}
+
+.dark .hetzner-monitoring__note-display-meta {
+    color: #93c5fd;
+}
+
+.hetzner-monitoring__note-input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.hetzner-monitoring__note-counter {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.hetzner-monitoring__note-counter--limit {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.hetzner-monitoring__note-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.hetzner-monitoring__note-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.hetzner-monitoring__note-btn--save {
+    background-color: #22c55e;
+    color: #fff;
+}
+
+.hetzner-monitoring__note-btn--save:hover:not(:disabled) {
+    background-color: #16a34a;
+}
+
+.hetzner-monitoring__note-btn--delete {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.hetzner-monitoring__note-btn--delete:hover:not(:disabled) {
+    background-color: #fecaca;
+}
+
+.hetzner-monitoring__note-btn--cancel {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.hetzner-monitoring__note-btn--cancel:hover:not(:disabled) {
+    background-color: #d1d5db;
+}

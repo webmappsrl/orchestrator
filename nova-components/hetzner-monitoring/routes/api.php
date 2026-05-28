@@ -7,4 +7,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/data', [HetznerMonitoringController::class, 'data']);
     Route::post('/refresh', [HetznerMonitoringController::class, 'refresh']);
     Route::get('/export', [HetznerMonitoringController::class, 'export']);
+    Route::post('/note', [HetznerMonitoringController::class, 'saveNote']);
+    Route::delete('/note', [HetznerMonitoringController::class, 'deleteNote']);
 });
