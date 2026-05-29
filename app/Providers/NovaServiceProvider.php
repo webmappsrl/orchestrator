@@ -13,6 +13,7 @@ use App\Nova\BacklogStory;
 use App\Nova\Customer;
 use App\Nova\CustomerStory;
 use App\Nova\CustomerTickets;
+use App\Nova\Dashboards\HetznerMonitoring;
 use App\Nova\Dashboards\Kanban;
 use App\Nova\Dashboards\Sales;
 use App\Nova\Documentation;
@@ -87,6 +88,15 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                                 });
                         }),
                     ])->collapsedByDefault(),
+                    MenuItem::link('Hetzner Monitoring', '/dashboards/hetzner-monitoring')->canSee(function ($request) {
+                        if ($request->user() === null) {
+                            return false;
+                        }
+
+                        return $request->user()->hasRole(UserRole::Admin)
+                            || $request->user()->hasRole(UserRole::Manager)
+                            || $request->user()->hasRole(UserRole::Developer);
+                    }),
 
                 ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
 
@@ -234,6 +244,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         return [
             new \App\Nova\Dashboards\Kanban,
             new \App\Nova\Dashboards\Sales,
+            new \App\Nova\Dashboards\HetznerMonitoring,
         ];
     }
 
