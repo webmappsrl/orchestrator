@@ -87,3 +87,17 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 
 ## Testing
 Tests use the real PostgreSQL database (not SQLite/in-memory). See `phpunit.xml` — `DB_CONNECTION` is not overridden. Run tests inside the container.
+
+## Decisioni architetturali
+
+### Ottimizzazione Costi Hetzner (oc:7944)
+- **Nova component self-contained**: `nova-components/hetzner-monitoring/` segue il pattern di `kanban-card` — il componente Vue è un JS puro registrato via `Nova::script()`, senza build step separato. Nessun Webpack/Vite da configurare per aggiunte read-only.
+- **Token Hetzner in ENV**: convenzione `HETZNER_TOKEN_<SLUG>=xxx`. Letti dinamicamente da `config/hetzner.php` via `collect($_ENV)`. Aggiungere un nuovo progetto = aggiungere una variabile ENV + restart container (no deploy di codice).
+- **Prezzi Volumes/Snapshots hardcodati**: l'API Hetzner Cloud non espone pricing per queste risorse. Valori da documentazione pubblica (mag 2026): Volumes €0.0476/GB/mese, Snapshots €0.0119/GB/mese. Aggiornare `HetznerApiService` se Hetzner modifica i prezzi.
+- **Errori per progetto isolati**: un token non valido non blocca gli altri. La cache Redis è per-progetto (`hetzner_project_{slug}`, TTL 15 min).
+
+## Feature disponibili
+
+| Feature | Ticket | Moduli toccati | Note |
+|---|---|---|---|
+| Hetzner Monitoring | oc:7944 | `config/hetzner.php`, `app/Services/HetznerApiService.php`, `app/Http/Controllers/HetznerMonitoringController.php`, `app/Exports/HetznerExport.php`, `nova-components/hetzner-monitoring/`, `app/Nova/Dashboards/HetznerMonitoring.php` | Dashboard Nova con tabella per progetto Hetzner: server, floating IP, volumes, LB, snapshot. Cache Redis 15 min. Export CSV. |

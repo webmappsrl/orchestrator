@@ -31,13 +31,14 @@
         "overtrue/laravel-favorite": "^6.0",
         "pgvector/pgvector": "^0.2.2",
         "predis/predis": "^2.2",
-        "suenerds/nova-searchable-belongs-to-filter": "*",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
         "spatie/db-dumper": "^3.3",
         "spatie/laravel-google-calendar": "^3.8",
         "spatie/laravel-medialibrary": "^11.0",
         "spatie/laravel-translatable": "^6.3",
+        "suenerds/nova-searchable-belongs-to-filter": "*",
         "webklex/laravel-imap": "*",
+        "wm/hetzner-monitoring": "dev-oc_7944",
         "wm/kanban-card": "*",
         "wm/wm-internal": "*",
         "wm/wm-package": "*"
@@ -117,6 +118,10 @@
         {
             "type": "path",
             "url": "./nova-components/kanban-card"
+        },
+        {
+            "type": "path",
+            "url": "./nova-components/hetzner-monitoring"
         }
     ]
 }

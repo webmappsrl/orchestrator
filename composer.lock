@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "128890d44da4a64d6532aa8d9382e21c",
+    "content-hash": "d043d571bee79b234691c8d040a27735",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -14065,8 +14065,34 @@
             "time": "2025-02-11T20:04:34+00:00"
         },
         {
+            "name": "wm/hetzner-monitoring",
+            "version": "dev-oc_7944",
+            "dist": {
+                "type": "path",
+                "url": "./nova-components/hetzner-monitoring",
+                "reference": "b33acc719fc67ce0651be7c8f2fa05bf0bb964f9"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Webmapp\\HetznerMonitoring\\HetznerServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Webmapp\\HetznerMonitoring\\": "src/"
+                }
+            },
+            "description": "Hetzner Cloud monitoring card for Laravel Nova",
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
             "name": "wm/kanban-card",
-            "version": "dev-develop",
+            "version": "dev-oc_7944",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/kanban-card",
@@ -14238,7 +14264,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-develop",
+            "version": "dev-oc_7944",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -14319,7 +14345,7 @@
         },
         {
             "name": "wm/wm-package",
-            "version": "dev-ff3402845c252ad0000e996ba41bf621ba56b031",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
@@ -17158,7 +17184,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "wm/hetzner-monitoring": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
