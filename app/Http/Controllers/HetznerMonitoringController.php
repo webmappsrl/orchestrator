@@ -39,7 +39,7 @@ class HetznerMonitoringController extends Controller
 
         $projects = $this->mergeNotes($this->service->getAllProjectsData());
 
-        return Excel::download(new HetznerExport($projects), 'hetzner-monitoring.csv', \Maatwebsite\Excel\Excel::CSV);
+        return Excel::download(new HetznerExport($projects), 'hetzner-monitoring.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function saveNote(Request $request): JsonResponse

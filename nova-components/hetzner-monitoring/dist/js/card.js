@@ -36,7 +36,7 @@ Nova.booting(function (app) {
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
-                Export CSV
+                Export Excel
             </a>
         </div>
     </div>
@@ -183,8 +183,8 @@ Nova.booting(function (app) {
                             </tr>
                             <tr v-if="s.note && activeNoteKey !== noteKey(project.slug,'server',s.id)" :class="rowClass(s.action_priority)">
                                 <td :colspan="14" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
-                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
-                                        <p class="hetzner-monitoring__note-display-text">📝 {{ s.note.text }}</p>
+                                    <div class="hetzner-monitoring__note-display">
+                                        <p class="hetzner-monitoring__note-display-text">{{ s.note.text }}</p>
                                         <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ s.note.user_name }}</span>, {{ formatDate(s.note.updated_at) }}</p>
                                     </div>
                                 </td>
@@ -253,8 +253,8 @@ Nova.booting(function (app) {
                             </tr>
                             <tr v-if="ip.note && activeNoteKey !== noteKey(project.slug,'floating_ip',ip.id)" :class="rowClass(ip.action_priority)">
                                 <td :colspan="7" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
-                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
-                                        <p class="hetzner-monitoring__note-display-text">📝 {{ ip.note.text }}</p>
+                                    <div class="hetzner-monitoring__note-display">
+                                        <p class="hetzner-monitoring__note-display-text">{{ ip.note.text }}</p>
                                         <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ ip.note.user_name }}</span>, {{ formatDate(ip.note.updated_at) }}</p>
                                     </div>
                                 </td>
@@ -327,8 +327,8 @@ Nova.booting(function (app) {
                             </tr>
                             <tr v-if="v.note && activeNoteKey !== noteKey(project.slug,'volume',v.id)" :class="rowClass(v.action_priority)">
                                 <td :colspan="9" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
-                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
-                                        <p class="hetzner-monitoring__note-display-text">📝 {{ v.note.text }}</p>
+                                    <div class="hetzner-monitoring__note-display">
+                                        <p class="hetzner-monitoring__note-display-text">{{ v.note.text }}</p>
                                         <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ v.note.user_name }}</span>, {{ formatDate(v.note.updated_at) }}</p>
                                     </div>
                                 </td>
@@ -397,8 +397,8 @@ Nova.booting(function (app) {
                             </tr>
                             <tr v-if="lb.note && activeNoteKey !== noteKey(project.slug,'load_balancer',lb.id)" :class="rowClass(lb.action_priority)">
                                 <td :colspan="7" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
-                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
-                                        <p class="hetzner-monitoring__note-display-text">📝 {{ lb.note.text }}</p>
+                                    <div class="hetzner-monitoring__note-display">
+                                        <p class="hetzner-monitoring__note-display-text">{{ lb.note.text }}</p>
                                         <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ lb.note.user_name }}</span>, {{ formatDate(lb.note.updated_at) }}</p>
                                     </div>
                                 </td>
@@ -467,8 +467,8 @@ Nova.booting(function (app) {
                             </tr>
                             <tr v-if="snap.note && activeNoteKey !== noteKey(project.slug,'snapshot',snap.id)" :class="rowClass(snap.action_priority)">
                                 <td :colspan="7" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hetzner-monitoring__note-cell">
-                                    <div class="hetzner-monitoring__note-display text-xs text-blue-800 dark:text-blue-300">
-                                        <p class="hetzner-monitoring__note-display-text">📝 {{ snap.note.text }}</p>
+                                    <div class="hetzner-monitoring__note-display">
+                                        <p class="hetzner-monitoring__note-display-text">{{ snap.note.text }}</p>
                                         <p class="hetzner-monitoring__note-display-meta"><span class="font-medium">{{ snap.note.user_name }}</span>, {{ formatDate(snap.note.updated_at) }}</p>
                                     </div>
                                 </td>
