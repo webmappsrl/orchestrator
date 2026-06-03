@@ -63,9 +63,11 @@ class Story extends Model implements HasMedia
 
             if (
                 isset($story->creator_id)
-                && $story->creator->hasRole($customerRole)
-                && $story->status === $releasedStatus
+                && $currentStatus === $releasedStatus
                 && $story->wasChanged('status')
+                && $story->creator_id !== $story->user_id
+                && $story->creator_id !== $story->tester_id
+                && (!$sender || $sender->id !== $story->creator_id)
             ) {
                 $story->sendStatusUpdatedEmail($story, $story->creator_id, [
                     'highlight_latest_response' => $story->wasChanged('customer_request'),

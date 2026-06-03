@@ -387,4 +387,99 @@ class StoryEmailTriggersTest extends TestCase
         });
     }
 
+    // =========================================================================
+    // OC:7977 — Creator riceve email su Released indipendentemente dal ruolo
+    // =========================================================================
+
+    /** @test */
+    public function creator_developer_receives_email_when_status_set_to_released(): void
+    {
+        Bus::fake();
+        $actor = $this->makeDeveloper();
+        $creator = $this->makeDeveloper();
+        $story = $this->makeStory([
+            'creator_id' => $creator->id,
+            'status' => StoryStatus::Progress->value,
+        ]);
+
+        Auth::login($actor);
+        $story->status = StoryStatus::Released->value;
+        $story->save();
+
+        $this->assertCount(1, $this->jobsDispatchedTo($creator->id));
+    }
+
+    /** @test */
+    public function creator_receives_no_duplicate_email_when_also_assignee(): void
+    {
+        Bus::fake();
+        $actor = $this->makeDeveloper();
+        $creator = $this->makeDeveloper();
+        $story = $this->makeStory([
+            'creator_id' => $creator->id,
+            'user_id' => $creator->id,
+            'status' => StoryStatus::Progress->value,
+        ]);
+
+        Auth::login($actor);
+        $story->status = StoryStatus::Released->value;
+        $story->save();
+
+        $this->assertLessThanOrEqual(1, $this->jobsDispatchedTo($creator->id)->count());
+    }
+
+    /** @test */
+    public function creator_receives_no_duplicate_email_when_also_tester(): void
+    {
+        Bus::fake();
+        $actor = $this->makeDeveloper();
+        $creator = $this->makeDeveloper();
+        $story = $this->makeStory([
+            'creator_id' => $creator->id,
+            'tester_id' => $creator->id,
+            'status' => StoryStatus::Progress->value,
+        ]);
+
+        Auth::login($actor);
+        $story->status = StoryStatus::Released->value;
+        $story->save();
+
+        $this->assertLessThanOrEqual(1, $this->jobsDispatchedTo($creator->id)->count());
+    }
+
+    /** @test */
+    public function creator_receives_no_email_when_they_set_released_themselves(): void
+    {
+        Bus::fake();
+        $creator = $this->makeDeveloper();
+        $story = $this->makeStory([
+            'creator_id' => $creator->id,
+            'status' => StoryStatus::Progress->value,
+        ]);
+
+        Auth::login($creator);
+        $story->status = StoryStatus::Released->value;
+        $story->save();
+
+        $this->assertCount(0, $this->jobsDispatchedTo($creator->id));
+    }
+
+    /** @test */
+    public function customer_creator_still_receives_email_when_status_set_to_released(): void
+    {
+        Bus::fake();
+        $actor = $this->makeDeveloper();
+        $customer = $this->makeCustomer();
+        $story = $this->makeStory([
+            'creator_id' => $customer->id,
+            'status' => StoryStatus::Progress->value,
+        ]);
+
+        Auth::login($actor);
+        $story->status = StoryStatus::Released->value;
+        $story->save();
+
+        $this->assertCount(1, $this->jobsDispatchedTo($customer->id));
+    }
+
 }
