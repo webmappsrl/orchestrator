@@ -425,7 +425,7 @@ class StoryEmailTriggersTest extends TestCase
         $story->status = StoryStatus::Released->value;
         $story->save();
 
-        $this->assertLessThanOrEqual(1, $this->jobsDispatchedTo($creator->id)->count());
+        $this->assertCount(1, $this->jobsDispatchedTo($creator->id));
     }
 
     /** @test */
@@ -444,11 +444,11 @@ class StoryEmailTriggersTest extends TestCase
         $story->status = StoryStatus::Released->value;
         $story->save();
 
-        $this->assertLessThanOrEqual(1, $this->jobsDispatchedTo($creator->id)->count());
+        $this->assertCount(1, $this->jobsDispatchedTo($creator->id));
     }
 
     /** @test */
-    public function creator_receives_no_email_when_they_set_released_themselves(): void
+    public function creator_receives_email_even_when_they_set_released_themselves(): void
     {
         Bus::fake();
         $creator = $this->makeDeveloper();
@@ -461,7 +461,26 @@ class StoryEmailTriggersTest extends TestCase
         $story->status = StoryStatus::Released->value;
         $story->save();
 
-        $this->assertCount(0, $this->jobsDispatchedTo($creator->id));
+        $this->assertCount(1, $this->jobsDispatchedTo($creator->id));
+    }
+
+    /** @test */
+    public function creator_receives_email_when_tester_sets_released(): void
+    {
+        Bus::fake();
+        $creator = $this->makeCustomer();
+        $tester = $this->makeDeveloper();
+        $story = $this->makeStory([
+            'creator_id' => $creator->id,
+            'tester_id' => $tester->id,
+            'status' => StoryStatus::Tested->value,
+        ]);
+
+        Auth::login($tester);
+        $story->status = StoryStatus::Released->value;
+        $story->save();
+
+        $this->assertCount(1, $this->jobsDispatchedTo($creator->id));
     }
 
     /** @test */

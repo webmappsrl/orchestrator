@@ -78,15 +78,28 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Invio email creator su Released | oc:7977 | `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Il creator riceve sempre l'email su status→released, indipendentemente da ruolo, da chi agisce, e dall'auto-assign tester |
 | API endpoint GET /me | oc:7974 | `routes/api.php`, `tests/Feature/Api/MeEndpointTest.php` | Restituisce id, name, email dell'utente autenticato via Sanctum |
 
 ## Decisioni architetturali
+
+### Invio email creator su Released (oc:7977)
+- **Nessuna guard sul blocco creator-released**: rimosse tutte le guard di deduplicazione (`creator != tester`, `creator != assignee`) e la self-notification. Per `released`, nessun altro path notifica tester o assignee — le guard erano inutili e bloccavano i developer-creator (auto-assign `tester_id = creator_id` nel hook `created`).
+- **Non toccare il hook `created`**: il bug era nella logica email, non nell'auto-assign del tester. Principio: minimo scope.
 
 ### API endpoint GET /me (oc:7974)
 - Closure inline in `routes/api.php` invece di un controller dedicato — accettato consapevolmente per semplicità; il progetto non usa `php artisan route:cache` in produzione
 
 ## Testing
-Tests use the real PostgreSQL database (not SQLite/in-memory). See `phpunit.xml` — `DB_CONNECTION` is not overridden. Run tests inside the container.
+Tests use the real PostgreSQL database (not SQLite/in-memory). Run tests inside the container.
+
+`phpunit.xml` punta a `orchestrator_test` ma il DB potrebbe non esistere (extension `pgvector` non disponibile su PG 14 blocca le migration). Usare il DB principale con:
+
+```bash
+DB_DATABASE=orchestrator php artisan test --filter=TestClassName
+```
+
+Sicuro perché tutti i test Feature usano `DatabaseTransactions` (rollback automatico).
 
 ## Decisioni architetturali
 
