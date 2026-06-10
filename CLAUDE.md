@@ -78,10 +78,15 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Invio email alla creazione ticket | oc:8040 | `app/Mail/DevNewStoryCreated.php`, `resources/views/mails/dev-new-story-created.blade.php`, `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Alla creazione di qualsiasi ticket tutti i dev ricevono email: `CustomerNewStoryCreated` se creator è customer, `DevNewStoryCreated` altrimenti |
 | Invio email creator su Released | oc:7977 | `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Il creator riceve sempre l'email su status→released, indipendentemente da ruolo, da chi agisce, e dall'auto-assign tester |
 | API endpoint GET /me | oc:7974 | `routes/api.php`, `tests/Feature/Api/MeEndpointTest.php` | Restituisce id, name, email dell'utente autenticato via Sanctum |
 
 ## Decisioni architetturali
+
+### Invio email alla creazione ticket (oc:8040)
+- **Due mail class separate**: `CustomerNewStoryCreated` (invariata) e `DevNewStoryCreated` (nuova). Differenze concrete: corpo (`customer_request` vs `description` con fallback) e rotta Nova (`/resources/customer-stories/` vs `/resources/stories/`). Unificazione in `NewStoryCreated` con parametro rotta è possibile in futuro a basso costo.
+- **Dev creatore incluso nei destinatari**: nessuna esclusione — il dev che crea il ticket riceve l'email come tutti gli altri.
 
 ### Invio email creator su Released (oc:7977)
 - **Nessuna guard sul blocco creator-released**: rimosse tutte le guard di deduplicazione (`creator != tester`, `creator != assignee`) e la self-notification. Per `released`, nessun altro path notifica tester o assignee — le guard erano inutili e bloccavano i developer-creator (auto-assign `tester_id = creator_id` nel hook `created`).
