@@ -9,7 +9,7 @@ use App\Actions\StoryTimeService;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Artisan;
+use App\Jobs\SyncDeveloperCalendarJob;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Log;
 use App\Services\TagService;
@@ -71,7 +71,7 @@ class StoryObserver
      */
     public function updated(Story $story): void
     {
-        $this->syncStoryCalendarIfStatusChanged($story);
+        $this->dispatchCalendarSyncIfNeeded($story);
         $this->createStoryLog($story);
         $this->notifyDeveloperIfIdle($story);
     }
@@ -133,23 +133,45 @@ class StoryObserver
         }
     }
 
-    private function syncStoryCalendarIfStatusChanged(Story $story): void
+    private function dispatchCalendarSyncIfNeeded(Story $story): void
     {
+        $emails = [];
+
         if ($story->isDirty('status')) {
-            $developerId = $story->user_id;
-            if ($developerId) {
-                $developer = DB::table('users')->where('id', $developerId)->first();
-                if ($developer && $developer->email) {
-                    Artisan::call('sync:stories-calendar', ['developerEmail' => $developer->email]);
-                }
-            }
-            if ($story->status === StoryStatus::Test->value) {
+            $emails[] = $this->userEmail($story->user_id);
+
+            // Sync the tester calendar both when the story enters and when it
+            // leaves the testing status (the 2BETESTED event must disappear).
+            if (
+                $story->status === StoryStatus::Test->value
+                || $story->getOriginal('status') === StoryStatus::Test->value
+            ) {
                 $tester = $story->tester;
-                if ($tester && $tester->email) {
-                    Artisan::call('sync:stories-calendar', ['developerEmail' => $tester->email]);
-                }
+                $emails[] = $tester?->email;
             }
         }
+
+        // On reassignment sync both calendars: the old assignee loses the
+        // event, the new one gains it.
+        if ($story->isDirty('user_id')) {
+            $emails[] = $this->userEmail($story->getOriginal('user_id'));
+            $emails[] = $this->userEmail($story->user_id);
+        }
+
+        // The job is delayed (debounce) and unique per email: bursts of saves
+        // collapse into a single sync that reads the final state from the DB.
+        foreach (array_unique(array_filter($emails)) as $email) {
+            SyncDeveloperCalendarJob::dispatch($email);
+        }
+    }
+
+    private function userEmail(?int $userId): ?string
+    {
+        if (!$userId) {
+            return null;
+        }
+
+        return DB::table('users')->where('id', $userId)->value('email');
     }
 
     private function createStoryLog(Story $story): void

@@ -17,7 +17,7 @@ docker exec -it php81_orchestrator bash
 # Run migrations
 php artisan migrate
 
-# Run tests (uses real PostgreSQL DB, not SQLite)
+# Run tests (uses the orchestrator_test support DB, see ## Testing)
 php artisan test
 php artisan test --filter=TestClassName
 
@@ -78,10 +78,24 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Sync calendario asincrona con debounce | oc:8044 | `app/Jobs/SyncDeveloperCalendarJob.php`, `app/Observers/StoryObserver.php`, `app/Console/Commands/SyncStoriesWithGoogleCalendar.php`, `tests/Feature/SyncDeveloperCalendarJobTest.php` | La sync Google Calendar al save di una Story è un job in coda (debounce 60s, unique per email); save Nova < 2s, bulk edit senza timeout |
+| Hetzner Monitoring | oc:7944 | `config/hetzner.php`, `app/Services/HetznerApiService.php`, `app/Http/Controllers/HetznerMonitoringController.php`, `app/Exports/HetznerExport.php`, `nova-components/hetzner-monitoring/`, `app/Nova/Dashboards/HetznerMonitoring.php` | Dashboard Nova con tabella per progetto Hetzner: server, floating IP, volumes, LB, snapshot. Cache Redis 15 min. Export CSV. |
 | Invio email creator su Released | oc:7977 | `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Il creator riceve sempre l'email su status→released, indipendentemente da ruolo, da chi agisce, e dall'auto-assign tester |
 | API endpoint GET /me | oc:7974 | `routes/api.php`, `tests/Feature/Api/MeEndpointTest.php` | Restituisce id, name, email dell'utente autenticato via Sanctum |
 
 ## Decisioni architetturali
+
+### Sync calendario asincrona con debounce (oc:8044)
+- **Job con debounce invece di sync sincrona**: `SyncDeveloperCalendarJob` usa `ShouldBeUniqueUntilProcessing` (mai una sync persa: un save durante l'esecuzione accoda un nuovo job) + delay 60s nel costruttore + lock su Redis (`uniqueVia`) + `WithoutOverlapping` (la sync è delete-then-recreate, idempotente solo se serializzata).
+- **Niente `saveQuietly()` sul cascade demote progress→todo**: gli eventi del modello alimentano StoryLog → `StoryTimeService` (calcolo ore) e la query calendario; il costo delle sync a catena è azzerato dalla dedup del job, non sopprimendo gli eventi.
+- **Date del comando `sync:stories-calendar` inizializzate in `handle()`**, mai nel costruttore: Artisan cacha l'istanza del comando per processo, nei worker long-running una data fissata nel costruttore diventa stantia dopo mezzanotte.
+- **Coda `default` senza modifiche a Horizon**: rischio timeout 60s/tries=1 accettato consapevolmente (volumi bassi, fallback alla sync schedulata delle 07:45). Supervisione Horizon: ticket oc:8059.
+
+### Ottimizzazione Costi Hetzner (oc:7944)
+- **Nova component self-contained**: `nova-components/hetzner-monitoring/` segue il pattern di `kanban-card` — il componente Vue è un JS puro registrato via `Nova::script()`, senza build step separato. Nessun Webpack/Vite da configurare per aggiunte read-only.
+- **Token Hetzner in ENV**: convenzione `HETZNER_TOKEN_<SLUG>=xxx`. Letti dinamicamente da `config/hetzner.php` via `collect($_ENV)`. Aggiungere un nuovo progetto = aggiungere una variabile ENV + restart container (no deploy di codice).
+- **Prezzi Volumes/Snapshots hardcodati**: l'API Hetzner Cloud non espone pricing per queste risorse. Valori da documentazione pubblica (mag 2026): Volumes €0.0476/GB/mese, Snapshots €0.0119/GB/mese. Aggiornare `HetznerApiService` se Hetzner modifica i prezzi.
+- **Errori per progetto isolati**: un token non valido non blocca gli altri. La cache Redis è per-progetto (`hetzner_project_{slug}`, TTL 15 min).
 
 ### Invio email creator su Released (oc:7977)
 - **Nessuna guard sul blocco creator-released**: rimosse tutte le guard di deduplicazione (`creator != tester`, `creator != assignee`) e la self-notification. Per `released`, nessun altro path notifica tester o assignee — le guard erano inutili e bloccavano i developer-creator (auto-assign `tester_id = creator_id` nel hook `created`).
@@ -91,26 +105,16 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 - Closure inline in `routes/api.php` invece di un controller dedicato — accettato consapevolmente per semplicità; il progetto non usa `php artisan route:cache` in produzione
 
 ## Testing
-Tests use the real PostgreSQL database (not SQLite/in-memory). Run tests inside the container.
-
-`phpunit.xml` punta a `orchestrator_test` ma il DB potrebbe non esistere (extension `pgvector` non disponibile su PG 14 blocca le migration). Usare il DB principale con:
+I test girano sul **DB di supporto `orchestrator_test`** (configurato in `phpunit.xml`), non sul DB principale — nessun override necessario:
 
 ```bash
-DB_DATABASE=orchestrator php artisan test --filter=TestClassName
+docker exec php81_orchestrator php artisan test --filter=TestClassName
 ```
 
-Sicuro perché tutti i test Feature usano `DatabaseTransactions` (rollback automatico).
+Verificato giu 2026: PostgreSQL 17.5 con `pgvector` 0.8.2 e PostGIS 3.5.2; `orchestrator_test` esiste con tutte le migration applicate (la vecchia nota "pgvector non disponibile su PG 14" è obsoleta). Se il DB di test restasse indietro con le migration:
 
-## Decisioni architetturali
+```bash
+docker exec php81_orchestrator bash -c "DB_DATABASE=orchestrator_test php artisan migrate"
+```
 
-### Ottimizzazione Costi Hetzner (oc:7944)
-- **Nova component self-contained**: `nova-components/hetzner-monitoring/` segue il pattern di `kanban-card` — il componente Vue è un JS puro registrato via `Nova::script()`, senza build step separato. Nessun Webpack/Vite da configurare per aggiunte read-only.
-- **Token Hetzner in ENV**: convenzione `HETZNER_TOKEN_<SLUG>=xxx`. Letti dinamicamente da `config/hetzner.php` via `collect($_ENV)`. Aggiungere un nuovo progetto = aggiungere una variabile ENV + restart container (no deploy di codice).
-- **Prezzi Volumes/Snapshots hardcodati**: l'API Hetzner Cloud non espone pricing per queste risorse. Valori da documentazione pubblica (mag 2026): Volumes €0.0476/GB/mese, Snapshots €0.0119/GB/mese. Aggiornare `HetznerApiService` se Hetzner modifica i prezzi.
-- **Errori per progetto isolati**: un token non valido non blocca gli altri. La cache Redis è per-progetto (`hetzner_project_{slug}`, TTL 15 min).
-
-## Feature disponibili
-
-| Feature | Ticket | Moduli toccati | Note |
-|---|---|---|---|
-| Hetzner Monitoring | oc:7944 | `config/hetzner.php`, `app/Services/HetznerApiService.php`, `app/Http/Controllers/HetznerMonitoringController.php`, `app/Exports/HetznerExport.php`, `nova-components/hetzner-monitoring/`, `app/Nova/Dashboards/HetznerMonitoring.php` | Dashboard Nova con tabella per progetto Hetzner: server, floating IP, volumes, LB, snapshot. Cache Redis 15 min. Export CSV. |
+Tutti i test Feature usano `DatabaseTransactions` (rollback automatico). **Non usare** `DB_DATABASE=orchestrator` per i test: punterebbe al DB reale.

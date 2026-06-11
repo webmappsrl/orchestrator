@@ -41,6 +41,7 @@
   "Description": "Descrizione",
   "Info": "Informazioni",
   "Estimated Hours": "Ore stimate",
+  "Effective Hours": "Ore effettive",
   "Creator": "Creatore",
   "Create": "Crea",
   "Create Story": "Crea Ticket",
@@ -520,5 +521,7 @@
   "Sales Kanban View": "Visualizza Kanban Commerciale",
   "Search or select customer:": "Cerca o seleziona cliente:",
   "Kanban View": "Vista Kanban",
-  "View kanban for:": "Visualizza kanban per:"
+  "View kanban for:": "Visualizza kanban per:",
+  "Total Estimated Hours": "Totale Ore Stimate",
+  "Total Effective Hours": "Totale Ore Effettive"
 }

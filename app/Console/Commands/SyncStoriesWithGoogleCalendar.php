@@ -32,12 +32,17 @@ class SyncStoriesWithGoogleCalendar extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->today = Carbon::today('Europe/Rome');
-        $this->startTime = $this->today->setTime(0, 1);
     }
 
     public function handle()
     {
+        // Initialize dates here and not in the constructor: Artisan caches the
+        // command instance per process, so in long-running queue workers a
+        // constructor-set date goes stale after midnight (events recreated on
+        // the wrong day).
+        $this->today = Carbon::today('Europe/Rome');
+        $this->startTime = $this->today->setTime(0, 1);
+
         $developerId = null;
         $developerEmail = $this->argument('developerEmail');
         $developerIds = [];
