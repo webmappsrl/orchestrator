@@ -5,11 +5,14 @@ namespace Tests\Feature;
 use App\Enums\StoryStatus;
 use App\Enums\StoryType;
 use App\Jobs\SendStatusUpdateMailJob;
+use App\Mail\CustomerNewStoryCreated;
+use App\Mail\DevNewStoryCreated;
 use App\Models\Story;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class StoryEmailTriggersTest extends TestCase
@@ -501,4 +504,43 @@ class StoryEmailTriggersTest extends TestCase
         $this->assertCount(1, $this->jobsDispatchedTo($customer->id));
     }
 
+    // ===================================================================================
+    // OC:8040 — Notifica a tutti i dev alla creazione di qualsiasi ticket di un developer
+    // ===================================================================================
+
+    /** @test */
+    public function dev_creator_sends_dev_mail_to_all_developers(): void
+    {
+        Mail::fake();
+        $creator = $this->makeDeveloper();
+
+        Auth::login($creator);
+        Story::query()->create([
+            'name' => 'Test story',
+            'type' => StoryType::Helpdesk->value,
+            'status' => StoryStatus::New->value,
+            'customer_request' => '<p>hello</p>',
+        ]);
+
+        Mail::assertSent(DevNewStoryCreated::class);
+        Mail::assertNotSent(CustomerNewStoryCreated::class);
+    }
+
+    /** @test */
+    public function customer_creator_still_sends_customer_mail_to_all_developers(): void
+    {
+        Mail::fake();
+        $customer = $this->makeCustomer();
+
+        Auth::login($customer);
+        Story::query()->create([
+            'name' => 'Test story',
+            'type' => StoryType::Helpdesk->value,
+            'status' => StoryStatus::New->value,
+            'customer_request' => '<p>hello</p>',
+        ]);
+
+        Mail::assertSent(CustomerNewStoryCreated::class);
+        Mail::assertNotSent(DevNewStoryCreated::class);
+    }
 }
