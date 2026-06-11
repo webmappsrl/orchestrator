@@ -17,16 +17,8 @@ class SyncDeveloperCalendarJobTest extends TestCase
 {
     use DatabaseTransactions;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // ShouldBeUniqueUntilProcessing acquires its unique lock even when the
-        // Bus is faked (the lock lives in PendingDispatch, before the fake
-        // dispatcher). The job uses Cache::driver('redis') for the lock: point
-        // the redis store to the array driver so tests never touch Redis.
-        config(['cache.stores.redis.driver' => 'array']);
-    }
+    // The redis cache store used by the job's unique lock is pointed to the
+    // array driver for the whole suite in Tests\TestCase::setUp().
 
     private function makeCustomer(): User
     {

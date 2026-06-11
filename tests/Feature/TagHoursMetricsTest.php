@@ -28,7 +28,10 @@ class TagHoursMetricsTest extends TestCase
 
     public function test_estimated_hours_metric_uses_tag_estimate_like_sal_card(): void
     {
-        $tag = Tag::factory()->create(['estimate' => 999.0]);
+        // `Tag::estimate` non è più una colonna persistita (refactor 3674990):
+        // è un accessor runtime = somma di `estimated_hours` delle story taggate,
+        // lo stesso valore usato dalla card SAL.
+        $tag = Tag::factory()->create();
         $s1 = Story::factory()->create(['estimated_hours' => 2.5, 'hours' => 1.0]);
         $s2 = Story::factory()->create(['estimated_hours' => 3.5, 'hours' => 1.0]);
         $s1->tags()->attach($tag->id);
@@ -36,18 +39,18 @@ class TagHoursMetricsTest extends TestCase
 
         $result = (new TagHoursTotal('estimated'))->calculate($this->novaDetailMetricRequest($tag));
 
-        $this->assertEqualsWithDelta(999.0, (float) $result->value, 0.001);
+        $this->assertEqualsWithDelta(6.0, (float) $result->value, 0.001);
     }
 
-    public function test_estimated_hours_metric_uses_tag_estimate_even_when_stories_have_null_estimated_hours(): void
+    public function test_estimated_hours_metric_is_zero_when_stories_have_no_estimated_hours(): void
     {
-        $tag = Tag::factory()->create(['estimate' => 8.0]);
+        $tag = Tag::factory()->create();
         $story = Story::factory()->create(['estimated_hours' => null, 'hours' => 10.0]);
         $story->tags()->attach($tag->id);
 
         $result = (new TagHoursTotal('estimated'))->calculate($this->novaDetailMetricRequest($tag));
 
-        $this->assertEqualsWithDelta(8.0, (float) $result->value, 0.001);
+        $this->assertEqualsWithDelta(0.0, (float) $result->value, 0.001);
     }
 
     public function test_effective_hours_metric_is_zero_when_tag_has_no_stories(): void
