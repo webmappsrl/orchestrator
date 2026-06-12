@@ -78,12 +78,18 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| PDF preventivo — logo visibile | oc:8047 | `resources/views/quote-pdf.blade.php`, `public/images/logo.png` | Usa `file://` path invece di data URI base64; DomPDF non renderizza data URI in questo setup |
 | Sync calendario asincrona con debounce | oc:8044 | `app/Jobs/SyncDeveloperCalendarJob.php`, `app/Observers/StoryObserver.php`, `app/Console/Commands/SyncStoriesWithGoogleCalendar.php`, `tests/Feature/SyncDeveloperCalendarJobTest.php` | La sync Google Calendar al save di una Story è un job in coda (debounce 60s, unique per email); save Nova < 2s, bulk edit senza timeout |
 | Hetzner Monitoring | oc:7944 | `config/hetzner.php`, `app/Services/HetznerApiService.php`, `app/Http/Controllers/HetznerMonitoringController.php`, `app/Exports/HetznerExport.php`, `nova-components/hetzner-monitoring/`, `app/Nova/Dashboards/HetznerMonitoring.php` | Dashboard Nova con tabella per progetto Hetzner: server, floating IP, volumes, LB, snapshot. Cache Redis 15 min. Export CSV. |
 | Invio email creator su Released | oc:7977 | `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Il creator riceve sempre l'email su status→released, indipendentemente da ruolo, da chi agisce, e dall'auto-assign tester |
 | API endpoint GET /me | oc:7974 | `routes/api.php`, `tests/Feature/Api/MeEndpointTest.php` | Restituisce id, name, email dell'utente autenticato via Sanctum |
 
 ## Decisioni architetturali
+
+### PDF preventivo — logo via file:// (oc:8047)
+- **DomPDF non renderizza data URI PNG/SVG**: in questo setup (`barryvdh/laravel-dompdf ^3.0`), le immagini passate come `data:image/...;base64,...` in tag `<img>` non vengono renderizzate. Usare sempre `file://` + path assoluto per le immagini locali nei template PDF.
+- **PNG ridimensionato per DomPDF**: immagini ad alta risoluzione (es. 2400px) non vengono renderizzate. Usare PNG ≤ 400–500px di larghezza per i loghi nei PDF.
+- **Protocollo `file://` già in whitelist**: configurato in `config/dompdf.php` → `allowed_protocols`. Nessuna modifica alla config necessaria.
 
 ### Sync calendario asincrona con debounce (oc:8044)
 - **Job con debounce invece di sync sincrona**: `SyncDeveloperCalendarJob` usa `ShouldBeUniqueUntilProcessing` (mai una sync persa: un save durante l'esecuzione accoda un nuovo job) + delay 60s nel costruttore + lock su Redis (`uniqueVia`) + `WithoutOverlapping` (la sync è delete-then-recreate, idempotente solo se serializzata).
