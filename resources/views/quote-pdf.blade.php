@@ -15,13 +15,8 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
 <body>
     <header class="webmapp-header">
         @php
-        $logoPath = public_path('images/logo.svg');
-        if (file_exists($logoPath)) {
-            $logoData = file_get_contents($logoPath);
-            $logoBase64 = 'data:image/svg+xml;base64,' . base64_encode($logoData);
-        } else {
-            $logoBase64 = '';
-        }
+        $logoPath = public_path('images/logo.png');
+        $logoSrc = file_exists($logoPath) ? 'file://' . $logoPath : '';
         // Generate the complete quote URL
         $quoteUrl = route('quote', ['id' => $quote->id]);
         if (App::getLocale() !== 'it') {
@@ -31,9 +26,9 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
         <div class="quote-url">
             {{ $quoteUrl }}
         </div>
-        @if($logoBase64)
+        @if($logoSrc)
         <div class="logo">
-            <img src="{{ $logoBase64 }}" alt="webmapp logo">
+            <img src="{{ $logoSrc }}" alt="webmapp logo">
         </div>
         @endif
         <div class="webmapp-details">
