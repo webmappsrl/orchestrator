@@ -528,6 +528,7 @@ class StoryEmailTriggersTest extends TestCase
     public function customer_creator_sends_new_story_mail_to_all_developers(): void
     {
         Mail::fake();
+        $this->makeDeveloper();
         $customer = $this->makeCustomer();
 
         Auth::login($customer);
