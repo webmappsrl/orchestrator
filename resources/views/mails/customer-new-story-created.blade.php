@@ -37,12 +37,15 @@
             <strong>{{ $story->name }}</strong>
         </div>
         <div class="content">
-            {!! $story->customer_request !!}
-            <p><a href="{{ url('/resources/customer-stories/' . $story->id) }}">Ticket {{ $story->id }}</a></p>
+            @if($story->customer_request)
+                {!! $story->customer_request !!}
+            @endif
+            <p><a href="{{ url($novaUrl) }}">Ticket {{ $story->id }}</a></p>
         </div>
         <div class="footer">
             <p>Orchestrator©</p>
         </div>
+    </div>
 </body>
 
 </html>
