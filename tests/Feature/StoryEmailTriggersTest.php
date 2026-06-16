@@ -6,7 +6,6 @@ use App\Enums\StoryStatus;
 use App\Enums\StoryType;
 use App\Jobs\SendStatusUpdateMailJob;
 use App\Mail\CustomerNewStoryCreated;
-use App\Mail\DevNewStoryCreated;
 use App\Models\Story;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -509,7 +508,7 @@ class StoryEmailTriggersTest extends TestCase
     // ===================================================================================
 
     /** @test */
-    public function dev_creator_sends_dev_mail_to_all_developers(): void
+    public function dev_creator_sends_new_story_mail_to_all_developers(): void
     {
         Mail::fake();
         $creator = $this->makeDeveloper();
@@ -522,12 +521,11 @@ class StoryEmailTriggersTest extends TestCase
             'customer_request' => '<p>hello</p>',
         ]);
 
-        Mail::assertSent(DevNewStoryCreated::class);
-        Mail::assertNotSent(CustomerNewStoryCreated::class);
+        Mail::assertSent(CustomerNewStoryCreated::class);
     }
 
     /** @test */
-    public function customer_creator_still_sends_customer_mail_to_all_developers(): void
+    public function customer_creator_sends_new_story_mail_to_all_developers(): void
     {
         Mail::fake();
         $customer = $this->makeCustomer();
@@ -541,6 +539,5 @@ class StoryEmailTriggersTest extends TestCase
         ]);
 
         Mail::assertSent(CustomerNewStoryCreated::class);
-        Mail::assertNotSent(DevNewStoryCreated::class);
     }
 }

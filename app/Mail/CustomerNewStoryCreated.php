@@ -2,9 +2,9 @@
 
 namespace App\Mail;
 
+use App\Enums\UserRole;
 use App\Models\Story;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -17,32 +17,25 @@ class CustomerNewStoryCreated extends Mailable
 
     public $story;
     public $creator;
+    public string $novaUrl;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(Story $story)
     {
         $this->story = $story;
         $this->creator = $story->creator;
+        $this->novaUrl = $story->creator->hasRole(UserRole::Customer)
+            ? '/resources/customer-stories/' . $story->id
+            : '/resources/stories/' . $story->id;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
-        $fromName = config('mail.from.name');
-        $fromAddress = config('mail.from.address');
         return new Envelope(
-            from: new Address($fromAddress, $fromName),
+            from: new Address(config('mail.from.address'), config('mail.from.name')),
             subject: '[new][' . $this->story->creator->name . ']: ' . $this->story->name,
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
@@ -50,15 +43,11 @@ class CustomerNewStoryCreated extends Mailable
             with: [
                 'story' => $this->story,
                 'creator' => $this->creator,
+                'novaUrl' => $this->novaUrl,
             ],
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
         return [];

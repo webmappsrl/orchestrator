@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Jobs\SendStatusUpdateMailJob;
 use App\Mail\CustomerNewStoryCreated;
-use App\Mail\DevNewStoryCreated;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Laravel\Nova\Notifications\NovaNotification;
@@ -167,12 +166,9 @@ class Story extends Model implements HasMedia
 
                 $story->save();
                 $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
-                $mailClass = $user->hasRole(UserRole::Customer)
-                    ? CustomerNewStoryCreated::class
-                    : DevNewStoryCreated::class;
                 foreach ($developers as $developer) {
                     try {
-                        Mail::to($developer->email)->send(new $mailClass($story));
+                        Mail::to($developer->email)->send(new CustomerNewStoryCreated($story));
                     } catch (\Exception $e) {
                         Log::error($e->getMessage());
                     }

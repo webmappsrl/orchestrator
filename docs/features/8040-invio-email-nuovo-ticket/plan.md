@@ -2,206 +2,103 @@
 
 # Plan — Invio email a tutti i dev alla creazione di qualsiasi ticket
 
-## Step 1 — Nuova mail class `app/Mail/DevNewStoryCreated.php`
+## Step 1 — Modifica `app/Mail/CustomerNewStoryCreated.php`
 
-Creare il file modellato su `CustomerNewStoryCreated`, con queste differenze:
-- template: `mails.dev-new-story-created`
-- subject: `[new][NomeCreatore]: TitoloTicket` (stesso formato)
+Aggiungere la proprietà `$novaUrl` calcolata nel costruttore in base al ruolo del creator. Passarla al template.
 
 ```php
-<?php
+use App\Enums\UserRole;
 
-namespace App\Mail;
-
-use App\Models\Story;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Address;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
-
-class DevNewStoryCreated extends Mailable
+class CustomerNewStoryCreated extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public $story;
     public $creator;
+    public string $novaUrl;
 
     public function __construct(Story $story)
     {
         $this->story = $story;
         $this->creator = $story->creator;
-    }
-
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            from: new Address(config('mail.from.address'), config('mail.from.name')),
-            subject: '[new][' . $this->creator->name . ']: ' . $this->story->name,
-        );
+        $this->novaUrl = $story->creator->hasRole(UserRole::Customer)
+            ? '/resources/customer-stories/' . $story->id
+            : '/resources/stories/' . $story->id;
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'mails.dev-new-story-created',
+            view: 'mails.customer-new-story-created',
             with: [
                 'story' => $this->story,
                 'creator' => $this->creator,
+                'novaUrl' => $this->novaUrl,
             ],
         );
-    }
-
-    public function attachments(): array
-    {
-        return [];
     }
 }
 ```
 
 ---
 
-## Step 2 — Nuovo template `resources/views/mails/dev-new-story-created.blade.php`
+## Step 2 — Aggiorna template `resources/views/mails/customer-new-story-created.blade.php`
 
-Modellato su `customer-new-story-created.blade.php`, con:
-- corpo: `description` con fallback a `customer_request`, fallback a testo neutro
-- link: `/resources/stories/{id}` (rotta Nova per developer)
+Corpo condizionale su `customer_request` (se vuoto non mostra nulla). Link dinamico via `$novaUrl`.
 
 ```blade
-<!DOCTYPE html>
-<html>
-<head>
-    <title>New Story Created</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .container { width: 100%; max-width: 600px; margin: 0 auto; }
-        .header, .footer { background-color: #f5f5f5; padding: 16px; }
-        .content { padding: 16px; }
-        img { max-width: 100%; height: auto; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <strong>{{ $story->name }}</strong>
-        </div>
-        <div class="content">
-            @if($story->description)
-                {!! $story->description !!}
-            @elseif($story->customer_request)
-                {!! $story->customer_request !!}
-            @else
-                <p>Nessun dettaglio aggiunto.</p>
-            @endif
-            <p><a href="{{ url('/resources/stories/' . $story->id) }}">Ticket {{ $story->id }}</a></p>
-        </div>
-        <div class="footer">
-            <p>Orchestrator©</p>
-        </div>
-    </div>
-</body>
-</html>
+<div class="content">
+    @if($story->customer_request)
+        {!! $story->customer_request !!}
+    @endif
+    <p><a href="{{ url($novaUrl) }}">Ticket {{ $story->id }}</a></p>
+</div>
 ```
 
 ---
 
 ## Step 3 — Modifica `app/Models/Story.php` — hook `created()`
 
-**File:** `app/Models/Story.php`
-**Blocco da modificare:** hook `created()`, righe 168-177
-
-### Codice attuale
-
-```php
-if ($user->hasRole(UserRole::Customer)) {
-    $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
-    foreach ($developers as $developer) {
-        try {
-            Mail::to($developer->email)->send(new CustomerNewStoryCreated($story));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-        }
-    }
-}
-```
-
-### Codice dopo il fix
+Rimuovere il branch condizionale per mail class. Usare sempre `CustomerNewStoryCreated`. Rimuovere l'import di `DevNewStoryCreated`.
 
 ```php
 $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
-$mailClass = $user->hasRole(UserRole::Customer)
-    ? CustomerNewStoryCreated::class
-    : DevNewStoryCreated::class;
-
 foreach ($developers as $developer) {
     try {
-        Mail::to($developer->email)->send(new $mailClass($story));
+        Mail::to($developer->email)->send(new CustomerNewStoryCreated($story));
     } catch (\Exception $e) {
         Log::error($e->getMessage());
     }
 }
 ```
 
-Aggiungere l'import in testa al file:
-```php
-use App\Mail\DevNewStoryCreated;
-```
-
 ---
 
 ## Step 4 — Test `tests/Feature/StoryEmailTriggersTest.php`
 
-Aggiungere una nuova sezione in fondo al file. Usare `Mail::fake()` (non `Bus::fake()`) perché `CustomerNewStoryCreated` e `DevNewStoryCreated` usano `Mail::send()` direttamente.
-
-Aggiungere l'import in testa al file:
-```php
-use Illuminate\Support\Facades\Mail;
-use App\Mail\DevNewStoryCreated;
-use App\Mail\CustomerNewStoryCreated;
-```
-
-### Test da aggiungere
+Rimuovere import `DevNewStoryCreated`. Aggiornare i due test oc:8040 per assertire `CustomerNewStoryCreated` in entrambi i casi.
 
 ```php
-// =========================================================================
-// OC:8040 — Notifica a tutti i dev alla creazione di qualsiasi ticket
-// =========================================================================
-
 /** @test */
-public function dev_creator_sends_dev_mail_to_all_developers(): void
+public function dev_creator_sends_new_story_mail_to_all_developers(): void
 {
     Mail::fake();
     $creator = $this->makeDeveloper();
-    $otherDev = $this->makeDeveloper();
 
     Auth::login($creator);
-    Story::query()->create([
-        'name' => 'Test story',
-        'type' => StoryType::Helpdesk->value,
-        'status' => StoryStatus::New->value,
-        'customer_request' => '<p>hello</p>',
-    ]);
+    Story::query()->create([...]);
 
-    Mail::assertSent(DevNewStoryCreated::class);
+    Mail::assertSent(CustomerNewStoryCreated::class);
 }
 
 /** @test */
-public function customer_creator_still_sends_customer_mail_to_all_developers(): void
+public function customer_creator_sends_new_story_mail_to_all_developers(): void
 {
     Mail::fake();
     $customer = $this->makeCustomer();
 
     Auth::login($customer);
-    Story::query()->create([
-        'name' => 'Test story',
-        'type' => StoryType::Helpdesk->value,
-        'status' => StoryStatus::New->value,
-        'customer_request' => '<p>hello</p>',
-    ]);
+    Story::query()->create([...]);
 
     Mail::assertSent(CustomerNewStoryCreated::class);
-    Mail::assertNotSent(DevNewStoryCreated::class);
 }
 ```
 
@@ -215,12 +112,12 @@ Dentro il container:
 DB_DATABASE=orchestrator php artisan test --filter=StoryEmailTriggersTest
 ```
 
-Tutti i test esistenti devono restare verdi. I due nuovi test devono passare.
+24 test verdi attesi.
 
 ---
 
 ## Commit convention
 
 ```
-feat(oc:8040): notify all devs on story creation regardless of creator role
+refactor(oc:8040): unify new story email into CustomerNewStoryCreated
 ```
