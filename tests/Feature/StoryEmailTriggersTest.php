@@ -541,4 +541,24 @@ class StoryEmailTriggersTest extends TestCase
 
         Mail::assertSent(CustomerNewStoryCreated::class);
     }
+
+    // ===================================================================================
+    // OC:8091 — Nessuna mail alla creazione di ticket di tipo Scrum
+    // ===================================================================================
+
+    /** @test */
+    public function scrum_story_creation_does_not_send_email_to_developers(): void
+    {
+        Mail::fake();
+        $developer = $this->makeDeveloper();
+
+        Auth::login($developer);
+        Story::query()->create([
+            'name' => 'Scrum ticket',
+            'type' => StoryType::Scrum->value,
+            'status' => StoryStatus::New->value,
+        ]);
+
+        Mail::assertNothingSent();
+    }
 }

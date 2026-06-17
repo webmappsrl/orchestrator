@@ -165,6 +165,10 @@ class Story extends Model implements HasMedia
                 }
 
                 $story->save();
+                // Scrum tickets are internal planning tasks: no email notification on creation.
+                if ($story->type === StoryType::Scrum->value) {
+                    return;
+                }
                 $developers = User::whereJsonContains('roles', UserRole::Developer)->get();
                 foreach ($developers as $developer) {
                     try {
