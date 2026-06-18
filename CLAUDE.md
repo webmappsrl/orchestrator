@@ -78,6 +78,7 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Fix download allegati (path generator ibrido) | oc:8028 | `app/Services/MediaLibrary/OrchestratorPathGenerator.php`, `app/Providers/AppServiceProvider.php` | Generator C→B→A ripristina accesso ai 605/631 media legacy; wm-package sovrascriveva path_generator con WmfePathGenerator |
 | PDF preventivo — logo visibile | oc:8047 | `resources/views/quote-pdf.blade.php`, `public/images/logo.png` | Usa `file://` path invece di data URI base64; DomPDF non renderizza data URI in questo setup |
 | Sync calendario asincrona con debounce | oc:8044 | `app/Jobs/SyncDeveloperCalendarJob.php`, `app/Observers/StoryObserver.php`, `app/Console/Commands/SyncStoriesWithGoogleCalendar.php`, `tests/Feature/SyncDeveloperCalendarJobTest.php` | La sync Google Calendar al save di una Story è un job in coda (debounce 60s, unique per email); save Nova < 2s, bulk edit senza timeout |
 | Hetzner Monitoring | oc:7944 | `config/hetzner.php`, `app/Services/HetznerApiService.php`, `app/Http/Controllers/HetznerMonitoringController.php`, `app/Exports/HetznerExport.php`, `nova-components/hetzner-monitoring/`, `app/Nova/Dashboards/HetznerMonitoring.php` | Dashboard Nova con tabella per progetto Hetzner: server, floating IP, volumes, LB, snapshot. Cache Redis 15 min. Export CSV. |
@@ -87,6 +88,12 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 | API endpoint GET /me | oc:7974 | `routes/api.php`, `tests/Feature/Api/MeEndpointTest.php` | Restituisce id, name, email dell'utente autenticato via Sanctum |
 
 ## Decisioni architetturali
+
+### Fix download allegati — path generator ibrido (oc:8028)
+- **wm-package sovrascrive `path_generator` e `disk_name`**: il suo ServiceProvider fa `array_merge` sulla config di `media-library`, rimpiazzando `CustomPathGenerator` con `WmfePathGenerator` e `disk_name` con `wmfe`. `AppServiceProvider::register()` deve ripristinare entrambi *dopo* il boot di wm-package.
+- **`disk_name` hardcodato a `public`** in `AppServiceProvider`: tutti i file storici sono su disco `public`, non su S3. Non usare `env('MEDIA_DISK')` che nel container di sviluppo punta a `wmfe`.
+- **Tre layout coesistenti su disco**: Layout A (`media/Model/name/file`, fino ad apr 2026), Layout B (`media/Model/name/id/file`, apr–mag 2026), Layout C (`orchestrator/media/id/file`, mag 2026–oggi). `OrchestratorPathGenerator` li tenta in ordine C→B→A; i nuovi upload vanno in C.
+- **Nessuna migrazione fisica dei file**: il generator ibrido risolve il problema senza spostare file su disco.
 
 ### Fix email creazione ticket Scrum (oc:8091)
 - **Guardia solo sull'invio email, non sull'assegnazione**: il `return` nell'hook `created` è posizionato dopo `$story->save()` (che assegna `creator_id`, `tester_id`) e prima del loop developer. I metadati del ticket Scrum vengono sempre popolati correttamente.
