@@ -81,11 +81,16 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 | PDF preventivo — logo visibile | oc:8047 | `resources/views/quote-pdf.blade.php`, `public/images/logo.png` | Usa `file://` path invece di data URI base64; DomPDF non renderizza data URI in questo setup |
 | Sync calendario asincrona con debounce | oc:8044 | `app/Jobs/SyncDeveloperCalendarJob.php`, `app/Observers/StoryObserver.php`, `app/Console/Commands/SyncStoriesWithGoogleCalendar.php`, `tests/Feature/SyncDeveloperCalendarJobTest.php` | La sync Google Calendar al save di una Story è un job in coda (debounce 60s, unique per email); save Nova < 2s, bulk edit senza timeout |
 | Hetzner Monitoring | oc:7944 | `config/hetzner.php`, `app/Services/HetznerApiService.php`, `app/Http/Controllers/HetznerMonitoringController.php`, `app/Exports/HetznerExport.php`, `nova-components/hetzner-monitoring/`, `app/Nova/Dashboards/HetznerMonitoring.php` | Dashboard Nova con tabella per progetto Hetzner: server, floating IP, volumes, LB, snapshot. Cache Redis 15 min. Export CSV. |
+| Fix email creazione ticket Scrum | oc:8091 | `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Alla creazione di un ticket di tipo Scrum nessuna mail viene inviata ai developer; tutti gli altri tipi inviano normalmente |
 | Invio email alla creazione ticket | oc:8040 | `app/Mail/DevNewStoryCreated.php`, `resources/views/mails/dev-new-story-created.blade.php`, `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Alla creazione di qualsiasi ticket tutti i dev ricevono email: `CustomerNewStoryCreated` se creator è customer, `DevNewStoryCreated` altrimenti |
 | Invio email creator su Released | oc:7977 | `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Il creator riceve sempre l'email su status→released, indipendentemente da ruolo, da chi agisce, e dall'auto-assign tester |
 | API endpoint GET /me | oc:7974 | `routes/api.php`, `tests/Feature/Api/MeEndpointTest.php` | Restituisce id, name, email dell'utente autenticato via Sanctum |
 
 ## Decisioni architetturali
+
+### Fix email creazione ticket Scrum (oc:8091)
+- **Guardia solo sull'invio email, non sull'assegnazione**: il `return` nell'hook `created` è posizionato dopo `$story->save()` (che assegna `creator_id`, `tester_id`) e prima del loop developer. I metadati del ticket Scrum vengono sempre popolati correttamente.
+- **`$story->type` è stringa, non enum castata**: il modello `Story` non ha `$casts` per il campo `type`. Il confronto `=== StoryType::Scrum->value` è safe. Se in futuro si aggiunge il cast Eloquent, aggiornare la guardia.
 
 ### PDF preventivo — logo via file:// (oc:8047)
 - **DomPDF non renderizza data URI PNG/SVG**: in questo setup (`barryvdh/laravel-dompdf ^3.0`), le immagini passate come `data:image/...;base64,...` in tag `<img>` non vengono renderizzate. Usare sempre `file://` + path assoluto per le immagini locali nei template PDF.
