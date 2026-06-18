@@ -533,4 +533,37 @@ class Story extends Resource
             new filters\StoryTypeFilter(),
         ];
     }
+
+    public static function afterCreate(NovaRequest $request, Model $model): void
+    {
+        static::attachAutoTags($model);
+    }
+
+    public static function afterUpdate(NovaRequest $request, Model $model): void
+    {
+        static::attachAutoTags($model);
+    }
+
+    private static function attachAutoTags(Model $model): void
+    {
+        $tagService = app(\App\Services\TagService::class);
+
+        try {
+            $tagService->attachQuarterTagToStory($model);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Auto-tagging (quarter) failed for story #{$model->id}: " . $e->getMessage());
+        }
+
+        try {
+            $tagService->attachCustomerTagToStory($model);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Auto-tagging (customer) failed for story #{$model->id}: " . $e->getMessage());
+        }
+
+        try {
+            $tagService->attachTagsFromTextToStory($model);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Auto-tagging (text) failed for story #{$model->id}: " . $e->getMessage());
+        }
+    }
 }

@@ -56,13 +56,24 @@ class StoryObserver
             Log::channel('user-activity')->info($message, $context);
         }
 
+        $tagService = app(TagService::class);
+
         try {
-            $tagService = app(TagService::class);
             $tagService->attachQuarterTagToStory($story);
+        } catch (\Throwable $e) {
+            Log::error("Auto-tagging (quarter) failed for story #{$story->id}: " . $e->getMessage());
+        }
+
+        try {
             $tagService->attachCustomerTagToStory($story);
+        } catch (\Throwable $e) {
+            Log::error("Auto-tagging (customer) failed for story #{$story->id}: " . $e->getMessage());
+        }
+
+        try {
             $tagService->attachTagsFromTextToStory($story);
         } catch (\Throwable $e) {
-            Log::warning("Auto-tagging failed for story #{$story->id}: " . $e->getMessage());
+            Log::error("Auto-tagging (text) failed for story #{$story->id}: " . $e->getMessage());
         }
     }
 
