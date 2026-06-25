@@ -82,6 +82,7 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 | PDF preventivo — logo visibile | oc:8047 | `resources/views/quote-pdf.blade.php`, `public/images/logo.png` | Usa `file://` path invece di data URI base64; DomPDF non renderizza data URI in questo setup |
 | Sync calendario asincrona con debounce | oc:8044 | `app/Jobs/SyncDeveloperCalendarJob.php`, `app/Observers/StoryObserver.php`, `app/Console/Commands/SyncStoriesWithGoogleCalendar.php`, `tests/Feature/SyncDeveloperCalendarJobTest.php` | La sync Google Calendar al save di una Story è un job in coda (debounce 60s, unique per email); save Nova < 2s, bulk edit senza timeout |
 | Hetzner Monitoring | oc:7944 | `config/hetzner.php`, `app/Services/HetznerApiService.php`, `app/Http/Controllers/HetznerMonitoringController.php`, `app/Exports/HetznerExport.php`, `nova-components/hetzner-monitoring/`, `app/Nova/Dashboards/HetznerMonitoring.php` | Dashboard Nova con tabella per progetto Hetzner: server, floating IP, volumes, LB, snapshot. Cache Redis 15 min. Export CSV. |
+| Auto-revert ticket in progress quando dev è offline su Slack | oc:8136 | `app/Console/Commands/SlackRevertProgressCommand.php`, `app/Services/SlackService.php`, `database/migrations/2026_06_25_120000_add_slack_user_id_to_users_table.php`, `app/Models/User.php`, `app/Nova/User.php`, `config/services.php`, `app/Console/Kernel.php` | Comando schedulato ogni 20 min (12-18) che verifica presenza Slack dei dev con ticket in progress; se offline → saveQuietly() + StoryLog manuale |
 | Fix tag automatici su update Nova | oc:8051 | `app/Nova/Story.php`, `app/Observers/StoryObserver.php` | Ripristinati `afterCreate`/`afterUpdate` in Nova; try/catch isolati in observer |
 | Fix email creazione ticket Scrum | oc:8091 | `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Alla creazione di un ticket di tipo Scrum nessuna mail viene inviata ai developer; tutti gli altri tipi inviano normalmente |
 | Invio email alla creazione ticket | oc:8040 | `app/Mail/DevNewStoryCreated.php`, `resources/views/mails/dev-new-story-created.blade.php`, `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Alla creazione di qualsiasi ticket tutti i dev ricevono email: `CustomerNewStoryCreated` se creator è customer, `DevNewStoryCreated` altrimenti |
@@ -116,6 +117,13 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 - **Token Hetzner in ENV**: convenzione `HETZNER_TOKEN_<SLUG>=xxx`. Letti dinamicamente da `config/hetzner.php` via `collect($_ENV)`. Aggiungere un nuovo progetto = aggiungere una variabile ENV + restart container (no deploy di codice).
 - **Prezzi Volumes/Snapshots hardcodati**: l'API Hetzner Cloud non espone pricing per queste risorse. Valori da documentazione pubblica (mag 2026): Volumes €0.0476/GB/mese, Snapshots €0.0119/GB/mese. Aggiornare `HetznerApiService` se Hetzner modifica i prezzi.
 - **Errori per progetto isolati**: un token non valido non blocca gli altri. La cache Redis è per-progetto (`hetzner_project_{slug}`, TTL 15 min).
+
+### Auto-revert ticket in progress via Slack presence (oc:8136)
+- **`everyTwentyMinutes()` non esiste in Laravel 10**: usare `->cron('*/20 12-18 * * *')` per scheduling ogni 20 minuti tra le 12 e le 18.
+- **Slack User ID inizia con `U`**: gli ID che iniziano con `D` sono canali DM, non User ID. Per copiare lo User ID corretto: profilo Slack → ⋯ → "Copia ID membro".
+- **`saveQuietly()` + StoryLog manuale**: il revert automatico usa `saveQuietly()` per evitare email/observer, ma crea `StoryLog` manualmente con `orchestrator_artisan@webmapp.it` come user di sistema.
+- **`firstOrCreate` per system user**: `orchestrator_artisan@webmapp.it` potrebbe non esistere nel DB di test — usare `firstOrCreate` nel comando invece di `->first()`.
+- **SLACK_BOT_TOKEN scope richiesto**: il bot token deve avere lo scope `users:read` nella sezione "Ambiti del token bot" (non "token utente") su api.slack.com/apps.
 
 ### Fix tag automatici su update Nova (oc:8051)
 - **`afterCreate`/`afterUpdate` in `Nova/Story.php`**: rimossi in oc:7972 e non ripristinati. La via Nova UI per gli update era completamente scoperta. La via API era già coperta da `StoryController::attachAutoTags()` — quella scelta di oc:7972 rimane valida e non è stata toccata.

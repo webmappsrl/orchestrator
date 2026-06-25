@@ -77,4 +77,8 @@ return [
     ],
     'app_environment' => env('APP_ENV', 'production'),
 
+    'slack' => [
+        'bot_token' => env('SLACK_BOT_TOKEN'),
+    ],
+
 ];
