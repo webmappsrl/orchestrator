@@ -157,6 +157,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(BacklogStory::class),
                     MenuItem::resource(CustomerStory::class),
+                    MenuItem::link('Team Performance', '/dashboards/team-performance'),
                 ])->icon('code')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;
@@ -245,6 +246,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new \App\Nova\Dashboards\Kanban,
             new \App\Nova\Dashboards\Sales,
             new \App\Nova\Dashboards\HetznerMonitoring,
+            new \App\Nova\Dashboards\TeamPerformance,
         ];
     }
 

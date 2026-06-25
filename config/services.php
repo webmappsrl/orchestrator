@@ -81,4 +81,10 @@ return [
         'bot_token' => env('SLACK_BOT_TOKEN'),
     ],
 
+    'github' => [
+        'token'                  => env('GITHUB_TOKEN', ''),
+        'org'                    => env('GITHUB_ORG', ''),
+        'backfill_delay_seconds' => env('BACKFILL_GITHUB_DELAY_SECONDS', 3),
+    ],
+
 ];
