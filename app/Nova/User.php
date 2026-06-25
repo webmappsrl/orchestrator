@@ -82,6 +82,11 @@ class User extends Resource
                 ->creationRules('required', Rules\Password::defaults())
                 ->updateRules('nullable', Rules\Password::defaults()),
 
+            Text::make('Slack User ID', 'slack_user_id')
+                ->nullable()
+                ->hideFromIndex()
+                ->help('ID utente Slack (es. U0123456789). Usato per verificare la presenza online.'),
+
             Text::make(__('Associated Customer'), function () {
                 $customer = $this->associatedCustomer;
                 if (! $customer) {

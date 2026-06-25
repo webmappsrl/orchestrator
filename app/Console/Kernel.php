@@ -26,6 +26,17 @@ class Kernel extends ConsoleKernel
                 Log::info('story:progress-to-todo command finished');
             });
 
+        $schedule->command('story:slack-revert-progress')
+            ->timezone('Europe/Rome')
+            ->cron('*/20 12-18 * * *')
+            ->withoutOverlapping()
+            ->before(function () {
+                Log::info('story:slack-revert-progress starting');
+            })
+            ->after(function () {
+                Log::info('story:slack-revert-progress finished');
+            });
+
         $schedule->command('story:scrum-to-done')
             ->timezone('Europe/Rome')
             ->dailyAt('16:00');
