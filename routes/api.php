@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\StoryController;
+use App\Http\Controllers\Api\TagController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -35,4 +36,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/stories/{story}', [StoryController::class, 'show']);
     Route::post('/stories', [StoryController::class, 'store']);
     Route::patch('/stories/{story}', [StoryController::class, 'update']);
+
+    Route::get('/tags', [TagController::class, 'index']);
+    Route::get('/tags/{tag}', [TagController::class, 'show']);
+    Route::post('/tags', [TagController::class, 'store']);
+    Route::patch('/tags/{tag}', [TagController::class, 'update']);
+    Route::post('/tags/{tag}/stories/{story}', [TagController::class, 'attachStory']);
+    Route::delete('/tags/{tag}/stories/{story}', [TagController::class, 'detachStory']);
 });
