@@ -97,6 +97,15 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                             || $request->user()->hasRole(UserRole::Manager)
                             || $request->user()->hasRole(UserRole::Developer);
                     }),
+                    MenuItem::link('Team Performance', '/dashboards/team-performance')->canSee(function ($request) {
+                        if ($request->user() === null) {
+                            return false;
+                        }
+
+                        return $request->user()->hasRole(UserRole::Admin)
+                            || $request->user()->hasRole(UserRole::Manager)
+                            || $request->user()->hasRole(UserRole::Developer);
+                    }),
 
                 ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
 
@@ -157,7 +166,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Documentation::class),
                     MenuItem::resource(BacklogStory::class),
                     MenuItem::resource(CustomerStory::class),
-                    MenuItem::link('Team Performance', '/dashboards/team-performance'),
                 ])->icon('code')->collapsable()->canSee(function ($request) {
                     if ($request->user() == null) {
                         return false;

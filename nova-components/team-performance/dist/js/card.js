@@ -54,12 +54,12 @@ Nova.booting(function (app) {
                 <tr class="border-b border-gray-200 dark:border-gray-700">
                     <th class="text-left py-3 px-3 font-semibold text-gray-600 dark:text-gray-400">Ticket</th>
                     <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400">Tipo</th>
-                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400 cursor-help" title="Somma dei minuti trascorsi in stato &quot;In lavorazione&quot; (tutti gli intervalli attivi sommati). Non include il tempo in altri stati.">Cycle Time ⓘ</th>
-                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400 cursor-help" title="Numero di volte che il ticket è tornato a progress/todo/assegnato da uno stato avanzato (testing, tested, released, done).">Reopen ⓘ</th>
-                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400 cursor-help" title="✓ se il cycle time rientra nelle ore stimate. Se le ore stimate non sono valorizzate, si confronta con la media del cycle time del team nel periodo.">On Time ⓘ</th>
-                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400 cursor-help" title="Numero di commit GitHub associati al ticket tramite convenzione oc:NNNN nel messaggio di commit.">Commit ⓘ</th>
-                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400 cursor-help" title="Numero di Pull Request GitHub associate al ticket (ricerca per branch/titolo o URL nella descrizione del ticket).">PR ⓘ</th>
-                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400 cursor-help" title="Totale di review ricevute sulle PR collegate (CHANGES_REQUESTED, commenti, approvazioni).">Reviews ⓘ</th>
+                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Minuti totali trascorsi in stato 'progress'. Esclude il tempo in altri stati (todo, testing, ecc.). Fonte: StoryLog.">Cycle Time ⓘ</th>
+                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Numero di volte che il ticket è tornato a progress/todo da uno stato avanzato (testing, tested, released). Indica rilavorazioni.">Reopen ⓘ</th>
+                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="✓ se il cycle time è entro il benchmark. Benchmark: ore stimate × 60 min se presenti, altrimenti media del cycle time del team nel quarter.">On Time ⓘ</th>
+                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Numero di commit su GitHub che richiamano questo ticket (pattern: oc seguito da max 3 caratteri e poi il numero, es. oc:1234, oc-1234).">Commit ⓘ</th>
+                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Numero di Pull Request su GitHub collegate al ticket.">PR ⓘ</th>
+                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Numero totale di review ricevute sulle PR collegate (commenti, approvazioni, richieste di modifica).">Reviews ⓘ</th>
                 </tr>
             </thead>
             <tbody>
@@ -86,7 +86,7 @@ Nova.booting(function (app) {
                             {{ ticket.reopen_count }}
                         </span>
                     </td>
-                    <td class="py-3 px-3 text-center" :title="ticket.on_time_detail || ''">
+                    <td class="py-3 px-3 text-center" style="cursor:help" :title="ticket.on_time_detail || ''">
                         <span v-if="ticket.on_time === true" class="text-green-500 text-lg">&#10003;</span>
                         <span v-else-if="ticket.on_time === false" class="text-red-500 text-lg">&#10007;</span>
                         <span v-else class="text-gray-400">-</span>
@@ -115,13 +115,13 @@ Nova.booting(function (app) {
                         Media team ({{ aggregate.team_average.story_count }} ticket)
                     </td>
                     <td class="py-3 px-3 text-center text-gray-500">-</td>
-                    <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400">
+                    <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400" style="cursor:help" title="Media del cycle time (tempo attivo in progress) di tutti i developer nel quarter">
                         {{ aggregate.team_average.avg_cycle_time_hours !== null ? aggregate.team_average.avg_cycle_time_hours + 'h' : '-' }}
                     </td>
-                    <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400">
+                    <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400" style="cursor:help" title="Media del numero di riaperture per ticket di tutti i developer nel quarter">
                         {{ aggregate.team_average.avg_reopen_count !== null ? aggregate.team_average.avg_reopen_count : '-' }}
                     </td>
-                    <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400">
+                    <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400" style="cursor:help" title="% di ticket completati entro il benchmark (ore stimate o media cycle time team) sul totale dei ticket con cycle time misurabile">
                         {{ aggregate.team_average.on_time_rate !== null ? aggregate.team_average.on_time_rate + '%' : '-' }}
                     </td>
                     <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400">
@@ -142,15 +142,15 @@ Nova.booting(function (app) {
                         <span class="font-normal text-xs text-blue-500 ml-1">({{ aggregate.developer.story_count }} ticket)</span>
                     </td>
                     <td class="py-3 px-3 text-center text-gray-500">-</td>
-                    <td class="py-3 px-3 text-center" :class="deltaClass(aggregate.developer.avg_cycle_time_hours, aggregate.team_average.avg_cycle_time_hours, true)">
+                    <td class="py-3 px-3 text-center" :class="deltaClass(aggregate.developer.avg_cycle_time_hours, aggregate.team_average.avg_cycle_time_hours, true)" style="cursor:help" title="Media del cycle time del developer. Verde = più veloce della media team, rosso = più lento.">
                         {{ aggregate.developer.avg_cycle_time_hours !== null ? aggregate.developer.avg_cycle_time_hours + 'h' : '-' }}
                         <span v-if="aggregate.developer.avg_cycle_time_hours !== null && aggregate.team_average.avg_cycle_time_hours !== null" class="text-xs ml-1">{{ delta(aggregate.developer.avg_cycle_time_hours, aggregate.team_average.avg_cycle_time_hours) }}</span>
                     </td>
-                    <td class="py-3 px-3 text-center" :class="deltaClass(aggregate.developer.avg_reopen_count, aggregate.team_average.avg_reopen_count, true)">
+                    <td class="py-3 px-3 text-center" :class="deltaClass(aggregate.developer.avg_reopen_count, aggregate.team_average.avg_reopen_count, true)" style="cursor:help" title="Media riaperture per ticket del developer. Verde = meno riaperture della media team, rosso = più riaperture.">
                         {{ aggregate.developer.avg_reopen_count !== null ? aggregate.developer.avg_reopen_count : '-' }}
                         <span v-if="aggregate.developer.avg_reopen_count !== null && aggregate.team_average.avg_reopen_count !== null" class="text-xs ml-1">{{ delta(aggregate.developer.avg_reopen_count, aggregate.team_average.avg_reopen_count) }}</span>
                     </td>
-                    <td class="py-3 px-3 text-center" :class="deltaClass(aggregate.developer.on_time_rate, aggregate.team_average.on_time_rate, false)">
+                    <td class="py-3 px-3 text-center" :class="deltaClass(aggregate.developer.on_time_rate, aggregate.team_average.on_time_rate, false)" style="cursor:help" title="% ticket completati in tempo dal developer. Verde = sopra la media team, rosso = sotto. Il diff mostra la distanza dalla media.">
                         {{ aggregate.developer.on_time_rate !== null ? aggregate.developer.on_time_rate + '%' : '-' }}
                         <span v-if="aggregate.developer.on_time_rate !== null && aggregate.team_average.on_time_rate !== null" class="text-xs ml-1">{{ delta(aggregate.developer.on_time_rate, aggregate.team_average.on_time_rate) }}</span>
                     </td>

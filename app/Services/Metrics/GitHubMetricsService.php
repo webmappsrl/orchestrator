@@ -29,7 +29,10 @@ class GitHubMetricsService
             return [];
         }
 
-        $query = "oc:{$storyId} org:{$this->org}";
+        // Cerca per numero nell'org, filtra PHP: "oc" deve essere entro 3 caratteri
+        // prima del numero — copre oc:NNNN, OC:NNNN, oc-NNNN, oc NNNN, OC: NNNN
+        $query = "{$storyId} org:{$this->org}";
+        $pattern = '/oc.{0,3}' . $storyId . '/i';
         $commits = [];
         $page = 1;
 
@@ -41,6 +44,11 @@ class GitHubMetricsService
             }
 
             foreach ($response['items'] ?? [] as $item) {
+                $message = $item['commit']['message'] ?? '';
+                if (!preg_match($pattern, $message)) {
+                    continue;
+                }
+
                 $commits[] = [
                     'sha'          => $item['sha'],
                     'repo'         => $item['repository']['full_name'],
