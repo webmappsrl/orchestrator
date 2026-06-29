@@ -83,6 +83,7 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 | Sync calendario asincrona con debounce | oc:8044 | `app/Jobs/SyncDeveloperCalendarJob.php`, `app/Observers/StoryObserver.php`, `app/Console/Commands/SyncStoriesWithGoogleCalendar.php`, `tests/Feature/SyncDeveloperCalendarJobTest.php` | La sync Google Calendar al save di una Story è un job in coda (debounce 60s, unique per email); save Nova < 2s, bulk edit senza timeout |
 | Hetzner Monitoring | oc:7944 | `config/hetzner.php`, `app/Services/HetznerApiService.php`, `app/Http/Controllers/HetznerMonitoringController.php`, `app/Exports/HetznerExport.php`, `nova-components/hetzner-monitoring/`, `app/Nova/Dashboards/HetznerMonitoring.php` | Dashboard Nova con tabella per progetto Hetzner: server, floating IP, volumes, LB, snapshot. Cache Redis 15 min. Export CSV. |
 | Auto-revert ticket in progress quando dev è offline su Slack | oc:8136 | `app/Console/Commands/SlackRevertProgressCommand.php`, `app/Services/SlackService.php`, `database/migrations/2026_06_25_120000_add_slack_user_id_to_users_table.php`, `app/Models/User.php`, `app/Nova/User.php`, `config/services.php`, `app/Console/Kernel.php` | Comando schedulato ogni 20 min (12-18) che verifica presenza Slack dei dev con ticket in progress; se offline → saveQuietly() + StoryLog manuale |
+| API CRUD per Tag con attach/detach stories | oc:8155 | `app/Http/Controllers/Api/TagController.php`, `app/Http/Requests/Api/TagApiRequest.php`, `routes/api.php`, `tests/Feature/Api/TagApiTest.php` | GET/POST/PATCH /api/tags, GET /api/tags/{tag}, POST/DELETE /api/tags/{tag}/stories/{story}; solo Developer e Admin; StoryLog su attach/detach |
 | Fix tag automatici su update Nova | oc:8051 | `app/Nova/Story.php`, `app/Observers/StoryObserver.php` | Ripristinati `afterCreate`/`afterUpdate` in Nova; try/catch isolati in observer |
 | Fix email creazione ticket Scrum | oc:8091 | `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Alla creazione di un ticket di tipo Scrum nessuna mail viene inviata ai developer; tutti gli altri tipi inviano normalmente |
 | Invio email alla creazione ticket | oc:8040 | `app/Mail/DevNewStoryCreated.php`, `resources/views/mails/dev-new-story-created.blade.php`, `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Alla creazione di qualsiasi ticket tutti i dev ricevono email: `CustomerNewStoryCreated` se creator è customer, `DevNewStoryCreated` altrimenti |
@@ -124,6 +125,13 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 - **`saveQuietly()` + StoryLog manuale**: il revert automatico usa `saveQuietly()` per evitare email/observer, ma crea `StoryLog` manualmente con `orchestrator_artisan@webmapp.it` come user di sistema.
 - **`firstOrCreate` per system user**: `orchestrator_artisan@webmapp.it` potrebbe non esistere nel DB di test — usare `firstOrCreate` nel comando invece di `->first()`.
 - **SLACK_BOT_TOKEN scope richiesto**: il bot token deve avere lo scope `users:read` nella sezione "Ambiti del token bot" (non "token utente") su api.slack.com/apps.
+
+### API CRUD per Tag (oc:8155)
+- **Il modello `Tag` ha due relazioni morfiche distinte**: `taggable()` (morphTo su `tags.taggable_type/id`, lega il tag a un parent come Project — non toccare via API) e `tagged()` (morphedByMany su pivot `taggables` — usare per attach/detach con Story).
+- **`isAdmin()` non esiste su `User`**: il check corretto è `hasRole(UserRole::Admin)`.
+- **Autorizzazione per ruolo nel controller**: solo `Developer` e `Admin` accedono alle API Tag — check via `abort_unless($user->hasRole(...))` nel metodo `authorizeRole()`.
+- **Sanitize LIKE**: `str_replace(['%', '_'], ['\%', '\_'], $search)` obbligatorio prima di qualsiasi query LIKE su nome tag.
+- **StoryLog su attach/detach**: creato manualmente nel controller con `changes = ['tag_attached' => $tag->id]` / `['tag_detached' => $tag->id]`.
 
 ### Fix tag automatici su update Nova (oc:8051)
 - **`afterCreate`/`afterUpdate` in `Nova/Story.php`**: rimossi in oc:7972 e non ripristinati. La via Nova UI per gli update era completamente scoperta. La via API era già coperta da `StoryController::attachAutoTags()` — quella scelta di oc:7972 rimane valida e non è stata toccata.
