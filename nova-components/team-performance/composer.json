@@ -1,0 +1,20 @@
+{
+    "name": "wm/team-performance",
+    "description": "Team Performance Analytics card for Laravel Nova.",
+    "license": "MIT",
+    "require": {
+        "php": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webmapp\\TeamPerformance\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Webmapp\\TeamPerformance\\TeamPerformanceServiceProvider"
+            ]
+        }
+    }
+}

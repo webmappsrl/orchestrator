@@ -180,6 +180,11 @@ class User extends Resource
     public function actions(NovaRequest $request)
     {
         return [
+            (new \App\Nova\Actions\GeneratePerformanceReportAction())
+                ->showInline()
+                ->canSee(fn($request) => $request->user()?->hasRole(\App\Enums\UserRole::Admin)
+                    || $request->user()?->hasRole(\App\Enums\UserRole::Manager)),
+
             (new AdminAddFavoriteProjectsAction($request->resourceId))->canSee(
                 function ($request) {
                     return $request->user()->hasRole(UserRole::Admin);

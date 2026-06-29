@@ -83,6 +83,15 @@ class StoryObserver
     public function updated(Story $story): void
     {
         $this->dispatchCalendarSyncIfNeeded($story);
+
+        // Sync commit GitHub quando la story viene chiusa
+        if (
+            $story->wasChanged('status')
+            && in_array($story->status, [StoryStatus::Done->value, StoryStatus::Released->value])
+        ) {
+            \App\Jobs\SyncStoryGithubCommitsJob::dispatch($story->id);
+        }
+
         $this->createStoryLog($story);
         $this->notifyDeveloperIfIdle($story);
     }

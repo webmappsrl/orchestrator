@@ -97,6 +97,15 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                             || $request->user()->hasRole(UserRole::Manager)
                             || $request->user()->hasRole(UserRole::Developer);
                     }),
+                    MenuItem::link('Team Performance', '/dashboards/team-performance')->canSee(function ($request) {
+                        if ($request->user() === null) {
+                            return false;
+                        }
+
+                        return $request->user()->hasRole(UserRole::Admin)
+                            || $request->user()->hasRole(UserRole::Manager)
+                            || $request->user()->hasRole(UserRole::Developer);
+                    }),
 
                 ])->icon('user')->collapsedByDefault()->collapsedByDefault(),
 
@@ -245,6 +254,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new \App\Nova\Dashboards\Kanban,
             new \App\Nova\Dashboards\Sales,
             new \App\Nova\Dashboards\HetznerMonitoring,
+            new \App\Nova\Dashboards\TeamPerformance,
         ];
     }
 
