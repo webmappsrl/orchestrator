@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d043d571bee79b234691c8d040a27735",
+    "content-hash": "eaf5f2122dd535130cd26bc0e59089de",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -14066,7 +14066,7 @@
         },
         {
             "name": "wm/hetzner-monitoring",
-            "version": "dev-oc_7944",
+            "version": "dev-feature/oc-8123-team-performance-analytics",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/hetzner-monitoring",
@@ -14092,7 +14092,7 @@
         },
         {
             "name": "wm/kanban-card",
-            "version": "dev-oc_7944",
+            "version": "dev-feature/oc-8123-team-performance-analytics",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/kanban-card",
@@ -14263,8 +14263,40 @@
             "time": "2025-03-31T07:45:35+00:00"
         },
         {
+            "name": "wm/team-performance",
+            "version": "dev-feature/oc-8123-team-performance-analytics",
+            "dist": {
+                "type": "path",
+                "url": "./nova-components/team-performance",
+                "reference": "250f4dfe86878de38a0e1dc38d9b3cff60a27175"
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Webmapp\\TeamPerformance\\TeamPerformanceServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Webmapp\\TeamPerformance\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Team Performance Analytics card for Laravel Nova.",
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
             "name": "wm/wm-internal",
-            "version": "dev-oc_7944",
+            "version": "dev-feature/oc-8123-team-performance-analytics",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -14345,7 +14377,7 @@
         },
         {
             "name": "wm/wm-package",
-            "version": "dev-main",
+            "version": "dev-ff3402845c252ad0000e996ba41bf621ba56b031",
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
@@ -17184,9 +17216,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "wm/hetzner-monitoring": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

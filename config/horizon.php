@@ -209,6 +209,18 @@ return [
             'timeout' => 620,
             'nice' => 0,
         ],
+        'supervisor-github-sync' => [
+            'connection' => 'redis',
+            'queue' => ['github-sync'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 60,
+            'nice' => 10,
+        ],
     ],
 
     'environments' => [
@@ -221,6 +233,9 @@ return [
             'supervisor-reports' => [
                 'maxProcesses' => 2,
             ],
+            'supervisor-github-sync' => [
+                'maxProcesses' => 1,
+            ],
         ],
 
         'local' => [
@@ -228,6 +243,9 @@ return [
                 'maxProcesses' => 3,
             ],
             'supervisor-reports' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-github-sync' => [
                 'maxProcesses' => 1,
             ],
         ],

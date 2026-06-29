@@ -526,4 +526,47 @@ class Story extends Model implements HasMedia
             }
         }
     }
+
+    /**
+     * Minuti trascorsi in stato `progress`, sommando tutti gli intervalli attivi.
+     * Fonte autorevole per le ore effettive — il campo `hours` è deprecato.
+     * Restituisce null se non ci sono mai stati log di progress.
+     */
+    public function effectiveMinutes(): ?int
+    {
+        return self::effectiveMinutesForStory($this->id);
+    }
+
+    /**
+     * Versione statica di effectiveMinutes() per uso da servizi esterni.
+     */
+    public static function effectiveMinutesForStory(int $storyId): ?int
+    {
+        $logs = StoryLog::where('story_id', $storyId)
+            ->whereRaw("changes::jsonb ?? 'status'")
+            ->orderBy('viewed_at')
+            ->get(['changes', 'viewed_at'])
+            ->map(fn($log) => [
+                'status'    => $log->changes['status'] ?? null,
+                'viewed_at' => $log->viewed_at,
+            ])
+            ->filter(fn($l) => !is_null($l['status']))
+            ->values();
+
+        $totalMinutes = 0;
+        $progressStart = null;
+        $hasProgress = false;
+
+        foreach ($logs as $log) {
+            if ($log['status'] === 'progress') {
+                $progressStart = \Carbon\Carbon::parse($log['viewed_at']);
+                $hasProgress = true;
+            } elseif ($progressStart !== null) {
+                $totalMinutes += $progressStart->diffInMinutes(\Carbon\Carbon::parse($log['viewed_at']));
+                $progressStart = null;
+            }
+        }
+
+        return $hasProgress ? max(0, $totalMinutes) : null;
+    }
 }
