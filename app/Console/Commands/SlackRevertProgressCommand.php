@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Enums\StoryStatus;
 use App\Models\Story;
-use App\Models\StoryLog;
 use App\Models\User;
 use App\Services\SlackService;
 use Illuminate\Console\Command;
@@ -17,11 +16,6 @@ class SlackRevertProgressCommand extends Command
 
     public function handle(SlackService $slackService): void
     {
-        $systemUser = User::firstOrCreate(
-            ['email' => 'orchestrator_artisan@webmapp.it'],
-            ['name' => 'Orchestrator Artisan', 'password' => bcrypt('unused')]
-        );
-
         $developers = User::whereHas('stories', function ($q) {
             $q->where('status', StoryStatus::Progress->value);
         })->whereNotNull('slack_user_id')->get();
@@ -46,13 +40,6 @@ class SlackRevertProgressCommand extends Command
             foreach ($stories as $story) {
                 $story->status = StoryStatus::Todo->value;
                 $story->saveQuietly();
-
-                StoryLog::create([
-                    'story_id'  => $story->id,
-                    'user_id'   => $systemUser->id,
-                    'viewed_at' => now()->format('Y-m-d H:i'),
-                    'changes'   => ['status' => StoryStatus::Todo->value],
-                ]);
 
                 $this->info("Reverted story {$story->id} (developer {$developer->id})");
                 Log::info("SlackRevertProgress: reverted story {$story->id} for developer {$developer->id}");

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\StoryTimeService;
 use App\Models\Tag;
 use App\Models\Epic;
 use App\Enums\UserRole;
@@ -36,6 +37,75 @@ class Story extends Model implements HasMedia
         'type',
         'parent_id',
     ];
+
+    public function save(array $options = []): bool
+    {
+        $isNew = !$this->exists;
+
+        return DB::transaction(function () use ($options, $isNew): bool {
+            $result = parent::save($options);
+
+            if ($result && !$isNew) {
+                $changes = $this->getChanges();
+                unset($changes['updated_at']);
+
+                if (count($changes) > 0) {
+                    $user = Auth::user()
+                        ?? User::where('email', 'orchestrator_artisan@webmapp.it')->first()
+                        ?? User::create([
+                            'email'    => 'orchestrator_artisan@webmapp.it',
+                            'name'     => 'Orchestrator Artisan',
+                            'password' => bcrypt('unused'),
+                        ]);
+
+                    $jsonChanges = [];
+                    foreach ($changes as $field => $newValue) {
+                        $jsonChanges[$field] = $field === 'description' ? 'change description' : $newValue;
+                    }
+
+                    StoryLog::create([
+                        'story_id'  => $this->id,
+                        'user_id'   => $user->id,
+                        'viewed_at' => now()->format('Y-m-d H:i'),
+                        'changes'   => $jsonChanges,
+                    ]);
+
+                    $changesText = implode(', ', array_map(
+                        fn($key, $value) => "{$key}: " . (is_string($value) ? $value : json_encode($value)),
+                        array_keys($jsonChanges),
+                        $jsonChanges
+                    ));
+
+                    Log::info(sprintf(
+                        '%s (%s) updated story #%d "%s" on %s - Changes: %s',
+                        $user->name,
+                        $user->email,
+                        $this->id,
+                        $this->name,
+                        now()->format('d-m-Y H:i:s'),
+                        $changesText
+                    ), [
+                        'story_id'   => $this->id,
+                        'story_name' => $this->name,
+                        'user_id'    => $user->id,
+                        'user_name'  => $user->name,
+                        'user_email' => $user->email,
+                        'changes'    => $jsonChanges,
+                        'timestamp'  => now()->format('Y-m-d H:i:s'),
+                    ]);
+
+                    if (isset($changes['status'])) {
+                        $storyTime = StoryTimeService::make()->getStoryTime($this);
+                        if ($storyTime !== false && $storyTime['hours']) {
+                            DB::table('stories')->where('id', $this->id)->update(['hours' => $storyTime['hours']]);
+                        }
+                    }
+                }
+            }
+
+            return $result;
+        });
+    }
 
     public static function boot()
     {
