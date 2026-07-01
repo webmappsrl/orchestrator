@@ -126,9 +126,13 @@ class SendWaitingStoryReminder extends Command
         try {
             $timestamp = now()->format('Y-m-d H:i');
             $jsonChanges = ['status' => StoryStatus::Waiting->value];
+            $systemUser = User::firstOrCreate(
+                ['email' => 'orchestrator_artisan@webmapp.it'],
+                ['name' => 'Orchestrator Artisan', 'password' => bcrypt('unused')]
+            );
             StoryLog::create([
                 'story_id' => $story->id,
-                'user_id' => 1,
+                'user_id' => $systemUser->id,
                 'viewed_at' => $timestamp,
                 'changes' => $jsonChanges,
             ]);
