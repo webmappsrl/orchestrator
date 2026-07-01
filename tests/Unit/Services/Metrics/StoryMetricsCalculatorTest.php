@@ -175,4 +175,44 @@ class StoryMetricsCalculatorTest extends TestCase
 
         $this->assertEquals(2, $this->calc->todoStagnationDays($story->id));
     }
+
+    // --- Todo stagnation total ---
+
+    public function test_todo_stagnation_total_sums_multiple_intervals(): void
+    {
+        $story = Story::factory()->create();
+        $monday = Carbon::parse('next monday');
+
+        // Primo intervallo: lunedì → mercoledì = 2 giorni
+        StoryLog::create(['story_id' => $story->id, 'user_id' => $this->user->id, 'viewed_at' => $monday, 'changes' => ['status' => 'todo']]);
+        StoryLog::create(['story_id' => $story->id, 'user_id' => $this->user->id, 'viewed_at' => $monday->copy()->addDays(2), 'changes' => ['status' => 'progress']]);
+
+        // Secondo intervallo: venerdì → lunedì successivo = 1 giorno lavorativo
+        StoryLog::create(['story_id' => $story->id, 'user_id' => $this->user->id, 'viewed_at' => $monday->copy()->addDays(4), 'changes' => ['status' => 'todo']]);
+        StoryLog::create(['story_id' => $story->id, 'user_id' => $this->user->id, 'viewed_at' => $monday->copy()->addDays(7), 'changes' => ['status' => 'progress']]);
+
+        $this->assertEquals(3, $this->calc->todoStagnationTotalDays($story->id));
+    }
+
+    public function test_todo_stagnation_total_returns_null_when_no_todo_logs(): void
+    {
+        $story = Story::factory()->create();
+        $monday = Carbon::parse('next monday');
+
+        StoryLog::create(['story_id' => $story->id, 'user_id' => $this->user->id, 'viewed_at' => $monday, 'changes' => ['status' => 'progress']]);
+        StoryLog::create(['story_id' => $story->id, 'user_id' => $this->user->id, 'viewed_at' => $monday->copy()->addDays(2), 'changes' => ['status' => 'done']]);
+
+        $this->assertNull($this->calc->todoStagnationTotalDays($story->id));
+    }
+
+    public function test_todo_stagnation_total_single_interval(): void
+    {
+        $story = Story::factory()->create();
+        $monday = Carbon::parse('next monday');
+
+        StoryLog::create(['story_id' => $story->id, 'user_id' => $this->user->id, 'viewed_at' => $monday, 'changes' => ['status' => 'todo']]);
+        StoryLog::create(['story_id' => $story->id, 'user_id' => $this->user->id, 'viewed_at' => $monday->copy()->addDays(2), 'changes' => ['status' => 'progress']]);
+
+        $this->assertEquals(2, $this->calc->todoStagnationTotalDays($story->id));
+    }
 }
