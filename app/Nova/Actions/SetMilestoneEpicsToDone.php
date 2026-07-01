@@ -10,6 +10,10 @@ use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
+/**
+ * @deprecated Non più in uso. Usare EpicDoneAction per le singole Epic.
+ *             Il metodo ->update() bulk bypassa Eloquent e non crea StoryLog.
+ */
 class SetMilestoneEpicsToDone extends Action
 {
     use InteractsWithQueue, Queueable;
