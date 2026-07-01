@@ -114,6 +114,7 @@ class TeamPerformanceController extends Controller
                 'commit_count'          => $commits ?: null,
                 'pr_count'              => $prs->count() ?: null,
                 'change_requests_count' => $prs->sum('change_requests_count') ?: null,
+                'todo_stagnation_days'  => $this->calc->todoStagnationTotalDays($story->id),
             ];
         })->toArray();
     }
@@ -175,22 +176,24 @@ class TeamPerformanceController extends Controller
     {
         if (empty($tickets)) {
             return [
-                'story_count'          => 0,
-                'avg_cycle_time_hours' => null,
-                'avg_reopen_count'     => null,
-                'on_time_rate'         => null,
-                'avg_commit_count'     => null,
-                'avg_pr_count'         => null,
-                'avg_change_requests'  => null,
+                'story_count'              => 0,
+                'avg_cycle_time_hours'     => null,
+                'avg_reopen_count'         => null,
+                'on_time_rate'             => null,
+                'avg_commit_count'         => null,
+                'avg_pr_count'             => null,
+                'avg_change_requests'      => null,
+                'avg_todo_stagnation_days' => null,
             ];
         }
 
-        $cycleTimes = array_filter(array_column($tickets, 'cycle_time_hours'), fn ($v) => $v !== null);
-        $reopens    = array_column($tickets, 'reopen_count');
-        $onTimes    = array_filter(array_column($tickets, 'on_time'), fn ($v) => $v !== null);
-        $commits    = array_filter(array_column($tickets, 'commit_count'), fn ($v) => $v !== null);
-        $prs        = array_filter(array_column($tickets, 'pr_count'), fn ($v) => $v !== null);
-        $changeReqs = array_filter(array_column($tickets, 'change_requests_count'), fn ($v) => $v !== null);
+        $cycleTimes     = array_filter(array_column($tickets, 'cycle_time_hours'), fn ($v) => $v !== null);
+        $reopens        = array_column($tickets, 'reopen_count');
+        $onTimes        = array_filter(array_column($tickets, 'on_time'), fn ($v) => $v !== null);
+        $commits        = array_filter(array_column($tickets, 'commit_count'), fn ($v) => $v !== null);
+        $prs            = array_filter(array_column($tickets, 'pr_count'), fn ($v) => $v !== null);
+        $changeReqs     = array_filter(array_column($tickets, 'change_requests_count'), fn ($v) => $v !== null);
+        $todoStagnation = array_filter(array_column($tickets, 'todo_stagnation_days'), fn ($v) => $v !== null);
         $capped     = count(array_filter($cycleTimes, fn ($v) => $v >= 80));
 
         return [
@@ -201,7 +204,8 @@ class TeamPerformanceController extends Controller
             'on_time_rate'         => count($onTimes) ? round(count(array_filter($onTimes)) / count($onTimes) * 100, 1) : null,
             'avg_commit_count'     => count($commits) ? round(array_sum($commits) / count($commits), 1) : null,
             'avg_pr_count'         => count($prs) ? round(array_sum($prs) / count($prs), 1) : null,
-            'avg_change_requests'  => count($changeReqs) ? round(array_sum($changeReqs) / count($changeReqs), 1) : null,
+            'avg_change_requests'      => count($changeReqs) ? round(array_sum($changeReqs) / count($changeReqs), 1) : null,
+            'avg_todo_stagnation_days' => count($todoStagnation) ? round(array_sum($todoStagnation) / count($todoStagnation), 1) : null,
         ];
     }
 
@@ -228,7 +232,7 @@ class TeamPerformanceController extends Controller
             ->values();
 
         if ($perDeveloper->isEmpty()) {
-            return ['story_count' => 0, 'avg_cycle_time_hours' => null, 'avg_reopen_count' => null, 'on_time_rate' => null, 'avg_commit_count' => null, 'avg_pr_count' => null, 'avg_change_requests' => null];
+            return ['story_count' => 0, 'avg_cycle_time_hours' => null, 'avg_reopen_count' => null, 'on_time_rate' => null, 'avg_commit_count' => null, 'avg_pr_count' => null, 'avg_change_requests' => null, 'avg_todo_stagnation_days' => null];
         }
 
         $avg = fn (string $key) => $perDeveloper->pluck($key)->filter(fn ($v) => $v !== null)->average();
@@ -241,7 +245,8 @@ class TeamPerformanceController extends Controller
             'on_time_rate'         => $avg('on_time_rate') !== null ? round($avg('on_time_rate'), 1) : null,
             'avg_commit_count'     => $avg('avg_commit_count') !== null ? round($avg('avg_commit_count'), 1) : null,
             'avg_pr_count'         => $avg('avg_pr_count') !== null ? round($avg('avg_pr_count'), 1) : null,
-            'avg_change_requests'  => $avg('avg_change_requests') !== null ? round($avg('avg_change_requests'), 1) : null,
+            'avg_change_requests'      => $avg('avg_change_requests') !== null ? round($avg('avg_change_requests'), 1) : null,
+            'avg_todo_stagnation_days' => $avg('avg_todo_stagnation_days') !== null ? round($avg('avg_todo_stagnation_days'), 1) : null,
         ];
     }
 }
