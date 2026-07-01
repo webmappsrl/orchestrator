@@ -78,6 +78,7 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Metrica "Todo >1g" nella card team performance | oc:8192 | `app/Services/Metrics/StoryMetricsCalculator.php`, `app/Http/Controllers/Nova/TeamPerformanceController.php`, `nova-components/team-performance/dist/js/card.js` | Nuovo metodo `todoStagnationTotalDays()` (somma tutti gli intervalli todo); esposto come colonna per-ticket e KPI aggregato; etichetta "Todo >1g" perché `workingDaysBetween` conta giorni interi; 0 giorni mostrato come `—` |
 | Fix download allegati (path generator ibrido) | oc:8028 | `app/Services/MediaLibrary/OrchestratorPathGenerator.php`, `app/Providers/AppServiceProvider.php` | Generator C→B→A ripristina accesso ai 605/631 media legacy; wm-package sovrascriveva path_generator con WmfePathGenerator |
 | PDF preventivo — logo visibile | oc:8047 | `resources/views/quote-pdf.blade.php`, `public/images/logo.png` | Usa `file://` path invece di data URI base64; DomPDF non renderizza data URI in questo setup |
 | Sync calendario asincrona con debounce | oc:8044 | `app/Jobs/SyncDeveloperCalendarJob.php`, `app/Observers/StoryObserver.php`, `app/Console/Commands/SyncStoriesWithGoogleCalendar.php`, `tests/Feature/SyncDeveloperCalendarJobTest.php` | La sync Google Calendar al save di una Story è un job in coda (debounce 60s, unique per email); save Nova < 2s, bulk edit senza timeout |
@@ -91,6 +92,12 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 | API endpoint GET /me | oc:7974 | `routes/api.php`, `tests/Feature/Api/MeEndpointTest.php` | Restituisce id, name, email dell'utente autenticato via Sanctum |
 
 ## Decisioni architetturali
+
+### Metrica "Todo >1g" nella card team performance (oc:8192)
+- **`workingDaysBetween` conta giorni interi**: un ticket in todo per meno di un giorno lavorativo restituisce 0. L'etichetta "Todo >1g" chiarisce che si tratta di giorni completi, non ore. Valori 0 vengono mostrati come `—`.
+- **Cache Redis `team_perf_avg_{year}_q{quarter}`**: TTL 1h. Dopo un deploy che aggiunge campi all'aggregato, svuotare le chiavi manualmente (`Cache::forget(...)`) altrimenti il frontend riceve il vecchio JSON senza i nuovi campi.
+- **`card.js` modificato direttamente**: nessun sorgente Vue — stesso pattern di `kanban-card`. Validare sempre con `node --check` prima del commit.
+- **Rollback non atomico**: rollback del solo PHP senza rollback di `card.js` causa `undefined` invece di `—` nel frontend. Entrambi i file devono essere rollbackati insieme.
 
 ### Fix download allegati — path generator ibrido (oc:8028)
 - **wm-package sovrascrive `path_generator` e `disk_name`**: il suo ServiceProvider fa `array_merge` sulla config di `media-library`, rimpiazzando `CustomPathGenerator` con `WmfePathGenerator` e `disk_name` con `wmfe`. `AppServiceProvider::register()` deve ripristinare entrambi *dopo* il boot di wm-package.

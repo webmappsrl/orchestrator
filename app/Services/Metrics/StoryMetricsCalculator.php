@@ -128,6 +128,30 @@ class StoryMetricsCalculator
     }
 
     /**
+     * Giorni lavorativi totali in cui la story è rimasta in `todo`, sommando tutti gli intervalli.
+     * Restituisce null se non esistono log con status `todo`.
+     */
+    public function todoStagnationTotalDays(int $storyId): ?int
+    {
+        $logs = $this->getStatusLogs($storyId);
+        $totalDays = 0;
+        $hasTodo = false;
+
+        for ($i = 0; $i < $logs->count(); $i++) {
+            if ($logs[$i]['status'] !== 'todo') {
+                continue;
+            }
+
+            $hasTodo = true;
+            $start = Carbon::parse($logs[$i]['viewed_at']);
+            $end   = isset($logs[$i + 1]) ? Carbon::parse($logs[$i + 1]['viewed_at']) : Carbon::now();
+            $totalDays += $this->workingDaysBetween($start, $end);
+        }
+
+        return $hasTodo ? $totalDays : null;
+    }
+
+    /**
      * Totale CHANGES_REQUESTED ricevuti sulle PR collegate alla story.
      */
     public function prChangeRequestsCount(int $storyId): int

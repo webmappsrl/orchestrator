@@ -55,11 +55,11 @@ Nova.booting(function (app) {
                     <th class="text-left py-3 px-3 font-semibold text-gray-600 dark:text-gray-400">Ticket</th>
                     <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400">Tipo</th>
                     <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Minuti totali trascorsi in stato 'progress'. Esclude il tempo in altri stati (todo, testing, ecc.). Fonte: StoryLog.">Cycle Time ⓘ</th>
+                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Totale giorni lavorativi trascorsi in stato todo prima di essere presi in carico. Somma di tutti gli intervalli todo nella storia del ticket.">Todo >1g ⓘ</th>
                     <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Numero di volte che il ticket è tornato a progress/todo da uno stato avanzato (testing, tested, released). Indica rilavorazioni.">Reopen ⓘ</th>
-                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="✓ se il cycle time è entro il benchmark. Benchmark: ore stimate × 60 min se presenti, altrimenti media del cycle time del team nel quarter.">On Time ⓘ</th>
-                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Numero di commit su GitHub che richiamano questo ticket (pattern: oc seguito da max 3 caratteri e poi il numero, es. oc:1234, oc-1234).">Commit ⓘ</th>
-                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Numero di Pull Request su GitHub collegate al ticket.">PR ⓘ</th>
                     <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Numero totale di review ricevute sulle PR collegate (commenti, approvazioni, richieste di modifica).">Reviews ⓘ</th>
+                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="✓ se il cycle time è entro il benchmark. Benchmark: ore stimate × 60 min se presenti, altrimenti media del cycle time del team nel quarter.">On Time ⓘ</th>
+                    <th class="text-center py-3 px-3 font-semibold text-gray-600 dark:text-gray-400" style="cursor:help" title="Numero di Pull Request su GitHub collegate al ticket.">PR ⓘ</th>
                 </tr>
             </thead>
             <tbody>
@@ -81,10 +81,14 @@ Nova.booting(function (app) {
                     <td class="py-3 px-3 text-center text-gray-700 dark:text-gray-300">
                         <span :class="ticket.cycle_time_hours >= 80 ? 'text-red-500 font-semibold' : ''">{{ ticket.cycle_time_hours !== null ? ticket.cycle_time_hours + (ticket.cycle_time_hours >= 80 ? 'h+' : 'h') : '-' }}</span>
                     </td>
+                    <td class="py-2 px-3 text-center text-gray-700 dark:text-gray-300">{{ ticket.todo_stagnation_days >= 1 ? ticket.todo_stagnation_days : '-' }}</td>
                     <td class="py-3 px-3 text-center">
                         <span :class="ticket.reopen_count > 0 ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-500 dark:text-gray-400'">
                             {{ ticket.reopen_count }}
                         </span>
+                    </td>
+                    <td class="py-3 px-3 text-center text-gray-700 dark:text-gray-300">
+                        {{ ticket.change_requests_count !== null ? ticket.change_requests_count : '-' }}
                     </td>
                     <td class="py-3 px-3 text-center" style="cursor:help" :title="ticket.on_time_detail || ''">
                         <span v-if="ticket.on_time === true" class="text-green-500 text-lg">&#10003;</span>
@@ -97,13 +101,7 @@ Nova.booting(function (app) {
                         </span>
                     </td>
                     <td class="py-3 px-3 text-center text-gray-700 dark:text-gray-300">
-                        {{ ticket.commit_count !== null ? ticket.commit_count : '-' }}
-                    </td>
-                    <td class="py-3 px-3 text-center text-gray-700 dark:text-gray-300">
                         {{ ticket.pr_count !== null ? ticket.pr_count : '-' }}
-                    </td>
-                    <td class="py-3 px-3 text-center text-gray-700 dark:text-gray-300">
-                        {{ ticket.change_requests_count !== null ? ticket.change_requests_count : '-' }}
                     </td>
                 </tr>
             </tbody>
@@ -118,20 +116,18 @@ Nova.booting(function (app) {
                     <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400" style="cursor:help" title="Media del cycle time (tempo attivo in progress) di tutti i developer nel quarter">
                         {{ aggregate.team_average.avg_cycle_time_hours !== null ? aggregate.team_average.avg_cycle_time_hours + 'h' : '-' }}
                     </td>
+                    <td class="py-3 px-3 text-center">{{ aggregate.team_average.avg_todo_stagnation_days !== null ? aggregate.team_average.avg_todo_stagnation_days : '-' }}</td>
                     <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400" style="cursor:help" title="Media del numero di riaperture per ticket di tutti i developer nel quarter">
                         {{ aggregate.team_average.avg_reopen_count !== null ? aggregate.team_average.avg_reopen_count : '-' }}
+                    </td>
+                    <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400">
+                        {{ aggregate.team_average.avg_change_requests !== null ? aggregate.team_average.avg_change_requests : '-' }}
                     </td>
                     <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400" style="cursor:help" title="% di ticket completati entro il benchmark (ore stimate o media cycle time team) sul totale dei ticket con cycle time misurabile">
                         {{ aggregate.team_average.on_time_rate !== null ? aggregate.team_average.on_time_rate + '%' : '-' }}
                     </td>
                     <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400">
-                        {{ aggregate.team_average.avg_commit_count !== null ? aggregate.team_average.avg_commit_count : '-' }}
-                    </td>
-                    <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400">
                         {{ aggregate.team_average.avg_pr_count !== null ? aggregate.team_average.avg_pr_count : '-' }}
-                    </td>
-                    <td class="py-3 px-3 text-center text-gray-600 dark:text-gray-400">
-                        {{ aggregate.team_average.avg_change_requests !== null ? aggregate.team_average.avg_change_requests : '-' }}
                     </td>
                 </tr>
 
@@ -146,22 +142,23 @@ Nova.booting(function (app) {
                         {{ aggregate.developer.avg_cycle_time_hours !== null ? aggregate.developer.avg_cycle_time_hours + 'h' : '-' }}
                         <span v-if="aggregate.developer.avg_cycle_time_hours !== null && aggregate.team_average.avg_cycle_time_hours !== null" class="text-xs ml-1">{{ delta(aggregate.developer.avg_cycle_time_hours, aggregate.team_average.avg_cycle_time_hours) }}</span>
                     </td>
+                    <td class="py-3 px-3 text-center" :class="deltaClass(aggregate.developer.avg_todo_stagnation_days, aggregate.team_average.avg_todo_stagnation_days, true)" style="cursor:help" title="Media giorni in todo del developer. Verde = meno giorni della media team, rosso = più giorni.">
+                        {{ aggregate.developer.avg_todo_stagnation_days !== null ? aggregate.developer.avg_todo_stagnation_days : '-' }}
+                        <span v-if="aggregate.developer.avg_todo_stagnation_days !== null && aggregate.team_average.avg_todo_stagnation_days !== null" class="text-xs ml-1">{{ delta(aggregate.developer.avg_todo_stagnation_days, aggregate.team_average.avg_todo_stagnation_days) }}</span>
+                    </td>
                     <td class="py-3 px-3 text-center" :class="deltaClass(aggregate.developer.avg_reopen_count, aggregate.team_average.avg_reopen_count, true)" style="cursor:help" title="Media riaperture per ticket del developer. Verde = meno riaperture della media team, rosso = più riaperture.">
                         {{ aggregate.developer.avg_reopen_count !== null ? aggregate.developer.avg_reopen_count : '-' }}
                         <span v-if="aggregate.developer.avg_reopen_count !== null && aggregate.team_average.avg_reopen_count !== null" class="text-xs ml-1">{{ delta(aggregate.developer.avg_reopen_count, aggregate.team_average.avg_reopen_count) }}</span>
+                    </td>
+                    <td class="py-3 px-3 text-center text-blue-700 dark:text-blue-300">
+                        {{ aggregate.developer.avg_change_requests !== null ? aggregate.developer.avg_change_requests : '-' }}
                     </td>
                     <td class="py-3 px-3 text-center" :class="deltaClass(aggregate.developer.on_time_rate, aggregate.team_average.on_time_rate, false)" style="cursor:help" title="% ticket completati in tempo dal developer. Verde = sopra la media team, rosso = sotto. Il diff mostra la distanza dalla media.">
                         {{ aggregate.developer.on_time_rate !== null ? aggregate.developer.on_time_rate + '%' : '-' }}
                         <span v-if="aggregate.developer.on_time_rate !== null && aggregate.team_average.on_time_rate !== null" class="text-xs ml-1">{{ delta(aggregate.developer.on_time_rate, aggregate.team_average.on_time_rate) }}</span>
                     </td>
                     <td class="py-3 px-3 text-center text-blue-700 dark:text-blue-300">
-                        {{ aggregate.developer.avg_commit_count !== null ? aggregate.developer.avg_commit_count : '-' }}
-                    </td>
-                    <td class="py-3 px-3 text-center text-blue-700 dark:text-blue-300">
                         {{ aggregate.developer.avg_pr_count !== null ? aggregate.developer.avg_pr_count : '-' }}
-                    </td>
-                    <td class="py-3 px-3 text-center text-blue-700 dark:text-blue-300">
-                        {{ aggregate.developer.avg_change_requests !== null ? aggregate.developer.avg_change_requests : '-' }}
                     </td>
                 </tr>
             </tfoot>
