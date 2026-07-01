@@ -92,7 +92,6 @@ class StoryObserver
             \App\Jobs\SyncStoryGithubCommitsJob::dispatch($story->id);
         }
 
-        $this->createStoryLog($story);
         $this->notifyDeveloperIfIdle($story);
     }
 
@@ -194,74 +193,6 @@ class StoryObserver
         return DB::table('users')->where('id', $userId)->value('email');
     }
 
-    private function createStoryLog(Story $story): void
-    {
-        // Don't log as "updated" if the story was just created in this request
-        if ($story->wasRecentlyCreated || isset(self::$createdStories[$story->id])) {
-            // Clean up the flag after checking
-            unset(self::$createdStories[$story->id]);
-
-            return;
-        }
-
-        $dirtyFields = $story->getDirty();
-
-        $user = Auth::user();
-        if (is_null($user)) {
-            $user = User::where('email', 'orchestrator_artisan@webmapp.it')->first();
-        } //there is a seeder for this user (PhpArtisanUserSeeder)
-
-        $jsonChanges = [];
-
-        foreach ($dirtyFields as $field => $newValue) {
-            if ($field === 'description') {
-                $newValue = 'change description';
-            }
-            $jsonChanges[$field] = $newValue;
-        }
-
-        if (count($jsonChanges) > 0) {
-            $timestamp = now()->format('Y-m-d H:i');
-            $storyLog = StoryLog::create([
-                'story_id' => $story->id,
-                'user_id' => $user->id,
-                'viewed_at' => $timestamp,
-                'changes' => $jsonChanges,
-            ]);
-
-            // Log activity to activity.log file
-            $changesText = implode(', ', array_map(
-                fn($key, $value) => "{$key}: " . (is_string($value) ? $value : json_encode($value)),
-                array_keys($jsonChanges),
-                $jsonChanges
-            ));
-
-            $message = sprintf(
-                '%s (%s) updated story #%d "%s" on %s - Changes: %s',
-                $user->name,
-                $user->email,
-                $story->id,
-                $story->name,
-                now()->format('d-m-Y H:i:s'),
-                $changesText
-            );
-
-            $context = [
-                'story_id' => $story->id,
-                'story_name' => $story->name,
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'user_email' => $user->email,
-                'changes' => $jsonChanges,
-                'timestamp' => now()->format('Y-m-d H:i:s'),
-            ];
-
-            Log::channel('activity')->info($message, $context);
-
-            $story->saveQuietly();
-            StoryTimeService::run($storyLog->story);
-        }
-    }
 
     private function notifyDeveloperIfIdle(Story $story): void
     {
