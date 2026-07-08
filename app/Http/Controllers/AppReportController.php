@@ -10,7 +10,19 @@ class AppReportController extends Controller
 {
     public function download(int $id)
     {
-        $app  = App::findOrFail($id);
+        $app = App::findOrFail($id);
+
+        // Report solo per app pubblicate sugli store (oc:8242): senza store
+        // presence il lookup non produce dati e il PDF uscirebbe vuoto.
+        if (! $app->hasStorePresence()) {
+            return response(
+                '<h2>' . e(__('Report not available')) . '</h2><p>'
+                . e(__('This app has no store links configured: there is no store data to report. Add the App Store / Play Store links to the app to enable the report.'))
+                . '</p>',
+                422
+            );
+        }
+
         $path = $this->pdfPath($app);
 
         // File già pronto: servi subito
@@ -26,22 +38,19 @@ class AppReportController extends Controller
 
         // Dispatch job e mostra pagina di attesa
         Cache::put($cacheKey, true, now()->addMinutes(10));
-        GenerateAppReportJob::dispatch($app->id, $app->name, $app->app_id, $path)->onQueue('reports');
+        GenerateAppReportJob::dispatch($app->id, $app->name, $this->bundleId($app), $path)->onQueue('reports');
 
         return $this->waitingResponse($app, $id);
     }
 
+    private function bundleId(App $app): ?string
+    {
+        return $app->storeBundleId();
+    }
+
     private function pdfPath(App $app): string
     {
-        $safeName = preg_replace('/[^\w\-]/u', '_', $app->name);
-        $month    = now()->format('Y-m');
-        $dir      = storage_path('app/reports');
-
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        return "{$dir}/webmapp_report_app_{$safeName}_{$month}.pdf";
+        return $app->reportPdfPath();
     }
 
     private function waitingResponse(App $app, int $id): \Illuminate\Http\Response
