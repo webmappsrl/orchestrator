@@ -39,10 +39,70 @@ class App extends Model
         "config_home", "app_pois_api_layer", "page_project", "tiles", "start_end_icons_show", "start_end_icons_min_zoom",
         "ref_on_track_show", "ref_on_track_min_zoom", "alert_poi_show", "alert_poi_radius", "social_track_text",
         "draw_track_show", "welcome", "iconmoon_selection", "editing_inline_show", "flow_line_quote_show", "flow_line_quote_orange",  "flow_line_quote_red", "map_max_stroke_width", "map_min_stroke_width", "download_track_enable", "dashboard_show",
-        "print_track_enable", "poi_interaction", "user_email", "page_project"
+        "print_track_enable", "poi_interaction", "user_email", "page_project",
+        "shard", "removed_from_shard_at", "sku"
     ];
 
     protected $guarded = [];
+
+    protected $casts = [
+        'removed_from_shard_at' => 'datetime',
+    ];
+
+    /**
+     * Scope: app presenti sul proprio shard (non dismesse).
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('removed_from_shard_at');
+    }
+
+    /**
+     * L'app risulta pubblicata sugli store? (store link presente o app_id
+     * in formato bundle). Condizione per il report PDF (oc:8242).
+     */
+    public function hasStorePresence(): bool
+    {
+        return ! empty($this->ios_store_link)
+            || ! empty($this->android_store_link)
+            || ($this->app_id && str_contains($this->app_id, '.'));
+    }
+
+    /**
+     * Bundle/package per lo store lookup del report (oc:8242).
+     * L'app_id delle app sincronizzate è l'id numerico dello shard, non un
+     * bundle. Ordine: package dal link Play Store → app_id solo se è un
+     * bundle vero → null (lo script farà fuzzy match sul nome).
+     */
+    public function storeBundleId(): ?string
+    {
+        if ($this->android_store_link && preg_match('/[?&]id=([\w.]+)/', $this->android_store_link, $matches)) {
+            return $matches[1];
+        }
+
+        if ($this->app_id && str_contains($this->app_id, '.')) {
+            return $this->app_id;
+        }
+
+        return null;
+    }
+
+    /**
+     * Path del PDF report del mese corrente, shard-qualificato: due app
+     * omonime su shard diversi non devono condividere lo stesso file (oc:8242).
+     */
+    public function reportPdfPath(): string
+    {
+        $safeName = preg_replace('/[^\w\-]/u', '_', $this->name);
+        $month = now()->format('Y-m');
+        $dir = storage_path('app/reports');
+
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        return "{$dir}/webmapp_report_app_{$this->shard}_{$safeName}_{$month}.pdf";
+    }
 
 
 
@@ -56,20 +116,6 @@ class App extends Model
         return $this->hasMany(Layer::class);
     }
 
-    public function ugc_medias()
-    {
-        return $this->hasMany(UgcMedia::class);
-    }
-
-    public function ugc_pois()
-    {
-        return $this->hasMany(UgcPoi::class);
-    }
-
-    public function ugc_tracks()
-    {
-        return $this->hasMany(UgcTrack::class);
-    }
     /**
      * Get all the tags for the project.
      */
@@ -77,109 +123,6 @@ class App extends Model
     {
         return $this->morphMany(Tag::class, 'taggable');
     }
-    public function getGeojson()
-    {
-        $tracks = EcTrack::where('user_id', $this->user_id)->get();
-
-        if (!is_null($tracks)) {
-            $geoJson = ["type" => "FeatureCollection"];
-            $features = [];
-            foreach ($tracks as $track) {
-                $geojson = $track->getGeojson();
-                //                if (isset($geojson))
-                $features[] = $geojson;
-            }
-            $geoJson["features"] = $features;
-
-            return json_encode($geoJson);
-        }
-    }
-
-    public function getMostViewedPoiGeojson()
-    {
-        $pois = EcPoi::where('user_id', $this->user_id)->limit(10)->get();
-
-        if (!is_null($pois)) {
-            $geoJson = ["type" => "FeatureCollection"];
-            $features = [];
-            foreach ($pois as $count => $poi) {
-                $feature = $poi->getEmptyGeojson();
-                if (isset($feature["properties"])) {
-                    $feature["properties"]["name"] = $poi->name;
-                    $feature["properties"]["visits"] = (11 - $count) * 10;
-                }
-
-                $features[] = $feature;
-            }
-            $geoJson["features"] = $features;
-
-            return json_encode($geoJson);
-        }
-    }
-
-    public function getUGCPoiGeojson($app_id)
-    {
-        $pois = UgcPoi::where('app_id', $app_id)->get();
-
-        if ($pois->count() > 0) {
-            $geoJson = ["type" => "FeatureCollection"];
-            $features = [];
-            foreach ($pois as $count => $poi) {
-                $feature = $poi->getEmptyGeojson();
-                if (isset($feature["properties"])) {
-                    $feature["properties"]["view"] = '/resources/ugc-pois/' . $poi->id;
-                }
-
-                $features[] = $feature;
-            }
-            $geoJson["features"] = $features;
-
-            return json_encode($geoJson);
-        }
-    }
-
-    public function getUGCMediaGeojson($app_id)
-    {
-        $medias = UgcMedia::where('app_id', $app_id)->get();
-
-        if ($medias->count() > 0) {
-            $geoJson = ["type" => "FeatureCollection"];
-            $features = [];
-            foreach ($medias as $count => $media) {
-                $feature = $media->getEmptyGeojson();
-                if (isset($feature["properties"])) {
-                    $feature["properties"]["view"] = '/resources/ugc-medias/' . $media->id;
-                }
-
-                $features[] = $feature;
-            }
-            $geoJson["features"] = $features;
-
-            return json_encode($geoJson);
-        }
-    }
-
-    public function getiUGCTrackGeojson($app_id)
-    {
-        $tracks = UgcTrack::where('app_id', $app_id)->get();
-
-        if ($tracks->count() > 0) {
-            $geoJson = ["type" => "FeatureCollection"];
-            $features = [];
-            foreach ($tracks as $count => $track) {
-                $feature = $track->getEmptyGeojson();
-                if (isset($feature["properties"])) {
-                    $feature["properties"]["view"] = '/resources/ugc-tracks/' . $track->id;
-                }
-
-                $features[] = $feature;
-            }
-            $geoJson["features"] = $features;
-
-            return json_encode($geoJson);
-        }
-    }
-
     function BuildConfJson()
     {
         $confUri = $this->id . ".json";
@@ -262,16 +205,6 @@ class App extends Model
     }
 
 
-    /**
-     * Function to retrieve all fillables from App API
-     * @return Arr
-     */
-    private function getAppfillables()
-    {
-        $appsData = json_decode(file_get_contents('https://geohub.webmapp.it/api/v1/app/all'), true);
-
-        $this->fillable(array_keys($appsData[0]));
-    }
 
     protected static function boot()
     {

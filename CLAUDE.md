@@ -78,6 +78,7 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 
 | Feature | Ticket | Moduli toccati | Note |
 |---|---|---|---|
+| Sync distribuita App multi-shard + report store | oc:8242 | `config/shards.php`, `app/Services/Shards/`, `app/Console/Commands/SyncShardApps.php`, `app/Console/Commands/GenerateAppReports.php`, `app/Jobs/SyncShardAppJob.php`, `app/Nova/App.php`, `app/Nova/Filters/Shard*.php`, `app/Http/Controllers/AppReportController.php`, `wm-package/src/Http/*Export*` | Apps sincronizzate da tutti gli shard (geohub/maphub/camminiditalia/osm2cai) con identità `(shard, app_id)`, upsert non distruttivo, sync on-demand sul detail; report PDF pre-generati di notte, bottone solo per app pubblicate sugli store |
 | Metrica "Todo >1g" nella card team performance | oc:8192 | `app/Services/Metrics/StoryMetricsCalculator.php`, `app/Http/Controllers/Nova/TeamPerformanceController.php`, `nova-components/team-performance/dist/js/card.js` | Nuovo metodo `todoStagnationTotalDays()` (somma tutti gli intervalli todo); esposto come colonna per-ticket e KPI aggregato; etichetta "Todo >1g" perché `workingDaysBetween` conta giorni interi; 0 giorni mostrato come `—` |
 | Fix download allegati (path generator ibrido) | oc:8028 | `app/Services/MediaLibrary/OrchestratorPathGenerator.php`, `app/Providers/AppServiceProvider.php` | Generator C→B→A ripristina accesso ai 605/631 media legacy; wm-package sovrascriveva path_generator con WmfePathGenerator |
 | PDF preventivo — logo visibile | oc:8047 | `resources/views/quote-pdf.blade.php`, `public/images/logo.png` | Usa `file://` path invece di data URI base64; DomPDF non renderizza data URI in questo setup |
@@ -85,6 +86,7 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 | Hetzner Monitoring | oc:7944 | `config/hetzner.php`, `app/Services/HetznerApiService.php`, `app/Http/Controllers/HetznerMonitoringController.php`, `app/Exports/HetznerExport.php`, `nova-components/hetzner-monitoring/`, `app/Nova/Dashboards/HetznerMonitoring.php` | Dashboard Nova con tabella per progetto Hetzner: server, floating IP, volumes, LB, snapshot. Cache Redis 15 min. Export CSV. |
 | Auto-revert ticket in progress quando dev è offline su Slack | oc:8136 | `app/Console/Commands/SlackRevertProgressCommand.php`, `app/Services/SlackService.php`, `database/migrations/2026_06_25_120000_add_slack_user_id_to_users_table.php`, `app/Models/User.php`, `app/Nova/User.php`, `config/services.php`, `app/Console/Kernel.php` | Comando schedulato ogni 20 min (12-18) che verifica presenza Slack dei dev con ticket in progress; se offline → saveQuietly() + StoryLog manuale |
 | API CRUD per Tag con attach/detach stories | oc:8155 | `app/Http/Controllers/Api/TagController.php`, `app/Http/Requests/Api/TagApiRequest.php`, `routes/api.php`, `tests/Feature/Api/TagApiTest.php` | GET/POST/PATCH /api/tags, GET /api/tags/{tag}, POST/DELETE /api/tags/{tag}/stories/{story}; solo Developer e Admin; StoryLog su attach/detach |
+| Override Orchestrator accesso Nova | oc:8161 | `app/Models/User.php`, `tests/Feature/UserAccessNovaOverrideTest.php` | Il wm-package blocca il login web senza `access-nova`; in Orchestrator `User::can('access-nova')` ritorna sempre true per consentire accesso Nova a tutti gli utenti del progetto |
 | Fix tag automatici su update Nova | oc:8051 | `app/Nova/Story.php`, `app/Observers/StoryObserver.php` | Ripristinati `afterCreate`/`afterUpdate` in Nova; try/catch isolati in observer |
 | Fix email creazione ticket Scrum | oc:8091 | `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Alla creazione di un ticket di tipo Scrum nessuna mail viene inviata ai developer; tutti gli altri tipi inviano normalmente |
 | Invio email alla creazione ticket | oc:8040 | `app/Mail/DevNewStoryCreated.php`, `resources/views/mails/dev-new-story-created.blade.php`, `app/Models/Story.php`, `tests/Feature/StoryEmailTriggersTest.php` | Alla creazione di qualsiasi ticket tutti i dev ricevono email: `CustomerNewStoryCreated` se creator è customer, `DevNewStoryCreated` altrimenti |
@@ -92,6 +94,16 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 | API endpoint GET /me | oc:7974 | `routes/api.php`, `tests/Feature/Api/MeEndpointTest.php` | Restituisce id, name, email dell'utente autenticato via Sanctum |
 
 ## Decisioni architetturali
+
+### Sync distribuita App multi-shard (oc:8242)
+- **Identità composita `(shard, app_id)`**: `app_id` è l'id numerico remoto (stringa) dello shard, immutabile; l'`id` locale autoincrement resta la chiave per route/pivot/tag. Unique composito al posto dell'unique su `app_id`. In Nova l'ID visibile è `app_id` (+ colonna shard), mai l'id locale.
+- **La sync scrive SOLO con `saveQuietly`**: mai eventi Eloquent (l'observer `updated` fa `BuildConfJson` con URL geohub hardcodati; il hook `created` crea tag automatici). Nessun side effect è invocato dalla sync.
+- **Colonne a proprietà separata**: shard-owned (schema wm-package, `user_email` incluso) scritte solo dalla sync; orchestrator-owned (`user_id` valorizzato, `customer_name`, pivot `user_app`, tag) mai toccate dopo la creazione; `removed_from_shard_at` è sync-owned (timbrata E azzerata dalla sync). I `null` del payload non si scrivono mai (colonne NOT NULL con default).
+- **Guardie riconciliazione**: payload vuoto/invalido → no-op con log; rimozioni > 30% delle attive dello shard → abort. Mai delete fisico: le app sparite vengono marcate dismesse, quelle ricomparse riattivate.
+- **Registry in `config/shards.php`**: slug IMMUTABILI (rinominarli orfanizza le app dello shard); `enabled => false` è il kill switch/rollback operativo — mai il `down()` della migration dopo il primo sync multi-shard. Token in ENV `SHARD_TOKEN_<SLUG>`.
+- **Contratto export wm-package**: `/api/v1/export/apps` — whitelist esplicita in `AppExportResource` (mai serializzare colonne modello), campo aggiunto = ok, rinomina/rimozione = `v2`. Bearer token da `WM_EXPORT_TOKEN` (assente = 403, endpoint spento).
+- **Report PDF**: bottone "Store report" solo se `hasStorePresence()` (store link o `app_id` bundle-like); `storeBundleId()` deriva il package dal link Play Store — MAI passare l'`app_id` numerico allo script Python (store lookup fallisce → PDF vuoto). Pre-generazione notturna alle 03:30 (`apps:generate-reports --fresh`). Nome file shard-qualificato.
+- **`App::author()` di wm-package richiedeva FK esplicita `user_id`**: l'inferita `author_id` non esiste — relazione rotta da sempre, fixata in oc:8242.
 
 ### Metrica "Todo >1g" nella card team performance (oc:8192)
 - **`workingDaysBetween` conta giorni interi**: un ticket in todo per meno di un giorno lavorativo restituisce 0. L'etichetta "Todo >1g" chiarisce che si tratta di giorni completi, non ore. Valori 0 vengono mostrati come `—`.
@@ -139,6 +151,12 @@ Each model has a corresponding Nova Resource. Nova is the primary interface. Cus
 - **Autorizzazione per ruolo nel controller**: solo `Developer` e `Admin` accedono alle API Tag — check via `abort_unless($user->hasRole(...))` nel metodo `authorizeRole()`.
 - **Sanitize LIKE**: `str_replace(['%', '_'], ['\%', '\_'], $search)` obbligatorio prima di qualsiasi query LIKE su nome tag.
 - **StoryLog su attach/detach**: creato manualmente nel controller con `changes = ['tag_attached' => $tag->id]` / `['tag_detached' => $tag->id]`.
+
+### Override accesso Nova Orchestrator (oc:8161)
+- **Il wm-package resta fail-closed**: il listener shared (`EnforceNovaAccessOnLogin`) continua a negare il login web quando `can('access-nova')` è false.
+- **Deroga esplicita solo in Orchestrator**: `App\Models\User::can()` intercetta l'ability `access-nova` e ritorna sempre `true`; tutte le altre ability continuano a usare Spatie/Gate standard.
+- **Scope volutamente minimale**: nessuna modifica nel package e nessun cambio su ruoli/permission seed; la deroga vive nello shard Orchestrator.
+- **Copertura test dedicata**: `UserAccessNovaOverrideTest` garantisce che un utente Orchestrator mantenga sempre `can('access-nova') = true`.
 
 ### Fix tag automatici su update Nova (oc:8051)
 - **`afterCreate`/`afterUpdate` in `Nova/Story.php`**: rimossi in oc:7972 e non ripristinati. La via Nova UI per gli update era completamente scoperta. La via API era già coperta da `StoryController::attachAutoTags()` — quella scelta di oc:7972 rimane valida e non è stata toccata.

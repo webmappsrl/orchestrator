@@ -17,7 +17,9 @@ class AppFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->name()
+            'name' => $this->faker->name(),
+            'shard' => 'geohub',
+            'app_id' => (string) $this->faker->unique()->numberBetween(1, 100000),
         ];
     }
 }

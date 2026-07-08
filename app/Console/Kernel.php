@@ -41,6 +41,19 @@ class Kernel extends ConsoleKernel
             ->timezone('Europe/Rome')
             ->dailyAt('16:00');
 
+        // oc:8242 — sync app da tutti gli shard (full fetch + upsert, errori isolati)
+        $schedule->command('apps:sync')
+            ->everyThirtyMinutes()
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        // oc:8242 — pre-genera di notte i report store (--fresh: dati sempre aggiornati al giorno prima)
+        $schedule->command('apps:generate-reports --fresh')
+            ->timezone('Europe/Rome')
+            ->dailyAt('03:30')
+            ->withoutOverlapping()
+            ->onOneServer();
+
         $schedule->command('sync:stories-calendar')
             ->timezone('Europe/Rome')
             ->dailyAt('07:45')
@@ -103,7 +116,6 @@ class Kernel extends ConsoleKernel
     protected function commands()
     {
         $this->load(__DIR__ . '/Commands');
-        $this->load(__DIR__ . 'Commands/OrchestratorImport');
         $this->load(__DIR__ . 'Commands/ImportProducts');
 
         require base_path('routes/console.php');
