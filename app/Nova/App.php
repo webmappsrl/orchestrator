@@ -19,9 +19,29 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Kongulov\NovaTabTranslatable\NovaTabTranslatable;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
+use App\Jobs\SyncShardAppJob;
+use Illuminate\Support\Facades\Log;
+use Laravel\Nova\Fields\DateTime;
 
 class App extends Resource
 {
+    /**
+     * All'apertura del detail rinfresca l'app dal suo shard (oc:8242).
+     * Inline con timeout 3s + throttle: mai bloccante oltre, mai errori in pagina.
+     */
+    public static function detailQuery(NovaRequest $request, $query)
+    {
+        if ($request->resourceId) {
+            try {
+                SyncShardAppJob::dispatchSync((int) $request->resourceId);
+            } catch (\Throwable $e) {
+                Log::warning('Sync on-demand dal detail Nova fallita: ' . $e->getMessage());
+            }
+        }
+
+        return parent::detailQuery($request, $query);
+    }
+
     /**
      * The model the resource corresponds to.
      *
@@ -115,7 +135,9 @@ class App extends Resource
     {
 
         return [
-            ID::make(__('ID'), 'id')->sortable(),
+            // ID visibile = id remoto dello shard (oc:8242); l'id locale resta interno.
+            Text::make(__('ID'), 'app_id')->sortable(),
+            Text::make(__('Shard'), 'shard')->sortable(),
             Text::make('API type', 'api')->sortable(),
             Text::make('Name')->sortable(),
             Text::make('Customer Name'),
@@ -175,7 +197,14 @@ class App extends Resource
                         onmouseout='this.style.backgroundColor = \"#79c35b\";'
                         href='$urlMobile' target='_blank'>MOBILE</a>";
             })->asHtml(),
-            Text::make(__('Report'), function () {
+            Text::make(__('Store report'), function () {
+                // Report solo per app pubblicate sugli store (oc:8242).
+                if (! $this->model()->hasStorePresence()) {
+                    $label = e(__('Not on stores'));
+
+                    return "<span style='color:#9ca3af;' title='{$label}'>—</span>";
+                }
+
                 $reportUrl = route('app.report.download', ['id' => $this->model()->id]);
                 return "
                     <a style='display: inline-flex;
@@ -193,7 +222,7 @@ class App extends Resource
                     border-radius: 0.25rem;'
                     onmouseover='this.style.backgroundColor=\"#4338ca\";'
                     onmouseout='this.style.backgroundColor=\"#4f46e5\";'
-                    href='$reportUrl'>PDF</a>";
+                    href='$reportUrl' target='_blank' rel='noopener'>PDF</a>";
             })->asHtml(),
         ];
     }
@@ -203,7 +232,7 @@ class App extends Resource
 
         if ($request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Editor) || $request->user()->hasRole(UserRole::Manager)) {
             return [
-                Tab::group("APP Details: {$this->name} ({$this->id})", $this->sections())->withToolbar(),
+                Tab::group("APP Details: {$this->name} ({$this->app_id} @ {$this->shard})", $this->sections())->withToolbar(),
             ];
         }
     }
@@ -240,7 +269,7 @@ class App extends Resource
     {
         if ($request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Editor)) {
             return [
-                Tab::group("APP Details: {$this->name} ({$this->id})", $this->sections())->withToolbar(),
+                Tab::group("APP Details: {$this->name} ({$this->app_id} @ {$this->shard})", $this->sections())->withToolbar(),
             ];
         }
     }
@@ -265,7 +294,10 @@ class App extends Resource
      */
     public function filters(NovaRequest $request)
     {
-        return [];
+        return [
+            new Filters\ShardFilter(),
+            new Filters\ShardStatusFilter(),
+        ];
     }
 
     /**
@@ -311,6 +343,11 @@ class App extends Resource
         return [
             Text::make(__('[id] App Id'), 'app_id')
                 ->readonly(),
+            Text::make(__('Shard'), 'shard')
+                ->readonly(),
+            DateTime::make(__('Removed from shard at'), 'removed_from_shard_at')
+                ->onlyOnDetail()
+                ->help(__('Set when the app is no longer present on its shard')),
             Text::make(__('[name] Name'), 'name')
                 ->sortable()
                 ->required()
