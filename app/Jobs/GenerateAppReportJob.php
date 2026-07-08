@@ -21,12 +21,17 @@ class GenerateAppReportJob implements ShouldQueue
     protected $bundleId;
     protected $outputPath;
 
-    public function __construct(int $appId, string $appName, string $bundleId, string $outputPath)
+    public function __construct(int $appId, string $appName, ?string $bundleId, string $outputPath)
     {
         $this->appId      = $appId;
         $this->appName    = $appName;
         $this->bundleId   = $bundleId;
         $this->outputPath = $outputPath;
+    }
+
+    public function getAppId(): int
+    {
+        return $this->appId;
     }
 
     public function handle(): void
@@ -40,10 +45,15 @@ class GenerateAppReportJob implements ShouldQueue
         }
 
         $cmd = [$pythonBin, 'genera_report_app.py',
-            '--app',       $this->appName,
-            '--bundle-id', $this->bundleId,
-            '--output',    $this->outputPath,
+            '--app',    $this->appName,
+            '--output', $this->outputPath,
         ];
+
+        // Senza bundle lo script fa fuzzy match sul nome negli store:
+        // meglio di un bundle sbagliato che azzera i dati (oc:8242).
+        if (!empty($this->bundleId)) {
+            array_splice($cmd, 4, 0, ['--bundle-id', $this->bundleId]);
+        }
 
         $process = new Process($cmd, $wmReportsDir);
         $process->setTimeout(290);
