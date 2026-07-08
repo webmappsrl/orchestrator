@@ -16,6 +16,8 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Impersonatable, Notifiable;
 
+    private const NOVA_ACCESS_PERMISSION = 'access-nova';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -55,6 +57,15 @@ class User extends Authenticatable
             return $this->roles->contains($roles);
         }
         return parent::hasRole($roles, $guard);
+    }
+
+    public function can($abilities, $arguments = []): bool
+    {
+        if (is_string($abilities) && $abilities === self::NOVA_ACCESS_PERMISSION) {
+            return true;
+        }
+
+        return parent::can($abilities, $arguments);
     }
 
     public function stories()
