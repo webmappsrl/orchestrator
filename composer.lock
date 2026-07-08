@@ -14066,7 +14066,7 @@
         },
         {
             "name": "wm/hetzner-monitoring",
-            "version": "dev-feature/oc-8123-team-performance-analytics",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/hetzner-monitoring",
@@ -14092,7 +14092,7 @@
         },
         {
             "name": "wm/kanban-card",
-            "version": "dev-feature/oc-8123-team-performance-analytics",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/kanban-card",
@@ -14264,7 +14264,7 @@
         },
         {
             "name": "wm/team-performance",
-            "version": "dev-feature/oc-8123-team-performance-analytics",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./nova-components/team-performance",
@@ -14296,7 +14296,7 @@
         },
         {
             "name": "wm/wm-internal",
-            "version": "dev-feature/oc-8123-team-performance-analytics",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "./wm-internal",
@@ -14377,11 +14377,11 @@
         },
         {
             "name": "wm/wm-package",
-            "version": "dev-ff3402845c252ad0000e996ba41bf621ba56b031",
+            "version": "dev-ef5e09b40852639b4060a19e7120db8c4f8aad40",
             "dist": {
                 "type": "path",
                 "url": "./wm-package",
-                "reference": "96af066f29d1c607be36dc37257d7b947b4bb736"
+                "reference": "cc79ae37dedd5bdc82699995694d3ad0a536d27f"
             },
             "require": {
                 "chillerlan/php-qrcode": "^5.0",
@@ -14454,6 +14454,9 @@
                     "Wm\\WmPackage\\Nova\\Fields\\IconSelect\\": "src/Nova/Fields/IconSelect/src/",
                     "Wm\\WmPackage\\Nova\\Fields\\LayerFeatures\\": "src/Nova/Fields/LayerFeatures/src/",
                     "Wm\\WmPackage\\Nova\\Fields\\FeatureCollectionMap\\": "src/Nova/Fields/FeatureCollectionMap/src/",
+                    "Wm\\WmPackage\\Nova\\Cards\\LayerAnalytics\\": "src/Nova/Cards/LayerAnalytics/src/",
+                    "Wm\\WmPackage\\Services\\PostHog\\": "src/Services/PostHog/",
+                    "Wm\\WmPackage\\Http\\Controllers\\Nova\\": "src/Http/Controllers/Nova/",
                     "Wm\\WmPackage\\Nova\\Fields\\FeatureCollectionGrid\\": "src/Nova/Fields/FeatureCollectionGrid/src/",
                     "Wm\\WmPackage\\Nova\\Cards\\ApiLinksCard\\": "src/Nova/Cards/ApiLinksCard/src/"
                 },
