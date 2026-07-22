@@ -13,6 +13,11 @@ use Illuminate\Http\Request;
 
 class TagController extends Controller
 {
+    /**
+     * List tags, optionally filtered by name.
+     *
+     * @response array<array{id: int, name: string, description: string|null}>
+     */
     public function index(Request $request): JsonResponse
     {
         $this->authorizeRole($request);
@@ -29,6 +34,11 @@ class TagController extends Controller
         return response()->json($tags->map(fn($t) => $this->formatTag($t)));
     }
 
+    /**
+     * Retrieve a tag with its attached stories.
+     *
+     * @response array{id: int, name: string, description: string|null, stories: array<array{id: int, name: string, status: string, customer_request: string|null, description: string|null}>}
+     */
     public function show(Request $request, Tag $tag): JsonResponse
     {
         $this->authorizeRole($request);
@@ -38,6 +48,11 @@ class TagController extends Controller
         return response()->json($this->formatTag($tag, true));
     }
 
+    /**
+     * Create a new tag.
+     *
+     * @response 201 array{id: int, name: string, description: string|null}
+     */
     public function store(TagApiRequest $request): JsonResponse
     {
         $this->authorizeRole($request);
@@ -54,6 +69,11 @@ class TagController extends Controller
         return response()->json($this->formatTag($tag), 201);
     }
 
+    /**
+     * Update an existing tag.
+     *
+     * @response array{id: int, name: string, description: string|null}
+     */
     public function update(TagApiRequest $request, Tag $tag): JsonResponse
     {
         $this->authorizeRole($request);

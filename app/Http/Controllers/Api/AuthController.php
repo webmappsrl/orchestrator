@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    /**
+     * Authenticate a user and issue a Sanctum bearer token.
+     *
+     * @response array{token: string, user: array{id: int, name: string, email: string}}
+     * @response 401 array{message: string}
+     */
     public function login(Request $request): JsonResponse
     {
         $request->validate([

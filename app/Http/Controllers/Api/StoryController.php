@@ -10,6 +10,11 @@ use Illuminate\Http\JsonResponse;
 
 class StoryController extends Controller
 {
+    /**
+     * Retrieve a story by ID.
+     *
+     * @response array{id: int, name: string, status: string, type: string, description: string|null, customer_request: string|null, user_id: int|null, tester_id: int|null, creator_id: int|null, parent_id: int|null, estimated_hours: float|null, hours: float|null, tags: array<array{id: int, name: string}>, created_at: string|null, updated_at: string|null}
+     */
     public function show(Story $story): JsonResponse
     {
         $story->load('tags');
@@ -17,6 +22,11 @@ class StoryController extends Controller
         return response()->json($this->formatStory($story));
     }
 
+    /**
+     * Create a new story.
+     *
+     * @response 201 array{id: int, name: string, status: string, type: string, description: string|null, customer_request: string|null, user_id: int|null, tester_id: int|null, creator_id: int|null, parent_id: int|null, estimated_hours: float|null, hours: float|null, tags: array<array{id: int, name: string}>, created_at: string|null, updated_at: string|null}
+     */
     public function store(StoryApiRequest $request): JsonResponse
     {
         $validated = $request->validated();
@@ -46,6 +56,11 @@ class StoryController extends Controller
         return response()->json($this->formatStory($story), 201);
     }
 
+    /**
+     * Update an existing story.
+     *
+     * @response array{id: int, name: string, status: string, type: string, description: string|null, customer_request: string|null, user_id: int|null, tester_id: int|null, creator_id: int|null, parent_id: int|null, estimated_hours: float|null, hours: float|null, tags: array<array{id: int, name: string}>, created_at: string|null, updated_at: string|null}
+     */
     public function update(StoryApiRequest $request, Story $story): JsonResponse
     {
         $validated = $request->validated();
