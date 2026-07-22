@@ -13,13 +13,16 @@ class QuotePolicy
 
     public function before(User $user)
     {
-        return $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer);
+        if (!($user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer))) {
+            return false;
+        }
     }
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user)
     {
+        return true;
     }
 
     /**
@@ -27,6 +30,7 @@ class QuotePolicy
      */
     public function view(User $user, Quote $quote)
     {
+        return true;
     }
 
     /**
@@ -34,6 +38,7 @@ class QuotePolicy
      */
     public function create(User $user)
     {
+        return true;
     }
 
     /**
@@ -59,6 +64,8 @@ class QuotePolicy
      */
     public function delete(User $user, Quote $quote)
     {
+        return $quote->status != QuoteStatus::Closed_Won->value &&
+            $quote->status != QuoteStatus::Closed_Lost->value;
     }
 
     /**
