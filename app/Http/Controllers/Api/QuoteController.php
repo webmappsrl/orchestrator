@@ -15,6 +15,11 @@ class QuoteController extends Controller
 {
     private const TRANSLATABLE_FIELDS = ['additional_services', 'notes'];
 
+    /**
+     * List quotes, optionally filtered by customer or status.
+     *
+     * @response array<array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}>
+     */
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Quote::class);
@@ -33,6 +38,11 @@ class QuoteController extends Controller
         return response()->json($quotes->map(fn(Quote $q) => $this->formatQuote($q)));
     }
 
+    /**
+     * Retrieve a quote.
+     *
+     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     */
     public function show(Request $request, Quote $quote): JsonResponse
     {
         $this->authorize('view', $quote);
@@ -42,6 +52,11 @@ class QuoteController extends Controller
         return response()->json($this->formatQuote($quote));
     }
 
+    /**
+     * Create a new quote.
+     *
+     * @response 201 array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     */
     public function store(QuoteApiRequest $request): JsonResponse
     {
         $this->authorize('create', Quote::class);
@@ -57,6 +72,11 @@ class QuoteController extends Controller
         return response()->json($this->formatQuote($quote), 201);
     }
 
+    /**
+     * Update an existing quote.
+     *
+     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     */
     public function update(QuoteApiRequest $request, Quote $quote): JsonResponse
     {
         $this->authorize('update', $quote);
@@ -71,6 +91,11 @@ class QuoteController extends Controller
         return response()->json($this->formatQuote($quote));
     }
 
+    /**
+     * Delete a quote.
+     *
+     * @response array{message: string}
+     */
     public function destroy(Request $request, Quote $quote): JsonResponse
     {
         $this->authorize('delete', $quote);
@@ -85,6 +110,11 @@ class QuoteController extends Controller
         return response()->json(['message' => 'Quote deleted.']);
     }
 
+    /**
+     * Attach a product to a quote with a quantity.
+     *
+     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     */
     public function attachProduct(Request $request, Quote $quote, Product $product): JsonResponse
     {
         $this->authorize('update', $quote);
@@ -96,6 +126,11 @@ class QuoteController extends Controller
         return response()->json($this->formatQuote($quote->fresh(['products', 'recurringProducts'])));
     }
 
+    /**
+     * Detach a product from a quote.
+     *
+     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     */
     public function detachProduct(Request $request, Quote $quote, Product $product): JsonResponse
     {
         $this->authorize('update', $quote);
@@ -107,6 +142,11 @@ class QuoteController extends Controller
         return response()->json($this->formatQuote($quote->fresh(['products', 'recurringProducts'])));
     }
 
+    /**
+     * Attach a recurring product to a quote with a quantity.
+     *
+     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     */
     public function attachRecurringProduct(Request $request, Quote $quote, RecurringProduct $recurringProduct): JsonResponse
     {
         $this->authorize('update', $quote);
@@ -118,6 +158,11 @@ class QuoteController extends Controller
         return response()->json($this->formatQuote($quote->fresh(['products', 'recurringProducts'])));
     }
 
+    /**
+     * Detach a recurring product from a quote.
+     *
+     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     */
     public function detachRecurringProduct(Request $request, Quote $quote, RecurringProduct $recurringProduct): JsonResponse
     {
         $this->authorize('update', $quote);

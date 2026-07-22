@@ -8,6 +8,7 @@ use App\Observers\MediaObserver;
 use App\Observers\StoryObserver;
 use App\Observers\TagGroupObserver;
 use App\Services\MediaLibrary\OrchestratorPathGenerator;
+use Dedoc\Scramble\Scramble;
 use Illuminate\Support\ServiceProvider;
 use Lorisleiva\Actions\Facades\Actions;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -57,5 +58,33 @@ class AppServiceProvider extends ServiceProvider
         Translatable::fallback(
             fallbackAny: true,
         );
+
+        // oc:8287 — Scramble di default documenta TUTTE le route sotto /api, incluse
+        // quelle registrate da wm-package (mobile app, ec/ugc, wallet, elasticsearch,
+        // export). Limitiamo la doc pubblica alle sole route definite in routes/api.php
+        // del repo principale.
+        Scramble::routes(function (\Illuminate\Routing\Route $route) {
+            $action = $route->getActionName();
+
+            if (str_starts_with($action, 'App\\Http\\Controllers\\Api\\')) {
+                return true;
+            }
+
+            return in_array($route->uri(), ['api/app/{id}/config.json', 'api/me'], true);
+        });
+
+        // oc:8287 — impedisce che "Try it out" nella doc pubblica /docs/api possa
+        // eseguire scritture reali con un Bearer token trapelato: le operazioni
+        // mutanti perdono il requisito di sicurezza (nessun Authorize iniettabile),
+        // restano comunque documentate ma non eseguibili con un click.
+        Scramble::afterOpenApiGenerated(function (\Dedoc\Scramble\Support\Generator\OpenApi $openApi) {
+            foreach ($openApi->paths as $path) {
+                foreach ($path->operations as $operation) {
+                    if (strtoupper($operation->method) !== 'GET') {
+                        $operation->security = [];
+                    }
+                }
+            }
+        });
     }
 }

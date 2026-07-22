@@ -197,6 +197,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::externalLink('Google Calendar', 'https://calendar.google.com/calendar/u/0/r')->openInNewTab()->canSee(function ($request) {
                         return $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager) || $request->user()->hasRole(UserRole::Developer);
                     }),
+                    MenuItem::externalLink('API Docs', '/docs/api')->openInNewTab(),
                 ])->icon('pencil')->collapsedByDefault(),
 
             ];

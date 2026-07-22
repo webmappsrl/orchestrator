@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    /**
+     * List all products.
+     *
+     * @response array<array{id: int, name: string, description: string|null, sku: string, price: float}>
+     */
     public function index(Request $request): JsonResponse
     {
         $this->authorizeRole($request);
