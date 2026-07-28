@@ -522,5 +522,7 @@
   "Not on stores": "Non pubblicata sugli store",
   "Report not available": "Report non disponibile",
   "This app has no store links configured: there is no store data to report. Add the App Store / Play Store links to the app to enable the report.": "Questa app non ha link agli store configurati: non ci sono dati store da riportare. Aggiungi i link App Store / Play Store alla scheda dell'app per abilitare il report.",
-  "Store report": "Report store"
+  "Store report": "Report store",
+  "VAT Number": "Partita IVA",
+  "Address": "Indirizzo"
 }

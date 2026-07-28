@@ -175,6 +175,19 @@ class QuoteApiTest extends TestCase
     }
 
     /** @test */
+    public function update_solo_status_non_richiede_title_ne_customer_id(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['additional_services' => []]);
+
+        $this->patchJson("/api/quotes/{$quote->id}", ['status' => QuoteStatus::Presented->value])
+            ->assertStatus(200)
+            ->assertJsonPath('status', QuoteStatus::Presented->value);
+
+        $this->assertEquals(QuoteStatus::Presented->value, $quote->fresh()->status);
+    }
+
+    /** @test */
     public function attach_product_richiede_quantity(): void
     {
         $this->actingAsAdmin();
@@ -303,5 +316,161 @@ class QuoteApiTest extends TestCase
         $recurringProduct = RecurringProduct::factory()->create();
 
         $this->deleteJson("/api/quotes/{$quote->id}/recurring-products/{$recurringProduct->id}")->assertStatus(404);
+    }
+
+    /** @test */
+    public function index_espone_created_at_e_updated_at(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['additional_services' => []]);
+
+        $response = $this->getJson('/api/quotes')->assertStatus(200);
+
+        $item = collect($response->json())->firstWhere('id', $quote->id);
+        $this->assertArrayHasKey('created_at', $item);
+        $this->assertArrayHasKey('updated_at', $item);
+        $this->assertNotNull($item['created_at']);
+    }
+
+    /** @test */
+    public function index_ordina_per_created_at_decrescente(): void
+    {
+        $this->actingAsAdmin();
+        // 'created_at' non è in $fillable su Quote: Eloquent lo scarterebbe
+        // silenziosamente via create(), quindi si forza con forceFill()+save()
+        // dopo la creazione per garantire due timestamp distinti e deterministici.
+        $older = Quote::factory()->create(['additional_services' => []]);
+        $older->forceFill(['created_at' => now()->subDays(2)])->save();
+        $newer = Quote::factory()->create(['additional_services' => []]);
+        $newer->forceFill(['created_at' => now()])->save();
+
+        $response = $this->getJson('/api/quotes?sort=-created_at')->assertStatus(200);
+
+        $ids = collect($response->json())->pluck('id')->filter(fn($id) => in_array($id, [$older->id, $newer->id]))->values();
+        $this->assertEquals([$newer->id, $older->id], $ids->all());
+    }
+
+    /** @test */
+    public function index_senza_parametri_di_paginazione_resta_un_array_semplice(): void
+    {
+        $this->actingAsAdmin();
+        Quote::factory()->count(3)->create(['additional_services' => []]);
+
+        $response = $this->getJson('/api/quotes')->assertStatus(200);
+
+        $this->assertIsArray($response->json());
+        $this->assertArrayNotHasKey('data', $response->json());
+    }
+
+    /** @test */
+    public function index_con_per_page_restituisce_un_oggetto_paginato(): void
+    {
+        $this->actingAsAdmin();
+        Quote::factory()->count(3)->create(['additional_services' => []]);
+
+        $response = $this->getJson('/api/quotes?per_page=2&page=1')->assertStatus(200);
+
+        $response->assertJsonStructure(['data', 'meta' => ['current_page', 'per_page', 'total', 'last_page']]);
+        $this->assertCount(2, $response->json('data'));
+    }
+
+    /** @test */
+    public function index_senza_sort_esplicito_ordina_per_id_decrescente(): void
+    {
+        $this->actingAsAdmin();
+        $first = Quote::factory()->create(['additional_services' => []]);
+        $second = Quote::factory()->create(['additional_services' => []]);
+        $third = Quote::factory()->create(['additional_services' => []]);
+
+        $response = $this->getJson('/api/quotes')->assertStatus(200);
+
+        $ids = collect($response->json())
+            ->pluck('id')
+            ->filter(fn($id) => in_array($id, [$first->id, $second->id, $third->id]))
+            ->values();
+        $this->assertEquals([$third->id, $second->id, $first->id], $ids->all());
+    }
+
+    /** @test */
+    public function index_paginato_senza_sort_esplicito_non_ha_righe_duplicate_o_saltate(): void
+    {
+        $this->actingAsAdmin();
+        $quotes = Quote::factory()->count(3)->create(['additional_services' => []]);
+
+        $page1 = $this->getJson('/api/quotes?per_page=2&page=1')->assertStatus(200)->json('data');
+        $page2 = $this->getJson('/api/quotes?per_page=2&page=2')->assertStatus(200)->json('data');
+
+        $combinedIds = collect($page1)->pluck('id')->merge(collect($page2)->pluck('id'));
+
+        $this->assertCount(3, $combinedIds);
+        $this->assertCount(3, $combinedIds->unique());
+        $this->assertEquals($quotes->pluck('id')->sort()->values()->all(), $combinedIds->sort()->values()->all());
+    }
+
+    /** @test */
+    public function index_filtra_per_piu_status(): void
+    {
+        $this->actingAsAdmin();
+        $new = Quote::factory()->create(['additional_services' => [], 'status' => \App\Enums\QuoteStatus::New->value]);
+        $presented = Quote::factory()->create(['additional_services' => [], 'status' => \App\Enums\QuoteStatus::Presented->value]);
+        $cold = Quote::factory()->create(['additional_services' => [], 'status' => \App\Enums\QuoteStatus::Cold->value]);
+
+        $response = $this->getJson('/api/quotes?' . http_build_query(['status' => [
+            \App\Enums\QuoteStatus::New->value,
+            \App\Enums\QuoteStatus::Presented->value,
+        ]]))->assertStatus(200);
+
+        $ids = collect($response->json())->pluck('id')->all();
+        $this->assertContains($new->id, $ids);
+        $this->assertContains($presented->id, $ids);
+        $this->assertNotContains($cold->id, $ids);
+    }
+
+    /** @test */
+    public function show_espone_iva_e_final_price(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['additional_services' => [], 'discount' => 0]);
+        $product = Product::factory()->create(['price' => 100]);
+        $quote->products()->attach($product->id, ['quantity' => 1]);
+
+        $response = $this->getJson("/api/quotes/{$quote->id}")->assertStatus(200);
+
+        $response->assertJson([
+            'net_total'   => 100.0,
+            'iva'         => 22.0,
+            'final_price' => 122.0,
+        ]);
+    }
+
+    /** @test */
+    public function show_senza_include_non_espone_le_relazioni(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['additional_services' => []]);
+
+        $response = $this->getJson("/api/quotes/{$quote->id}")->assertStatus(200);
+
+        $response->assertJsonMissing(['customer' => []]);
+        $this->assertArrayNotHasKey('customer', $response->json());
+        $this->assertArrayNotHasKey('products', $response->json());
+    }
+
+    /** @test */
+    public function show_con_include_espone_customer_e_products(): void
+    {
+        $this->actingAsAdmin();
+        $customer = Customer::factory()->create(['name' => 'cliente_test']);
+        $quote = Quote::factory()->create(['additional_services' => [], 'customer_id' => $customer->id]);
+        $product = Product::factory()->create(['price' => 50]);
+        $quote->products()->attach($product->id, ['quantity' => 2]);
+
+        $response = $this->getJson("/api/quotes/{$quote->id}?include=customer,products")->assertStatus(200);
+
+        $response->assertJsonPath('customer.id', $customer->id);
+        $response->assertJsonPath('customer.name', 'cliente_test');
+        $response->assertJsonPath('products.0.id', $product->id);
+        $response->assertJsonPath('products.0.quantity', 2);
+        $this->assertArrayNotHasKey('recurringProducts', $response->json());
     }
 }

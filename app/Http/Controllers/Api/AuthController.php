@@ -12,6 +12,9 @@ class AuthController extends Controller
     /**
      * Authenticate a user and issue a Sanctum bearer token.
      *
+     * Issues a Sanctum bearer token for API access. Intended for long-lived
+     * use by trusted integrations (e.g. Claude Code skills).
+     *
      * @response array{token: string, user: array{id: int, name: string, email: string}}
      * @response 401 array{message: string}
      */

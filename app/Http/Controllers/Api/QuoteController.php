@@ -7,18 +7,27 @@ use App\Http\Requests\Api\QuoteApiRequest;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\RecurringProduct;
+use App\Services\QuotePdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 class QuoteController extends Controller
 {
     private const TRANSLATABLE_FIELDS = ['additional_services', 'notes'];
 
     /**
-     * List quotes, optionally filtered by customer or status.
+     * List quotes, optionally filtered by customer or status (single or
+     * multiple), sorted by `created_at` via `?sort=created_at`/`-created_at`,
+     * and optionally paginated. Without an explicit `sort`, results default
+     * to descending `id` order so paginated requests stay deterministic.
      *
-     * @response array<array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}>
+     * Pagination is opt-in: without `per_page`/`page` the response stays a
+     * plain array (unchanged from before this feature) to avoid breaking
+     * existing consumers.
+     *
+     * @response array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>
      */
     public function index(Request $request): JsonResponse
     {
@@ -29,8 +38,40 @@ class QuoteController extends Controller
         if ($request->filled('customer_id')) {
             $query->where('customer_id', $request->integer('customer_id'));
         }
+
         if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
+            $status = $request->input('status');
+            if (is_array($status)) {
+                $query->whereIn('status', $status);
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        if ($request->get('sort') === '-created_at') {
+            $query->orderByDesc('created_at');
+        } elseif ($request->get('sort') === 'created_at') {
+            $query->orderBy('created_at');
+        } else {
+            // No explicit sort requested: without a deterministic ORDER BY,
+            // PostgreSQL row order is not stable across paginated requests
+            // (page=1 / page=2 can overlap or skip rows). `id` is the
+            // primary key, always indexed and monotonic.
+            $query->orderByDesc('id');
+        }
+
+        if ($request->filled('per_page') || $request->filled('page')) {
+            $paginated = $query->paginate($request->integer('per_page', 20));
+
+            return response()->json([
+                'data' => collect($paginated->items())->map(fn(Quote $q) => $this->formatQuote($q)),
+                'meta' => [
+                    'current_page' => $paginated->currentPage(),
+                    'per_page'     => $paginated->perPage(),
+                    'total'        => $paginated->total(),
+                    'last_page'    => $paginated->lastPage(),
+                ],
+            ]);
         }
 
         $quotes = $query->get();
@@ -38,24 +79,91 @@ class QuoteController extends Controller
         return response()->json($quotes->map(fn(Quote $q) => $this->formatQuote($q)));
     }
 
+    private const ALLOWED_INCLUDES = ['customer', 'products', 'recurringProducts'];
+
     /**
-     * Retrieve a quote.
+     * Retrieve a quote, optionally expanding relations via `?include=`.
      *
-     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     * `?include=` accepts a comma-separated list among `customer`, `products`,
+     * `recurringProducts`; each name adds the corresponding key below to the
+     * response. Omitted names are simply absent from the response (not null).
+     *
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null, customer?: array{id: int, name: string}, products?: array<array{id: int, name: string, price: float, quantity: int}>, recurringProducts?: array<array{id: int, name: string, price: float, quantity: int}>}
      */
     public function show(Request $request, Quote $quote): JsonResponse
     {
         $this->authorize('view', $quote);
 
-        $quote->load(['products', 'recurringProducts']);
+        $include = array_values(array_intersect(
+            array_filter(explode(',', (string) $request->get('include', ''))),
+            self::ALLOWED_INCLUDES
+        ));
 
-        return response()->json($this->formatQuote($quote));
+        $relationsToLoad = array_unique(array_merge(['products', 'recurringProducts'], $include));
+        $quote->load($relationsToLoad);
+
+        return response()->json($this->formatQuote($quote, $include));
+    }
+
+    /**
+     * Stream the quote PDF (bearer auth).
+     *
+     * Returns the rendered PDF as a binary `application/pdf` stream, not
+     * JSON. Accepts an optional `lang` query param (defaults to `it`) to
+     * select the PDF locale.
+     *
+     * `persist: false` — this endpoint is built for repeated/automated
+     * calls, unlike the legacy web route. Persisting here would call
+     * `Quote::save()`, and since a `template=true` quote's `saving` hook
+     * mass-demotes every other template quote for the same customer, a
+     * routine PDF download would silently cascade `template=false` onto
+     * sibling quotes.
+     */
+    public function pdf(Request $request, Quote $quote, QuotePdfService $pdfService)
+    {
+        $this->authorize('view', $quote);
+
+        $lang = $request->get('lang', 'it');
+
+        return $pdfService->stream($quote, $lang, persist: false);
+    }
+
+    /**
+     * Generate a temporary signed public URL for the quote PDF (no auth
+     * required to open it — meant to be embedded in an email to the
+     * customer). expires_in_days is capped at 90 to avoid a de-facto
+     * permanent link; the signature cannot be revoked before expiry short
+     * of rotating APP_KEY (which invalidates every signed link project-wide).
+     *
+     * @response 201 array{url: string, expires_at: string}
+     */
+    public function pdfLink(Request $request, Quote $quote): JsonResponse
+    {
+        $this->authorize('view', $quote);
+
+        $validated = $request->validate([
+            'lang'             => ['sometimes', 'string', 'max:5'],
+            'expires_in_days'  => ['sometimes', 'integer', 'min:1', 'max:90'],
+        ]);
+
+        $lang = $validated['lang'] ?? 'it';
+        $expiresAt = now()->addDays($validated['expires_in_days'] ?? 30);
+
+        $url = URL::temporarySignedRoute('quotes.pdf.public', $expiresAt, [
+            'quote' => $quote->id,
+            'lang'  => $lang,
+        ]);
+
+        return response()->json([
+            'url'        => $url,
+            'expires_at' => $expiresAt->toIso8601String(),
+        ], 201);
     }
 
     /**
      * Create a new quote.
      *
-     * @response 201 array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     * @response 201 array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function store(QuoteApiRequest $request): JsonResponse
     {
@@ -75,7 +183,7 @@ class QuoteController extends Controller
     /**
      * Update an existing quote.
      *
-     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function update(QuoteApiRequest $request, Quote $quote): JsonResponse
     {
@@ -113,7 +221,7 @@ class QuoteController extends Controller
     /**
      * Attach a product to a quote with a quantity.
      *
-     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function attachProduct(Request $request, Quote $quote, Product $product): JsonResponse
     {
@@ -129,7 +237,7 @@ class QuoteController extends Controller
     /**
      * Detach a product from a quote.
      *
-     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function detachProduct(Request $request, Quote $quote, Product $product): JsonResponse
     {
@@ -145,7 +253,7 @@ class QuoteController extends Controller
     /**
      * Attach a recurring product to a quote with a quantity.
      *
-     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function attachRecurringProduct(Request $request, Quote $quote, RecurringProduct $recurringProduct): JsonResponse
     {
@@ -161,7 +269,7 @@ class QuoteController extends Controller
     /**
      * Detach a recurring product from a quote.
      *
-     * @response array{id: int, title: string, status: string, priority: string, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: string|null, template: string|null, total: float, net_total: float}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function detachRecurringProduct(Request $request, Quote $quote, RecurringProduct $recurringProduct): JsonResponse
     {
@@ -193,9 +301,12 @@ class QuoteController extends Controller
         }
     }
 
-    private function formatQuote(Quote $quote): array
+    private function formatQuote(Quote $quote, array $include = []): array
     {
-        return [
+        $netTotal = $quote->getQuoteNetPrice();
+        $iva = $netTotal * 0.22;
+
+        $data = [
             'id'                   => $quote->id,
             'title'                => $quote->title,
             'status'               => $quote->status,
@@ -207,7 +318,38 @@ class QuoteController extends Controller
             'additional_services'  => $quote->additional_services,
             'template'             => $quote->template,
             'total'                => $quote->getTotalPrice() + $quote->getTotalRecurringPrice() + $quote->getTotalAdditionalServicesPrice(),
-            'net_total'            => $quote->getQuoteNetPrice(),
+            'net_total'            => $netTotal,
+            'iva'                  => $iva,
+            'final_price'          => $netTotal + $iva,
+            'created_at'           => optional($quote->created_at)->toIso8601String(),
+            'updated_at'           => optional($quote->updated_at)->toIso8601String(),
         ];
+
+        if (in_array('customer', $include, true) && $quote->relationLoaded('customer') && $quote->customer) {
+            $data['customer'] = [
+                'id'   => $quote->customer->id,
+                'name' => $quote->customer->name,
+            ];
+        }
+
+        if (in_array('products', $include, true)) {
+            $data['products'] = $quote->products->map(fn($p) => [
+                'id'       => $p->id,
+                'name'     => $p->name,
+                'price'    => $p->price,
+                'quantity' => $p->pivot->quantity,
+            ])->all();
+        }
+
+        if (in_array('recurringProducts', $include, true)) {
+            $data['recurringProducts'] = $quote->recurringProducts->map(fn($p) => [
+                'id'       => $p->id,
+                'name'     => $p->name,
+                'price'    => $p->price,
+                'quantity' => $p->pivot->quantity,
+            ])->all();
+        }
+
+        return $data;
     }
 }
