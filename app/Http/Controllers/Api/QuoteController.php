@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Quote;
 use App\Models\RecurringProduct;
 use App\Services\QuotePdfService;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +30,11 @@ class QuoteController extends Controller
      *
      * @response array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>
      */
+    #[QueryParameter('customer_id', description: 'Filter quotes belonging to a specific customer.', type: 'int')]
+    #[QueryParameter('status', description: 'Filter by status. Accepts a single value (?status=new) or multiple via array syntax (?status[]=new&status[]=presented).', type: 'string|array<string>')]
+    #[QueryParameter('sort', description: 'Sort by created_at: "created_at" for ascending, "-created_at" for descending. Without this parameter, results default to descending id order (needed for deterministic pagination).', type: 'string')]
+    #[QueryParameter('per_page', description: 'Enables opt-in pagination together with page. Without per_page/page the response is a plain array; with either, it becomes {data, meta}.', type: 'int', default: 20)]
+    #[QueryParameter('page', description: 'Page number for opt-in pagination, used together with per_page.', type: 'int')]
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Quote::class);

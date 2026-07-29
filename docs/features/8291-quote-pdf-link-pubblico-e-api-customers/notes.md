@@ -15,6 +15,8 @@
 
 ## Bug trovati
 
+- Test manuale post-commit su `/docs/api`: `sort`, `page` e la forma array di `status[]` non comparivano tra i parametri documentati di `GET /api/quotes`, pur funzionando a livello di codice (test verdi). Causa: Scramble infra i query param solo da chiamate `$request->method('key')` con metodo riconosciuto in posizione AST diretta — `sort` è letto solo dentro un confronto (`===`), `page` solo via `$request->filled()` (metodo non mappato) ed è comunque consumato internamente da `paginate()`, mai dal nostro codice. Corretto con attributi `#[QueryParameter(...)]` espliciti su `Api\QuoteController::index()` per tutti e 5 i parametri, incluso `status` documentato come `string|array<string>`.
+
 - Review finale sull'intero branch (SDD): rotta pubblica senza rate limiting dedicato; rotta pubblica priva di guardia su id inesistente (enumerazione); `expires_in_days` non validato; filename non sanitizzato; regex VAT senza confine sul run di cifre; `Storage::put()` non verificato prima di `--apply`; paginazione senza `ORDER BY` deterministico. Tutti corretti prima della fine di quella fase.
 - Review formale (`wm-review-ticket`, dopo la review SDD): il fix precedente per il DB-write sulla rotta pubblica aveva introdotto una regressione sui contenuti del PDF (vedi Deviazioni sopra) — corretto. Trovato anche che l'endpoint bearer aveva lo stesso problema di cascata `template=false` della rotta pubblica, non coperto dal fix precedente — corretto.
 
