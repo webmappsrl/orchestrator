@@ -397,14 +397,21 @@ class QuoteApiTest extends TestCase
         $this->actingAsAdmin();
         $quotes = Quote::factory()->count(3)->create(['additional_services' => []]);
 
-        $page1 = $this->getJson('/api/quotes?per_page=2&page=1')->assertStatus(200)->json('data');
-        $page2 = $this->getJson('/api/quotes?per_page=2&page=2')->assertStatus(200)->json('data');
+        // The test DB may already contain other quotes from unrelated fixtures —
+        // walk every page (not just 2) so the assertion holds regardless of
+        // total row count, instead of assuming these 3 are the only rows.
+        $totalQuotes = Quote::count();
+        $combinedIds = collect();
+        $page = 1;
+        do {
+            $response = $this->getJson("/api/quotes?per_page=2&page={$page}")->assertStatus(200)->json();
+            $combinedIds = $combinedIds->merge(collect($response['data'])->pluck('id'));
+            $page++;
+        } while ($page <= $response['meta']['last_page']);
 
-        $combinedIds = collect($page1)->pluck('id')->merge(collect($page2)->pluck('id'));
-
-        $this->assertCount(3, $combinedIds);
-        $this->assertCount(3, $combinedIds->unique());
-        $this->assertEquals($quotes->pluck('id')->sort()->values()->all(), $combinedIds->sort()->values()->all());
+        $this->assertCount($totalQuotes, $combinedIds, 'Paginating through every page should yield exactly one row per quote, no duplicates or gaps.');
+        $this->assertCount($totalQuotes, $combinedIds->unique());
+        $this->assertEquals($quotes->pluck('id')->sort()->values()->all(), $combinedIds->intersect($quotes->pluck('id'))->sort()->values()->all());
     }
 
     /** @test */
@@ -460,7 +467,7 @@ class QuoteApiTest extends TestCase
     public function show_con_include_espone_customer_e_products(): void
     {
         $this->actingAsAdmin();
-        $customer = Customer::factory()->create(['name' => 'cliente_test']);
+        $customer = Customer::factory()->create(['name' => 'cliente_test', 'full_name' => 'Cliente Test S.r.l.']);
         $quote = Quote::factory()->create(['additional_services' => [], 'customer_id' => $customer->id]);
         $product = Product::factory()->create(['price' => 50]);
         $quote->products()->attach($product->id, ['quantity' => 2]);
@@ -469,6 +476,7 @@ class QuoteApiTest extends TestCase
 
         $response->assertJsonPath('customer.id', $customer->id);
         $response->assertJsonPath('customer.name', 'cliente_test');
+        $response->assertJsonPath('customer.company_name', 'Cliente Test S.r.l.');
         $response->assertJsonPath('products.0.id', $product->id);
         $response->assertJsonPath('products.0.quantity', 2);
         $this->assertArrayNotHasKey('recurringProducts', $response->json());

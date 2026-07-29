@@ -72,7 +72,7 @@ Durante la sessione di lavoro del 22/07/2026 (Alessio Piccioli) sono stati risco
 
 ## Out of scope
 
-- Endpoint `POST /api/quotes/{quote}/send` per l'invio email — il link pubblico (punto 1) è sufficiente, l'invio resta gestito dalla skill via Gmail
+- Endpoint `POST /api/quotes/{quote}/send` per l'invio email — il link pubblico (punto 1) è sufficiente, l'invio resta gestito dalla skill via Gmail. **Confermato in sede di scrum** (non solo scelta tecnica di questo ciclo): (1) la gestione dell'invio email è responsabilità della skill Claude, già in grado di farlo in modo più appropriato; (2) inviare dal backend userebbe l'indirizzo dell'utente loggato come mittente, impedendo una gestione efficace delle risposte (servirebbe un indirizzo no-reply/di sistema dedicato) — problema che la skill non ha; (3) si preferisce evitare implementazioni frammentate, rimandando l'intera gestione email-su-ticket a una discussione più ampia e strutturata in futuro.
 - Enforcement granulare delle abilities Sanctum (`quotes:read`, `quotes:write`, `customers:read`) — richiederebbe modifiche coerenti a *tutti* i controller API (non solo Quote/Customer) per evitare un modello di sicurezza a metà; questo ciclo produce solo documentazione
 - Traduzioni `fr`/`es`/`de` per il PDF preventivo — le cartelle restano vuote, fallback su `en`
 - Nessuna colonna `company_name` viene creata: nella response API è un alias di sola lettura su `full_name` (calcolato nel controller), non un campo persistito nel DB

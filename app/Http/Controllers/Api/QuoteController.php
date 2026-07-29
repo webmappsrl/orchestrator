@@ -13,10 +13,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
+use Symfony\Component\HttpFoundation\Response;
 
 class QuoteController extends Controller
 {
     private const TRANSLATABLE_FIELDS = ['additional_services', 'notes'];
+    private const ALLOWED_INCLUDES = ['customer', 'products', 'recurringProducts'];
+    private const DEFAULT_PER_PAGE = 20;
+    private const DEFAULT_LANG = 'it';
 
     /**
      * List quotes, optionally filtered by customer or status (single or
@@ -28,12 +32,12 @@ class QuoteController extends Controller
      * plain array (unchanged from before this feature) to avoid breaking
      * existing consumers.
      *
-     * @response array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>
+     * @response array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>|array{data: array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>, meta: array{current_page: int, per_page: int, total: int, last_page: int}}
      */
     #[QueryParameter('customer_id', description: 'Filter quotes belonging to a specific customer.', type: 'int')]
     #[QueryParameter('status', description: 'Filter by status. Accepts a single value (?status=new) or multiple via array syntax (?status[]=new&status[]=presented).', type: 'string|array<string>')]
-    #[QueryParameter('sort', description: 'Sort by created_at: "created_at" for ascending, "-created_at" for descending. Without this parameter, results default to descending id order (needed for deterministic pagination).', type: 'string')]
-    #[QueryParameter('per_page', description: 'Enables opt-in pagination together with page. Without per_page/page the response is a plain array; with either, it becomes {data, meta}.', type: 'int', default: 20)]
+    #[QueryParameter('sort', description: 'Sort by created_at: "created_at" for ascending, "-created_at" for descending. Any other value (including omitting this parameter) silently falls back to descending id order (needed for deterministic pagination).', type: 'string')]
+    #[QueryParameter('per_page', description: 'Enables opt-in pagination together with page. Without per_page/page the response is a plain array; with either, it becomes {data, meta}.', type: 'int', default: self::DEFAULT_PER_PAGE)]
     #[QueryParameter('page', description: 'Page number for opt-in pagination, used together with per_page.', type: 'int')]
     public function index(Request $request): JsonResponse
     {
@@ -67,7 +71,7 @@ class QuoteController extends Controller
         }
 
         if ($request->filled('per_page') || $request->filled('page')) {
-            $paginated = $query->paginate($request->integer('per_page', 20));
+            $paginated = $query->paginate($request->integer('per_page', self::DEFAULT_PER_PAGE));
 
             return response()->json([
                 'data' => collect($paginated->items())->map(fn(Quote $q) => $this->formatQuote($q)),
@@ -85,8 +89,6 @@ class QuoteController extends Controller
         return response()->json($quotes->map(fn(Quote $q) => $this->formatQuote($q)));
     }
 
-    private const ALLOWED_INCLUDES = ['customer', 'products', 'recurringProducts'];
-
     /**
      * Retrieve a quote, optionally expanding relations via `?include=`.
      *
@@ -94,8 +96,9 @@ class QuoteController extends Controller
      * `recurringProducts`; each name adds the corresponding key below to the
      * response. Omitted names are simply absent from the response (not null).
      *
-     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null, customer?: array{id: int, name: string}, products?: array<array{id: int, name: string, price: float, quantity: int}>, recurringProducts?: array<array{id: int, name: string, price: float, quantity: int}>}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null, customer?: array{id: int, name: string, company_name: string|null}, products?: array<array{id: int, name: string, price: float, quantity: int}>, recurringProducts?: array<array{id: int, name: string, price: float, quantity: int}>}
      */
+    #[QueryParameter('include', description: 'Comma-separated list of relations to expand: customer, products, recurringProducts (e.g. ?include=customer,products). Unlisted names are silently ignored; omitted relations are simply absent from the response.', type: 'string')]
     public function show(Request $request, Quote $quote): JsonResponse
     {
         $this->authorize('view', $quote);
@@ -125,11 +128,11 @@ class QuoteController extends Controller
      * routine PDF download would silently cascade `template=false` onto
      * sibling quotes.
      */
-    public function pdf(Request $request, Quote $quote, QuotePdfService $pdfService)
+    public function pdf(Request $request, Quote $quote, QuotePdfService $pdfService): Response
     {
         $this->authorize('view', $quote);
 
-        $lang = $request->get('lang', 'it');
+        $lang = $request->get('lang', self::DEFAULT_LANG);
 
         return $pdfService->stream($quote, $lang, persist: false);
     }
@@ -152,7 +155,7 @@ class QuoteController extends Controller
             'expires_in_days'  => ['sometimes', 'integer', 'min:1', 'max:90'],
         ]);
 
-        $lang = $validated['lang'] ?? 'it';
+        $lang = $validated['lang'] ?? self::DEFAULT_LANG;
         $expiresAt = now()->addDays($validated['expires_in_days'] ?? 30);
 
         $url = URL::temporarySignedRoute('quotes.pdf.public', $expiresAt, [
@@ -310,7 +313,7 @@ class QuoteController extends Controller
     private function formatQuote(Quote $quote, array $include = []): array
     {
         $netTotal = $quote->getQuoteNetPrice();
-        $iva = $netTotal * 0.22;
+        $iva = $netTotal * Quote::VAT_RATE;
 
         $data = [
             'id'                   => $quote->id,
@@ -333,8 +336,9 @@ class QuoteController extends Controller
 
         if (in_array('customer', $include, true) && $quote->relationLoaded('customer') && $quote->customer) {
             $data['customer'] = [
-                'id'   => $quote->customer->id,
-                'name' => $quote->customer->name,
+                'id'           => $quote->customer->id,
+                'name'         => $quote->customer->name,
+                'company_name' => $quote->customer->full_name,
             ];
         }
 

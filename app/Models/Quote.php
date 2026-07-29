@@ -16,6 +16,16 @@ class Quote extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, HasTranslations;
 
+    /**
+     * Italian VAT rate applied to quotes. Single source of truth for the
+     * Nova detail view (app/Nova/Quote.php) and the API
+     * (Api\QuoteController::formatQuote()). NOT used by
+     * resources/views/quote-pdf.blade.php, which independently hardcodes
+     * the same rate (pre-existing, out of scope for oc:8291) — keep both
+     * in sync manually if this rate ever changes.
+     */
+    public const VAT_RATE = 0.22;
+
     protected $casts = [
         'additional_services' => 'array',
         'template' => 'bool',
