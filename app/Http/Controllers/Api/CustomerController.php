@@ -54,9 +54,13 @@ class CustomerController extends Controller
 
     private function authorizeRole(Request $request): void
     {
+        // Matches CustomerPolicy::before() (Admin/Manager only) — Nova denies
+        // Developer access to Customer data, so the API must not be more
+        // permissive than the UI for the same sensitive fields (vat, address,
+        // contact_emails, phone).
         $user = $request->user();
         abort_unless(
-            $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer),
+            $user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager),
             403
         );
     }

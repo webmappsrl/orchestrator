@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\QuoteApiRequest;
 use App\Models\Product;
@@ -149,6 +150,16 @@ class QuoteController extends Controller
     public function pdfLink(Request $request, Quote $quote): JsonResponse
     {
         $this->authorize('view', $quote);
+
+        // Unlike a bearer-authenticated PDF download, this issues an
+        // unauthenticated, externally-shareable link valid up to 90 days —
+        // QuotePolicy::view() has no per-quote ownership check, so it alone
+        // isn't a tight enough gate for an action with this blast radius.
+        // Restrict it to Admin/Manager, same set as CustomerPolicy.
+        abort_unless(
+            $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager),
+            403
+        );
 
         $validated = $request->validate([
             'lang'             => ['sometimes', 'string', 'max:5'],
