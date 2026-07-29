@@ -53,6 +53,8 @@ class Customer extends Model implements HasMedia
         'mobile_phone',
         'user_id',
         'associated_user_id',
+        'vat',
+        'address',
     ];
 
     /**
@@ -82,6 +84,23 @@ class Customer extends Model implements HasMedia
     public function setMobilePhoneAttribute(?string $value): void
     {
         $this->attributes['mobile_phone'] = static::normalizePhoneString($value);
+    }
+
+    /**
+     * Contact emails as a structured array. `email` is free text (no cast,
+     * not validated) — same split logic already used by the Nova resource
+     * for display, kept identical for API/Nova consistency.
+     */
+    public function getContactEmailsAttribute(): array
+    {
+        if (empty($this->attributes['email'])) {
+            return [];
+        }
+
+        return collect(preg_split('/[\s,]+/', trim($this->attributes['email'])))
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**

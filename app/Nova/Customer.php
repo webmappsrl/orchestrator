@@ -161,6 +161,13 @@ class Customer extends Resource
                         ->sortable()
                         ->nullable()
                         ->hideFromIndex(),
+                    Text::make(__('VAT Number'), 'vat')
+                        ->sortable()
+                        ->nullable()
+                        ->hideFromIndex(),
+                    Textarea::make(__('Address'), 'address')
+                        ->nullable()
+                        ->hideFromIndex(),
                     Text::make('Contact emails', 'email')
                         ->onlyOnForms(),
                     Text::make(__('Phone'), 'phone')

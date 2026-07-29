@@ -16,6 +16,16 @@ class Quote extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, HasTranslations;
 
+    /**
+     * Italian VAT rate applied to quotes. Single source of truth for the
+     * Nova detail view (app/Nova/Quote.php) and the API
+     * (Api\QuoteController::formatQuote()). NOT used by
+     * resources/views/quote-pdf.blade.php, which independently hardcodes
+     * the same rate (pre-existing, out of scope for oc:8291) — keep both
+     * in sync manually if this rate ever changes.
+     */
+    public const VAT_RATE = 0.22;
+
     protected $casts = [
         'additional_services' => 'array',
         'template' => 'bool',
@@ -163,7 +173,19 @@ class Quote extends Model implements HasMedia
         $this->addMediaCollection('documents');
     }
 
-    public function clearEmptyAdditionalServicesTranslations(): void
+    /**
+     * Strip out any locale whose `additional_services` translation is an
+     * empty array. Spatie\Translatable's fallback (`getTranslatedLocales()`)
+     * considers a locale "translated" if its key exists in the underlying
+     * JSON, even when the value is empty — without this, an empty-array
+     * locale never falls back to a populated one.
+     *
+     * The in-memory normalization always runs (so rendering is correct
+     * regardless of the caller). Only the DB write is gated by `$persist`,
+     * so read-only callers (e.g. the anonymous public PDF link) get correct
+     * rendering without writing to the database.
+     */
+    public function clearEmptyAdditionalServicesTranslations(bool $persist = true): void
     {
         if (empty($this->getTranslations('additional_services'))) {
             return;
@@ -181,7 +203,9 @@ class Quote extends Model implements HasMedia
             $this->replaceTranslations('additional_services', $filtered);
         }
 
-        $this->save();
+        if ($persist) {
+            $this->save();
+        }
     }
 
     protected static function booted()

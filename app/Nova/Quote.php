@@ -219,7 +219,7 @@ class Quote extends Resource
                 ->locale('it')
                 ->onlyonDetail()
                 ->displayUsing(function () {
-                    $iva = $this->getQuoteNetPrice() * 0.22;
+                    $iva = $this->getQuoteNetPrice() * \App\Models\Quote::VAT_RATE;
                     return number_format($iva, 2, ',', '.') . ' €';
                 }),
             Currency::make('Final Price')
@@ -227,7 +227,7 @@ class Quote extends Resource
                 ->locale('it')
                 ->onlyonDetail()
                 ->displayUsing(function () {
-                    $iva = $this->getQuoteNetPrice() * 0.22;
+                    $iva = $this->getQuoteNetPrice() * \App\Models\Quote::VAT_RATE;
                     return number_format($this->getQuoteNetPrice() + $iva, 2, ',', '.') . ' €';
                 }),
             Text::make('PDF')

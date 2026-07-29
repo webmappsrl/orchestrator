@@ -734,5 +734,7 @@
   "Not on stores": "Not on stores",
   "Report not available": "Report not available",
   "This app has no store links configured: there is no store data to report. Add the App Store / Play Store links to the app to enable the report.": "This app has no store links configured: there is no store data to report. Add the App Store / Play Store links to the app to enable the report.",
-  "Store report": "Store report"
+  "Store report": "Store report",
+  "VAT Number": "VAT Number",
+  "Address": "Address"
 }
