@@ -18,6 +18,28 @@ Nova.booting((app) => {
                 </div>
                 <!-- Body: toolbar + board (hidden when collapsed if collapsible) -->
                 <div v-show="!collapsible || !isCollapsed" class="kanban-collapse-body">
+                <!-- Summary metric-cards: total amount + count per status, driven by metricStatuses -->
+                <div v-if="metricCards.length" class="kanban-metrics-row">
+                    <div
+                        v-for="metric in metricCards"
+                        :key="metric.status"
+                        class="kanban-metric-card"
+                        :style="{ borderLeftColor: metric.color }"
+                    >
+                        <div class="kanban-metric-title">{{ translations.metricTotalPrefix }} {{ metric.label }}</div>
+                        <div v-if="countsLoading" class="kanban-metric-loading">
+                            <svg class="kanban-spinner" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div v-else-if="countsError" class="kanban-metric-error" :title="translations.metricError">—</div>
+                        <template v-else>
+                            <div class="kanban-metric-amount">{{ formatCurrency(metric.sum) }}</div>
+                            <div class="kanban-metric-count">({{ metric.count }} {{ translations.metricTotalSuffix }})</div>
+                        </template>
+                    </div>
+                </div>
+
                 <!-- Toolbar: single search + filter field (combobox) -->
                 <div v-if="(filterField && filterOptions.length) || searchFields.length" class="kanban-toolbar-container">
                     <div v-if="toolbarTitle" class="kanban-toolbar-title">{{ toolbarTitle }}</div>
@@ -208,6 +230,8 @@ Nova.booting((app) => {
                 collapseStorageKey: storageKey,
                 hasMoreByStatus: {},
                 totalCountByStatus: {},
+                countsLoading: true,
+                countsError: false,
                 loadingMoreStatus: null,
                 dragScrollRAF: null,
                 dragScrollDirection: 0,
@@ -267,6 +291,25 @@ Nova.booting((app) => {
             },
             toolbarLabel() {
                 return this.cardData.toolbarLabel || '';
+            },
+            /**
+             * Builds the list of summary metric-cards from cardData.metricStatuses,
+             * cross-referenced with the existing columns config (same color/label source
+             * as the kanban columns, no duplicated status metadata here).
+             */
+            metricCards() {
+                var self = this;
+                var statuses = self.cardData.metricStatuses || [];
+                return statuses.map(function (status) {
+                    var col = self.columns.find(function (c) { return c.value === status; });
+                    return {
+                        status: status,
+                        label: col ? col.label : status,
+                        color: col ? col.color : '#9CA3AF',
+                        count: self.getHeaderCount(status),
+                        sum: self.getHeaderSum(status),
+                    };
+                });
             },
             selectOnly() {
                 return this.cardData.selectOnly === true;
@@ -732,6 +775,8 @@ Nova.booting((app) => {
              */
             async fetchCounts() {
                 var self = this;
+                self.countsLoading = true;
+                self.countsError = false;
                 try {
                     var statuses = self.columns.map(function (c) { return c.value; }).join(',');
                     var url = '/nova-vendor/kanban-card/counts?config=' + self.configParam +
@@ -757,6 +802,9 @@ Nova.booting((app) => {
                     self.totalCountByStatus = await response.json();
                 } catch (e) {
                     console.error('Kanban counts fetch error:', e);
+                    self.countsError = true;
+                } finally {
+                    self.countsLoading = false;
                 }
             },
 

@@ -48,6 +48,15 @@ class KanbanCard extends Card
     public array $columnsConfig = [];
 
     /**
+     * Status values (subset of columnsConfig) for which a summary metric-card
+     * (title + currency total + count) is shown above the toolbar.
+     * Empty by default: no metric-card is rendered unless explicitly configured.
+     *
+     * @var array<string>
+     */
+    public array $metricStatuses = [];
+
+    /**
      * Column values to exclude from the board (e.g. ['cold', 'closed lost']).
      * Excluded columns are not shown and their items are not requested.
      *
@@ -491,6 +500,20 @@ class KanbanCard extends Card
     }
 
     /**
+     * Show a summary metric-card (title + currency total + count) above the toolbar
+     * for each of these status values. Requires aggregateColumnsUsing() to be set,
+     * otherwise the sum will always be null and only the count will be shown.
+     *
+     * @param  array<string>  $statuses
+     */
+    public function metricStatuses(array $statuses): self
+    {
+        $this->metricStatuses = array_values(array_filter($statuses, fn($s) => is_string($s) && $s !== ''));
+
+        return $this;
+    }
+
+    /**
      * Exclude one or more columns by value (e.g. ['cold', 'closed lost']).
      * Excluded columns are not shown and their items are not loaded.
      *
@@ -776,6 +799,7 @@ class KanbanCard extends Card
         return array_merge(parent::jsonSerialize(), [
             'apiConfig' => $this->getApiConfig(),
             'columns' => $columns,
+            'metricStatuses' => $this->metricStatuses,
             'resourceUri' => $this->resourceUri,
             'filterField' => $this->filterField,
             'filterOptions' => $this->filterOptions,
@@ -806,6 +830,9 @@ class KanbanCard extends Card
                 'noFilterMatch' => __('Kanban No Filter Match'),
                 'showMore' => __('Kanban Show More'),
                 'showLess' => __('Kanban Show Less'),
+                'metricTotalPrefix' => __('Kanban Metric Total Prefix'),
+                'metricTotalSuffix' => __('Kanban Metric Total Suffix'),
+                'metricError' => __('Kanban Metric Error'),
             ],
         ]);
     }
