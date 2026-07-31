@@ -69,6 +69,11 @@ class Sales extends Dashboard
                 ->priorityField('priority')
                 ->enableIntraColumnReorder(true)
                 ->limitPerColumn(5)
+                ->metricStatuses([
+                    QuoteStatus::To_Present->value,
+                    QuoteStatus::Presented->value,
+                    QuoteStatus::Waiting_For_Order->value,
+                ])
                 ->columns(
                     array_map(
                         fn (QuoteStatus $status) => [
