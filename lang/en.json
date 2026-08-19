@@ -739,5 +739,16 @@
   "This app has no store links configured: there is no store data to report. Add the App Store / Play Store links to the app to enable the report.": "This app has no store links configured: there is no store data to report. Add the App Store / Play Store links to the app to enable the report.",
   "Store report": "Store report",
   "VAT Number": "VAT Number",
-  "Address": "Address"
+  "Address": "Address",
+  "Task": "Task",
+  "Tasks": "Tasks",
+  "Due date": "Due date",
+  "Due today": "Due today",
+  "Upcoming": "Upcoming",
+  "Overdue": "Overdue",
+  "Completed": "Completed",
+  "Assignee": "Assignee",
+  "Overdue by :days days": "Overdue by :days days",
+  "Due in :days days": "Due in :days days",
+  "Completed late": "Completed late"
 }

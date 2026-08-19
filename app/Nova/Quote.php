@@ -17,6 +17,7 @@ use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\HasMany;
 use App\Nova\Actions\DuplicateQuote;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\BelongsToMany;
@@ -44,6 +45,16 @@ class Quote extends Resource
      * @var string
      */
     public static $title = 'name';
+
+    /**
+     * Fallback to `title` when `name` is empty — most Quotes only have
+     * `title` populated (`name` is a legacy fillable with no real usage,
+     * see docs/features/8327-task-collegati-alle-quote/notes.md).
+     */
+    public function title()
+    {
+        return $this->name ?: $this->title;
+    }
 
     /**
      * The columns that should be searched.
@@ -169,6 +180,7 @@ class Quote extends Resource
                 ->searchable()
                 ->filterable()
                 ->nullable(),
+            HasMany::make(__('Tasks'), 'tasks', \App\Nova\Task::class),
             Currency::make(__('Products'))
                 ->currency('EUR')
                 ->locale('it')
