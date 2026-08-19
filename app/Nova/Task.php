@@ -1,0 +1,182 @@
+<?php
+
+namespace App\Nova;
+
+use App\Models\Task as TaskModel;
+use App\Nova\Actions\ToggleTaskCompleted;
+use App\Nova\Filters\TaskDueDateFilter;
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Badge;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Marshmallow\Tiptap\Tiptap;
+
+class Task extends Resource
+{
+    public static $model = TaskModel::class;
+
+    public static $title = 'title';
+
+    public static $search = [
+        'id',
+        'title',
+    ];
+
+    public function fields(NovaRequest $request)
+    {
+        return [
+            ID::make()->sortable(),
+
+            Text::make(__('Task'), 'title')
+                ->sortable()
+                ->rules('required', 'max:255'),
+
+            BelongsTo::make(__('Quote'), 'quote', Quote::class)
+                ->searchable()
+                ->rules('required'),
+
+            Text::make(__('Customer'), function () {
+                $customer = $this->quote?->customer;
+                if (! $customer) {
+                    return '—';
+                }
+                $url = url("/resources/customers/{$customer->id}");
+                return "<a href='{$url}' class='no-underline dim text-primary font-bold'>" . e($customer->full_name) . '</a>';
+            })->asHtml()->exceptOnForms(),
+
+            DateTime::make(__('Due date'), 'due_date')
+                ->sortable()
+                ->rules('required'),
+
+            Badge::make(__('Status'), function () {
+                return $this->urgencyBadgeKey();
+            })->map([
+                'overdue' => 'danger',
+                'due_today' => 'warning',
+                'upcoming' => 'success',
+                'completed' => 'info',
+                'completed_late' => 'warning',
+            ])->label(function ($value) {
+                return $this->urgencyBadgeLabel();
+            })->onlyOnIndex(),
+
+            Boolean::make(__('Completed'), 'completed')
+                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                    $model->status = $request->boolean($requestAttribute)
+                        ? TaskModel::STATUS_COMPLETED
+                        : TaskModel::STATUS_TODO;
+                })
+                ->resolveUsing(fn () => $this->status === TaskModel::STATUS_COMPLETED)
+                ->hideWhenCreating(),
+
+            Tiptap::make(__('Notes'), 'notes')
+                ->hideFromIndex()
+                ->buttons([
+                    'heading',
+                    '|',
+                    'italic',
+                    'bold',
+                    '|',
+                    'link',
+                    'code',
+                    'strike',
+                    'underline',
+                    'highlight',
+                    '|',
+                    'bulletList',
+                    'orderedList',
+                    'br',
+                    'codeBlock',
+                    'blockquote',
+                    '|',
+                    'horizontalRule',
+                    'hardBreak',
+                    '|',
+                    'table',
+                    '|',
+                    'image',
+                    '|',
+                    'textAlign',
+                    '|',
+                    'rtl',
+                    '|',
+                    'history',
+                    '|',
+                    'editHtml',
+                ]),
+        ];
+    }
+
+    public function urgencyBadgeKey(): string
+    {
+        if ($this->status === TaskModel::STATUS_COMPLETED) {
+            return $this->completed_at && $this->completed_at->gt($this->due_date)
+                ? 'completed_late'
+                : 'completed';
+        }
+
+        $today = now()->startOfDay();
+
+        if ($this->due_date->lt($today)) {
+            return 'overdue';
+        }
+
+        if ($this->due_date->isSameDay($today)) {
+            return 'due_today';
+        }
+
+        return 'upcoming';
+    }
+
+    public function urgencyBadgeLabel(): string
+    {
+        $today = now()->startOfDay();
+        $dueDate = $this->due_date->copy()->startOfDay();
+
+        return match ($this->urgencyBadgeKey()) {
+            'overdue' => __('Overdue by :days days', ['days' => (int) $dueDate->diffInDays($today)]),
+            'due_today' => __('Due today'),
+            'upcoming' => __('Due in :days days', ['days' => (int) $today->diffInDays($dueDate)]),
+            'completed_late' => __('Completed late'),
+            default => __('Completed'),
+        };
+    }
+
+    public function filters(NovaRequest $request)
+    {
+        return [
+            new TaskDueDateFilter(),
+        ];
+    }
+
+    public function actions(NovaRequest $request)
+    {
+        return [
+            (new ToggleTaskCompleted())->showInline(),
+        ];
+    }
+
+    public function authorizedToReplicate(Request $request)
+    {
+        return false;
+    }
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        if ($request->viaResource === 'quotes') {
+            return $query;
+        }
+
+        $user = $request->user();
+
+        if ($user === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->forUser($user)->reorder('due_date', 'asc');
+    }
+}
