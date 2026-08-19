@@ -26,6 +26,7 @@ use App\Nova\Renewals;
 use App\Nova\StoryShowedByCustomer;
 use App\Nova\Tag;
 use App\Nova\TagGroup;
+use App\Nova\Task;
 use App\Nova\ToBeTestedStory;
 use App\Nova\User;
 use Illuminate\Http\Request;
@@ -129,6 +130,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('CRM', [
                     MenuItem::link(__('Sales'), '/dashboards/sales'),
                     MenuItem::resource(Quote::class),
+                    MenuItem::resource(Task::class),
                     MenuItem::resource(Renewals::class)->canSee(function ($request) {
                         if ($request->user() == null) {
                             return false;

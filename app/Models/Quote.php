@@ -77,6 +77,11 @@ class Quote extends Model implements HasMedia
         return $this->belongsTo(User::class);
     }
 
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
     /**
      * Get the total price of the quote.
      * @return float
