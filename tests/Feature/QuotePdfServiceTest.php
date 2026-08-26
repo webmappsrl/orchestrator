@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Quote;
 use App\Services\QuotePdfService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class QuotePdfServiceTest extends TestCase
@@ -96,5 +97,57 @@ class QuotePdfServiceTest extends TestCase
 
         $fromDb = $quote->fresh();
         $this->assertArrayHasKey('it', $fromDb->getTranslations('additional_services'));
+    }
+
+    /**
+     * `additional_services` is a nullable json column and the factory always
+     * populates an array, so the null state has to be forced on the column
+     * directly. See oc:8413.
+     */
+    private function forceAdditionalServices(Quote $quote, $value): Quote
+    {
+        DB::table('quotes')->where('id', $quote->id)->update(['additional_services' => $value]);
+
+        return $quote->refresh();
+    }
+
+    /** @test */
+    public function stream_non_esplode_con_additional_services_null(): void
+    {
+        $customer = Customer::factory()->create(['full_name' => 'Cliente Di Prova']);
+        $quote = Quote::factory()->create(['customer_id' => $customer->id]);
+        $this->forceAdditionalServices($quote, null);
+
+        $response = (new QuotePdfService())->stream($quote, 'it');
+
+        $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
+    }
+
+    /** @test */
+    public function stream_non_esplode_con_additional_services_stringa_json(): void
+    {
+        $customer = Customer::factory()->create(['full_name' => 'Cliente Di Prova']);
+        $quote = Quote::factory()->create(['customer_id' => $customer->id]);
+        $this->forceAdditionalServices($quote, '{"Servizio":"100"}');
+
+        $response = (new QuotePdfService())->stream($quote, 'it');
+
+        $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
+    }
+
+    /**
+     * Covers the path that actually produced the 500 in production:
+     * QuoteController@show -> clearEmptyAdditionalServicesTranslations(true)
+     * -> QuotePdfService::stream().
+     *
+     * @test
+     */
+    public function rotta_web_quote_pdf_risponde_200_con_additional_services_null(): void
+    {
+        $customer = Customer::factory()->create(['full_name' => 'Cliente Di Prova']);
+        $quote = Quote::factory()->create(['customer_id' => $customer->id]);
+        $this->forceAdditionalServices($quote, null);
+
+        $this->get("/quote/{$quote->id}")->assertOk();
     }
 }
