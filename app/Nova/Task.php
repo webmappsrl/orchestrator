@@ -2,13 +2,16 @@
 
 namespace App\Nova;
 
+use App\Enums\UserRole;
 use App\Models\Task as TaskModel;
 use App\Nova\Actions\ToggleTaskCompleted;
+use App\Nova\Filters\TaskAssigneeFilter;
 use App\Nova\Filters\TaskDueDateFilter;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Badge;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
@@ -28,16 +31,28 @@ class Task extends Resource
 
     public function fields(NovaRequest $request)
     {
+        if ($request->viaResource === 'quotes') {
+            return [
+                ID::make()->sortable(),
+
+                Text::make(__('Task'), 'title')
+                    ->sortable()
+                    ->rules('required', 'max:255'),
+
+                DateTime::make(__('Due date'), 'due_date')
+                    ->sortable()
+                    ->rules('required'),
+
+                $this->statusBadgeField(),
+
+                $this->completedField(),
+
+                $this->notesField(),
+            ];
+        }
+
         return [
             ID::make()->sortable(),
-
-            Text::make(__('Task'), 'title')
-                ->sortable()
-                ->rules('required', 'max:255'),
-
-            BelongsTo::make(__('Quote'), 'quote', Quote::class)
-                ->searchable()
-                ->rules('required'),
 
             Text::make(__('Customer'), function () {
                 $customer = $this->quote?->customer;
@@ -48,67 +63,94 @@ class Task extends Resource
                 return "<a href='{$url}' class='no-underline dim text-primary font-bold'>" . e($customer->full_name) . '</a>';
             })->asHtml()->exceptOnForms(),
 
-            DateTime::make(__('Due date'), 'due_date')
+            BelongsTo::make(__('Quote'), 'quote', Quote::class)
+                ->searchable()
+                ->rules('required'),
+
+            Text::make(__('Task'), 'title')
+                ->sortable()
+                ->rules('required', 'max:255'),
+
+            Date::make(__('Due date'), 'due_date')
                 ->sortable()
                 ->rules('required'),
 
-            Badge::make(__('Status'), function () {
-                return $this->urgencyBadgeKey();
-            })->map([
-                'overdue' => 'danger',
-                'due_today' => 'warning',
-                'upcoming' => 'success',
-                'completed' => 'info',
-                'completed_late' => 'warning',
-            ])->label(function ($value) {
-                return $this->urgencyBadgeLabel();
-            })->onlyOnIndex(),
+            $this->statusBadgeField(),
 
-            Boolean::make(__('Completed'), 'completed')
-                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
-                    $model->status = $request->boolean($requestAttribute)
-                        ? TaskModel::STATUS_COMPLETED
-                        : TaskModel::STATUS_TODO;
-                })
-                ->resolveUsing(fn () => $this->status === TaskModel::STATUS_COMPLETED)
-                ->hideWhenCreating(),
+            $this->completedField(),
 
-            Tiptap::make(__('Notes'), 'notes')
-                ->hideFromIndex()
-                ->buttons([
-                    'heading',
-                    '|',
-                    'italic',
-                    'bold',
-                    '|',
-                    'link',
-                    'code',
-                    'strike',
-                    'underline',
-                    'highlight',
-                    '|',
-                    'bulletList',
-                    'orderedList',
-                    'br',
-                    'codeBlock',
-                    'blockquote',
-                    '|',
-                    'horizontalRule',
-                    'hardBreak',
-                    '|',
-                    'table',
-                    '|',
-                    'image',
-                    '|',
-                    'textAlign',
-                    '|',
-                    'rtl',
-                    '|',
-                    'history',
-                    '|',
-                    'editHtml',
-                ]),
+            Text::make(__('Assignee'), function () {
+                return $this->assignee?->name ?? '—';
+            })->exceptOnForms(),
+
+            $this->notesField(),
         ];
+    }
+
+    private function statusBadgeField(): Badge
+    {
+        return Badge::make(__('Status'), function () {
+            return $this->urgencyBadgeKey();
+        })->map([
+            'overdue' => 'danger',
+            'due_today' => 'warning',
+            'upcoming' => 'success',
+            'completed' => 'info',
+            'completed_late' => 'warning',
+        ])->label(function ($value) {
+            return $this->urgencyBadgeLabel();
+        })->onlyOnIndex();
+    }
+
+    private function completedField(): Boolean
+    {
+        return Boolean::make(__('Completed'), 'completed')
+            ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
+                $model->status = $request->boolean($requestAttribute)
+                    ? TaskModel::STATUS_COMPLETED
+                    : TaskModel::STATUS_TODO;
+            })
+            ->resolveUsing(fn () => $this->status === TaskModel::STATUS_COMPLETED)
+            ->hideWhenCreating();
+    }
+
+    private function notesField(): Tiptap
+    {
+        return Tiptap::make(__('Notes'), 'notes')
+            ->hideFromIndex()
+            ->buttons([
+                'heading',
+                '|',
+                'italic',
+                'bold',
+                '|',
+                'link',
+                'code',
+                'strike',
+                'underline',
+                'highlight',
+                '|',
+                'bulletList',
+                'orderedList',
+                'br',
+                'codeBlock',
+                'blockquote',
+                '|',
+                'horizontalRule',
+                'hardBreak',
+                '|',
+                'table',
+                '|',
+                'image',
+                '|',
+                'textAlign',
+                '|',
+                'rtl',
+                '|',
+                'history',
+                '|',
+                'editHtml',
+            ]);
     }
 
     public function urgencyBadgeKey(): string
@@ -148,8 +190,15 @@ class Task extends Resource
 
     public function filters(NovaRequest $request)
     {
+        if ($request->viaResource === 'quotes') {
+            return [
+                new TaskDueDateFilter(),
+            ];
+        }
+
         return [
             new TaskDueDateFilter(),
+            new TaskAssigneeFilter(),
         ];
     }
 
@@ -171,10 +220,16 @@ class Task extends Resource
             return $query;
         }
 
+        $query->with(['quote.user', 'quote.customer']);
+
         $user = $request->user();
 
         if ($user === null) {
             return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager)) {
+            return $query->reorder('due_date', 'asc');
         }
 
         return $query->forUser($user)->reorder('due_date', 'asc');
