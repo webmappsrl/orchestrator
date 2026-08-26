@@ -23,3 +23,72 @@
         position: fixed;
     }
 }
+
+/* oc:8407: Nova's Tab::group styles any `.tab-item` inside a `.tab-group`
+   ancestor. Toast UI Editor's own Markdown/WYSIWYG switch buttons happen to
+   reuse the same generic `.tab-item` class name (unrelated to Nova's tabs),
+   so nesting a MarkdownTui field inside Tab::group makes Nova's tab styling
+   (padding: 1rem, flex, min-width, overflow: hidden, ...) bleed into them.
+   Restore Toast UI Editor's own intended styling, scoped precisely so it
+   doesn't affect Nova's real tabs. */
+.toastui-editor-defaultUI .toastui-editor-mode-switch .tab-item {
+    background: #f7f9fc;
+    border: 1px solid #dadde6;
+    border-radius: 0 0 4px 4px;
+    box-sizing: border-box;
+    color: #969aa5;
+    cursor: pointer;
+    display: inline-block;
+    flex: none;
+    font-weight: 500;
+    height: 24px;
+    line-height: 24px;
+    margin-right: -1px;
+    margin-top: -1px;
+    min-width: 0;
+    overflow: visible;
+    padding: 0;
+    position: static;
+    text-align: center;
+    width: 96px;
+}
+
+.toastui-editor-defaultUI .toastui-editor-mode-switch .tab-item.active {
+    background-color: #fff;
+    border-top: 1px solid #fff;
+    color: #555;
+}
+
+/* Same collision, different Toast UI Editor sub-component: the "Scrivere"/
+   "Anteprima" (Write/Preview) tabs also reuse the generic `.tab-item` class. */
+.toastui-editor-defaultUI .toastui-editor-md-tab-container .tab-item {
+    background: #eaedf1;
+    border: 1px solid #dadde6;
+    border-radius: 4px 4px 0 0;
+    box-sizing: border-box;
+    color: #969aa5;
+    cursor: pointer;
+    display: inline-block;
+    flex: none;
+    font-size: 12px;
+    font-weight: 500;
+    height: 33px;
+    line-height: 33px;
+    margin-top: 13px;
+    min-width: 0;
+    overflow: visible;
+    padding: 0;
+    position: static;
+    text-align: center;
+    width: 70px;
+}
+
+.toastui-editor-defaultUI .toastui-editor-md-tab-container .tab-item.active {
+    background-color: #fff;
+    border-bottom: 1px solid #fff;
+    color: #555;
+}
+
+.toastui-editor-defaultUI .toastui-editor-md-tab-container .tab-item:last-child {
+    margin-left: -1px;
+}
