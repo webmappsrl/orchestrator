@@ -109,6 +109,13 @@ class Quote extends Resource
         ];
         return [
             ID::make()->sortable(),
+            BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
+                ->filterable()
+                ->searchable(),
+            Text::make(__('Title'), function () {
+                $wrappedName = wordwrap($this->title, 50, "\n", true);
+                return str_replace("\n", '<br>', $wrappedName);
+            })->asHtml()->onlyOnIndex(),
             NovaTabTranslatable::make([
                 Text::make(__('Title'), 'title')
                     ->displayUsing(function ($name, $a, $b) {
@@ -117,7 +124,7 @@ class Quote extends Resource
                         return $htmlName;
                     })
                     ->asHtml(),
-            ])->setTitle(__('Title')),
+            ])->setTitle(__('Title'))->hideFromIndex(),
             DateTime::make(__('Created At'), 'created_at')
                 ->displayUsing(function ($date) {
                     return $date ? $date->format('d/m/Y H:i') : null;
@@ -146,6 +153,14 @@ class Quote extends Resource
                     return $status ? $status->label() : (string) $this->status;
                 })
                 ->onlyOnIndex(),
+            BelongsTo::make(__('Owner'), 'user', 'App\nova\User')
+                ->searchable()
+                ->filterable()
+                ->nullable(),
+            Text::make(__('Due date'), function () {
+                $nextTask = $this->tasks->first();
+                return $nextTask ? $nextTask->due_date->format('d/m/Y') : '—';
+            })->onlyOnIndex(),
             Select::make('Status')->options(
                 collect(QuoteStatus::cases())->mapWithKeys(function (QuoteStatus $status) {
                     return [$status->value => $status->label()];
@@ -156,9 +171,6 @@ class Quote extends Resource
             Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                 return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
             })->asHtml(),
-            BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
-                ->filterable()
-                ->searchable(),
             Boolean::make(__('Template'), 'template')
                 ->help(__('Only one template per customer. If you enable this, it becomes the current template and the previous one will be automatically disabled.'))
                 ->hideFromIndex(),
@@ -168,18 +180,16 @@ class Quote extends Resource
                         ->default(1)
                 ];
             })
-                ->searchable(),
+                ->searchable()
+                ->hideFromIndex(),
             BelongsToMany::make('Recurring Products')->fields(function () {
                 return [
                     Number::make(__('Quantity'), 'quantity')->rules('required', 'numeric', 'min:1')
                         ->default(1)
                 ];
             })
-                ->searchable(),
-            BelongsTo::make(__('Owner'), 'user', 'App\nova\User')
                 ->searchable()
-                ->filterable()
-                ->nullable(),
+                ->hideFromIndex(),
             HasMany::make(__('Tasks'), 'tasks', \App\Nova\Task::class),
             Currency::make(__('Products'))
                 ->currency('EUR')
@@ -188,7 +198,8 @@ class Quote extends Resource
                 ->displayUsing(function () {
                     $price = empty($this->products) ? 0 : $this->getTotalPrice();
                     return number_format($price, 2, ',', '.') . ' €';
-                })->sortable(),
+                })->sortable()
+                ->hideFromIndex(),
             Currency::make(__('Recurring'), 'recurring')
                 ->currency('EUR')
                 ->locale('it')
@@ -196,7 +207,8 @@ class Quote extends Resource
                 ->displayUsing(function () {
                     $price = empty($this->recurringProducts) ? 0 : $this->getTotalRecurringPrice();
                     return number_format($price, 2, ',', '.') . ' €';
-                })->sortable(),
+                })->sortable()
+                ->hideFromIndex(),
             Currency::make(__('Total'), 'total')
                 ->currency('EUR')
                 ->locale('it')
@@ -294,7 +306,7 @@ class Quote extends Resource
                 'Quotes by Status',
                 $query,
                 'status',
-            ))->width('full'),
+            ))->width('1/2'),
             (new NewQuotes)->width('1/2')
         ];
     }
@@ -344,7 +356,10 @@ class Quote extends Resource
             QuoteStatus::Closed_Lost->value,
         ];
         return $query
-            ->whereNotIn('status', $whereNotIn);
+            ->whereNotIn('status', $whereNotIn)
+            ->with(['tasks' => function ($tasksQuery) {
+                $tasksQuery->where('status', \App\Models\Task::STATUS_TODO)->orderBy('due_date', 'asc');
+            }]);
     }
 
     public function authorizedToReplicate(Request $request)
