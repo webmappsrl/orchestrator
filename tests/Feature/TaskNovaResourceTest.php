@@ -139,8 +139,22 @@ class TaskNovaResourceTest extends TestCase
         $fields = (new TaskResource($task))->fields($request);
         $names = collect($fields)->pluck('name');
 
+        // Il sub-panel deve restare identico al layout pre-oc:8402: Cliente e
+        // Preventivo c'erano gia' (fields() era condiviso senza scoping),
+        // solo Assegnatario e' la novita' da escludere qui.
+        $this->assertContains(__('Customer'), $names);
+        $this->assertContains(__('Quote'), $names);
         $this->assertNotContains(__('Assignee'), $names);
-        $this->assertNotContains(__('Customer'), $names);
+        $this->assertCount(8, $fields);
+
+        // Ordine esatto pre-oc:8402: Task, Quote, Customer (non l'ordine
+        // Customer-first introdotto per la vista globale). Il primo campo
+        // (ID) e' escluso: la sua label e' un oggetto PendingTranslation,
+        // non una stringa comparabile direttamente.
+        $this->assertSame(
+            [__('Task'), __('Quote'), __('Customer'), __('Due date'), __('Status'), __('Completed'), __('Notes')],
+            $names->slice(1)->values()->all()
+        );
 
         $dueDateField = collect($fields)->firstWhere('name', __('Due date'));
         $this->assertSame('date-time-field', $dueDateField->component);

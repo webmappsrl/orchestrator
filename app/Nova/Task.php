@@ -39,6 +39,12 @@ class Task extends Resource
                     ->sortable()
                     ->rules('required', 'max:255'),
 
+                BelongsTo::make(__('Quote'), 'quote', Quote::class)
+                    ->searchable()
+                    ->rules('required'),
+
+                $this->customerField(),
+
                 DateTime::make(__('Due date'), 'due_date')
                     ->sortable()
                     ->rules('required'),
@@ -54,14 +60,7 @@ class Task extends Resource
         return [
             ID::make()->sortable(),
 
-            Text::make(__('Customer'), function () {
-                $customer = $this->quote?->customer;
-                if (! $customer) {
-                    return '—';
-                }
-                $url = url("/resources/customers/{$customer->id}");
-                return "<a href='{$url}' class='no-underline dim text-primary font-bold'>" . e($customer->full_name) . '</a>';
-            })->asHtml()->exceptOnForms(),
+            $this->customerField(),
 
             BelongsTo::make(__('Quote'), 'quote', Quote::class)
                 ->searchable()
@@ -85,6 +84,18 @@ class Task extends Resource
 
             $this->notesField(),
         ];
+    }
+
+    private function customerField(): Text
+    {
+        return Text::make(__('Customer'), function () {
+            $customer = $this->quote?->customer;
+            if (! $customer) {
+                return '—';
+            }
+            $url = url("/resources/customers/{$customer->id}");
+            return "<a href='{$url}' class='no-underline dim text-primary font-bold'>" . e($customer->full_name) . '</a>';
+        })->asHtml()->exceptOnForms();
     }
 
     private function statusBadgeField(): Badge
