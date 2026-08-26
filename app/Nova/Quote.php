@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use Laravel\Nova\Panel;
+use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
 use Laravel\Nova\Fields\ID;
@@ -108,175 +109,184 @@ class Quote extends Resource
             'editHtml',
         ];
         return [
-            ID::make()->sortable(),
-            NovaTabTranslatable::make([
-                Text::make(__('Title'), 'title')
-                    ->displayUsing(function ($name, $a, $b) {
-                        $wrappedName = wordwrap($name, 50, "\n", true);
-                        $htmlName = str_replace("\n", '<br>', $wrappedName);
-                        return $htmlName;
+            Tab::group(__('Quote Details'), [
+                Tab::make(__('Main'), [
+                    ID::make()->sortable(),
+                    NovaTabTranslatable::make([
+                        Text::make(__('Title'), 'title')
+                            ->displayUsing(function ($name, $a, $b) {
+                                $wrappedName = wordwrap($name, 50, "\n", true);
+                                $htmlName = str_replace("\n", '<br>', $wrappedName);
+                                return $htmlName;
+                            })
+                            ->asHtml(),
+                    ])->setTitle(__('Title')),
+                    DateTime::make(__('Created At'), 'created_at')
+                        ->displayUsing(function ($date) {
+                            return $date ? $date->format('d/m/Y H:i') : null;
+                        })
+                        ->onlyOnDetail()
+                        ->sortable(),
+                    Text::make(__('Status'), 'status')
+                        ->displayUsing(function () {
+                            $status = QuoteStatus::tryFrom($this->status);
+                            return $status ? $status->label() : (string) $this->status;
+                        })
+                        ->onlyOnDetail(),
+                    Status::make('Status')
+                        ->loadingWhen([
+                            QuoteStatus::New->value,
+                            QuoteStatus::To_Present->value,
+                            QuoteStatus::Presented->value,
+                            QuoteStatus::Waiting_For_Order->value,
+                            QuoteStatus::Cold->value
+                        ])
+                        ->failedWhen([
+                            QuoteStatus::Closed_Lost->value,
+                        ])
+                        ->displayUsing(function () {
+                            $status = QuoteStatus::tryFrom($this->status);
+                            return $status ? $status->label() : (string) $this->status;
+                        })
+                        ->onlyOnIndex(),
+                    Select::make('Status')->options(
+                        collect(QuoteStatus::cases())->mapWithKeys(function (QuoteStatus $status) {
+                            return [$status->value => $status->label()];
+                        })->toArray()
+                    )
+                        ->onlyOnForms()
+                        ->default(QuoteStatus::New->value),
+                    BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
+                        ->filterable()
+                        ->searchable(),
+                    Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
+                        return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
+                    })->asHtml(),
+                    Boolean::make(__('Template'), 'template')
+                        ->help(__('Only one template per customer. If you enable this, it becomes the current template and the previous one will be automatically disabled.'))
+                        ->hideFromIndex(),
+                    BelongsTo::make(__('Owner'), 'user', 'App\nova\User')
+                        ->searchable()
+                        ->filterable()
+                        ->nullable(),
+                    Currency::make(__('Total'), 'total')
+                        ->currency('EUR')
+                        ->locale('it')
+                        ->exceptOnForms()
+                        ->displayUsing(function () {
+                            $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice();
+                            return number_format($quotePrice, 2, ',', '.') . ' €';
+                        })->sortable(),
+                    Currency::make(__('Discount'), 'discount')
+                        ->currency('EUR')
+                        ->locale('it')
+                        ->hideFromIndex()
+                        ->displayUsing(function () {
+                            return number_format($this->discount, 2, ',', '.') . ' €';
+                        }),
+                    Currency::make('Additional Services Total Price')
+                        ->currency('EUR')
+                        ->locale('it')
+                        ->onlyonDetail()
+                        ->displayUsing(function () {
+                            return number_format($this->getTotalAdditionalServicesPrice(), 2, ',', '.') . ' €';
+                        }),
+                    Currency::make('IVA')
+                        ->currency('EUR')
+                        ->locale('it')
+                        ->onlyonDetail()
+                        ->displayUsing(function () {
+                            $iva = $this->getQuoteNetPrice() * \App\Models\Quote::VAT_RATE;
+                            return number_format($iva, 2, ',', '.') . ' €';
+                        }),
+                    Currency::make('Final Price')
+                        ->currency('EUR')
+                        ->locale('it')
+                        ->onlyonDetail()
+                        ->displayUsing(function () {
+                            $iva = $this->getQuoteNetPrice() * \App\Models\Quote::VAT_RATE;
+                            return number_format($this->getQuoteNetPrice() + $iva, 2, ',', '.') . ' €';
+                        }),
+                    NovaTabTranslatable::make([
+                        KeyValue::make(__('Additional Services'), 'additional_services')
+                            ->hideFromIndex()
+                            ->keyLabel(__('Description'))
+                            ->valueLabel(__('Price') . '(€)')
+                            ->hideFromIndex(),
+                    ])->hideFromIndex(),
+                    Text::make('PDF')
+                        ->resolveUsing(function ($value, $resource, $attribute) {
+                            $itaUrl = route('quote', ['id' => $resource->id]);
+                            $enUrl = route('quote', ['id' => $resource->id, 'lang' => 'en']);
+
+                            return $this->pdfButton($itaUrl, 'ITA') . $this->pdfButton($enUrl, 'EN');
+                        })
+                        ->asHtml()
+                        ->exceptOnForms(),
+                    NovaTabTranslatable::make([
+                        Tiptap::make(__('Additional Info'), 'additional_info')
+                            ->hideFromIndex()
+                            ->buttons($allButtons),
+
+                        Tiptap::make(__('Delivery Time'), 'delivery_time')
+                            ->hideFromIndex()
+                            ->buttons($allButtons),
+
+                        Tiptap::make(__('Payment Plan'), 'payment_plan')
+                            ->hideFromIndex()
+                            ->buttons($allButtons),
+
+                        Tiptap::make(__('Billing Plan'), 'billing_plan')
+                            ->hideFromIndex()
+                            ->buttons($allButtons),
+                    ])->hideFromIndex(),
+                    Files::make(__('Documents'), 'documents')
+                        ->hideFromIndex(),
+                    NovaTabTranslatable::make([
+                        MarkdownTui::make(__('Notes'), 'notes')
+                            ->hideFromIndex()
+                            ->initialEditType(EditorType::MARKDOWN)
+                            ->nullable(),
+                    ])->hideFromIndex(),
+                ]),
+                Tab::make(__('Task'), [
+                    HasMany::make(__('Tasks'), 'tasks', \App\Nova\Task::class),
+                ]),
+                Tab::make(__('Products'), [
+                    BelongsToMany::make(__('Products'), 'products', 'App\nova\Product')->fields(function () {
+                        return [
+                            Number::make(__('Quantity'), 'quantity')->rules('required', 'numeric', 'min:1')
+                                ->default(1)
+                        ];
                     })
-                    ->asHtml(),
-            ])->setTitle(__('Title')),
-            DateTime::make(__('Created At'), 'created_at')
-                ->displayUsing(function ($date) {
-                    return $date ? $date->format('d/m/Y H:i') : null;
-                })
-                ->onlyOnDetail()
-                ->sortable(),
-            Text::make(__('Status'), 'status')
-                ->displayUsing(function () {
-                    $status = QuoteStatus::tryFrom($this->status);
-                    return $status ? $status->label() : (string) $this->status;
-                })
-                ->onlyOnDetail(),
-            Status::make('Status')
-                ->loadingWhen([
-                    QuoteStatus::New->value,
-                    QuoteStatus::To_Present->value,
-                    QuoteStatus::Presented->value,
-                    QuoteStatus::Waiting_For_Order->value,
-                    QuoteStatus::Cold->value
-                ])
-                ->failedWhen([
-                    QuoteStatus::Closed_Lost->value,
-                ])
-                ->displayUsing(function () {
-                    $status = QuoteStatus::tryFrom($this->status);
-                    return $status ? $status->label() : (string) $this->status;
-                })
-                ->onlyOnIndex(),
-            Select::make('Status')->options(
-                collect(QuoteStatus::cases())->mapWithKeys(function (QuoteStatus $status) {
-                    return [$status->value => $status->label()];
-                })->toArray()
-            )
-                ->onlyOnForms()
-                ->default(QuoteStatus::New->value),
-            Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
-                return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
-            })->asHtml(),
-            BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
-                ->filterable()
-                ->searchable(),
-            Boolean::make(__('Template'), 'template')
-                ->help(__('Only one template per customer. If you enable this, it becomes the current template and the previous one will be automatically disabled.'))
-                ->hideFromIndex(),
-            BelongsToMany::make(__('Products'), 'products', 'App\nova\Product')->fields(function () {
-                return [
-                    Number::make(__('Quantity'), 'quantity')->rules('required', 'numeric', 'min:1')
-                        ->default(1)
-                ];
-            })
-                ->searchable(),
-            BelongsToMany::make('Recurring Products')->fields(function () {
-                return [
-                    Number::make(__('Quantity'), 'quantity')->rules('required', 'numeric', 'min:1')
-                        ->default(1)
-                ];
-            })
-                ->searchable(),
-            BelongsTo::make(__('Owner'), 'user', 'App\nova\User')
-                ->searchable()
-                ->filterable()
-                ->nullable(),
-            HasMany::make(__('Tasks'), 'tasks', \App\Nova\Task::class),
-            Currency::make(__('Products'))
-                ->currency('EUR')
-                ->locale('it')
-                ->exceptOnForms()
-                ->displayUsing(function () {
-                    $price = empty($this->products) ? 0 : $this->getTotalPrice();
-                    return number_format($price, 2, ',', '.') . ' €';
-                })->sortable(),
-            Currency::make(__('Recurring'), 'recurring')
-                ->currency('EUR')
-                ->locale('it')
-                ->exceptOnForms()
-                ->displayUsing(function () {
-                    $price = empty($this->recurringProducts) ? 0 : $this->getTotalRecurringPrice();
-                    return number_format($price, 2, ',', '.') . ' €';
-                })->sortable(),
-            Currency::make(__('Total'), 'total')
-                ->currency('EUR')
-                ->locale('it')
-                ->exceptOnForms()
-                ->displayUsing(function () {
-                    $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice();
-                    return number_format($quotePrice, 2, ',', '.') . ' €';
-                })->sortable(),
-            Currency::make(__('Discount'), 'discount')
-                ->currency('EUR')
-                ->locale('it')
-                ->hideFromIndex()
-                ->displayUsing(function () {
-                    return number_format($this->discount, 2, ',', '.') . ' €';
-                }),
-            NovaTabTranslatable::make([
-                KeyValue::make(__('Additional Services'), 'additional_services')
-                    ->hideFromIndex()
-                    ->keyLabel(__('Description'))
-                    ->valueLabel(__('Price') . '(€)')
-                    ->hideFromIndex(),
-            ])->hideFromIndex(),
-            Currency::make('Additional Services Total Price')
-                ->currency('EUR')
-                ->locale('it')
-                ->onlyonDetail()
-                ->displayUsing(function () {
-                    return number_format($this->getTotalAdditionalServicesPrice(), 2, ',', '.') . ' €';
-                }),
-            Currency::make('IVA')
-                ->currency('EUR')
-                ->locale('it')
-                ->onlyonDetail()
-                ->displayUsing(function () {
-                    $iva = $this->getQuoteNetPrice() * \App\Models\Quote::VAT_RATE;
-                    return number_format($iva, 2, ',', '.') . ' €';
-                }),
-            Currency::make('Final Price')
-                ->currency('EUR')
-                ->locale('it')
-                ->onlyonDetail()
-                ->displayUsing(function () {
-                    $iva = $this->getQuoteNetPrice() * \App\Models\Quote::VAT_RATE;
-                    return number_format($this->getQuoteNetPrice() + $iva, 2, ',', '.') . ' €';
-                }),
-            Text::make('PDF')
-                ->resolveUsing(function ($value, $resource, $attribute) {
-                    $itaUrl = route('quote', ['id' => $resource->id]);
-                    $enUrl = route('quote', ['id' => $resource->id, 'lang' => 'en']);
-
-                    return $this->pdfButton($itaUrl, 'ITA') . $this->pdfButton($enUrl, 'EN');
-                })
-                ->asHtml()
-                ->exceptOnForms(),
-            NovaTabTranslatable::make([
-                Tiptap::make(__('Additional Info'), 'additional_info')
-                    ->hideFromIndex()
-                    ->buttons($allButtons),
-
-                Tiptap::make(__('Delivery Time'), 'delivery_time')
-                    ->hideFromIndex()
-                    ->buttons($allButtons),
-
-                Tiptap::make(__('Payment Plan'), 'payment_plan')
-                    ->hideFromIndex()
-                    ->buttons($allButtons),
-
-                Tiptap::make(__('Billing Plan'), 'billing_plan')
-                    ->hideFromIndex()
-                    ->buttons($allButtons),
-                MarkdownTui::make(__('Notes'), 'notes')
-                    ->hideFromIndex()
-                    ->initialEditType(EditorType::MARKDOWN)
-                    ->nullable()
-            ])->hideFromIndex(),
-
-            Files::make(__('Documents'), 'documents')
-                ->hideFromIndex(),
-
-
+                        ->searchable(),
+                    Currency::make(__('Products'))
+                        ->currency('EUR')
+                        ->locale('it')
+                        ->exceptOnForms()
+                        ->displayUsing(function () {
+                            $price = empty($this->products) ? 0 : $this->getTotalPrice();
+                            return number_format($price, 2, ',', '.') . ' €';
+                        })->sortable(),
+                ]),
+                Tab::make(__('Recurring Products'), [
+                    BelongsToMany::make('Recurring Products')->fields(function () {
+                        return [
+                            Number::make(__('Quantity'), 'quantity')->rules('required', 'numeric', 'min:1')
+                                ->default(1)
+                        ];
+                    })
+                        ->searchable(),
+                    Currency::make(__('Recurring'), 'recurring')
+                        ->currency('EUR')
+                        ->locale('it')
+                        ->exceptOnForms()
+                        ->displayUsing(function () {
+                            $price = empty($this->recurringProducts) ? 0 : $this->getTotalRecurringPrice();
+                            return number_format($price, 2, ',', '.') . ' €';
+                        })->sortable(),
+                ]),
+            ])->withToolbar(),
         ];
     }
 
