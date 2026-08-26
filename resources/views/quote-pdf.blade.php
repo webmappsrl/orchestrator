@@ -1,6 +1,18 @@
 @php
 $customerName = $quote->customer->full_name ?? $quote->customer->name;
 $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
+
+// `additional_services` is a nullable json column: Nova's KeyValue field
+// saves null when left empty, and the API validates it as `nullable`.
+// Coerce every shape (null, JSON string, anything non-array) to an array
+// before it reaches count()/foreach — see oc:8413.
+$normalizeAdditionalServices = function ($value): array {
+    if (is_string($value)) {
+        $value = json_decode($value, true) ?? [];
+    }
+
+    return is_array($value) ? $value : [];
+};
 @endphp
 
 <!DOCTYPE html>
@@ -61,13 +73,7 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
 
     <div class="service-description">
         @php
-        $additionalServicesForCount = $quote->additional_services;
-        if (is_string($additionalServicesForCount)) {
-            $additionalServicesForCount = json_decode($additionalServicesForCount, true) ?? [];
-        }
-        if (!is_array($additionalServicesForCount)) {
-            $additionalServicesForCount = [];
-        }
+        $additionalServicesForCount = $normalizeAdditionalServices($quote->additional_services);
         @endphp
         @if (count($quote->products) < 1 && count($quote->recurringProducts) < 1 && count($additionalServicesForCount) < 1)
         <h2 style="color:red;">{{ __('No items available') }}</h2>
@@ -100,9 +106,9 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
             @endif
 
             @php
-            $additionalServices = $quote->additional_services;
+            $additionalServices = $normalizeAdditionalServices($quote->additional_services);
             @endphp
-            @if (!is_string($additionalServices) && count($additionalServices) > 0)
+            @if (count($additionalServices) > 0)
             <h3 class="description">{{ __('Additional services') }}:</h3>
             <ul>
                 @foreach ($additionalServices as $description => $price)
@@ -239,9 +245,9 @@ $pdfName = __('Preventivo_WEBMAPP_' . $customerName);
 
     {{-- Start additional services table --}}
     @php
-    $additionalServices = $quote->getTranslation('additional_services', App::getLocale());
+    $additionalServices = $normalizeAdditionalServices($quote->getTranslation('additional_services', App::getLocale()));
     @endphp
-    @if (!is_string($additionalServices) && count($additionalServices) > 0)
+    @if (count($additionalServices) > 0)
     <div class="additional-services">
         <table>
             <thead>
