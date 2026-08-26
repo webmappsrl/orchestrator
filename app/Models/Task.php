@@ -48,6 +48,28 @@ class Task extends Model
         return $this->quote?->user;
     }
 
+    /**
+     * Prepende una nota in cima a `notes`, con autore e timestamp, mirror
+     * del comportamento reale di Story::addDevNote() (che nonostante il
+     * nome storico "prepende", non accoda — la nota più recente resta
+     * sempre in cima). Mai sovrascrittura del contenuto esistente.
+     */
+    public function appendNote(string $note, bool $persist = true): void
+    {
+        $sender = auth()->user();
+        $divider = "<div style='height: 2px; background-color: #e2e8f0; margin: 20px 0;'></div>";
+        $style = "style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 10px 20px;'";
+
+        $formatted = $sender->name . ' ha aggiunto una nota il: ' . now()->format('d-m-Y H:i')
+            . "\n <div $style> <p>" . $note . ' </p> </div>' . $divider;
+
+        $this->notes = $formatted . ($this->notes ?? '');
+
+        if ($persist) {
+            $this->save();
+        }
+    }
+
     public function scopeForUser($query, User $user)
     {
         return $query->where(function ($q) use ($user) {
