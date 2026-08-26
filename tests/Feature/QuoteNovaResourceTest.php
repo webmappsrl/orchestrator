@@ -29,6 +29,26 @@ class QuoteNovaResourceTest extends TestCase
         ]);
     }
 
+    /**
+     * fields() now nests raw fields inside Tab::group()/Tab::make() (oc:8407),
+     * both instances of Laravel\Nova\Fields\FieldMergeValue (their children
+     * live in the public $data property). Flatten before searching.
+     */
+    private function flattenFields(array $fields): array
+    {
+        $flat = [];
+
+        foreach ($fields as $field) {
+            if ($field instanceof \Laravel\Nova\Fields\FieldMergeValue) {
+                $flat = array_merge($flat, $this->flattenFields($field->data));
+            } else {
+                $flat[] = $field;
+            }
+        }
+
+        return $flat;
+    }
+
     private function fieldPosition(array $fields, callable $matcher): int
     {
         foreach ($fields as $i => $field) {
@@ -54,7 +74,7 @@ class QuoteNovaResourceTest extends TestCase
     public function test_index_columns_are_in_the_expected_order()
     {
         $request = NovaRequest::create('/');
-        $fields = (new QuoteResource(new Quote()))->fields($request);
+        $fields = $this->flattenFields((new QuoteResource(new Quote()))->fields($request));
 
         $customerPos = $this->fieldPosition($fields, fn ($f) => $f instanceof BelongsTo && $f->attribute === 'customer' && $f->showOnIndex === true);
         $titlePos = $this->fieldPosition($fields, fn ($f) => $f instanceof Text && $f->name === __('Title') && $f->showOnIndex === true);
@@ -81,7 +101,7 @@ class QuoteNovaResourceTest extends TestCase
 
         app()->setLocale('en');
 
-        $fields = (new QuoteResource($quote))->fields(NovaRequest::create('/'));
+        $fields = $this->flattenFields((new QuoteResource($quote))->fields(NovaRequest::create('/')));
         $titleField = $fields[$this->fieldPosition($fields, fn ($f) => $f instanceof Text && $f->name === __('Title') && $f->showOnIndex === true)];
         $titleField->resolveForDisplay($quote);
 
@@ -94,7 +114,7 @@ class QuoteNovaResourceTest extends TestCase
     public function test_products_and_recurring_columns_are_hidden_from_index()
     {
         $request = NovaRequest::create('/');
-        $fields = (new QuoteResource(new Quote()))->fields($request);
+        $fields = $this->flattenFields((new QuoteResource(new Quote()))->fields($request));
 
         $hiddenLabels = [__('Products'), 'Recurring Products', __('Recurring')];
         $hiddenCount = 0;
@@ -118,7 +138,7 @@ class QuoteNovaResourceTest extends TestCase
 
         $loaded = QuoteResource::indexQuery(NovaRequest::create('/'), Quote::query()->whereKey($quote->id))->first();
 
-        $fields = (new QuoteResource($loaded))->fields(NovaRequest::create('/'));
+        $fields = $this->flattenFields((new QuoteResource($loaded))->fields(NovaRequest::create('/')));
         $dueDateField = $fields[$this->fieldPosition($fields, fn ($f) => $f instanceof Text && $f->name === __('Due date'))];
         $dueDateField->resolveForDisplay($loaded);
 
@@ -132,7 +152,7 @@ class QuoteNovaResourceTest extends TestCase
 
         $loaded = QuoteResource::indexQuery(NovaRequest::create('/'), Quote::query()->whereKey($quote->id))->first();
 
-        $fields = (new QuoteResource($loaded))->fields(NovaRequest::create('/'));
+        $fields = $this->flattenFields((new QuoteResource($loaded))->fields(NovaRequest::create('/')));
         $dueDateField = $fields[$this->fieldPosition($fields, fn ($f) => $f instanceof Text && $f->name === __('Due date'))];
         $dueDateField->resolveForDisplay($loaded);
 
@@ -147,7 +167,7 @@ class QuoteNovaResourceTest extends TestCase
 
         $loaded = QuoteResource::indexQuery(NovaRequest::create('/'), Quote::query()->whereKey($quote->id))->first();
 
-        $fields = (new QuoteResource($loaded))->fields(NovaRequest::create('/'));
+        $fields = $this->flattenFields((new QuoteResource($loaded))->fields(NovaRequest::create('/')));
         $dueDateField = $fields[$this->fieldPosition($fields, fn ($f) => $f instanceof Text && $f->name === __('Due date'))];
         $dueDateField->resolveForDisplay($loaded);
 
