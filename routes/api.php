@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\QuoteController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RecurringProductController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\TaskController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -65,4 +66,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/customers', [CustomerController::class, 'index']);
     Route::get('/customers/{customer}', [CustomerController::class, 'show']);
+
+    Route::get('/tasks', [TaskController::class, 'index']);
+    Route::get('/tasks/{task}', [TaskController::class, 'show']);
+    Route::post('/tasks', [TaskController::class, 'store']);
+    Route::patch('/tasks/{task}', [TaskController::class, 'update']);
 });
