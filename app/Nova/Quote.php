@@ -118,16 +118,13 @@ class Quote extends Resource
                         ->searchable(),
 
                     Text::make(__('Title'), function () {
-                        $wrappedName = wordwrap($this->title, 50, "\n", true);
-                        return str_replace("\n", '<br>', $wrappedName);
+                        return self::wrapTitleHtml($this->title);
                     })->asHtml()->onlyOnIndex(),
 
                     NovaTabTranslatable::make([
                         Text::make(__('Title'), 'title')
                             ->displayUsing(function ($name, $a, $b) {
-                                $wrappedName = wordwrap($name, 50, "\n", true);
-                                $htmlName = str_replace("\n", '<br>', $wrappedName);
-                                return $htmlName;
+                                return self::wrapTitleHtml($name);
                             })
                             ->asHtml(),
                     ])->setTitle(__('Title'))->hideFromIndex(),
@@ -267,8 +264,10 @@ class Quote extends Resource
                             ->hideFromIndex()
                             ->buttons($allButtons),
                     ])->hideFromIndex(),
+
                     Files::make(__('Documents'), 'documents')
                         ->hideFromIndex(),
+
                     NovaTabTranslatable::make([
                         MarkdownTui::make(__('Notes'), 'notes')
                             ->hideFromIndex()
@@ -386,9 +385,7 @@ class Quote extends Resource
         ];
         return $query
             ->whereNotIn('status', $whereNotIn)
-            ->with(['tasks' => function ($tasksQuery) {
-                $tasksQuery->where('status', \App\Models\Task::STATUS_TODO)->orderBy('due_date', 'asc');
-            }]);
+            ->withNextTodoTask();
     }
 
     public function authorizedToReplicate(Request $request)
@@ -403,5 +400,15 @@ class Quote extends Resource
                             {$label}
                         </a>
                     HTML;
+    }
+
+    /**
+     * Shared wordwrap/HTML rendering for the Title field, reused by the
+     * single-locale index field and the NovaTabTranslatable form field.
+     */
+    protected static function wrapTitleHtml(?string $title): string
+    {
+        $wrapped = wordwrap((string) $title, 50, "\n", true);
+        return str_replace("\n", '<br>', $wrapped);
     }
 }

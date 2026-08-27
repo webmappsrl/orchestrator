@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Quote;
 use App\Models\Task;
 use App\Nova\Quote as QuoteResource;
+use App\Nova\QuoteNoFilter;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Fields\BelongsTo;
@@ -58,6 +59,19 @@ class QuoteNovaResourceTest extends TestCase
         }
 
         $this->fail('Field not found among fields()');
+    }
+
+    /**
+     * Resolves the "Due date" index field for a given (already-loaded) Quote
+     * and returns its display value.
+     */
+    private function resolvedDueDateValue(Quote $quote): string
+    {
+        $fields = $this->flattenFields((new QuoteResource($quote))->fields(NovaRequest::create('/')));
+        $dueDateField = $fields[$this->fieldPosition($fields, fn ($f) => $f instanceof Text && $f->name === __('Due date'))];
+        $dueDateField->resolveForDisplay($quote);
+
+        return $dueDateField->value;
     }
 
     public function test_cards_are_both_half_width()
@@ -138,11 +152,7 @@ class QuoteNovaResourceTest extends TestCase
 
         $loaded = QuoteResource::indexQuery(NovaRequest::create('/'), Quote::query()->whereKey($quote->id))->first();
 
-        $fields = $this->flattenFields((new QuoteResource($loaded))->fields(NovaRequest::create('/')));
-        $dueDateField = $fields[$this->fieldPosition($fields, fn ($f) => $f instanceof Text && $f->name === __('Due date'))];
-        $dueDateField->resolveForDisplay($loaded);
-
-        $this->assertSame($near->due_date->format('d/m/Y'), $dueDateField->value);
+        $this->assertSame($near->due_date->format('d/m/Y'), $this->resolvedDueDateValue($loaded));
     }
 
     public function test_due_date_column_shows_overdue_task_instead_of_dash()
@@ -151,13 +161,10 @@ class QuoteNovaResourceTest extends TestCase
         $overdue = Task::create(['quote_id' => $quote->id, 'title' => 'Scaduto', 'due_date' => now()->subDays(3)]);
 
         $loaded = QuoteResource::indexQuery(NovaRequest::create('/'), Quote::query()->whereKey($quote->id))->first();
+        $value = $this->resolvedDueDateValue($loaded);
 
-        $fields = $this->flattenFields((new QuoteResource($loaded))->fields(NovaRequest::create('/')));
-        $dueDateField = $fields[$this->fieldPosition($fields, fn ($f) => $f instanceof Text && $f->name === __('Due date'))];
-        $dueDateField->resolveForDisplay($loaded);
-
-        $this->assertSame($overdue->due_date->format('d/m/Y'), $dueDateField->value);
-        $this->assertNotSame('—', $dueDateField->value);
+        $this->assertSame($overdue->due_date->format('d/m/Y'), $value);
+        $this->assertNotSame('—', $value);
     }
 
     public function test_due_date_column_shows_dash_when_no_todo_task()
@@ -167,11 +174,44 @@ class QuoteNovaResourceTest extends TestCase
 
         $loaded = QuoteResource::indexQuery(NovaRequest::create('/'), Quote::query()->whereKey($quote->id))->first();
 
-        $fields = $this->flattenFields((new QuoteResource($loaded))->fields(NovaRequest::create('/')));
-        $dueDateField = $fields[$this->fieldPosition($fields, fn ($f) => $f instanceof Text && $f->name === __('Due date'))];
-        $dueDateField->resolveForDisplay($loaded);
+        $this->assertSame('—', $this->resolvedDueDateValue($loaded));
+    }
 
-        $this->assertSame('—', $dueDateField->value);
+    /**
+     * Covers plan.md Task 5 case 7: with a mix of overdue and future todo
+     * tasks on the same Quote, the chronologically earliest `due_date`
+     * always wins (ORDER BY due_date ASC — the most-overdue task, not the
+     * one closest to "today" in absolute distance), regardless of which
+     * side of "today" it falls on.
+     */
+    public function test_due_date_column_shows_earliest_task_across_past_and_future()
+    {
+        $quote = $this->makeQuote();
+        $earliest = Task::create(['quote_id' => $quote->id, 'title' => 'Scaduto lontano', 'due_date' => now()->subDays(10)]);
+        Task::create(['quote_id' => $quote->id, 'title' => 'Scaduto vicino', 'due_date' => now()->subDay()]);
+        Task::create(['quote_id' => $quote->id, 'title' => 'Futuro lontano', 'due_date' => now()->addDays(10)]);
+
+        $loaded = QuoteResource::indexQuery(NovaRequest::create('/'), Quote::query()->whereKey($quote->id))->first();
+
+        $this->assertSame($earliest->due_date->format('d/m/Y'), $this->resolvedDueDateValue($loaded));
+    }
+
+    /**
+     * Regression test for the QuoteNoFilter subpanel (Customer -> tab
+     * Quotes, app/Nova/Customer.php): its indexQuery() must apply the same
+     * todo-task eager load as the main Quotes index, otherwise the "Due
+     * date" field (inherited, unfiltered) silently resolves the wrong task
+     * (any status, arbitrary DB order) instead of "—" or the nearest todo.
+     */
+    public function test_quote_no_filter_due_date_column_matches_main_index()
+    {
+        $quote = $this->makeQuote();
+        Task::create(['quote_id' => $quote->id, 'title' => 'Completato inserito per primo', 'due_date' => now()->addDay(), 'status' => Task::STATUS_COMPLETED]);
+        $todo = Task::create(['quote_id' => $quote->id, 'title' => 'Todo reale', 'due_date' => now()->addDays(5)]);
+
+        $loaded = QuoteNoFilter::indexQuery(NovaRequest::create('/'), Quote::query()->whereKey($quote->id))->first();
+
+        $this->assertSame($todo->due_date->format('d/m/Y'), $this->resolvedDueDateValue($loaded));
     }
 
     public function test_index_query_eager_loads_todo_tasks_without_n_plus_one()
