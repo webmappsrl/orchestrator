@@ -83,6 +83,20 @@ class Quote extends Model implements HasMedia
     }
 
     /**
+     * Eager-load `tasks` filtered to `todo` and ordered by nearest `due_date`
+     * (past or future — see docs/features/8404-.../overview.md), so
+     * `$quote->tasks->first()` resolves the "next todo task" without an
+     * extra query. Shared by every Nova index query that renders the
+     * "Due date" column (App\Nova\Quote and App\Nova\QuoteNoFilter).
+     */
+    public function scopeWithNextTodoTask($query)
+    {
+        return $query->with(['tasks' => function ($tasksQuery) {
+            $tasksQuery->where('status', Task::STATUS_TODO)->orderBy('due_date', 'asc');
+        }]);
+    }
+
+    /**
      * Get the total price of the quote.
      * @return float
      */
