@@ -112,27 +112,37 @@ class Quote extends Resource
             Tab::group(__('Quote Details'), [
                 Tab::make(__('Main'), [
                     ID::make()->sortable(),
+
+                    BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
+                        ->filterable()
+                        ->searchable(),
+
+                    Text::make(__('Title'), function () {
+                        return self::wrapTitleHtml($this->title);
+                    })->asHtml()->onlyOnIndex(),
+
                     NovaTabTranslatable::make([
                         Text::make(__('Title'), 'title')
                             ->displayUsing(function ($name, $a, $b) {
-                                $wrappedName = wordwrap($name, 50, "\n", true);
-                                $htmlName = str_replace("\n", '<br>', $wrappedName);
-                                return $htmlName;
+                                return self::wrapTitleHtml($name);
                             })
                             ->asHtml(),
-                    ])->setTitle(__('Title')),
+                    ])->setTitle(__('Title'))->hideFromIndex(),
+
                     DateTime::make(__('Created At'), 'created_at')
                         ->displayUsing(function ($date) {
                             return $date ? $date->format('d/m/Y H:i') : null;
                         })
                         ->onlyOnDetail()
                         ->sortable(),
+
                     Text::make(__('Status'), 'status')
                         ->displayUsing(function () {
                             $status = QuoteStatus::tryFrom($this->status);
                             return $status ? $status->label() : (string) $this->status;
                         })
                         ->onlyOnDetail(),
+
                     Status::make('Status')
                         ->loadingWhen([
                             QuoteStatus::New->value,
@@ -149,6 +159,17 @@ class Quote extends Resource
                             return $status ? $status->label() : (string) $this->status;
                         })
                         ->onlyOnIndex(),
+
+                    BelongsTo::make(__('Owner'), 'user', 'App\nova\User')
+                        ->searchable()
+                        ->filterable()
+                        ->nullable(),
+
+                    Text::make(__('Due date'), function () {
+                        $nextTask = $this->tasks->first();
+                        return $nextTask ? $nextTask->due_date->format('d/m/Y') : '—';
+                    })->onlyOnIndex(),
+
                     Select::make('Status')->options(
                         collect(QuoteStatus::cases())->mapWithKeys(function (QuoteStatus $status) {
                             return [$status->value => $status->label()];
@@ -156,19 +177,15 @@ class Quote extends Resource
                     )
                         ->onlyOnForms()
                         ->default(QuoteStatus::New->value),
-                    BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
-                        ->filterable()
-                        ->searchable(),
+
                     Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                         return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
                     })->asHtml(),
+
                     Boolean::make(__('Template'), 'template')
                         ->help(__('Only one template per customer. If you enable this, it becomes the current template and the previous one will be automatically disabled.'))
                         ->hideFromIndex(),
-                    BelongsTo::make(__('Owner'), 'user', 'App\nova\User')
-                        ->searchable()
-                        ->filterable()
-                        ->nullable(),
+
                     Currency::make(__('Total'), 'total')
                         ->currency('EUR')
                         ->locale('it')
@@ -177,6 +194,7 @@ class Quote extends Resource
                             $quotePrice = $this->getTotalPrice() + $this->getTotalRecurringPrice() + $this->getTotalAdditionalServicesPrice();
                             return number_format($quotePrice, 2, ',', '.') . ' €';
                         })->sortable(),
+
                     Currency::make(__('Discount'), 'discount')
                         ->currency('EUR')
                         ->locale('it')
@@ -184,6 +202,7 @@ class Quote extends Resource
                         ->displayUsing(function () {
                             return number_format($this->discount, 2, ',', '.') . ' €';
                         }),
+
                     Currency::make('Additional Services Total Price')
                         ->currency('EUR')
                         ->locale('it')
@@ -191,6 +210,7 @@ class Quote extends Resource
                         ->displayUsing(function () {
                             return number_format($this->getTotalAdditionalServicesPrice(), 2, ',', '.') . ' €';
                         }),
+
                     Currency::make('IVA')
                         ->currency('EUR')
                         ->locale('it')
@@ -199,6 +219,7 @@ class Quote extends Resource
                             $iva = $this->getQuoteNetPrice() * \App\Models\Quote::VAT_RATE;
                             return number_format($iva, 2, ',', '.') . ' €';
                         }),
+
                     Currency::make('Final Price')
                         ->currency('EUR')
                         ->locale('it')
@@ -207,6 +228,7 @@ class Quote extends Resource
                             $iva = $this->getQuoteNetPrice() * \App\Models\Quote::VAT_RATE;
                             return number_format($this->getQuoteNetPrice() + $iva, 2, ',', '.') . ' €';
                         }),
+
                     NovaTabTranslatable::make([
                         KeyValue::make(__('Additional Services'), 'additional_services')
                             ->hideFromIndex()
@@ -214,6 +236,7 @@ class Quote extends Resource
                             ->valueLabel(__('Price') . '(€)')
                             ->hideFromIndex(),
                     ])->hideFromIndex(),
+
                     Text::make('PDF')
                         ->resolveUsing(function ($value, $resource, $attribute) {
                             $itaUrl = route('quote', ['id' => $resource->id]);
@@ -223,6 +246,7 @@ class Quote extends Resource
                         })
                         ->asHtml()
                         ->exceptOnForms(),
+
                     NovaTabTranslatable::make([
                         Tiptap::make(__('Additional Info'), 'additional_info')
                             ->hideFromIndex()
@@ -240,8 +264,10 @@ class Quote extends Resource
                             ->hideFromIndex()
                             ->buttons($allButtons),
                     ])->hideFromIndex(),
+
                     Files::make(__('Documents'), 'documents')
                         ->hideFromIndex(),
+
                     NovaTabTranslatable::make([
                         MarkdownTui::make(__('Notes'), 'notes')
                             ->hideFromIndex()
@@ -259,7 +285,8 @@ class Quote extends Resource
                                 ->default(1)
                         ];
                     })
-                        ->searchable(),
+                        ->searchable()
+                        ->hideFromIndex(),
                     Currency::make(__('Products'))
                         ->currency('EUR')
                         ->locale('it')
@@ -267,7 +294,8 @@ class Quote extends Resource
                         ->displayUsing(function () {
                             $price = empty($this->products) ? 0 : $this->getTotalPrice();
                             return number_format($price, 2, ',', '.') . ' €';
-                        })->sortable(),
+                        })->sortable()
+                        ->hideFromIndex(),
                 ]),
                 Tab::make(__('Recurring Products'), [
                     BelongsToMany::make('Recurring Products')->fields(function () {
@@ -276,7 +304,8 @@ class Quote extends Resource
                                 ->default(1)
                         ];
                     })
-                        ->searchable(),
+                        ->searchable()
+                        ->hideFromIndex(),
                     Currency::make(__('Recurring'), 'recurring')
                         ->currency('EUR')
                         ->locale('it')
@@ -284,7 +313,8 @@ class Quote extends Resource
                         ->displayUsing(function () {
                             $price = empty($this->recurringProducts) ? 0 : $this->getTotalRecurringPrice();
                             return number_format($price, 2, ',', '.') . ' €';
-                        })->sortable(),
+                        })->sortable()
+                        ->hideFromIndex(),
                 ]),
             ])->withToolbar(),
         ];
@@ -304,7 +334,7 @@ class Quote extends Resource
                 'Quotes by Status',
                 $query,
                 'status',
-            ))->width('full'),
+            ))->width('1/2'),
             (new NewQuotes)->width('1/2')
         ];
     }
@@ -354,7 +384,8 @@ class Quote extends Resource
             QuoteStatus::Closed_Lost->value,
         ];
         return $query
-            ->whereNotIn('status', $whereNotIn);
+            ->whereNotIn('status', $whereNotIn)
+            ->withNextTodoTask();
     }
 
     public function authorizedToReplicate(Request $request)
@@ -369,5 +400,15 @@ class Quote extends Resource
                             {$label}
                         </a>
                     HTML;
+    }
+
+    /**
+     * Shared wordwrap/HTML rendering for the Title field, reused by the
+     * single-locale index field and the NovaTabTranslatable form field.
+     */
+    protected static function wrapTitleHtml(?string $title): string
+    {
+        $wrapped = wordwrap((string) $title, 50, "\n", true);
+        return str_replace("\n", '<br>', $wrapped);
     }
 }

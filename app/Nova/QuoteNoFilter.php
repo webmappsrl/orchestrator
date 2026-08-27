@@ -9,6 +9,6 @@ class QuoteNoFilter extends Quote
 {
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return $query;
+        return $query->withNextTodoTask();
     }
 }
