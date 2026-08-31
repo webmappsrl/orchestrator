@@ -59,8 +59,10 @@ class Customer extends Model implements HasMedia
 
     /**
      * Normalize phone string: Unicode spaces to normal space, strip zero-width/invisible chars.
+     * Public so it can be reused by App\Nova\Customer for pre-save validation
+     * (validation runs on the raw submitted value, before this mutator applies).
      */
-    protected static function normalizePhoneString(?string $value): ?string
+    public static function normalizePhoneString(?string $value): ?string
     {
         if ($value === null || $value === '') {
             return $value;
