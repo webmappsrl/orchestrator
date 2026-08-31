@@ -172,13 +172,25 @@ class Customer extends Resource
                         ->onlyOnForms(),
                     Text::make(__('Phone'), 'phone')
                         ->nullable()
-                        ->rules('nullable', 'regex:/^[\d\s\p{Z}+,\-\.()\x{200B}\x{200C}\x{200D}\x{FEFF}]+$/u', 'max:255')
-                        ->help(__('One or more numbers separated by comma; spaces and common separators allowed.'))
+                        ->rules('nullable', 'max:255', function ($attribute, $value, $fail) {
+                            if ($error = $this->phoneValidationError($value, $this->phone)) {
+                                $fail($error);
+                            }
+                        })
+                        ->help(__('One or more phone numbers, separated by comma. :example', [
+                            'example' => __('Example: +39 328 5360803'),
+                        ]))
                         ->onlyOnForms(),
                     Text::make(__('Mobile phone'), 'mobile_phone')
                         ->nullable()
-                        ->rules('nullable', 'regex:/^[\d\s\p{Z}+,\-\.()\x{200B}\x{200C}\x{200D}\x{FEFF}]+$/u', 'max:255')
-                        ->help(__('One or more numbers separated by comma; spaces and common separators allowed.'))
+                        ->rules('nullable', 'max:255', function ($attribute, $value, $fail) {
+                            if ($error = $this->phoneValidationError($value, $this->mobile_phone)) {
+                                $fail($error);
+                            }
+                        })
+                        ->help(__('One or more phone numbers, separated by comma. :example', [
+                            'example' => __('Example: +39 328 5360803'),
+                        ]))
                         ->onlyOnForms(),
                     $this->statusField($request),
                     BelongsTo::make(__('Owner'), 'owner', User::class)
@@ -309,6 +321,75 @@ class Customer extends Resource
                 ->hideWhenCreating()
                 ->hideWhenUpdating(),
         ];
+    }
+
+    /**
+     * Reuses the model's own phone normalization (Unicode spaces incl. NBSP
+     * to a plain space, zero-width/invisible chars stripped) so the "did
+     * this value actually change" comparison below doesn't diverge from
+     * what gets persisted by CustomerModel::setPhoneAttribute()/setMobilePhoneAttribute().
+     */
+    private function normalizePhoneFieldValue(?string $value): string
+    {
+        return CustomerModel::normalizePhoneString($value) ?? '';
+    }
+
+    /**
+     * Structural sanity check for a single phone number, no external
+     * dependency: an explicit "+" prefix is treated as an international
+     * number (8-15 digits, per E.164 bounds); otherwise the number is
+     * assumed Italian (6-11 digits, covering landlines and mobiles).
+     * This intentionally isn't a per-country numbering-plan validation.
+     */
+    private function isValidPhoneFragment(string $fragment): bool
+    {
+        if (!preg_match('/^[\d+\s\-.()]+$/', $fragment)) {
+            return false;
+        }
+
+        $digits = preg_replace('/[^\d+]/', '', $fragment) ?? '';
+        if ($digits === '') {
+            return false;
+        }
+
+        if ($digits[0] === '+') {
+            return (bool) preg_match('/^\+\d{8,15}$/', $digits);
+        }
+
+        return (bool) preg_match('/^\d{6,11}$/', $digits);
+    }
+
+    /**
+     * Validates one or more comma-separated phone numbers.
+     *
+     * Skips validation entirely when the (normalized) value matches what is
+     * already persisted, so a pre-existing legacy number that no longer
+     * passes this validation doesn't block saving unrelated field changes.
+     */
+    public function phoneValidationError(?string $value, ?string $existingValue): ?string
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        $normalized = $this->normalizePhoneFieldValue($value);
+        if ($normalized === $this->normalizePhoneFieldValue($existingValue)) {
+            return null;
+        }
+
+        $fragments = collect(explode(',', $normalized))
+            ->map(fn ($fragment) => trim($fragment))
+            ->filter(fn ($fragment) => $fragment !== '');
+
+        foreach ($fragments as $fragment) {
+            if (!$this->isValidPhoneFragment($fragment)) {
+                return __('One or more numbers are not in a valid phone format. :example', [
+                    'example' => __('Example: +39 328 5360803'),
+                ]);
+            }
+        }
+
+        return null;
     }
 
     /**
