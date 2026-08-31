@@ -62,6 +62,7 @@ class Kanban extends Dashboard
                 ->statusFilterOverrides([
                     StoryStatus::Test->value => 'tester_id',
                     StoryStatus::Tested->value => 'tester_id',
+                    StoryStatus::PendingRelease->value => ['user_id', 'creator_id'],
                     StoryStatus::Released->value => ['user_id', 'creator_id'],
                 ])
                 ->statusColumnLimits([
@@ -103,7 +104,7 @@ class Kanban extends Dashboard
                                 'color' => $status->color() ?: KanbanCard::DEFAULT_COLOR,
                                 'collapse' => $status->collapse(),
                             ],
-                            [StoryStatus::Released]
+                            [StoryStatus::PendingRelease, StoryStatus::Released]
                         )
                     )
                 )

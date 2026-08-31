@@ -93,6 +93,7 @@ class Tag extends Model
     public static function salClosedStoryStatusValues(): array
     {
         return [
+            StoryStatus::PendingRelease->value,
             StoryStatus::Released->value,
             StoryStatus::Done->value,
             StoryStatus::Rejected->value,

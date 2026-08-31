@@ -15,7 +15,7 @@ class StoryMetricsCalculator
     // Status che indicano "rilavorazione" — un reopen avviene quando si torna
     // da uno stato avanzato a uno di questi
     private const REOPEN_TARGET_STATUSES = ['progress', 'todo', 'assigned'];
-    private const FORWARD_STATUSES = ['testing', 'tested', 'released', 'done'];
+    private const FORWARD_STATUSES = ['testing', 'tested', 'pending_release', 'released', 'done'];
 
     /** Cache in-memory per i log di status, per evitare N+1 query nella Lens */
     private static array $logCache = [];
