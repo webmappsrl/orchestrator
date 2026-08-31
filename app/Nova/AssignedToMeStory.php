@@ -18,7 +18,7 @@ class AssignedToMeStory extends Story
     {
         return $query
             ->where('user_id', auth()->user()->id)
-            ->whereNotIn('status', [StoryStatus::New, StoryStatus::Done]);
+            ->whereNotIn('status', [StoryStatus::New, StoryStatus::Done, StoryStatus::PendingRelease]);
     }
 
     public static function authorizedToCreate(Request $request)

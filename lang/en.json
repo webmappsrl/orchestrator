@@ -551,6 +551,8 @@
   "Progress": "In Progress",
   "Test": "to be tested",
   "Tested": "Tested",
+  "Pending Release": "Pending Release",
+  "Pending_release": "Pending Release",
   "Testing": "To be tested",
   "testing": "To be tested",
   "Waiting": "Waiting",
