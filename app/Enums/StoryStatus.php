@@ -11,6 +11,7 @@ enum StoryStatus: string
     case Progress = 'progress';
     case Test = 'testing';
     case Tested = 'tested';
+    case PendingRelease = 'pending_release';
     case Waiting = 'waiting';
     case Done = 'done';
     case Rejected = 'rejected';
@@ -34,6 +35,7 @@ enum StoryStatus: string
             self::Waiting => '#F59E0B',
             self::Test => '#8B5CF6',
             self::Tested => '#34D399',
+            self::PendingRelease => '#14B8A6',
             self::Released => '#10B981',
             self::Done => '#16A34A',
             self::Backlog => '#E5E7EB',
@@ -66,6 +68,7 @@ enum StoryStatus: string
             self::Waiting => __('Waiting'),
             self::Test => __('Test'),
             self::Tested => __('Tested'),
+            self::PendingRelease => __('Pending Release'),
             self::Backlog => __('Backlog'),
             self::New => __('New'),
             self::Done => __('Done'),
