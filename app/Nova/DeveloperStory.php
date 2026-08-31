@@ -33,7 +33,10 @@ class DeveloperStory extends Story
             ->whereDoesntHave('creator', function ($query) {
                 $query->whereJsonContains('roles', UserRole::Customer);
             })
-            ->where('status', '!=', StoryStatus::Done->value);
+            ->whereNotIn('status', [
+                StoryStatus::Done->value,
+                StoryStatus::PendingRelease->value,
+            ]);
     }
 
     public function cards(NovaRequest $request)
