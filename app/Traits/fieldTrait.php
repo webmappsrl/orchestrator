@@ -324,6 +324,7 @@ trait fieldTrait
                     StoryStatus::Todo->value,
                     StoryStatus::Progress->value,
                     StoryStatus::Tested->value,
+                    StoryStatus::PendingRelease->value,
                     StoryStatus::Backlog->value,
                     storyStatus::Test->value
                 ])
