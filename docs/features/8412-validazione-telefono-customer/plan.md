@@ -4,11 +4,9 @@
 
 Nota: `superpowers:writing-plans` non è installata in questo ambiente — piano scritto manualmente seguendo le stesse convenzioni (path, header, commit convention).
 
-**Revisione post-review (CTO):** il piano originale (Task 1-2-3 sotto, versione iniziale) usava `propaganistas/laravel-phone`. Dopo la review formale (approvata senza bloccanti), il CTO ha richiesto di eliminare la dipendenza esterna per questa feature e sostituirla con un controllo nativo di plausibilità. Task 1 è stato **revertato** (`composer remove propaganistas/laravel-phone`), Task 2/3 sono stati **riscritti** di conseguenza. I blocchi di codice sotto riflettono la versione finale effettivamente implementata; vedi `notes.md` per il dettaglio della revisione e la motivazione.
+## Task 1 — Nessuna dipendenza composer
 
-## Task 1 — ~~Aggiungere dipendenza composer~~ (revertato)
-
-Nessuna dipendenza composer esterna. `docker exec php81_orchestrator composer remove propaganistas/laravel-phone` eseguito per rimuovere quanto installato nella prima iterazione — `composer.json`/`composer.lock` risultano identici a `develop` dopo il ciclo add+remove, **nessun file da committare per questo task**.
+La validazione è implementata internamente al progetto: `composer.json`/`composer.lock` restano identici a `develop`, **nessun file da committare per questo task**.
 
 ## Task 2 — Helper di normalizzazione e validazione in `app/Nova/Customer.php`
 
@@ -125,7 +123,7 @@ Text::make(__('Mobile phone'), 'mobile_phone')
 Nota: `$this->phone` / `$this->mobile_phone` dentro la Closure di validazione leggono l'attributo corrente del model proxato dalla Nova Resource (`$this->resource`) — riflette il valore in DB al momento in cui `fields()` viene costruito, **prima** che Nova applichi i nuovi valori del form al model (stesso pattern già usato in questo file, righe 98-99, per il subtitle). Su creazione, `$this->phone`/`$this->mobile_phone` sono `null` (resource non ancora esistente) → normalizzato a stringa vuota → qualsiasi valore non vuoto inserito viene sempre validato.
 
 File: `app/Nova/Customer.php`
-Commit (Task 2+3 insieme): `fix(oc:8412): validate phone/mobile_phone with laravel-phone instead of regex`
+Commit (Task 2+3 insieme): `fix(oc:8412): validate phone/mobile_phone with a native plausibility check instead of regex`
 
 ## Task 4 — Traduzioni
 
