@@ -31,19 +31,17 @@ class DuplicateStory extends Action
             $story->user_id = $user->id;
             $newStory = Story::create($story->toArray());
             $newStory->status = StoryStatus::New->value;
+            // oc:8445 - il duplicato nasce isolato: nessun padre, nessun figlio.
+            $newStory->parent_id = null;
             $newStory->saveQuietly();
 
             // belongsTo
             $newStory->developer()->associate($story->developer);
             $newStory->tester()->associate($story->tester);
-            $newStory->parentStory()->associate($story->parentStory);
 
             // belongsToMany
             $participantsIds = $story->participants->pluck('id')->toArray();
             $newStory->participants()->sync($participantsIds);
-
-            $childStoryIds = $story->childStories->pluck('id')->toArray();
-            $newStory->childStories()->sync($childStoryIds);
 
             $tagIds = $story->tags->pluck('id')->toArray();
             $newStory->tags()->sync($tagIds);
