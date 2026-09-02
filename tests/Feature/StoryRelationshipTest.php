@@ -3,90 +3,99 @@
 namespace Tests\Feature;
 
 use App\Models\Story;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
-
 use Tests\TestCase;
 
 class StoryRelationshipTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_story_children_creation_and_parent_assignment()
+    /** @test */
+    public function child_stories_e_una_relazione_hasmany_sulla_colonna_parent_id()
     {
-        // Creazione delle storie padre e figlio
-        $parentStory = Story::create(['name' => 'Parent Story']);
-        $childStory1 = Story::create(['name' => 'Child Story 1']);
-        $childStory2 = Story::create(['name' => 'Child Story 2']);
+        $parent = Story::create(['name' => 'Parent Story']);
 
-        // Assegnazione dei figli al genitore nella tabella pivot
-        $parentStory->childStories()->attach($childStory1->id);
-        $parentStory->childStories()->attach($childStory2->id);
-
-        // Recupera il genitore tramite i figli e verifica che sia corretto
-        $this->assertDatabaseHas('story_story', [
-            'parent_id' => $parentStory->id,
-            'child_id' => $childStory1->id
-        ]);
-
-
-        // Verifica che i figli abbiano esattamente un genitore e sia quello corretto
-        $children = Story::find([$childStory1->id, $childStory2->id]);
-        foreach ($children as $child) {
-            $this->assertEquals($parentStory->id, $child->parent_id);
-        }
+        $this->assertInstanceOf(HasMany::class, $parent->childStories());
+        $this->assertEquals('parent_id', $parent->childStories()->getForeignKeyName());
     }
 
     /** @test */
-    public function it_removes_child_associations_when_parent_is_deleted()
+    public function il_padre_elenca_i_figli_collegati_solo_via_colonna_parent_id()
     {
-        $parentStory = Story::create(['name' => 'Parent Story']);
-        $childStory = Story::create(['name' => 'Child Story']);
+        // Riproduce oc:8445: i figli sono collegati dalla sola colonna,
+        // senza alcuna riga nel pivot story_story.
+        $parent = Story::create(['name' => 'Parent Story']);
+        $child1 = Story::create(['name' => 'Child 1', 'parent_id' => $parent->id]);
+        $child2 = Story::create(['name' => 'Child 2', 'parent_id' => $parent->id]);
 
-        $parentStory->childStories()->attach($childStory->id);
+        $this->assertDatabaseCount('story_story', 0);
 
-        // Elimina la storia genitore
-        $parentStory->delete();
+        $ids = $parent->fresh()->childStories->pluck('id')->sort()->values()->all();
 
-        // Verifica che la relazione nella tabella pivot sia stata rimossa
-        $this->assertDatabaseMissing('story_story', [
-            'parent_id' => $parentStory->id,
-            'child_id' => $childStory->id
-        ]);
+        $this->assertEquals([$child1->id, $child2->id], $ids);
     }
 
     /** @test */
-    public function it_correctly_references_the_parent_when_adding_a_child()
+    public function il_figlio_referenzia_correttamente_il_padre()
     {
-        $parentStory = Story::create(['name' => 'Parent Story']);
-        $childStory = Story::create(['name' => 'Child Story']);
+        $parent = Story::create(['name' => 'Parent Story']);
+        $child = Story::create(['name' => 'Child Story', 'parent_id' => $parent->id]);
 
-        $parentStory->childStories()->attach($childStory->id);
-        $parentStory = $parentStory->fresh();
-        $childStory = $childStory->fresh();
-        $parentOfChild = Story::find($childStory->parent_id);
-
-        $this->assertNotNull($parentOfChild);
-        $this->assertEquals($parentStory->id, $parentOfChild->id);
+        $this->assertEquals($parent->id, $child->fresh()->parentStory->id);
     }
+
     /** @test */
-    public function it_propagates_status_changes_from_parent_to_child()
+    public function cancellando_il_padre_i_figli_restano_senza_padre()
     {
-        $parentStory = Story::create(['name' => 'Parent Story', 'status' => 'new']);
-        $childStory = Story::create(['name' => 'Child Story', 'status' => 'new']);
-        $user = User::factory()->create(); // Assicurati di avere una factory per gli utenti.
+        $parent = Story::create(['name' => 'Parent Story']);
+        $child = Story::create(['name' => 'Child Story', 'parent_id' => $parent->id]);
+
+        $parent->delete();
+
+        $this->assertNull($child->fresh()->parent_id);
+    }
+
+    /** @test */
+    public function nessuna_riga_viene_piu_scritta_nel_pivot_story_story()
+    {
+        $parent = Story::create(['name' => 'Parent Story']);
+        $child = Story::create(['name' => 'Child Story']);
+
+        $child->parent_id = $parent->id;
+        $child->save();
+
+        $this->assertDatabaseCount('story_story', 0);
+    }
+
+    /** @test */
+    public function lo_status_del_padre_non_si_propaga_piu_ai_figli()
+    {
+        $user = \App\Models\User::factory()->create();
         $this->actingAs($user);
 
-        $parentStory->childStories()->attach($childStory->id);
-        $parentStory = $parentStory->fresh();
-        $childStory = $childStory->fresh();
-        $parentStory->update(['status' => 'done']);
-        $parentStory = $parentStory->fresh();
+        $parent = Story::create(['name' => 'Parent Story', 'status' => 'new']);
+        $child = Story::create(['name' => 'Child Story', 'status' => 'new', 'parent_id' => $parent->id]);
 
-        // Assumendo che lo stato debba propagarsi
-        $updatedChild = $childStory->fresh();
+        // fresh() e' necessario: l'hook created esegue un save() interno che
+        // desincronizza l'istanza in memoria e rende isDirty('status') falso.
+        // Nova lavora sempre su istanze ricaricate dal DB.
+        $parent = $parent->fresh();
+        $parent->update(['status' => 'done']);
 
-        $this->assertEquals('done', $updatedChild->status);
+        $this->assertEquals('new', $child->fresh()->status);
+    }
+
+    /** @test */
+    public function una_storia_con_figli_non_puo_diventare_figlia_e_lancia_un_errore_di_validazione()
+    {
+        $grandparent = Story::create(['name' => 'Grandparent']);
+        $parent = Story::create(['name' => 'Parent']);
+        Story::create(['name' => 'Child', 'parent_id' => $parent->id]);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        $parent->parent_id = $grandparent->id;
+        $parent->save();
     }
 }

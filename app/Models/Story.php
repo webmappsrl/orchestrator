@@ -18,9 +18,11 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Laravel\Nova\Notifications\NovaNotification;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class Story extends Model implements HasMedia
 {
@@ -252,54 +254,6 @@ class Story extends Model implements HasMedia
 
         static::updated(function (Story $story) {
             if (auth()->user()) {
-                $tablePivot = DB::table('story_story');
-                if ($story->isDirty('status')) {
-                    foreach ($story->childStories as $child) {
-                        $child->status = $story->status;
-                        $child->save();
-                    }
-                }
-                if ($story->wasChanged('parent_id')) {
-                    try {
-
-                        $originalStory = $story->getOriginal();
-                        $originalParentStoryId = $originalStory['parent_id'];
-                        if (isset($story->parent_id)) {
-                            $exists = DB::table('story_story')
-                                ->where('parent_id', $story->parent_id)
-                                ->where('child_id',  $story->id)
-                                ->exists();
-                            if (is_null($originalParentStoryId)) {
-                                if ($exists === false) {
-                                    $tablePivot
-                                        ->insert([
-                                            'parent_id' => $story->parent_id,
-                                            'child_id' => $story->id
-                                        ]);
-                                }
-                            } else if ($story->parent_id != $originalParentStoryId) {
-                                $tablePivot
-                                    ->where('parent_id', $originalParentStoryId)
-                                    ->where('child_id', $story->id)
-                                    ->delete();
-                                $tablePivot
-                                    ->insert([
-                                        'parent_id' => $story->parent_id,
-                                        'child_id' => $story->id
-                                    ]);
-                            }
-                        } else {
-                            if ($originalParentStoryId) {
-                                $tablePivot
-                                    ->where('parent_id', $originalParentStoryId)
-                                    ->where('child_id', $originalStory['id'])
-                                    ->delete();
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        $e;
-                    }
-                }
                 $storyHasDeveloper = isset($story->user_id);
                 $storyHasTester = isset($story->tester_id);
                 $hasRoleAssignmentChange = $story->wasChanged('user_id') || $story->wasChanged('tester_id');
@@ -341,8 +295,9 @@ class Story extends Model implements HasMedia
         });
         static::saving(function ($story) {
             if ($story->parent_id && $story->childStories()->exists()) {
-                // Lancia un'eccezione o rifiuta il salvataggio
-                throw new \Exception('Una storia che è figlia non può avere figli.');
+                throw ValidationException::withMessages([
+                    'parent_id' => __('A ticket that has child tickets cannot itself become a child ticket.'),
+                ]);
             }
         });
     }
@@ -413,10 +368,17 @@ class Story extends Model implements HasMedia
         return $this->belongsTo(Story::class, 'parent_id');
     }
 
-    // Relazione per ottenere le storie figlie
-    public function childStories()
+    /**
+     * Ticket figli.
+     *
+     * Fonte unica: la colonna stories.parent_id.
+     * Il pivot story_story e' DEPRECATO (oc:8445) e non va piu' usato: si era
+     * disallineato dalla colonna su 15 relazioni su 66 perche' la sua sincronizzazione
+     * girava solo con un utente autenticato e solo in update, mai in create.
+     */
+    public function childStories(): HasMany
     {
-        return $this->belongsToMany(Story::class, 'story_story', 'parent_id', 'child_id')->using(StoryPivot::class);
+        return $this->hasMany(Story::class, 'parent_id');
     }
 
 

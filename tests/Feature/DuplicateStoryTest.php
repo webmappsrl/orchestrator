@@ -27,7 +27,8 @@ class DuplicateStoryTest extends TestCase
         $story->creator()->associate($creator = User::factory()->create());
         $story->tester()->associate($tester = User::factory()->create());
         $story->user()->associate($user = User::factory()->create());
-        $story->parentStory()->associate($parent = Story::factory()->create());
+        // oc:8445 - l'originale ha un padre, ma il duplicato NON deve ereditarlo.
+        $story->parentStory()->associate(Story::factory()->create());
 
         // BelongsToMany
         $story->tags()->sync($tags = Tag::factory(3)->create()->pluck('id'));
@@ -51,6 +52,11 @@ class DuplicateStoryTest extends TestCase
         // BelongsToMany
         $this->assertEquals($original->tags->pluck('id'), $duplicate->tags->pluck('id'));
         $this->assertEquals($original->participants->pluck('id'), $duplicate->participants->pluck('id'));
+
+        // oc:8445 - il duplicato nasce isolato: non eredita il padre dell'originale
+        // e non ne acquisisce i figli.
+        $this->assertNull($duplicate->parent_id);
+        $this->assertCount(0, $duplicate->childStories);
     }
 
     /** @test */
@@ -111,5 +117,24 @@ class DuplicateStoryTest extends TestCase
             $latestOriginalStory = $originalStories[$numberOfOriginalStories - 1 - $i];
             $this->assertStoryCloned($latestOriginalStory, $latestDuplicatedStory);
         }
+    }
+
+    /** @test */
+    public function il_duplicato_non_compare_tra_i_figli_del_padre_dell_originale()
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $grandparent = Story::factory()->create();
+        $original = Story::factory()->create(['parent_id' => $grandparent->id]);
+
+        $action = new DuplicateStory();
+        $action->handle(new ActionFields(collect(), collect()), collect([$original]));
+
+        // Il ticket di un terzo non deve essere stato toccato dall'azione.
+        $this->assertEquals(
+            [$original->id],
+            $grandparent->fresh()->childStories->pluck('id')->all()
+        );
     }
 }
