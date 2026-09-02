@@ -5,8 +5,6 @@
 ## Cosa cambia
 Nel form Nova di creazione/modifica Customer (`app/Nova/Customer.php`), i campi "Telefono" (`phone`) e "Cellulare" (`mobile_phone`) passano da una validazione basata su regex generica a un controllo strutturale di plausibilità, scritto internamente al progetto (nessuna libreria esterna): un numero con prefisso `+XX` esplicito deve avere 8-15 cifre (limiti E.164), un numero senza prefisso è assunto italiano e deve avere 6-11 cifre. Il supporto multi-numero (più numeri separati da virgola nello stesso campo) resta invariato: ogni frammento viene validato singolarmente. L'help text sotto entrambi i campi mostra un esempio concreto di formato riconosciuto (`+39 328 5360803`).
 
-**Decisione CTO (revisione post-review):** la prima versione di questa feature usava `propaganistas/laravel-phone` (wrapper su `giggsey/libphonenumber-for-php`, motore di Google). Il CTO ha richiesto di eliminare la dipendenza esterna per una feature di questa portata (form interno Nova, non validazione semantica per-piano-nazionale) e di riscrivere la stessa logica come controllo nativo, senza vendorizzare il dataset della libreria (che sposterebbe solo il problema di manutenzione, non lo eliminerebbe). Vedi `notes.md` per il dettaglio della revisione e la motivazione completa.
-
 ## Perché
 Oggi i due campi accettano quasi qualsiasi carattere (la regex attuale ammette cifre, spazi, `+`, virgole, trattini, punti, parentesi e alcuni caratteri unicode invisibili) senza indicare all'utente un formato di riferimento né verificare che il numero sia realmente valido. Il cliente ha chiesto un helper con esempio di formato e una validazione che segnali errori comprensibili.
 
