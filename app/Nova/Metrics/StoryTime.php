@@ -21,16 +21,19 @@ class StoryTime extends Value
         $requestModel = $request->findModel();
         $requestResource = $request->findResource();
         if ($requestModel instanceof Tag) {
-            $query = Story::whereRelation('tags', 'taggables.taggable_type', Story::class)
-                ->whereRelation('tags', 'taggables.tag_id', $requestModel->id);
+            $taggedIds = Story::whereRelation('tags', 'taggables.taggable_type', Story::class)
+                ->whereRelation('tags', 'taggables.tag_id', $requestModel->id)
+                ->pluck('id');
+            $query = Story::whereIn('id', Story::idsWithChildren($taggedIds));
         } elseif ($requestModel instanceof Story) {
-            if (! is_null($requestModel->id))
-                $query = Story::where('id', $requestModel->id);
-            else {
-                $query = $requestResource->indexQuery($request, (new Story)->newQuery());
+            if (! is_null($requestModel->id)) {
+                $query = Story::whereIn('id', Story::idsWithChildren([$requestModel->id]));
+            } else {
+                $baseQuery = $requestResource->indexQuery($request, (new Story)->newQuery());
+                $baseIds = (clone $baseQuery)->pluck('id');
+                $query = Story::whereIn('id', Story::idsWithChildren($baseIds));
             }
         }
-
 
         return $this->precision(2)->sum($request, $query, 'hours')->suffix('Hours');
     }
