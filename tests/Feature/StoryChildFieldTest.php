@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Story;
 use App\Models\User;
 use App\Nova\Story as NovaStory;
@@ -30,7 +31,11 @@ class StoryChildFieldTest extends TestCase
         // Regressione oc:8445: searchable()/filterable() non esistono su HasMany
         // e la loro presenza produceva un BadMethodCallException, cioe' un 500
         // sul detail di OGNI ticket.
-        $user = User::factory()->create();
+        // UserFactory assegna 2 ruoli casuali per default: fissare un ruolo
+        // esplicito (non Customer) evita che il test sia flaky quando il
+        // sorteggio include Customer (childStories e' nascosto ai Customer,
+        // vedi App\Nova\Story::fieldsInDetails()).
+        $user = User::factory()->create(['roles' => [UserRole::Admin]]);
         $this->actingAs($user);
 
         $parent = Story::create(['name' => 'Parent']);
@@ -48,7 +53,7 @@ class StoryChildFieldTest extends TestCase
     /** @test */
     public function il_campo_ticket_correlati_e_un_hasmany()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['roles' => [UserRole::Admin]]);
         $this->actingAs($user);
 
         $parent = Story::create(['name' => 'Parent']);
