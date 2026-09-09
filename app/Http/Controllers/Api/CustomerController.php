@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Http\Requests\Api\CustomerApiRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
@@ -52,6 +54,51 @@ class CustomerController extends Controller
         return response()->json($this->formatCustomer($customer));
     }
 
+    /**
+     * Create a customer.
+     *
+     * @response 201 array{id: int, name: string, company_name: string|null, vat: string|null, address: string|null, contact_emails: array<string>, phone: string|null, status: string|null, owner: array{id: int, name: string}|null, notes: string|null, warnings?: array<array{type: string, customers: array<array{id: int, name: string}>}>}
+     */
+    public function store(CustomerApiRequest $request): JsonResponse
+    {
+        $this->authorizeRole($request);
+
+        $validated = $request->validated();
+
+        $customer = new Customer();
+        $customer->name = $this->resolveName($validated);
+        $this->applyWritableFields($customer, $validated);
+        $customer->save();
+
+        $data = $this->formatCustomer($customer->fresh('owner'));
+
+        if ($warnings = $this->duplicateVatWarnings($customer)) {
+            $data['warnings'] = $warnings;
+        }
+
+        return response()->json($data, 201);
+    }
+
+    /**
+     * Update a customer.
+     *
+     * @response array{id: int, name: string, company_name: string|null, vat: string|null, address: string|null, contact_emails: array<string>, phone: string|null, status: string|null, owner: array{id: int, name: string}|null, notes: string|null}
+     */
+    public function update(CustomerApiRequest $request, Customer $customer): JsonResponse
+    {
+        $this->authorizeRole($request);
+
+        $validated = $request->validated();
+
+        if (!empty($validated['name'])) {
+            $customer->name = $validated['name'];
+        }
+        $this->applyWritableFields($customer, $validated);
+        $customer->save();
+
+        return response()->json($this->formatCustomer($customer->fresh('owner')));
+    }
+
     private function authorizeRole(Request $request): void
     {
         // Matches CustomerPolicy::before() (Admin/Manager only) — Nova denies
@@ -82,5 +129,95 @@ class CustomerController extends Controller
             ] : null,
             'notes'          => $customer->notes,
         ];
+    }
+
+    private function resolveName(array $validated): string
+    {
+        if (!empty($validated['name'])) {
+            return $validated['name'];
+        }
+
+        $base = Str::slug($validated['company_name'] ?? '', '_');
+
+        return $this->uniqueSlug($base !== '' ? $base : 'customer');
+    }
+
+    private function uniqueSlug(string $base): string
+    {
+        $slug = $base;
+        $suffix = 1;
+
+        while (Customer::where('name', $slug)->exists()) {
+            $suffix++;
+            $slug = "{$base}_{$suffix}";
+        }
+
+        return $slug;
+    }
+
+    private function applyWritableFields(Customer $customer, array $validated): void
+    {
+        if (array_key_exists('company_name', $validated)) {
+            $customer->full_name = $validated['company_name'];
+        }
+        if (array_key_exists('vat', $validated)) {
+            $customer->vat = $validated['vat'];
+        }
+        if (array_key_exists('address', $validated)) {
+            $customer->address = $validated['address'];
+        }
+        if (array_key_exists('phone', $validated)) {
+            $customer->phone = $validated['phone'];
+        }
+        if (array_key_exists('status', $validated)) {
+            $customer->status = $validated['status'];
+        }
+        if (array_key_exists('notes', $validated)) {
+            $customer->notes = $validated['notes'];
+        }
+        $this->applyContactEmails($customer, $validated);
+    }
+
+    /**
+     * `contact_emails` (replace-all) e `contact_emails_add` (append) sono
+     * mutuamente esclusivi — già garantito da CustomerApiRequest::withValidator().
+     * La colonna `email` resta testo libero comma-separated, coerente col
+     * formato già in produzione (Customer::getContactEmailsAttribute()).
+     */
+    private function applyContactEmails(Customer $customer, array $validated): void
+    {
+        if (array_key_exists('contact_emails', $validated)) {
+            $customer->email = implode(',', $validated['contact_emails'] ?? []);
+            return;
+        }
+
+        if (array_key_exists('contact_emails_add', $validated) && $validated['contact_emails_add'] !== null) {
+            $toAdd = is_array($validated['contact_emails_add'])
+                ? $validated['contact_emails_add']
+                : [$validated['contact_emails_add']];
+
+            $merged = array_values(array_unique(array_merge($customer->contact_emails, $toAdd)));
+            $customer->email = implode(',', $merged);
+        }
+    }
+
+    private function duplicateVatWarnings(Customer $customer): array
+    {
+        if (blank($customer->vat)) {
+            return [];
+        }
+
+        $duplicates = Customer::where('vat', $customer->vat)
+            ->where('id', '!=', $customer->id)
+            ->get(['id', 'name']);
+
+        if ($duplicates->isEmpty()) {
+            return [];
+        }
+
+        return [[
+            'type'      => 'duplicate_vat',
+            'customers' => $duplicates->map(fn(Customer $c) => ['id' => $c->id, 'name' => $c->name])->all(),
+        ]];
     }
 }

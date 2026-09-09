@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Quote;
 use App\Models\RecurringProduct;
 use App\Services\QuotePdfService;
+use Dedoc\Scramble\Attributes\BodyParameter;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -185,6 +186,7 @@ class QuoteController extends Controller
      *
      * @response 201 array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
+    #[BodyParameter('additional_services', description: 'Map of service description to price, e.g. {"Setup fee": 150.0}.', type: 'object')]
     public function store(QuoteApiRequest $request): JsonResponse
     {
         $this->authorize('create', Quote::class);
@@ -205,6 +207,7 @@ class QuoteController extends Controller
      *
      * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
+    #[BodyParameter('additional_services', description: 'Map of service description to price, e.g. {"Setup fee": 150.0}.', type: 'object')]
     public function update(QuoteApiRequest $request, Quote $quote): JsonResponse
     {
         $this->authorize('update', $quote);

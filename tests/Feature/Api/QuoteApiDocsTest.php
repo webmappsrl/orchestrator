@@ -78,4 +78,21 @@ class QuoteApiDocsTest extends TestCase
             $this->assertArrayHasKey($metaField, $paginated['properties']['meta']['properties'] ?? [], "Expected meta.{$metaField} in the paginated response schema.");
         }
     }
+
+    public function test_quotes_store_documents_additional_services_as_object(): void
+    {
+        $spec = $this->get('/docs/api.json')->json();
+        $requestBodySchema = $spec['paths']['/quotes']['post']['requestBody']['content']['application/json']['schema'] ?? null;
+
+        $this->assertNotNull($requestBodySchema, 'Expected a request body schema for POST /quotes.');
+
+        $variants = $requestBodySchema['allOf'] ?? [$requestBodySchema];
+        $additionalServicesSchema = collect($variants)
+            ->pluck('properties.additional_services')
+            ->filter()
+            ->last();
+
+        $this->assertNotNull($additionalServicesSchema, 'Expected additional_services to be documented on POST /quotes.');
+        $this->assertEquals('object', $additionalServicesSchema['type'] ?? null, 'Expected additional_services to be documented as an object, not an array of strings.');
+    }
 }
