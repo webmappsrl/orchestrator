@@ -14,7 +14,6 @@ use Ebess\AdvancedNovaMediaLibrary\Fields\Files;
 use Illuminate\Support\Facades\Session;
 use InteractionDesignFoundation\HtmlCard\HtmlCard;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\MorphToMany;
@@ -192,12 +191,13 @@ class Story extends Resource
             HasMany::make(__('Logs'), 'views', StoryLog::class)->canSee(function ($request) {
                 return ! $request->user()->hasRole(UserRole::Customer);
             }),
-            BelongsToMany::make(__('Child Stories'), 'childStories', Story::class)
-                ->nullable()
-                ->searchable()
+            // oc:8445 - HasMany di sola lettura sulla colonna parent_id.
+            // searchable()/filterable() NON esistono su HasMany: aggiungerli
+            // solleva un BadMethodCallException, cioe' un 500 sul detail.
+            HasMany::make(__('Child Stories'), 'childStories', Story::class)
                 ->canSee(function ($request) {
                     return empty($this->parent_id) && ! $request->user()->hasRole(UserRole::Customer);
-                })->filterable(),
+                }),
             BelongsTo::make(__('Parent Story'), 'parentStory', Story::class)
                 ->nullable()
                 ->searchable()
@@ -248,7 +248,7 @@ class Story extends Resource
                 ->canSee(function ($request) {
                     return ! $request->user()->hasRole(UserRole::Customer);
                 })
-                ->help(__('Here you can attach the ticket that has the same issue. If multiple tickets share the same issue, attach the main ticket to all related tickets. You can find the main ticket by searching for its title. It is important to note that when the main ticket status changes, the status of all related tickets will also be updated.')),
+                ->help(__("Here you can attach the main ticket for this issue. If multiple tickets share the same issue, attach the main ticket to all of them. You can find it by searching for its title. The status of each ticket remains independent: changing the status of the main ticket does not change the status of the related ones.")),
         ];
 
         return array_map(function ($field) {
