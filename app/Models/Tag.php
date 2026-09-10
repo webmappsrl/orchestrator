@@ -42,13 +42,29 @@ class Tag extends Model
         return $this->estimate ? ($totalHours / $this->estimate) * 100 : 0; // Calcola la percentuale di avanzamento
     }
 
+    protected ?float $totalHoursMemo = null;
+    protected bool $totalHoursComputed = false;
+
+    /**
+     * Somma di `hours` sull'unione deduplicata (story taggate ∪ loro figli diretti).
+     * Query dei figli su `parent_id`, non su childStories() — vedi oc:8421 overview §Decisioni.
+     * Memoizzato per istanza: il valore e letto piu volte per riga in Nova\Tag/Nova\TagGroup ("SAL t").
+     */
     public function getTotalHoursAttribute()
     {
-        if (! $this->tagged()->exists()) {
-            return null; // Se non ci sono storie associate
+        if ($this->totalHoursComputed) {
+            return $this->totalHoursMemo;
+        }
+        $this->totalHoursComputed = true;
+
+        $taggedIds = $this->tagged()->pluck((new Story)->getTable() . '.id');
+        if ($taggedIds->isEmpty()) {
+            return $this->totalHoursMemo = null;
         }
 
-        return round($this->tagged()->sum('hours'), 2); // Somma delle ore delle storie associate arrotondata a due cifre
+        $allIds = Story::idsWithChildren($taggedIds);
+
+        return $this->totalHoursMemo = round(Story::whereIn('id', $allIds)->sum('hours'), 2);
     }
 
     public function calculateSalPercentage()

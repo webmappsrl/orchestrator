@@ -521,7 +521,7 @@ trait fieldTrait
     {
         if ($request->isResourceDetailRequest() || $request->isResourceIndexRequest()) {
             return Text::make(__('Effective Hours'), $fieldName, function () {
-                $hours = $this->hours ?? 0;
+                $hours = $this->hoursWithChildren() ?? 0;
                 return
                     <<<HTML
                         <span >Effective Hours: $hours</span>

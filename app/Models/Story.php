@@ -381,6 +381,41 @@ class Story extends Model implements HasMedia
         return $this->hasMany(Story::class, 'parent_id');
     }
 
+    /**
+     * Dato un insieme di id story, ritorna l'unione con gli id dei loro figli diretti.
+     * Query diretta su `parent_id`, non su childStories(): quest'ultima resta pensata per
+     * la UI Nova (campo "Ticket correlati", oc:8445) e per quello scopo basta una relazione;
+     * qui serve solo l'insieme di id, e la query diretta evita di dipendere da quella relazione.
+     */
+    public static function idsWithChildren(iterable $storyIds): \Illuminate\Support\Collection
+    {
+        $ids = collect($storyIds)->filter()->unique()->values();
+        if ($ids->isEmpty()) {
+            return $ids;
+        }
+        $childIds = static::whereIn('parent_id', $ids)->pluck('id');
+        return $ids->merge($childIds)->unique()->values();
+    }
+
+    /**
+     * Tempo effettivo (colonna `hours`) di questa story, incluso quello dei suoi figli diretti.
+     * Story senza figli: ritorna `hours` cosi com'e (incluso null), nessun cambio di comportamento.
+     * Story con figli: somma hours proprio + hours dei figli (SQL SUM ignora i NULL, nessun clamp sui negativi).
+     *
+     * Esegue sempre una query per riga quando la story ha figli: nessun precaricamento batch
+     * (vedi oc:8421 notes.md — un tentativo di anti-N+1 via subquery su Story::indexQuery() e'
+     * stato scartato in review perche' rompeva altri filtri Nova che condividono la stessa query
+     * e non era comunque ereditato dalle risorse Nova realmente usate in produzione).
+     */
+    public function hoursWithChildren(): ?float
+    {
+        if (! static::where('parent_id', $this->id)->exists()) {
+            return $this->hours;
+        }
+
+        return (float) round(static::whereIn('id', static::idsWithChildren([$this->id]))->sum('hours'), 2);
+    }
+
 
     /**
      * Register a spatie media collection
@@ -561,7 +596,8 @@ class Story extends Model implements HasMedia
 
     /**
      * Minuti trascorsi in stato `progress`, sommando tutti gli intervalli attivi.
-     * Fonte autorevole per le ore effettive — il campo `hours` è deprecato.
+     * Alimenta solo la dashboard Team Performance — NON è la fonte delle ore effettive
+     * lette da Nova/Tag SAL/report/API (quella è la colonna `hours`, vedi docs/calcolo-ore-effettive-stimate.md).
      * Restituisce null se non ci sono mai stati log di progress.
      */
     public function effectiveMinutes(): ?int
