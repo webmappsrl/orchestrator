@@ -66,3 +66,13 @@ Il dettaglio Quote ha accumulato troppi campi in un unico pannello (21+ campi in
 - `app/Nova/Quote.php` (repo `orchestrator`) — wrap `fields()` in `Tab::group()`/`Tab::make()`, riordino campi Tab Main.
 - `lang/it.json`, `lang/en.json` (repo `orchestrator`) — nuova chiave di traduzione `"Quote Details"`.
 - `public/nova-custom.css` (repo `orchestrator`) — fix CSS per la collisione di classe `.tab-item` tra `Tab::group` di Nova e il componente Toast UI Editor (vedi Rischi). **Attenzione**: esiste un secondo file quasi omonimo `public/css/nova-custom.css`, mai referenziato da `NovaServiceProvider` (`public_path('/nova-custom.css')` risolve alla root di `public/`, non a `public/css/`) — file morto, non toccare in futuro credendo sia quello attivo.
+
+---
+
+> **Errata (2026-09-12)** — questo documento afferma che `eminiarts/nova-tabs` è «installato in
+> composer ma non usato direttamente per il layout — è una dipendenza transitiva legata a
+> `NovaTabTranslatable`».
+> Verificato: `composer.json:17` — `"eminiarts/nova-tabs": "^1.5"` è dichiarato fra i `require` del
+> progetto, quindi è una **dipendenza diretta**, non transitiva. Resta vero che il layout a tab usa
+> il Tab nativo di Nova 4 e non quel package.
+> Lo stato attuale è in [docs/knowledge/quote-api-e-pdf.md](../../knowledge/quote-api-e-pdf.md).
