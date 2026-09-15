@@ -80,7 +80,7 @@ class StoryController extends Controller
             $story->addResponse($validated['customer_request'], false);
         }
         if (array_key_exists('description', $validated)) {
-            $story->addDevNote($validated['description'], false);
+            $story->description = $validated['description'];
         }
         if (array_key_exists('estimated_hours', $validated)) {
             $story->estimated_hours = $validated['estimated_hours'];

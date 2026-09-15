@@ -128,8 +128,9 @@ class StoryApiTest extends TestCase
             ->assertJsonFragment(['name' => 'Nuovo nome']);
 
         $this->assertDatabaseHas('stories', [
-            'id'   => $story->id,
-            'name' => 'Nuovo nome',
+            'id'          => $story->id,
+            'name'        => 'Nuovo nome',
+            'description' => 'Note aggiornate',
         ]);
     }
 
@@ -150,6 +151,23 @@ class StoryApiTest extends TestCase
         $this->assertDatabaseHas('stories', [
             'id'   => $story->id,
             'name' => 'Nome originale',
+        ]);
+    }
+
+    /** @test */
+    public function aggiorna_story_description_sostituisce_valore_precedente(): void
+    {
+        Sanctum::actingAs($this->developer);
+
+        $story = Story::factory()->create(['description' => 'Descrizione vecchia']);
+
+        $this->patchJson("/api/stories/{$story->id}", [
+            'description' => 'Descrizione nuova',
+        ]);
+
+        $this->assertDatabaseHas('stories', [
+            'id'          => $story->id,
+            'description' => 'Descrizione nuova',
         ]);
     }
 
