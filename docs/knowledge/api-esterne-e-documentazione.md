@@ -35,6 +35,43 @@ documentata.
   intenzionalmente **fuori** dal docblock pubblico di `AuthController::login()`, che finisce su
   `/docs/api`: offrirebbe ricognizione gratuita a un attaccante.
 
+### Lista Story, log delle modifiche e ordine degli stati (oc:8536)
+- `GET /api/stories` è il primo `index` su Story: filtri **su due livelli distinti**, tenuti
+  volutamente separati — proprietà della story (`status` multi-valore, `type`, `tag_id`, `user_id`
+  come assegnatario attuale, `creator_id`, range `created_*`/`updated_*`) contro proprietà delle sue
+  modifiche registrate (`changed_by` come autore, `changed_from`/`changed_to`). **Confondere
+  `user_id` con `changed_by` è l'errore più probabile e il più silenzioso**: una persona modifica
+  di continuo story assegnate ad altri, quindi il risultato resta plausibile anche se il filtro
+  sbagliato viene applicato.
+- **Un log in `story_logs` non è sempre una "modifica"**: la tabella contiene anche righe di
+  tracciamento visualizzazione (`LogStory` middleware, `changes: {"watch": ...}`, ~38% delle righe
+  su dati reali) e di attach/detach tag (`TagController`, `changes: {"tag_attached"/"tag_detached"}`).
+  `changed_by`/`changed_from`/`changed_to` e `with=logs` le escludono sempre
+  (`StoryController::LOG_IS_CHANGE_SQL`, via `jsonb_exists()` su Postgres). **Attenzione:** esiste
+  già altrove (`Story.php:614`, `effectiveMinutesForStory()`) una diversa forma per lo stesso
+  genere di problema (`changes::jsonb ?? 'status'`), e una quarta logica con criterio diverso
+  (conteggio di chiavi, non chiavi specifiche) vive in `SendWaitingStoryReminder.php:75` — le tre
+  non sono centralizzate, coincidono oggi solo perché nessun log ha chiavi miste.
+- **Paginazione sempre attiva** (`{data, meta}`, default 25, clampata a `[1, 100]`) — a differenza
+  di `QuoteController::index()` (paginazione opt-in, scelta per non rompere consumer esistenti) e
+  di `TagController`/`TaskController::index()` (nessuna paginazione). Tre convenzioni diverse
+  convivono nell'API oggi; per un endpoint nuovo la paginazione sempre attiva è stata preferita
+  perché più semplice da consumare per un client automatico (skill Claude), non essendoci
+  compatibilità da preservare.
+- **Ogni filtro numerico o data non validato risponde 422**, non un 500 né un risultato vuoto
+  silenzioso: `validatedIntFilter()`/`validatedDateFilter()` in `StoryController` sono il pattern da
+  imitare per i prossimi filtri di query string che non passano da una `FormRequest` (gli endpoint
+  `index`/`show`-like non ne usano una, a differenza di `store`/`update`).
+- **`GET /api/stories/{story}/logs`** risponde alla domanda "cosa è successo a questa story" (storico
+  completo, nessun filtro `changed_*`) — diversa da `with=logs` su `GET /api/stories`, che risponde
+  "chi ha modificato cosa in una finestra di tempo" per più story insieme.
+- **L'ordine canonico degli stati (`sort=status`) resta bloccato**: `StoryStatus` non ha ancora un
+  metodo che restituisca la posizione nel flusso, in attesa di conferma esplicita del CTO — la
+  Kanban (`Kanban.php:86-92`) tratta `waiting` come stato in sequenza, `StoryMetricsCalculator::FORWARD_STATUSES`
+  tratta `done` come successivo a `released`: due precedenti nel codice che non concordano fra loro
+  sulla posizione di questi stati. `sort=status`/`-status` ricade silenziosamente sul default
+  (`-created_at`) finché il metodo non esiste.
+
 ### Accesso a Nova (oc:8161)
 - **Il wm-package resta fail-closed**: il listener condiviso `EnforceNovaAccessOnLogin` continua a
   negare il login web quando `can('access-nova')` è falso.

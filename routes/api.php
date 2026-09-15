@@ -38,9 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
             'email' => $request->user()->email,
         ]);
     });
+    Route::get('/stories', [StoryController::class, 'index']);
     Route::get('/stories/{story}', [StoryController::class, 'show']);
     Route::post('/stories', [StoryController::class, 'store']);
     Route::patch('/stories/{story}', [StoryController::class, 'update']);
+    Route::get('/stories/{story}/logs', [StoryController::class, 'logs']);
 
     Route::get('/tags', [TagController::class, 'index']);
     Route::get('/tags/{tag}', [TagController::class, 'show']);
