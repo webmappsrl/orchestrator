@@ -31,8 +31,9 @@ class TaskApiRequest extends FormRequest
         }
 
         return [
-            'status' => ['sometimes', Rule::in([Task::STATUS_TODO, Task::STATUS_COMPLETED])],
-            'notes'  => ['sometimes', 'string'],
+            'status'   => ['sometimes', Rule::in([Task::STATUS_TODO, Task::STATUS_COMPLETED])],
+            'notes'    => ['sometimes', 'string'],
+            'due_date' => ['sometimes', 'date'],
         ];
     }
 }

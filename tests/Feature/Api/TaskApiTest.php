@@ -344,4 +344,64 @@ class TaskApiTest extends TestCase
 
         $this->assertEquals($creator->id, $task->fresh()->creator_id);
     }
+
+    /** @test */
+    public function creator_puo_spostare_la_scadenza(): void
+    {
+        $creator = $this->loginAs([UserRole::Developer]);
+        $quote = $this->makeQuote();
+        $task = $this->makeTask($quote, ['creator_id' => $creator->id]);
+
+        $response = $this->patchJson("/api/tasks/{$task->id}", ['due_date' => '2026-10-15 10:30:00'])
+            ->assertStatus(200);
+
+        $this->assertStringStartsWith('2026-10-15T10:30:00', $response->json('due_date'));
+        $this->assertEquals('2026-10-15 10:30:00', $task->fresh()->due_date->format('Y-m-d H:i:s'));
+    }
+
+    /** @test */
+    public function due_date_non_valida_ritorna_422(): void
+    {
+        $creator = $this->loginAs([UserRole::Developer]);
+        $quote = $this->makeQuote();
+        $task = $this->makeTask($quote, ['creator_id' => $creator->id]);
+        $scadenzaOriginale = $task->fresh()->due_date;
+
+        $this->patchJson("/api/tasks/{$task->id}", ['due_date' => 'domani'])->assertStatus(422);
+        $this->patchJson("/api/tasks/{$task->id}", ['due_date' => null])->assertStatus(422);
+
+        $this->assertEquals($scadenzaOriginale, $task->fresh()->due_date);
+    }
+
+    /** @test */
+    public function non_creator_puo_spostare_la_scadenza(): void
+    {
+        $this->loginAs([UserRole::Admin]);
+        $quote = $this->makeQuote();
+        $altroCreator = User::factory()->create();
+        $task = $this->makeTask($quote, ['creator_id' => $altroCreator->id]);
+
+        $this->patchJson("/api/tasks/{$task->id}", ['due_date' => '2026-10-20'])->assertStatus(200);
+
+        $this->assertEquals('2026-10-20', $task->fresh()->due_date->format('Y-m-d'));
+    }
+
+    /** @test */
+    public function payload_misto_status_e_due_date_da_non_creator_non_salva_niente(): void
+    {
+        $this->loginAs([UserRole::Admin]);
+        $quote = $this->makeQuote();
+        $altroCreator = User::factory()->create();
+        $task = $this->makeTask($quote, ['creator_id' => $altroCreator->id]);
+        $scadenzaOriginale = $task->fresh()->due_date;
+
+        $this->patchJson("/api/tasks/{$task->id}", [
+            'status'   => Task::STATUS_COMPLETED,
+            'due_date' => '2026-10-20',
+        ])->assertStatus(403);
+
+        $fresh = $task->fresh();
+        $this->assertEquals(Task::STATUS_TODO, $fresh->status);
+        $this->assertEquals($scadenzaOriginale, $fresh->due_date);
+    }
 }

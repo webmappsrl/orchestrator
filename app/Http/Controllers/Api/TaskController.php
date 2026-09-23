@@ -87,16 +87,17 @@ class TaskController extends Controller
     }
 
     /**
-     * Update a task, limited to two fields with per-field authorization
+     * Update a task, limited to three fields with per-field authorization
      * (documented in TaskPolicy): `status` requires the authenticated user
      * to be the task's creator (mirror of
-     * App\Nova\Actions\ToggleTaskCompleted::authorizedToRun()); `notes` is
-     * open to any Admin/Manager/Developer. The `status` authorization
-     * check runs BEFORE any mutation is applied, so a mixed payload
-     * {status, notes} from a non-creator fails the entire request with
-     * 403 — `notes` is never persisted in that case, even though it would
-     * have been allowed on its own. `completed_at` is updated
-     * automatically by the existing Task::booted() hook.
+     * App\Nova\Actions\ToggleTaskCompleted::authorizedToRun()); `notes` and
+     * `due_date` are open to any Admin/Manager/Developer. The `status`
+     * authorization check runs BEFORE any mutation is applied, so a mixed
+     * payload {status, notes} or {status, due_date} from a non-creator
+     * fails the entire request with 403 — nothing is persisted in that
+     * case, even the fields that would have been allowed on their own.
+     * `completed_at` is updated automatically by the existing
+     * Task::booted() hook.
      *
      * @response array{id: int, quote_id: int, quote_title: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}
      */
@@ -110,6 +111,13 @@ class TaskController extends Controller
 
         if ($request->has('status')) {
             $task->status = $request->input('status');
+        }
+
+        if ($request->has('due_date')) {
+            $task->due_date = $request->input('due_date');
+        }
+
+        if ($task->isDirty()) {
             $task->save();
         }
 
