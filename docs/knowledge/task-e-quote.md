@@ -33,7 +33,9 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   `ToggleTaskCompleted::authorizedToRun()`), `notes` per qualsiasi Admin/Manager/Developer
   (`TaskPolicy::update()`, mirror di `Story::addDevNote()`). `due_date` segue la stessa regola di
   `notes`, perché capita che sia un collega a riprogrammare un follow-up, e usa la stessa
-  validazione del POST (`date`: sola data o data e ora, date passate ammesse) (oc:8625). Il
+  validazione del POST (`date`: sola data o data e ora, date passate ammesse) (oc:8625). In
+  entrambi i casi la data passa da `TaskApiRequest::dueDate()`, che la converte nel fuso
+  dell'applicazione: il cast `datetime` da solo scarterebbe l'offset di un input ISO 8601. Il
   controller verifica `updateStatus` **prima** di applicare qualsiasi modifica: un payload
   `{status, notes}` o `{status, due_date}` da un non-creator fallisce con 403 sull'intera
   richiesta. Pattern non standard rispetto al resto del

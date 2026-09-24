@@ -404,4 +404,58 @@ class TaskApiTest extends TestCase
         $this->assertEquals(Task::STATUS_TODO, $fresh->status);
         $this->assertEquals($scadenzaOriginale, $fresh->due_date);
     }
+
+    /** @test */
+    public function due_date_con_fuso_orario_viene_convertita_in_ora_di_roma(): void
+    {
+        $creator = $this->loginAs([UserRole::Developer]);
+        $quote = $this->makeQuote();
+        $task = $this->makeTask($quote, ['creator_id' => $creator->id]);
+
+        // 22:00 UTC del 30/09 è la mezzanotte del 1/10 a Roma (ora legale, +02:00)
+        $response = $this->patchJson("/api/tasks/{$task->id}", ['due_date' => '2026-09-30T22:00:00.000Z'])
+            ->assertStatus(200);
+
+        $this->assertStringStartsWith('2026-10-01T00:00:00', $response->json('due_date'));
+        $this->assertEquals('2026-10-01 00:00:00', $task->fresh()->due_date->format('Y-m-d H:i:s'));
+
+        // 23:30 UTC del 1/12 è le 00:30 del 2/12 a Roma (ora solare, +01:00)
+        $this->patchJson("/api/tasks/{$task->id}", ['due_date' => '2026-12-01T23:30:00Z'])
+            ->assertStatus(200);
+
+        $this->assertEquals('2026-12-02 00:30:00', $task->fresh()->due_date->format('Y-m-d H:i:s'));
+    }
+
+    /** @test */
+    public function store_converte_due_date_con_fuso_orario_in_ora_di_roma(): void
+    {
+        $this->loginAs([UserRole::Admin]);
+        $quote = $this->makeQuote();
+
+        $response = $this->postJson('/api/tasks', [
+            'quote_id' => $quote->id,
+            'title'    => 'Richiamare il cliente',
+            'due_date' => '2026-10-15T08:30:00+00:00',
+        ])->assertStatus(201);
+
+        $this->assertEquals('2026-10-15 10:30:00', Task::find($response->json('id'))->due_date->format('Y-m-d H:i:s'));
+    }
+
+    /** @test */
+    public function payload_con_due_date_e_notes_salva_entrambi(): void
+    {
+        $this->loginAs([UserRole::Admin]);
+        $quote = $this->makeQuote();
+        $task = $this->makeTask($quote, ['notes' => 'Nota preesistente']);
+
+        $this->patchJson("/api/tasks/{$task->id}", [
+            'due_date' => '2026-10-20',
+            'notes'    => 'Scadenza spostata su richiesta del cliente',
+        ])->assertStatus(200);
+
+        $fresh = $task->fresh();
+        $this->assertEquals('2026-10-20', $fresh->due_date->format('Y-m-d'));
+        $this->assertStringContainsString('Scadenza spostata su richiesta del cliente', $fresh->notes);
+        $this->assertStringContainsString('Nota preesistente', $fresh->notes);
+    }
 }

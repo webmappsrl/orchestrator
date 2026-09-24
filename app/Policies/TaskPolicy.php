@@ -68,16 +68,17 @@ class TaskPolicy
     }
 
     /**
-     * Autorizzazione "base" per il PATCH: copre il campo `notes` (chiunque
-     * abbia un ruolo abilitato può aggiungere una nota, mirror di
-     * Story::addDevNote() dove qualunque utente autorizzato può annotare).
+     * Autorizzazione "base" per il PATCH: copre i campi `notes` e
+     * `due_date` (chiunque abbia un ruolo abilitato può aggiungere una nota,
+     * mirror di Story::addDevNote() dove qualunque utente autorizzato può
+     * annotare, e riprogrammare la scadenza, come già in Nova — oc:8625).
      * Il campo `status` NON è coperto qui: richiede il check aggiuntivo
      * updateStatus(), invocato esplicitamente da TaskController::update()
      * SOLO quando il payload contiene la chiave `status`, PRIMA di
      * applicare qualsiasi modifica — questo realizza il comportamento
-     * "tutto o niente" quando un payload misto {status, notes} arriva da
-     * un utente che non è il creator: la richiesta fallisce con 403 prima
-     * che `notes` venga persistito. Questa autorizzazione differenziata
+     * "tutto o niente" quando un payload misto {status, notes} o
+     * {status, due_date} arriva da un utente che non è il creator: la
+     * richiesta fallisce con 403 prima che qualsiasi campo venga persistito. Questa autorizzazione differenziata
      * per campo diverge intenzionalmente dal pattern "un verdetto per
      * endpoint" usato da QuotePolicy — decisione presa in Fase: challenge
      * di oc:8403.

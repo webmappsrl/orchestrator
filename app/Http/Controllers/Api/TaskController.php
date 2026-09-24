@@ -78,7 +78,7 @@ class TaskController extends Controller
         $task->quote_id = $quote->id;
         $task->title = $request->input('title');
         $task->notes = $request->input('notes');
-        $task->due_date = $request->input('due_date');
+        $task->due_date = $request->dueDate();
         $task->save();
 
         $task->load('quote.user');
@@ -96,6 +96,8 @@ class TaskController extends Controller
      * payload {status, notes} or {status, due_date} from a non-creator
      * fails the entire request with 403 — nothing is persisted in that
      * case, even the fields that would have been allowed on their own.
+     * All fields are written with a single save(). `due_date` is converted
+     * to the application timezone (TaskApiRequest::dueDate()).
      * `completed_at` is updated automatically by the existing
      * Task::booted() hook.
      *
@@ -107,23 +109,18 @@ class TaskController extends Controller
 
         if ($request->has('status')) {
             $this->authorize('updateStatus', $task);
-        }
-
-        if ($request->has('status')) {
             $task->status = $request->input('status');
         }
 
         if ($request->has('due_date')) {
-            $task->due_date = $request->input('due_date');
-        }
-
-        if ($task->isDirty()) {
-            $task->save();
+            $task->due_date = $request->dueDate();
         }
 
         if ($request->has('notes')) {
-            $task->appendNote($request->input('notes'));
+            $task->appendNote($request->input('notes'), false);
         }
+
+        $task->save();
 
         $task->load('quote.user');
 
