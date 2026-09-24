@@ -31,9 +31,14 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
 - **Autorizzazione differenziata per campo sul `PATCH /api/tasks/{task}`**: `status` solo se
   `creator_id === utente loggato` (via `TaskPolicy::updateStatus()`, mirror di
   `ToggleTaskCompleted::authorizedToRun()`), `notes` per qualsiasi Admin/Manager/Developer
-  (`TaskPolicy::update()`, mirror di `Story::addDevNote()`). Il controller verifica
-  `updateStatus` **prima** di applicare qualsiasi modifica: un payload `{status, notes}` da un
-  non-creator fallisce con 403 sull'intera richiesta. Pattern non standard rispetto al resto del
+  (`TaskPolicy::update()`, mirror di `Story::addDevNote()`). `due_date` segue la stessa regola di
+  `notes`, perché capita che sia un collega a riprogrammare un follow-up, e usa la stessa
+  validazione del POST (`date`: sola data o data e ora, date passate ammesse) (oc:8625). In
+  entrambi i casi la data passa da `TaskApiRequest::dueDate()`, che la converte nel fuso
+  dell'applicazione: il cast `datetime` da solo scarterebbe l'offset di un input ISO 8601. Il
+  controller verifica `updateStatus` **prima** di applicare qualsiasi modifica: un payload
+  `{status, notes}` o `{status, due_date}` da un non-creator fallisce con 403 sull'intera
+  richiesta. Pattern non standard rispetto al resto del
   progetto (Quote e Tag hanno un solo verdetto per endpoint), documentato nei docblock.
 - **`GET /api/tasks/{task}` è ruolo-only, `GET /api/tasks` è scoped** via `scopeForUser()`:
   asimmetria intenzionale, coerente col resto del progetto — la lista filtra "i miei task", il
