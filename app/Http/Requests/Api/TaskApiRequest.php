@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api;
 
 use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 class TaskApiRequest extends FormRequest
@@ -31,8 +32,22 @@ class TaskApiRequest extends FormRequest
         }
 
         return [
-            'status' => ['sometimes', Rule::in([Task::STATUS_TODO, Task::STATUS_COMPLETED])],
-            'notes'  => ['sometimes', 'string'],
+            'status'   => ['sometimes', Rule::in([Task::STATUS_TODO, Task::STATUS_COMPLETED])],
+            'notes'    => ['sometimes', 'string'],
+            'due_date' => ['sometimes', 'date'],
         ];
+    }
+
+    /**
+     * `due_date` convertita nel fuso dell'applicazione. La regola `date`
+     * accetta anche ISO 8601 con offset o `Z`, ma il cast `datetime` di
+     * Task scrive l'ora così com'è, senza convertirla: senza questo
+     * passaggio "2026-09-30T22:00:00Z" finirebbe nel DB come le 22:00 di
+     * Roma invece che la mezzanotte del giorno dopo. Le stringhe senza
+     * fuso vengono già interpretate nel fuso dell'applicazione.
+     */
+    public function dueDate(): ?Carbon
+    {
+        return $this->date('due_date')?->setTimezone(config('app.timezone'));
     }
 }
