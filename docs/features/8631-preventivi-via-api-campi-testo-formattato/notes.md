@@ -89,7 +89,7 @@ Un inconveniente d'ambiente durante i cleanup: Docker Desktop si è fermato e, d
   - Prezzi: numero JSON o stringa `^-?\d+([.,]\d{1,2})?$`, niente separatore delle migliaia (`"1.234,56"` romperebbe `number_format` e darebbe 1.234 nel totale); `additional_services` dev'essere un oggetto, non una lista.
   - 422 raggruppati per tipo con conteggio, max 10 voci per campo; limite 50.000 caratteri per campo.
   - Ipotetici ignorati: XSS in Nova per differenze tra parser, locale dei messaggi 422 sporcata da `setLocale` nel worker, deriva docblock (coperta testando tutti gli 8 endpoint), rollback con client che già legge le chiavi.
-- **Stima (2026-09-25, `wm-estimate` cieco sulla sola overview)**: Misurato 1,13h + Stimato 9,8h = Totale 10,9h, confidenza bassa (prima Rule custom del progetto, primo uso diretto di `masterminds/html5`). **Non ancora scritta su Orchestrator** per scelta del dev: da riprendere a fine lavoro.
+- **Stima (2026-09-25, `wm-estimate` cieco sulla sola overview)**: Misurato 1,13h + Stimato 9,8h = Totale 10,9h, confidenza bassa (prima Rule custom del progetto, primo uso diretto di `masterminds/html5`). Il dev l'ha sostituita con **7h**, scritta su Orchestrator il 2026-09-25 a fine lavoro. Tempo effettivo della sessione, dall'inizio della pianificazione al commit dei cleanup: circa 3,8h.
 - **Riallineamento su develop** (2026-09-25, HEAD `aae37a8`): le evidenze raccolte prima (colonne, `$translatable`/`$fillable`, Tiptap e `$allButtons`, `QuoteApiRequest::rules()`, `TRANSLATABLE_FIELDS`, blade, chiavi di traduzione, htmlpurifier non usato) sono state riverificate e restano valide; cambiano solo i numeri di riga.
 
 ## Follow-up
@@ -100,7 +100,6 @@ Un inconveniente d'ambiente durante i cleanup: Docker Desktop si è fermato e, d
 - **Immagini da URL esterno inserite da Nova**: valutare se disattivare in Nova l'inserimento da URL (solo upload) per coerenza con l'API.
 
 - **Prima del merge**: il dev lancia `php artisan quotes:check-rich-text` in produzione e riporta l'esito; exit 1 = allargare la regola o correggere i dati prima del rilascio.
-- **Stima** (10,9h) ancora da scrivere su Orchestrator.
 - **Status 201 in OpenAPI**: `pdfLink` e gli store di Customer/Story/Tag hanno ancora lo schema `{"type":"integer","const":201}`.
 - `.phpunit.cache/test-results` è tracciato in git e viene modificato da ogni esecuzione dei test: non includerlo nei commit.
 
