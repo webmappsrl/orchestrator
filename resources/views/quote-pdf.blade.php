@@ -347,9 +347,10 @@ $normalizeAdditionalServices = function ($value): array {
     @endif
 
     @if ($quote->billing_plan)
-    <div class="payment-plan">
+    <div class="billing-plan">
         <h2 class="description">{{ __('Billing plan') }}</h2>
-        <p>{!! $quote->getTranslation('billing_plan', App::getLocale()) !!}</p>
+        {{-- div e non p: il contenuto è HTML a blocchi (elenchi, paragrafi), che dentro un <p> non è valido --}}
+        <div>{!! $quote->getTranslation('billing_plan', App::getLocale()) !!}</div>
     </div>
     @endif
 

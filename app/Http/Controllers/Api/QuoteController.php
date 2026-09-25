@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\QuoteApiRequest;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Services\Quotes\QuoteRichText;
 use App\Models\RecurringProduct;
 use App\Services\QuotePdfService;
 use Dedoc\Scramble\Attributes\BodyParameter;
@@ -19,12 +20,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class QuoteController extends Controller
 {
-    public const RICH_TEXT_FIELDS = ['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'];
-    private const TRANSLATABLE_FIELDS = ['additional_services', 'notes', ...self::RICH_TEXT_FIELDS];
+    private const TRANSLATABLE_FIELDS = ['additional_services', 'notes', ...QuoteRichText::FIELDS];
     private const RICH_TEXT_DESCRIPTION = 'HTML in the default language, same format as the Nova editor; saved exactly as sent. '
-        . 'null or "" removes the text. Max 50000 characters. Rejected with 422: script, iframe, object and similar tags, '
+        . 'null or "" removes the text. Max ' . QuoteRichText::MAX_LENGTH . ' characters. Rejected with 422: script, iframe, object and similar tags, '
         . 'on* attributes, links other than http(s):, mailto: or #, url(/image-set(/expression( in style, '
-        . 'images outside /storage/ of this application. Send only the fields you change.';
+        . 'images outside /storage/ of this application. Send only the fields you change. '
+        . 'Reads return the text the PDF prints: if the default language is empty, a text in another language is returned.';
     private const ALLOWED_INCLUDES = ['customer', 'products', 'recurringProducts'];
     private const DEFAULT_PER_PAGE = 20;
     private const DEFAULT_LANG = 'it';
@@ -334,9 +335,10 @@ class QuoteController extends Controller
     private function applyTranslatable(Quote $quote, array $translatable): void
     {
         foreach ($translatable as $field => $value) {
-            // oc:8631: per i rich-text un valore vuoto rimuove la traduzione,
-            // così il PDF (`@if ($quote->campo)`) nasconde la sezione con certezza.
-            if (in_array($field, self::RICH_TEXT_FIELDS, true) && ($value === null || $value === '')) {
+            // oc:8631: per i rich-text un valore vuoto rimuove la traduzione di
+            // default invece di salvare "". Se il campo ha testo in un'altra lingua
+            // il PDF ricade su quello (fallbackAny): la risposta lo riporta, vedi richText().
+            if (in_array($field, QuoteRichText::FIELDS, true) && QuoteRichText::isEmpty($value)) {
                 $quote->forgetTranslation($field, config('app.locale'));
                 continue;
             }
@@ -346,9 +348,11 @@ class QuoteController extends Controller
 
     private function richText(Quote $quote, string $field): ?string
     {
-        $value = $quote->getTranslation($field, config('app.locale'), false);
+        // Stesso fallback del PDF (Translatable::fallback(fallbackAny: true)): la
+        // risposta mostra il testo che il PDF stampa, anche se è in un'altra lingua.
+        $value = $quote->getTranslation($field, config('app.locale'));
 
-        return $value === '' || $value === null ? null : $value;
+        return QuoteRichText::isEmpty($value) ? null : $value;
     }
 
     private function formatQuote(Quote $quote, array $include = []): array
@@ -366,10 +370,6 @@ class QuoteController extends Controller
             'discount'             => $quote->discount,
             'notes'                => $quote->notes,
             'additional_services'  => $quote->additional_services,
-            'additional_info'      => $this->richText($quote, 'additional_info'),
-            'delivery_time'        => $this->richText($quote, 'delivery_time'),
-            'payment_plan'         => $this->richText($quote, 'payment_plan'),
-            'billing_plan'         => $this->richText($quote, 'billing_plan'),
             'template'             => $quote->template,
             'total'                => $quote->getTotalPrice() + $quote->getTotalRecurringPrice() + $quote->getTotalAdditionalServicesPrice(),
             'net_total'            => $netTotal,
@@ -378,6 +378,10 @@ class QuoteController extends Controller
             'created_at'           => optional($quote->created_at)->toIso8601String(),
             'updated_at'           => optional($quote->updated_at)->toIso8601String(),
         ];
+
+        foreach (QuoteRichText::FIELDS as $field) {
+            $data[$field] = $this->richText($quote, $field);
+        }
 
         if (in_array('customer', $include, true) && $quote->relationLoaded('customer') && $quote->customer) {
             $data['customer'] = [

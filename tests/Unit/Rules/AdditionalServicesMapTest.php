@@ -56,4 +56,31 @@ class AdditionalServicesMapTest extends TestCase
             $this->assertFalse(AdditionalServicesMap::isValidPrice($ko), var_export($ko, true));
         }
     }
+
+    /** @test */
+    public function un_numero_con_piu_di_due_decimali_e_rifiutato(): void
+    {
+        $this->assertFalse(AdditionalServicesMap::isValidPrice(1234.567));
+        $this->assertTrue(AdditionalServicesMap::isValidPrice(99.5));
+        $this->assertTrue(AdditionalServicesMap::isValidPrice(0.1 + 0.2 - 0.3 + 12.34));
+    }
+
+    /** @test */
+    public function il_messaggio_per_la_lista_non_ripete_il_campo_e_spiega_le_chiavi_numeriche(): void
+    {
+        $messaggio = $this->errore([150, 200]);
+
+        $this->assertSame(1, substr_count($messaggio, 'additional_services'));
+        $this->assertStringContainsString('Voce 1', $messaggio);
+    }
+
+    /** @test */
+    public function i_segnaposto_nel_nome_del_servizio_non_vengono_sostituiti(): void
+    {
+        $messaggio = $this->errore(['Setup :attribute :input' => 'x']);
+
+        $this->assertStringNotContainsString('Setup additional services', $messaggio);
+        $this->assertStringContainsString("Setup :\u{2060}attribute :\u{2060}input", $messaggio);
+    }
 }
+

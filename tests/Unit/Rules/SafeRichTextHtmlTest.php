@@ -3,6 +3,7 @@
 namespace Tests\Unit\Rules;
 
 use App\Rules\SafeRichTextHtml;
+use App\Services\Quotes\QuoteRichText;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
@@ -45,15 +46,38 @@ class SafeRichTextHtmlTest extends TestCase
         $messaggio = $this->errore($html);
 
         $this->assertStringContainsString('e altri 2 tipi di elementi non ammessi', $messaggio);
-        $this->assertLessThan(1500, strlen($messaggio));
+        $this->assertSame(QuoteRichText::MAX_LISTED, substr_count($messaggio, '; '), 'dieci voci più la riga «…e altri N»');
     }
 
     /** @test */
-    public function un_tag_non_supportato_non_viene_descritto_come_pericoloso(): void
+    public function un_attributo_con_url_non_ammesso_e_indicato_col_proprio_nome(): void
     {
-        $messaggio = $this->errore('<p>a<o:p></o:p></p>');
+        $messaggio = $this->errore('<div data="x">a</div>');
 
-        $this->assertStringContainsString('tag <o:p> non supportato', $messaggio);
-        $this->assertStringNotContainsString('eseguire codice', $messaggio);
+        $this->assertStringContainsString('attributo data non ammesso (1 occorrenza)', $messaggio);
+        $this->assertStringNotContainsString('immagine', $messaggio);
+    }
+
+    /** @test */
+    public function il_messaggio_sulle_immagini_indica_host_e_porta_accettati(): void
+    {
+        config(['app.url' => 'https://h.example.it:8443']);
+
+        $this->assertStringContainsString('h.example.it:8443', $this->errore('<img src="https://evil.com/x.png">'));
+    }
+
+    /** @test */
+    public function il_messaggio_sui_link_cita_anche_i_percorsi_relativi(): void
+    {
+        $this->assertStringContainsString('percorso relativo', $this->errore('<a href="javascript:x()">a</a>'));
+    }
+
+    /** @test */
+    public function un_attributo_di_presentazione_non_valido_spiega_il_valore_atteso(): void
+    {
+        $messaggio = $this->errore('<p align="left; background:url(http://evil.com/x)">a</p>');
+
+        $this->assertStringContainsString('attributo align con valore non ammesso (1 occorrenza)', $messaggio);
+        $this->assertStringContainsString('center', $messaggio);
     }
 }

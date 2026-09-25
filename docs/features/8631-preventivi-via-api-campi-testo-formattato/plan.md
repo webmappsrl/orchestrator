@@ -143,6 +143,8 @@ git commit -m "fix(oc:8631): i Tiptap del preventivo salvano sotto la lingua del
 
 ### Task 2: `RichTextHtmlInspector` — analisi dell'HTML pericoloso
 
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#review-finale--correzioni-di-sicurezza)
+
 **File:**
 - Crea: `app/Services/Quotes/RichTextHtmlInspector.php`
 - Test: `tests/Unit/Services/RichTextHtmlInspectorTest.php`
@@ -409,6 +411,8 @@ git commit -m "feat(oc:8631): analisi dell'HTML pericoloso nei campi rich-text d
 
 ### Task 3: Rule `SafeRichTextHtml` con messaggi 422 comprensibili
 
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#review-finale--correzioni-di-sicurezza)
+
 **File:**
 - Crea: `app/Rules/SafeRichTextHtml.php` (prima Rule custom del progetto: creare la cartella `app/Rules/`)
 - Modifica: `lang/en.json`, `lang/it.json`
@@ -599,6 +603,8 @@ git commit -m "feat(oc:8631): regola di validazione dell'HTML rich-text con mess
 ---
 
 ### Task 4: Rule `AdditionalServicesMap` — forma e prezzi dei servizi aggiuntivi
+
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#cleanup-della-review-wm-review-ticket)
 
 **File:**
 - Crea: `app/Rules/AdditionalServicesMap.php`
@@ -806,6 +812,8 @@ git commit -m "feat(oc:8631): validazione di forma e prezzi dei servizi aggiunti
 ---
 
 ### Task 5: API — lettura e scrittura dei quattro campi
+
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#cleanup-della-review-wm-review-ticket)
 
 **File:**
 - Modifica: `app/Http/Requests/Api/QuoteApiRequest.php`
@@ -1155,6 +1163,8 @@ git commit -m "test(oc:8631): la documentazione OpenAPI espone i campi rich-text
 ---
 
 ### Task 7: Comando `quotes:check-rich-text`
+
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#cleanup-della-review-wm-review-ticket)
 
 > ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#task-7--comando-quotescheck-rich-text)
 

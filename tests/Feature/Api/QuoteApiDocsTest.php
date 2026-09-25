@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Services\Quotes\QuoteRichText;
 use Tests\TestCase;
 
 /**
@@ -96,9 +97,16 @@ class QuoteApiDocsTest extends TestCase
         $this->assertEquals('object', $additionalServicesSchema['type'] ?? null, 'Expected additional_services to be documented as an object, not an array of strings.');
     }
 
+    private function spec(): array
+    {
+        return $this->spec ??= $this->get('/docs/api.json')->json();
+    }
+
+    private ?array $spec = null;
+
     private function allFullQuoteSchemas(): array
     {
-        $spec = $this->get('/docs/api.json')->json();
+        $spec = $this->spec();
         $ops = [
             ['/quotes', 'get', '200'], ['/quotes/{quote}', 'get', '200'],
             // Scramble documenta store sotto 200 anche se risponde 201 (limite noto, oc:8631).
@@ -118,39 +126,56 @@ class QuoteApiDocsTest extends TestCase
         return $schemas;
     }
 
-    private function quoteProperties(array $schema): array
+    /**
+     * Le proprietà del preventivo in ogni forma di risposta documentata: per
+     * index sia l'array semplice sia la variante paginata {data, meta}.
+     *
+     * @return array<int, array>
+     */
+    private function quotePropertySets(array $schema): array
     {
-        if (isset($schema['anyOf'])) {
-            $schema = $schema['anyOf'][0];
+        $sets = [];
+        foreach ($schema['anyOf'] ?? [$schema] as $variant) {
+            if (($variant['type'] ?? null) === 'array') {
+                $variant = $variant['items'];
+            } elseif (isset($variant['properties']['data'])) {
+                $variant = $variant['properties']['data']['items'] ?? [];
+            }
+            $sets[] = $variant['properties'] ?? [];
         }
-        if (($schema['type'] ?? null) === 'array') {
-            $schema = $schema['items'];
-        }
-        return $schema['properties'] ?? [];
+        return $sets;
+    }
+
+    /** Proprietà del body della richiesta, risolvendo il $ref a components/schemas. */
+    private function requestBodyProperties(string $path, string $method): array
+    {
+        $spec = $this->spec();
+        $body = $spec['paths'][$path][$method]['requestBody']['content']['application/json']['schema'] ?? [];
+
+        return collect($body['allOf'] ?? [$body])
+            ->map(fn ($part) => isset($part['$ref'])
+                ? $spec['components']['schemas'][basename($part['$ref'])] ?? []
+                : $part)
+            ->pluck('properties')->filter()
+            ->reduce(fn (array $carry, array $properties) => array_replace_recursive($carry, $properties), []);
     }
 
     public function test_all_full_quote_responses_document_the_rich_text_fields(): void
     {
         foreach ($this->allFullQuoteSchemas() as $operation => $schema) {
-            $properties = $this->quoteProperties($schema);
-            foreach (['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'] as $field) {
-                $this->assertArrayHasKey($field, $properties, "Expected {$field} in the response schema of {$operation}.");
+            foreach ($this->quotePropertySets($schema) as $variant => $properties) {
+                foreach (QuoteRichText::FIELDS as $field) {
+                    $this->assertArrayHasKey($field, $properties, "Expected {$field} in response variant {$variant} of {$operation}.");
+                }
             }
         }
     }
 
     public function test_quotes_store_and_update_document_the_rich_text_fields_in_the_body(): void
     {
-        $spec = $this->get('/docs/api.json')->json();
         foreach ([['/quotes', 'post'], ['/quotes/{quote}', 'patch']] as [$path, $method]) {
-            $body = $spec['paths'][$path][$method]['requestBody']['content']['application/json']['schema'] ?? [];
-            // Il body delle FormRequest è un $ref a components/schemas: risolverlo.
-            $properties = collect($body['allOf'] ?? [$body])
-                ->map(fn ($part) => isset($part['$ref'])
-                    ? $spec['components']['schemas'][basename($part['$ref'])] ?? []
-                    : $part)
-                ->pluck('properties')->filter()->collapse()->all();
-            foreach (['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'] as $field) {
+            $properties = $this->requestBodyProperties($path, $method);
+            foreach (QuoteRichText::FIELDS as $field) {
                 $this->assertArrayHasKey($field, $properties, "Expected {$field} in the request body of {$method} {$path}.");
             }
         }
@@ -158,19 +183,10 @@ class QuoteApiDocsTest extends TestCase
 
     public function test_quotes_store_and_update_describe_the_rich_text_rules_in_the_body(): void
     {
-        $spec = $this->get('/docs/api.json')->json();
         foreach ([['/quotes', 'post'], ['/quotes/{quote}', 'patch']] as [$path, $method]) {
-            $body = $spec['paths'][$path][$method]['requestBody']['content']['application/json']['schema'] ?? [];
-            $descriptions = collect($body['allOf'] ?? [$body])
-                ->map(fn ($part) => isset($part['$ref'])
-                    ? $spec['components']['schemas'][basename($part['$ref'])] ?? []
-                    : $part)
-                ->pluck('properties')->filter()
-                ->flatMap(fn ($properties) => collect($properties)->map(fn ($p) => $p['description'] ?? ''))
-                ->all();
-
-            foreach (['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'] as $field) {
-                $description = $descriptions[$field] ?? '';
+            $properties = $this->requestBodyProperties($path, $method);
+            foreach (QuoteRichText::FIELDS as $field) {
+                $description = $properties[$field]['description'] ?? '';
                 $this->assertStringContainsString('HTML', $description, "Expected {$method} {$path} to describe {$field} as HTML.");
                 $this->assertStringContainsString('/storage/', $description, "Expected {$method} {$path} to state the image rule for {$field}.");
             }

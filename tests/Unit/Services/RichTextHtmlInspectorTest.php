@@ -157,12 +157,85 @@ class RichTextHtmlInspectorTest extends TestCase
     }
 
     /** @test */
-    public function tag_sconosciuto_innocuo_e_distinto_da_quello_pericoloso(): void
+    public function tag_sconosciuti_ma_innocui_passano_solo_quelli_pericolosi_sono_rifiutati(): void
     {
-        $violations = $this->inspector()->inspect('<o:p>a</o:p><script>b</script>');
-
-        $this->assertContains(['kind' => 'tag', 'name' => 'o:p', 'count' => 1], $violations);
+        $this->assertSame([], $this->inspector()->inspect(
+            '<o:p>a</o:p><section><figure><figcaption>f</figcaption></figure></section><center>c</center><x-foo>z</x-foo>'
+        ));
+        $this->assertSame(
+            [['kind' => 'tag', 'name' => 'script', 'count' => 1]],
+            $this->inspector()->inspect('<o:p>a</o:p><script>b</script>')
+        );
         $this->assertTrue(RichTextHtmlInspector::isDangerousTag('script'));
         $this->assertFalse(RichTextHtmlInspector::isDangerousTag('o:p'));
+    }
+
+    /**
+     * @test
+     * @dataProvider attributiTradottiInCss
+     */
+    public function attributi_che_dompdf_traduce_in_css_accettano_solo_valori_semplici(string $html, string $attributo): void
+    {
+        $this->assertContains(
+            ['kind' => 'presentation', 'name' => $attributo, 'count' => 1],
+            $this->inspector()->inspect($html)
+        );
+    }
+
+    public static function attributiTradottiInCss(): array
+    {
+        return [
+            'align con url'     => ['<p align="left; background-image:url(http://169.254.169.254/x)">x</p>', 'align'],
+            'width con url'     => ['<td width="10; background:url(http://evil.com/x)">x</td>', 'width'],
+            'bgcolor con url'   => ['<table bgcolor="red; background-image:url(http://evil.com/x)"><tr><td>x</td></tr></table>', 'bgcolor'],
+            'face con url'      => ['<font face="Arial; background:url(http://evil.com/x)">x</font>', 'face'],
+            'height con escape' => ['<td height="1\;background:u\\72l(x)">x</td>', 'height'],
+            'valign con commento' => ['<td valign="top/**/;background:url(x)">x</td>', 'valign'],
+        ];
+    }
+
+    /** @test */
+    public function attributi_di_presentazione_con_valori_normali_passano(): void
+    {
+        $html = '<p align="center">a</p><table width="100%" border="1" cellpadding="2" bgcolor="#ffeecc">'
+            . '<tr><td valign="top" width="200" height="20">b</td></tr></table>'
+            . '<font face="Times New Roman, serif" color="red" size="3">c</font><hr width="50%" noshade>';
+
+        $this->assertSame([], $this->inspector()->inspect($html));
+    }
+
+    /** @test */
+    public function commento_css_dentro_una_stringa_non_nasconde_url(): void
+    {
+        $violations = $this->inspector()->inspect("<p style=\"font-family:'/*';background:url(https://evil.com/x.png);x:'*/'\">a</p>");
+
+        $this->assertContains(['kind' => 'style', 'name' => '/*', 'count' => 1], $violations);
+        $this->assertContains(['kind' => 'style', 'name' => 'url(', 'count' => 1], $violations);
+    }
+
+    /** @test */
+    public function attributi_con_url_non_ammessi_sono_riportati_con_il_proprio_nome(): void
+    {
+        $violations = $this->inspector()->inspect('<div data="x">a</div><table background="https://evil.com/x.png"><tr><td>b</td></tr></table>');
+
+        $this->assertContains(['kind' => 'url', 'name' => 'data', 'count' => 1], $violations);
+        $this->assertContains(['kind' => 'url', 'name' => 'background', 'count' => 1], $violations);
+    }
+
+    /** @test */
+    public function annidamento_oltre_il_limite_e_rifiutato_senza_ricorsione(): void
+    {
+        $profondo = str_repeat('<b>', 150) . 'x' . str_repeat('</b>', 150);
+        $normale = str_repeat('<div>', 40) . 'x' . str_repeat('</div>', 40);
+
+        $this->assertContains(['kind' => 'depth', 'name' => (string) RichTextHtmlInspector::MAX_DEPTH, 'count' => 1], $this->inspector()->inspect($profondo));
+        $this->assertSame([], $this->inspector()->inspect($normale));
+    }
+
+    /** @test */
+    public function allowed_origin_include_la_porta(): void
+    {
+        $this->assertSame('orchestrator.example.it', $this->inspector()->allowedOrigin());
+        $this->assertSame('h.example.it:8443', (new RichTextHtmlInspector('h.example.it', 8443))->allowedOrigin());
     }
 }

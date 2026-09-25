@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\Customer;
 use App\Models\Quote;
 use App\Models\User;
+use App\Services\Quotes\QuoteRichText;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -14,7 +15,7 @@ class QuoteRichTextApiTest extends TestCase
 {
     use DatabaseTransactions;
 
-    private const CAMPI = ['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'];
+    private const CAMPI = QuoteRichText::FIELDS;
 
     protected function setUp(): void
     {
@@ -32,7 +33,6 @@ class QuoteRichTextApiTest extends TestCase
     {
         $quote = $this->quote();
         $quote->setTranslation('payment_plan', 'it', '<ul><li>20% alla firma</li></ul>');
-        $quote->setTranslation('delivery_time', 'de', '<p>solo tedesco</p>');
         $quote->save();
 
         $json = $this->getJson("/api/quotes/{$quote->id}")->assertOk()->json();
@@ -41,6 +41,33 @@ class QuoteRichTextApiTest extends TestCase
         $this->assertNull($json['delivery_time']);
         $this->assertNull($json['additional_info']);
         $this->assertNull($json['billing_plan']);
+    }
+
+    /** @test */
+    public function la_lettura_restituisce_il_testo_che_il_pdf_italiano_stampa(): void
+    {
+        // Il PDF usa il fallback di Spatie (fallbackAny): senza `it` stampa un'altra lingua.
+        $quote = $this->quote();
+        $quote->setTranslation('delivery_time', 'en', '<p>english only</p>');
+        $quote->save();
+
+        $this->assertSame('<p>english only</p>', $this->getJson("/api/quotes/{$quote->id}")->json('delivery_time'));
+    }
+
+    /** @test */
+    public function svuotare_un_campo_con_testo_in_altra_lingua_restituisce_quello_che_resta_nel_pdf(): void
+    {
+        $quote = $this->quote();
+        $quote->setTranslation('billing_plan', 'it', '<p>it</p>');
+        $quote->setTranslation('billing_plan', 'en', '<p>en</p>');
+        $quote->save();
+
+        $json = $this->patchJson("/api/quotes/{$quote->id}", ['billing_plan' => null])->assertOk()->json();
+
+        $this->assertSame('<p>en</p>', $json['billing_plan'], 'la risposta deve dire che nel PDF resta il testo inglese');
+        $quote->refresh();
+        $this->assertArrayNotHasKey('it', $quote->getTranslations('billing_plan'));
+        $this->assertSame('<p>en</p>', $quote->getTranslation('billing_plan', 'en', false), 'il testo inglese non va cancellato');
     }
 
     /** @test */
@@ -146,4 +173,27 @@ class QuoteRichTextApiTest extends TestCase
 
         $this->assertStringContainsString('"Setup"', $messaggio);
     }
+
+    /** @test */
+    public function spazi_e_a_capo_ai_bordi_vengono_mantenuti(): void
+    {
+        $quote = $this->quote();
+        $html = "\n  <p>a</p>\n";
+
+        $this->assertSame($html, $this->patchJson("/api/quotes/{$quote->id}", ['payment_plan' => $html])->assertOk()->json('payment_plan'));
+    }
+
+    /** @test */
+    public function round_trip_di_immagine_tiptap_con_url_assoluto(): void
+    {
+        $html = '<p><img src="' . rtrim(config('app.url'), '/') . '/storage/tiptap/logo.png" tt-mode="file" alt="logo"></p>';
+        $quote = $this->quote();
+        $quote->setTranslation('additional_info', 'it', $html)->save();
+
+        $letto = $this->getJson("/api/quotes/{$quote->id}")->json('additional_info');
+        $this->patchJson("/api/quotes/{$quote->id}", ['additional_info' => $letto])->assertOk();
+
+        $this->assertSame($html, $quote->fresh()->getTranslation('additional_info', 'it', false));
+    }
 }
+

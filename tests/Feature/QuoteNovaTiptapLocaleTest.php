@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\Quote;
 use App\Nova\Quote as QuoteResource;
+use App\Services\Quotes\QuoteRichText;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Tests\TestCase;
@@ -36,7 +37,7 @@ class QuoteNovaTiptapLocaleTest extends TestCase
     {
         $quote = Quote::create(['title' => 'T', 'customer_id' => Customer::factory()->create()->id]);
 
-        foreach (['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'] as $campo) {
+        foreach (QuoteRichText::FIELDS as $campo) {
             $payload = [];
             foreach (config('tab-translatable.locales') as $locale) {
                 $payload["translations_{$campo}_{$locale}"] = $locale === 'it' ? "<p>{$campo} it</p>" : '';

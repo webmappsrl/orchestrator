@@ -36,6 +36,37 @@ Decisione su un punto emerso dalla review: da Nova si può inserire un'immagine 
 
 Su richiesta del dev, i quattro campi hanno una descrizione nel body di `store`/`update` (`#[BodyParameter(..., description: self::RICH_TEXT_DESCRIPTION)]`): formato HTML, `null`/`""` svuotano, limite di 50.000 caratteri, cosa viene rifiutato e l'indicazione di mandare solo i campi modificati. Il piano la prevedeva solo come ripiego: i campi comparivano già, ma senza nessuna regola. Elenca le categorie rifiutate e non il funzionamento interno del controllo, perché la pagina è pubblica. Test: `test_quotes_store_and_update_describe_the_rich_text_rules_in_the_body`.
 
+### Review `wm-review-ticket` (primo ciclo) — due bloccanti corretti
+
+- **SSRF dagli attributi di presentazione.** DomPDF traduce `align`, `width`, `height`, `bgcolor`, `face` e simili in CSS con `sprintf('text-align: %s;', $valore)` senza escape (`Css/AttributeTranslator.php`): `<p align="left; background-image:url(http://…)">` passava la validazione e il server scaricava l'URL a ogni PDF. Ora quegli attributi accettano solo valori semplici (lettere, cifre, spazi, `# % . , ' " _ -`), con un messaggio che indica cosa usare. Test: `attributi_che_dompdf_traduce_in_css_accettano_solo_valori_semplici` (6 casi) + `attributi_di_presentazione_con_valori_normali_passano`.
+- **Lettura e svuotamento incoerenti con il PDF.** Con `Translatable::fallback(fallbackAny: true)` (`AppServiceProvider`) il PDF, se manca `it`, stampa il testo di un'altra lingua; l'API invece leggeva `it` senza fallback e rispondeva `null`. Scelta del dev (opzione A, fra A = la lettura segue il PDF e B = svuotare cancella tutte le lingue): la lettura usa lo stesso fallback del PDF, quindi la risposta mostra sempre il testo che il PDF stampa; lo svuotamento continua a rimuovere solo `it` e non cancella i testi scritti in Nova nelle altre tab. Scartata B perché cancellerebbe senza avviso testi scritti a mano. Nel DB locale 0 preventivi hanno testo fuori da `it` in questi campi. Test: `la_lettura_restituisce_il_testo_che_il_pdf_italiano_stampa`, `svuotare_un_campo_con_testo_in_altra_lingua_restituisce_quello_che_resta_nel_pdf`. Descrizione in `/docs/api` aggiornata.
+- Suite completa dopo le correzioni: 612 test verdi.
+
+### Task 9 — suite completa
+
+580 test verdi alla chiusura del piano, poi 601 dopo la review finale del branch, 612 dopo i bloccanti di `wm-review-ticket`, e l'esito finale dopo i cleanup è riportato sotto. Nessun test esistente è stato rotto dalla nuova validazione di `additional_services` (la `QuoteFactory` genera prezzi `randomFloat(2, …)`, validi).
+
+### Cleanup della review `wm-review-ticket`
+
+Il dev ha chiesto di risolverli tutti prima del commit. Per ognuno un test che falliva sul codice del commit precedente (verificato mettendo da parte l'implementazione).
+
+- **Una sola fonte per campi, limite e regole**: `App\Services\Quotes\QuoteRichText` (`FIELDS`, `MAX_LENGTH`, `MAX_LISTED`, `fieldRules()`, `isEmpty()`, `limitDetails()`, `protectPlaceholders()`), usata da request, controller e comando. `QuoteController::RICH_TEXT_FIELDS` è stato tolto.
+- **Il comando applica le stesse Rule dell'API** tramite `Validator`, invece di riscriverle: prima una descrizione vuota in `additional_services` passava la verifica ma prendeva 422 dall'API. Il motivo riportato è il messaggio 422 stesso.
+- **Tag: si rifiutano solo quelli pericolosi** (`DANGEROUS_TAGS`); i tag sconosciuti ma innocui (`<o:p>`, `<section>`, `<center>`) passano. Prima un elenco chiuso di tag ammessi faceva prendere 422 a un campo scritto con `editHtml` e rimandato senza modifiche. Il messaggio «tag non supportato» è stato tolto, perché non serve più.
+- **`style`**: un commento `/*` ora è rifiutato come dicono documenti e messaggio, invece di essere tolto: la rimozione con una regex ingenua si aggirava con un commento dentro una stringa CSS (`font-family:'/*';background:url(…);x:'*/'`), che il browser in Nova avrebbe caricato.
+- **Messaggi 422 precisi**: gli attributi con URL sono riportati col proprio nome (`data`, `background`, `srcset`…), non più come «immagine… src»; l'host indicato include la porta (`allowedOrigin()`); il messaggio sui link cita i percorsi relativi, che sono ammessi; la lista in `additional_services` non ripete il nome del campo e spiega il caso delle chiavi numeriche (`{"0":150}` arriva come lista PHP); i segnaposto `:attribute`, `:input`… scritti dall'utente in un nome di servizio non vengono più sostituiti dal Validator (word joiner U+2060 dopo i due punti).
+- **Prezzi numerici con più di due decimali** (`1234.567`) rifiutati, come le stringhe.
+- **`TrimStrings`** esclude i quattro campi: l'HTML si salva davvero così com'è, spazi e a capo ai bordi compresi.
+- **Profondità massima 100 livelli** con visita iterativa (prima ricorsiva senza limite: circa 2 s di CPU per campo con 16.000 `<b>` annidati).
+- **Inspector senza stato** (le violazioni sono una variabile locale), costanti private tranne quelle usate fuori; la Rule riceve l'inspector nel costruttore invece di risolverlo con `app()`.
+- **PDF**: il blocco del Piano di fatturazione usa `<div class="billing-plan">` e il contenuto in un `<div>`, non in un `<p>` (HTML a blocchi dentro un `<p>` non è valido). Resa verificata sul preventivo 156: identica a prima. Il Piano di pagamento, che ha lo stesso difetto, non è stato toccato (impaginazione fuori scope).
+- **Test**: `QuoteApiDocsTest` controlla anche la variante paginata di `index` e usa `QuoteRichText::FIELDS`; la soglia arbitraria sulla lunghezza del messaggio è diventata un conteggio delle voci; aggiunto il giro GET → PATCH con l'URL assoluto che Tiptap salva davvero.
+- **Documenti**: `overview.md` (requisiti, rischi, moduli toccati), rimandi «ha deviato» nei Task 2, 3, 4, 5 e 7 del piano, pagina di conoscenza.
+- **Da sapere, non corretto**: il Piano di fatturazione ora compare anche nei PDF dei preventivi esistenti che l'avevano compilato in Nova (6 in locale), compresi i link pubblici già inviati ai clienti.
+- **Non fatto, per scelta del dev**: applicare le stesse regole anche in Nova (cleanup 22). Resta fuori da questo ticket: bloccherebbe il salvataggio da Nova dei preventivi esistenti con prezzi testuali o immagini esterne. Va aperto un ticket dedicato (vedi Follow-up).
+
+Un inconveniente d'ambiente durante i cleanup: Docker Desktop si è fermato e, dopo il riavvio e uno `git stash`/`pop`, il container vedeva versioni vecchie di alcuni file (hash diversi da quelli su disco). Risolto con `docker restart php81_orchestrator`; tutte le verifiche sono state rifatte dopo, sui file allineati.
+
 ## Bug trovati
 
 - `@response 201 array{...}` produce uno schema OpenAPI sbagliato in 5 endpoint del repo (vedi Task 6): corretto solo su `QuoteController::store`.
@@ -63,7 +94,9 @@ Su richiesta del dev, i quattro campi hanno una descrizione nel body di `store`/
 
 ## Follow-up
 
-- **Rimasti aperti dalla review finale (minori)**: `{"0":150}` riceve il messaggio «non una lista»; un nome di servizio che contiene `:attribute` viene alterato nel messaggio 422; `quotes:check-rich-text` esce con 1 anche per i prezzi testuali già presenti, non solo per l'HTML (leggere la colonna «Campo» per distinguere).
+- **Regole di HTML e prezzi anche in Nova** (cleanup 22 della review `wm-review-ticket`): oggi valgono solo per l'API; in Nova `editHtml` e il KeyValue di `additional_services` accettano di tutto, e il template PDF si fida dei dati. Da ticket dedicato, da decidere con chi usa Nova per i preventivi: estenderle impedirebbe di salvare da Nova i preventivi esistenti non conformi finché non vengono corretti.
+
+- **Da leggere bene nell'output di `quotes:check-rich-text`**: esce con 1 anche per i prezzi testuali già presenti in `additional_services`, non solo per l'HTML; la colonna «Campo» distingue i due casi.
 - **Immagini da URL esterno inserite da Nova**: valutare se disattivare in Nova l'inserimento da URL (solo upload) per coerenza con l'API.
 
 - **Prima del merge**: il dev lancia `php artisan quotes:check-rich-text` in produzione e riporta l'esito; exit 1 = allargare la regola o correggere i dati prima del rilascio.

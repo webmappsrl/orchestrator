@@ -15,5 +15,10 @@ class TrimStrings extends Middleware
         'current_password',
         'password',
         'password_confirmation',
+        // oc:8631: l'HTML dei campi rich-text del preventivo si salva così com'è.
+        'additional_info',
+        'delivery_time',
+        'payment_plan',
+        'billing_plan',
     ];
 }

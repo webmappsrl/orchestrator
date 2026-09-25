@@ -3,7 +3,6 @@
 namespace App\Services\Quotes;
 
 use DOMElement;
-use DOMNode;
 use Masterminds\HTML5;
 
 /**
@@ -11,29 +10,39 @@ use Masterminds\HTML5;
  * può eseguire codice o caricare risorse esterne (oc:8631). Usa lo stesso
  * parser di DomPDF, così validatore e rendering leggono l'HTML allo stesso modo.
  *
- * URL e style vengono normalizzati come li leggono browser e DomPDF prima del
- * controllo: tab/newline e caratteri di controllo tolti, `\` letto come `/`,
- * commenti CSS rimossi. Senza normalizzazione `java\tscript:` o
- * `url/**\/(…)` passerebbero il controllo e verrebbero eseguiti o scaricati.
+ * I tag sconosciuti ma innocui (`<o:p>` di Word, `<section>`, `<center>`)
+ * passano: da Nova, con `editHtml`, si può salvare HTML libero, e rifiutarli
+ * farebbe fallire il PATCH di un campo letto e rimandato senza modifiche.
+ *
+ * Gli URL vengono normalizzati come li legge il browser prima del controllo:
+ * tab/newline e caratteri di controllo tolti, `\` letto come `/`. Senza
+ * normalizzazione `java\tscript:` o `/\host` passerebbero il controllo.
  */
 class RichTextHtmlInspector
 {
-    public const ALLOWED_TAGS = [
-        'p', 'br', 'div', 'span', 'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'mark', 'code',
-        'pre', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'hr', 'a',
-        'img', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'colgroup', 'col',
-        'caption', 'font', 'sup', 'sub', 'small',
+    /** Oltre questa profondità l'HTML è rifiutato: Tiptap non va oltre poche decine di livelli. */
+    public const MAX_DEPTH = 100;
+
+    /** Le immagini di Tiptap vivono sul disco public, servito sotto /storage/. */
+    public const RESOURCE_PATH_PREFIX = '/storage/';
+
+    /** I soli tag rifiutati: eseguono codice, incorporano contenuti o sono controlli di form. */
+    private const DANGEROUS_TAGS = [
+        'script', 'noscript', 'template', 'slot', 'iframe', 'frame', 'frameset', 'portal',
+        'fencedframe', 'object', 'embed', 'applet', 'param', 'style', 'link', 'meta', 'base',
+        'title', 'form', 'input', 'button', 'textarea', 'select', 'option', 'keygen', 'isindex',
+        'dialog', 'svg', 'math', 'video', 'audio', 'source', 'track', 'picture', 'bgsound',
+        'html', 'head', 'body',
     ];
 
-    /** Tag rifiutati perché eseguono codice o incorporano contenuti esterni. */
-    public const DANGEROUS_TAGS = [
-        'script', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet', 'style', 'link',
-        'meta', 'base', 'form', 'input', 'button', 'textarea', 'select', 'svg', 'math',
-        'noscript', 'template', 'video', 'audio', 'source', 'track', 'picture', 'html', 'head',
-        'body',
-    ];
-
-    public const DANGEROUS_STYLE_TOKENS = ['url(', 'image-set(', 'expression(', '@import', 'javascript:', '\\'];
+    /**
+     * Nello style: `url(` e `image-set(` scaricano risorse, `expression(` e
+     * `javascript:` eseguono codice, `@import` carica un foglio esterno.
+     * Backslash (escape CSS come `u\72l(`) e commenti servono solo a nascondere
+     * quei token: DomPDF toglie i commenti prima di leggere lo style, e un
+     * commento dentro una stringa CSS inganna qualsiasi rimozione ingenua.
+     */
+    private const DANGEROUS_STYLE_TOKENS = ['url(', 'image-set(', 'expression(', '@import', 'javascript:', '\\', '/*'];
 
     /** Attributi che contengono l'URL di una risorsa caricata automaticamente. */
     private const RESOURCE_URL_ATTRIBUTES = ['src', 'background', 'poster', 'lowsrc', 'dynsrc'];
@@ -41,19 +50,30 @@ class RichTextHtmlInspector
     /** Attributi con URL rifiutati sempre: non servono a Tiptap e sono difficili da validare. */
     private const FORBIDDEN_URL_ATTRIBUTES = ['srcset', 'action', 'formaction', 'data'];
 
+    /**
+     * Attributi di presentazione che DomPDF traduce in CSS con
+     * sprintf('text-align: %s;', $valore), senza escape (Css/AttributeTranslator.php):
+     * un `;` nel valore aggiunge proprietà CSS arbitrarie, comprese url(…) che
+     * DomPDF scarica. Si ammettono solo valori semplici.
+     */
+    private const PRESENTATION_ATTRIBUTES = [
+        'align', 'valign', 'width', 'height', 'bgcolor', 'color', 'text', 'link', 'border',
+        'bordercolor', 'cellpadding', 'cellspacing', 'clear', 'face', 'frame', 'rules', 'size',
+        'start', 'type', 'value', 'hspace', 'vspace', 'nowrap', 'noshade', 'compact', 'dir',
+    ];
+
+    /** Lettere, cifre, spazi e # % . , ' " _ -: bastano per center, 100%, #ff0000, "Times New Roman". */
+    private const PRESENTATION_VALUE_PATTERN = '/^[\p{L}\p{N}\s#%.,\'"_-]*$/u';
+
     private const LINK_ATTRIBUTES = ['href', 'xlink:href'];
 
     private const SAFE_HREF_SCHEMES = ['http', 'https', 'mailto'];
 
-    /** Le immagini di Tiptap vivono sul disco public, servito sotto /storage/. */
-    private const RESOURCE_PATH_PREFIX = '/storage/';
+    private const SAFE_RESOURCE_SCHEMES = ['http', 'https'];
 
     private string $appHost;
 
     private ?int $appPort;
-
-    /** @var array<string, array{kind: string, name: string, count: int}> */
-    private array $violations = [];
 
     public function __construct(?string $appHost = null, ?int $appPort = null)
     {
@@ -71,33 +91,51 @@ class RichTextHtmlInspector
         return in_array(strtolower($tag), self::DANGEROUS_TAGS, true);
     }
 
+    /** Host (e porta, se presente) su cui sono ammesse le immagini: serve ai messaggi. */
+    public function allowedOrigin(): string
+    {
+        return $this->appHost . ($this->appPort !== null ? ':' . $this->appPort : '');
+    }
+
+    /**
+     * @return array<int, array{kind: string, name: string, count: int}>
+     */
     public function inspect(string $html): array
     {
-        $this->violations = [];
+        $violations = [];
         $fragment = (new HTML5(['disable_html_ns' => true]))->loadHTMLFragment($html);
 
-        foreach ($fragment->childNodes as $node) {
-            $this->walk($node);
+        // Visita iterativa con profondità: un HTML annidato migliaia di livelli
+        // non deve costare secondi di CPU né rischiare lo stack.
+        // I figli vanno sullo stack in ordine inverso, così le violazioni restano
+        // nell'ordine in cui compaiono nel testo.
+        $stack = [];
+        foreach (array_reverse(iterator_to_array($fragment->childNodes)) as $node) {
+            $stack[] = [$node, 1];
+        }
+        while ($stack !== []) {
+            [$node, $depth] = array_pop($stack);
+            if (! $node instanceof DOMElement) {
+                continue;
+            }
+            if ($depth > self::MAX_DEPTH) {
+                $this->add($violations, 'depth', (string) self::MAX_DEPTH);
+                break;
+            }
+            $this->checkElement($node, $violations);
+            foreach (array_reverse(iterator_to_array($node->childNodes)) as $child) {
+                $stack[] = [$child, $depth + 1];
+            }
         }
 
-        return array_values($this->violations);
+        return array_values($violations);
     }
 
-    private function walk(DOMNode $node): void
-    {
-        if ($node instanceof DOMElement) {
-            $this->checkElement($node);
-        }
-        foreach ($node->childNodes ?? [] as $child) {
-            $this->walk($child);
-        }
-    }
-
-    private function checkElement(DOMElement $element): void
+    private function checkElement(DOMElement $element, array &$violations): void
     {
         $tag = strtolower($element->tagName);
-        if (! in_array($tag, self::ALLOWED_TAGS, true)) {
-            $this->add('tag', $tag);
+        if (self::isDangerousTag($tag)) {
+            $this->add($violations, 'tag', $tag);
         }
 
         foreach ($element->attributes as $attribute) {
@@ -105,34 +143,34 @@ class RichTextHtmlInspector
             $value = (string) $attribute->value;
 
             if (str_starts_with($name, 'on')) {
-                $this->add('attribute', $name);
+                $this->add($violations, 'attribute', $name);
             } elseif ($name === 'style') {
-                $this->checkStyle($value);
-            } elseif (in_array($name, self::LINK_ATTRIBUTES, true) && ! $this->isSafeHref($value)) {
-                $this->add('url', 'href');
-            } elseif (in_array($name, self::RESOURCE_URL_ATTRIBUTES, true) && ! $this->isSafeResourceUrl($value)) {
-                $this->add('url', 'src');
+                $this->checkStyle($value, $violations);
+            } elseif (in_array($name, self::LINK_ATTRIBUTES, true)) {
+                if (! $this->isSafeHref($value)) {
+                    $this->add($violations, 'url', 'href');
+                }
+            } elseif (in_array($name, self::RESOURCE_URL_ATTRIBUTES, true)) {
+                if (! $this->isSafeResourceUrl($value)) {
+                    $this->add($violations, 'url', $name);
+                }
             } elseif (in_array($name, self::FORBIDDEN_URL_ATTRIBUTES, true)) {
-                $this->add('url', 'src');
+                $this->add($violations, 'url', $name);
+            } elseif (in_array($name, self::PRESENTATION_ATTRIBUTES, true)
+                && preg_match(self::PRESENTATION_VALUE_PATTERN, $value) !== 1) {
+                $this->add($violations, 'presentation', $name);
             }
         }
     }
 
-    private function checkStyle(string $style): void
+    private function checkStyle(string $style, array &$violations): void
     {
-        // DomPDF toglie i commenti prima di leggere lo style (Css/Stylesheet.php):
-        // vanno tolti anche qui, altrimenti `url/**/(` sfugge al controllo.
-        $withoutComments = preg_replace('~/\*.*?\*/~s', '', $style);
-        $normalized = strtolower(preg_replace('/\s+/', '', $withoutComments));
+        $normalized = strtolower(preg_replace('/\s+/', '', $style));
 
         foreach (self::DANGEROUS_STYLE_TOKENS as $token) {
             if (str_contains($normalized, $token)) {
-                $this->add('style', $token);
+                $this->add($violations, 'style', $token);
             }
-        }
-        // Un commento non chiuso nasconde il resto dello style a DomPDF ma non al browser.
-        if (str_contains($withoutComments, '/*')) {
-            $this->add('style', '/*');
         }
     }
 
@@ -153,6 +191,7 @@ class RichTextHtmlInspector
         return preg_match('/^[a-z][a-z0-9+.-]*:/i', $url) === 1;
     }
 
+    /** Link: http(s), mailto, ancora `#` o percorso relativo (non `//host`). */
     private function isSafeHref(string $href): bool
     {
         $href = $this->normalizeUrl($href);
@@ -187,7 +226,7 @@ class RichTextHtmlInspector
             return false;
         }
 
-        return in_array(strtolower($parts['scheme'] ?? ''), ['http', 'https'], true)
+        return in_array(strtolower($parts['scheme'] ?? ''), self::SAFE_RESOURCE_SCHEMES, true)
             && ! isset($parts['user'])
             && ! isset($parts['pass'])
             && strtolower($parts['host'] ?? '') === $this->appHost
@@ -203,10 +242,10 @@ class RichTextHtmlInspector
             && ! preg_match('~(^|/)\.\.?(/|$)~', rawurldecode($path));
     }
 
-    private function add(string $kind, string $name): void
+    private function add(array &$violations, string $kind, string $name): void
     {
         $key = $kind . ':' . $name;
-        $this->violations[$key] ??= ['kind' => $kind, 'name' => $name, 'count' => 0];
-        $this->violations[$key]['count']++;
+        $violations[$key] ??= ['kind' => $kind, 'name' => $name, 'count' => 0];
+        $violations[$key]['count']++;
     }
 }

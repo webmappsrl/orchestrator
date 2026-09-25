@@ -39,4 +39,18 @@ class CheckQuoteRichTextCommandTest extends TestCase
 
         $this->assertEquals($prima, $ko->fresh()->getAttributes());
     }
+
+    /** @test */
+    public function applica_le_stesse_regole_dell_api_anche_alla_descrizione_vuota(): void
+    {
+        $ko = Quote::factory()->create(['additional_services' => []]);
+        $ko->setTranslation('additional_services', 'it', ['  ' => 100])->save();
+
+        $exit = Artisan::call('quotes:check-rich-text');
+        $output = Artisan::output();
+
+        $this->assertSame(1, $exit);
+        $this->assertStringContainsString('descrizione non vuota', $output);
+    }
 }
+

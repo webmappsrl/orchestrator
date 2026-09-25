@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api;
 
 use App\Enums\QuoteStatus;
 use App\Rules\AdditionalServicesMap;
-use App\Rules\SafeRichTextHtml;
+use App\Services\Quotes\QuoteRichText;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,10 +29,6 @@ class QuoteApiRequest extends FormRequest
             'discount'             => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'notes'                => ['sometimes', 'nullable', 'string'],
             'template'             => ['sometimes', 'boolean'],
-            'additional_info'      => ['sometimes', 'nullable', 'string', 'max:50000', new SafeRichTextHtml()],
-            'delivery_time'        => ['sometimes', 'nullable', 'string', 'max:50000', new SafeRichTextHtml()],
-            'payment_plan'         => ['sometimes', 'nullable', 'string', 'max:50000', new SafeRichTextHtml()],
-            'billing_plan'         => ['sometimes', 'nullable', 'string', 'max:50000', new SafeRichTextHtml()],
-        ];
+        ] + array_fill_keys(QuoteRichText::FIELDS, ['sometimes', ...QuoteRichText::fieldRules()]);
     }
 }
