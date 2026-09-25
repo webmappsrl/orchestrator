@@ -155,4 +155,25 @@ class QuoteApiDocsTest extends TestCase
             }
         }
     }
+
+    public function test_quotes_store_and_update_describe_the_rich_text_rules_in_the_body(): void
+    {
+        $spec = $this->get('/docs/api.json')->json();
+        foreach ([['/quotes', 'post'], ['/quotes/{quote}', 'patch']] as [$path, $method]) {
+            $body = $spec['paths'][$path][$method]['requestBody']['content']['application/json']['schema'] ?? [];
+            $descriptions = collect($body['allOf'] ?? [$body])
+                ->map(fn ($part) => isset($part['$ref'])
+                    ? $spec['components']['schemas'][basename($part['$ref'])] ?? []
+                    : $part)
+                ->pluck('properties')->filter()
+                ->flatMap(fn ($properties) => collect($properties)->map(fn ($p) => $p['description'] ?? ''))
+                ->all();
+
+            foreach (['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'] as $field) {
+                $description = $descriptions[$field] ?? '';
+                $this->assertStringContainsString('HTML', $description, "Expected {$method} {$path} to describe {$field} as HTML.");
+                $this->assertStringContainsString('/storage/', $description, "Expected {$method} {$path} to state the image rule for {$field}.");
+            }
+        }
+    }
 }

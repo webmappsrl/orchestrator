@@ -21,6 +21,10 @@ class QuoteController extends Controller
 {
     public const RICH_TEXT_FIELDS = ['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'];
     private const TRANSLATABLE_FIELDS = ['additional_services', 'notes', ...self::RICH_TEXT_FIELDS];
+    private const RICH_TEXT_DESCRIPTION = 'HTML in the default language, same format as the Nova editor; saved exactly as sent. '
+        . 'null or "" removes the text. Max 50000 characters. Rejected with 422: script, iframe, object and similar tags, '
+        . 'on* attributes, links other than http(s):, mailto: or #, url(/image-set(/expression( in style, '
+        . 'images outside /storage/ of this application. Send only the fields you change.';
     private const ALLOWED_INCLUDES = ['customer', 'products', 'recurringProducts'];
     private const DEFAULT_PER_PAGE = 20;
     private const DEFAULT_LANG = 'it';
@@ -189,6 +193,10 @@ class QuoteController extends Controller
      * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     #[BodyParameter('additional_services', description: 'Map of service description to price, e.g. {"Setup fee": 150.0}.', type: 'object')]
+    #[BodyParameter('additional_info', description: self::RICH_TEXT_DESCRIPTION, type: 'string')]
+    #[BodyParameter('delivery_time', description: self::RICH_TEXT_DESCRIPTION, type: 'string')]
+    #[BodyParameter('payment_plan', description: self::RICH_TEXT_DESCRIPTION, type: 'string')]
+    #[BodyParameter('billing_plan', description: self::RICH_TEXT_DESCRIPTION, type: 'string')]
     public function store(QuoteApiRequest $request): JsonResponse
     {
         $this->authorize('create', Quote::class);
@@ -210,6 +218,10 @@ class QuoteController extends Controller
      * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     #[BodyParameter('additional_services', description: 'Map of service description to price, e.g. {"Setup fee": 150.0}.', type: 'object')]
+    #[BodyParameter('additional_info', description: self::RICH_TEXT_DESCRIPTION, type: 'string')]
+    #[BodyParameter('delivery_time', description: self::RICH_TEXT_DESCRIPTION, type: 'string')]
+    #[BodyParameter('payment_plan', description: self::RICH_TEXT_DESCRIPTION, type: 'string')]
+    #[BodyParameter('billing_plan', description: self::RICH_TEXT_DESCRIPTION, type: 'string')]
     public function update(QuoteApiRequest $request, Quote $quote): JsonResponse
     {
         $this->authorize('update', $quote);

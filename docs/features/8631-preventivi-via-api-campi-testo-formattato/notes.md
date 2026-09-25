@@ -32,6 +32,10 @@ La review finale del branch ha trovato modi per aggirare la regola HTML, verific
 
 Decisione su un punto emerso dalla review: da Nova si può inserire un'immagine da URL esterno (`<img tt-mode="url" src="https://…">`), che l'API rifiuta. Non si allarga la regola, perché DomPDF scaricherebbe l'immagine, e non si tocca Nova in questo ticket: il 422 spiega cosa fare, e **la skill deve mandare nel PATCH solo i campi che modifica**.
 
+### Dopo il primo commit — descrizioni in `/docs/api`
+
+Su richiesta del dev, i quattro campi hanno una descrizione nel body di `store`/`update` (`#[BodyParameter(..., description: self::RICH_TEXT_DESCRIPTION)]`): formato HTML, `null`/`""` svuotano, limite di 50.000 caratteri, cosa viene rifiutato e l'indicazione di mandare solo i campi modificati. Il piano la prevedeva solo come ripiego: i campi comparivano già, ma senza nessuna regola. Elenca le categorie rifiutate e non il funzionamento interno del controllo, perché la pagina è pubblica. Test: `test_quotes_store_and_update_describe_the_rich_text_rules_in_the_body`.
+
 ## Bug trovati
 
 - `@response 201 array{...}` produce uno schema OpenAPI sbagliato in 5 endpoint del repo (vedi Task 6): corretto solo su `QuoteController::store`.
