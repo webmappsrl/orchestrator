@@ -95,4 +95,64 @@ class QuoteApiDocsTest extends TestCase
         $this->assertNotNull($additionalServicesSchema, 'Expected additional_services to be documented on POST /quotes.');
         $this->assertEquals('object', $additionalServicesSchema['type'] ?? null, 'Expected additional_services to be documented as an object, not an array of strings.');
     }
+
+    private function allFullQuoteSchemas(): array
+    {
+        $spec = $this->get('/docs/api.json')->json();
+        $ops = [
+            ['/quotes', 'get', '200'], ['/quotes/{quote}', 'get', '200'],
+            // Scramble documenta store sotto 200 anche se risponde 201 (limite noto, oc:8631).
+            ['/quotes', 'post', '200'],
+            ['/quotes/{quote}', 'patch', '200'],
+            ['/quotes/{quote}/products/{product}', 'post', '200'], ['/quotes/{quote}/products/{product}', 'delete', '200'],
+            ['/quotes/{quote}/recurring-products/{recurringProduct}', 'post', '200'],
+            ['/quotes/{quote}/recurring-products/{recurringProduct}', 'delete', '200'],
+        ];
+
+        $schemas = [];
+        foreach ($ops as [$path, $method, $status]) {
+            $schema = $spec['paths'][$path][$method]['responses'][$status]['content']['application/json']['schema'] ?? null;
+            $this->assertNotNull($schema, "Expected a {$status} response schema for {$method} {$path}.");
+            $schemas["{$method} {$path}"] = $schema;
+        }
+        return $schemas;
+    }
+
+    private function quoteProperties(array $schema): array
+    {
+        if (isset($schema['anyOf'])) {
+            $schema = $schema['anyOf'][0];
+        }
+        if (($schema['type'] ?? null) === 'array') {
+            $schema = $schema['items'];
+        }
+        return $schema['properties'] ?? [];
+    }
+
+    public function test_all_full_quote_responses_document_the_rich_text_fields(): void
+    {
+        foreach ($this->allFullQuoteSchemas() as $operation => $schema) {
+            $properties = $this->quoteProperties($schema);
+            foreach (['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'] as $field) {
+                $this->assertArrayHasKey($field, $properties, "Expected {$field} in the response schema of {$operation}.");
+            }
+        }
+    }
+
+    public function test_quotes_store_and_update_document_the_rich_text_fields_in_the_body(): void
+    {
+        $spec = $this->get('/docs/api.json')->json();
+        foreach ([['/quotes', 'post'], ['/quotes/{quote}', 'patch']] as [$path, $method]) {
+            $body = $spec['paths'][$path][$method]['requestBody']['content']['application/json']['schema'] ?? [];
+            // Il body delle FormRequest è un $ref a components/schemas: risolverlo.
+            $properties = collect($body['allOf'] ?? [$body])
+                ->map(fn ($part) => isset($part['$ref'])
+                    ? $spec['components']['schemas'][basename($part['$ref'])] ?? []
+                    : $part)
+                ->pluck('properties')->filter()->collapse()->all();
+            foreach (['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'] as $field) {
+                $this->assertArrayHasKey($field, $properties, "Expected {$field} in the request body of {$method} {$path}.");
+            }
+        }
+    }
 }

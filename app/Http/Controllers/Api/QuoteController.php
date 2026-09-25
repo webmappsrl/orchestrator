@@ -19,7 +19,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class QuoteController extends Controller
 {
-    private const TRANSLATABLE_FIELDS = ['additional_services', 'notes'];
+    public const RICH_TEXT_FIELDS = ['additional_info', 'delivery_time', 'payment_plan', 'billing_plan'];
+    private const TRANSLATABLE_FIELDS = ['additional_services', 'notes', ...self::RICH_TEXT_FIELDS];
     private const ALLOWED_INCLUDES = ['customer', 'products', 'recurringProducts'];
     private const DEFAULT_PER_PAGE = 20;
     private const DEFAULT_LANG = 'it';
@@ -34,7 +35,7 @@ class QuoteController extends Controller
      * plain array (unchanged from before this feature) to avoid breaking
      * existing consumers.
      *
-     * @response array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>|array{data: array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>, meta: array{current_page: int, per_page: int, total: int, last_page: int}}
+     * @response array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>|array{data: array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>, meta: array{current_page: int, per_page: int, total: int, last_page: int}}
      */
     #[QueryParameter('customer_id', description: 'Filter quotes belonging to a specific customer.', type: 'int')]
     #[QueryParameter('status', description: 'Filter by status. Accepts a single value (?status=new) or multiple via array syntax (?status[]=new&status[]=presented).', type: 'string|array<string>')]
@@ -98,7 +99,7 @@ class QuoteController extends Controller
      * `recurringProducts`; each name adds the corresponding key below to the
      * response. Omitted names are simply absent from the response (not null).
      *
-     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null, customer?: array{id: int, name: string, company_name: string|null}, products?: array<array{id: int, name: string, price: float, quantity: int}>, recurringProducts?: array<array{id: int, name: string, price: float, quantity: int}>}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null, customer?: array{id: int, name: string, company_name: string|null}, products?: array<array{id: int, name: string, price: float, quantity: int}>, recurringProducts?: array<array{id: int, name: string, price: float, quantity: int}>}
      */
     #[QueryParameter('include', description: 'Comma-separated list of relations to expand: customer, products, recurringProducts (e.g. ?include=customer,products). Unlisted names are silently ignored; omitted relations are simply absent from the response.', type: 'string')]
     public function show(Request $request, Quote $quote): JsonResponse
@@ -184,7 +185,8 @@ class QuoteController extends Controller
     /**
      * Create a new quote.
      *
-     * @response 201 array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
+     * @status 201
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     #[BodyParameter('additional_services', description: 'Map of service description to price, e.g. {"Setup fee": 150.0}.', type: 'object')]
     public function store(QuoteApiRequest $request): JsonResponse
@@ -205,7 +207,7 @@ class QuoteController extends Controller
     /**
      * Update an existing quote.
      *
-     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     #[BodyParameter('additional_services', description: 'Map of service description to price, e.g. {"Setup fee": 150.0}.', type: 'object')]
     public function update(QuoteApiRequest $request, Quote $quote): JsonResponse
@@ -244,7 +246,7 @@ class QuoteController extends Controller
     /**
      * Attach a product to a quote with a quantity.
      *
-     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function attachProduct(Request $request, Quote $quote, Product $product): JsonResponse
     {
@@ -260,7 +262,7 @@ class QuoteController extends Controller
     /**
      * Detach a product from a quote.
      *
-     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function detachProduct(Request $request, Quote $quote, Product $product): JsonResponse
     {
@@ -276,7 +278,7 @@ class QuoteController extends Controller
     /**
      * Attach a recurring product to a quote with a quantity.
      *
-     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function attachRecurringProduct(Request $request, Quote $quote, RecurringProduct $recurringProduct): JsonResponse
     {
@@ -292,7 +294,7 @@ class QuoteController extends Controller
     /**
      * Detach a recurring product from a quote.
      *
-     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}
      */
     public function detachRecurringProduct(Request $request, Quote $quote, RecurringProduct $recurringProduct): JsonResponse
     {
@@ -320,8 +322,21 @@ class QuoteController extends Controller
     private function applyTranslatable(Quote $quote, array $translatable): void
     {
         foreach ($translatable as $field => $value) {
+            // oc:8631: per i rich-text un valore vuoto rimuove la traduzione,
+            // così il PDF (`@if ($quote->campo)`) nasconde la sezione con certezza.
+            if (in_array($field, self::RICH_TEXT_FIELDS, true) && ($value === null || $value === '')) {
+                $quote->forgetTranslation($field, config('app.locale'));
+                continue;
+            }
             $quote->setTranslation($field, config('app.locale'), $value);
         }
+    }
+
+    private function richText(Quote $quote, string $field): ?string
+    {
+        $value = $quote->getTranslation($field, config('app.locale'), false);
+
+        return $value === '' || $value === null ? null : $value;
     }
 
     private function formatQuote(Quote $quote, array $include = []): array
@@ -339,6 +354,10 @@ class QuoteController extends Controller
             'discount'             => $quote->discount,
             'notes'                => $quote->notes,
             'additional_services'  => $quote->additional_services,
+            'additional_info'      => $this->richText($quote, 'additional_info'),
+            'delivery_time'        => $this->richText($quote, 'delivery_time'),
+            'payment_plan'         => $this->richText($quote, 'payment_plan'),
+            'billing_plan'         => $this->richText($quote, 'billing_plan'),
             'template'             => $quote->template,
             'total'                => $quote->getTotalPrice() + $quote->getTotalRecurringPrice() + $quote->getTotalAdditionalServicesPrice(),
             'net_total'            => $netTotal,

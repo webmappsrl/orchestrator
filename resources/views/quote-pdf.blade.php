@@ -346,6 +346,13 @@ $normalizeAdditionalServices = function ($value): array {
     </div>
     @endif
 
+    @if ($quote->billing_plan)
+    <div class="payment-plan">
+        <h2 class="description">{{ __('Billing plan') }}</h2>
+        <p>{!! $quote->getTranslation('billing_plan', App::getLocale()) !!}</p>
+    </div>
+    @endif
+
     <div class="message">
         <p>{{ __('At your disposal for any clarification, we send you cordial greetings.') }}</p>
         <br>

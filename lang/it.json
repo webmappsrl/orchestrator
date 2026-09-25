@@ -544,5 +544,21 @@
   "Assignee": "Assegnatario",
   "Overdue by :days days": "Scaduto da :days giorni",
   "Due in :days days": "Tra :days giorni",
-  "Completed late": "Completato in ritardo"
+  "Completed late": "Completato in ritardo",
+  "The :attribute field contains HTML that is not allowed: :details.": "Il campo :attribute contiene HTML non ammesso: :details.",
+  "tag <:name> not allowed (:count :occurrences): remove it, it can run code or embed external content": "tag <:name> non ammesso (:count :occurrences): rimuovilo, può eseguire codice o incorporare contenuti esterni",
+  "attribute :name not allowed (:count :occurrences): remove attributes starting with \"on\", they run code": "attributo :name non ammesso (:count :occurrences): rimuovi gli attributi che iniziano con \"on\", eseguono codice",
+  "style with :name not allowed (:count :occurrences): in style do not use url(, image-set(, expression(, @import, javascript:, backslashes or comments": "style con :name non ammesso (:count :occurrences): nello style non usare url(, image-set(, expression(, @import, javascript:, backslash o commenti",
+  "link not allowed (:count :occurrences): href must start with https://, http://, mailto: or #": "link non ammesso (:count :occurrences): href deve iniziare con https://, http://, mailto: o #",
+  "image not allowed (:count :occurrences): src must be a path under /storage/ (e.g. /storage/tiptap/logo.png) or a URL on :host under /storage/; srcset is not supported": "immagine non ammessa (:count :occurrences): src deve essere un percorso sotto /storage/ (es. /storage/tiptap/logo.png) o un URL su :host sotto /storage/; srcset non è supportato",
+  "...and :count more kinds of elements not allowed": "...e altri :count tipi di elementi non ammessi",
+  "occurrence": "occorrenza",
+  "occurrences": "occorrenze",
+  "The :attribute field is not valid: :details.": "Il campo :attribute non è valido: :details.",
+  ":attribute must be an object {\"description\": price}, not a list (e.g. {\"Initial setup\": 1500})": ":attribute deve essere un oggetto {\"descrizione\": prezzo}, non una lista (es. {\"Setup iniziale\": 1500})",
+  "every service must have a non-empty description": "ogni servizio deve avere una descrizione non vuota",
+  "the price of service \":service\" is not valid (received: :value): use a number without thousands separator and at most two decimals. Valid examples: 1234.56, 1234,56, 1234": "il prezzo del servizio \":service\" non è valido (ricevuto: :value): usa un numero senza separatore delle migliaia e al massimo due decimali. Esempi validi: 1234.56, 1234,56, 1234",
+  "...and :count more problems": "...e altri :count problemi",
+  "Billing plan": "Piano di fatturazione",
+  "tag <:name> not supported (:count :occurrences): remove it or replace it with a supported tag (p, span, strong, em, ul, ol, li, table)": "tag <:name> non supportato (:count :occurrences): rimuovilo o sostituiscilo con un tag supportato (p, span, strong, em, ul, ol, li, table)"
 }

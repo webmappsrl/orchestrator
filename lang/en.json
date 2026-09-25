@@ -756,5 +756,21 @@
   "Assignee": "Assignee",
   "Overdue by :days days": "Overdue by :days days",
   "Due in :days days": "Due in :days days",
-  "Completed late": "Completed late"
+  "Completed late": "Completed late",
+  "The :attribute field contains HTML that is not allowed: :details.": "The :attribute field contains HTML that is not allowed: :details.",
+  "tag <:name> not allowed (:count :occurrences): remove it, it can run code or embed external content": "tag <:name> not allowed (:count :occurrences): remove it, it can run code or embed external content",
+  "attribute :name not allowed (:count :occurrences): remove attributes starting with \"on\", they run code": "attribute :name not allowed (:count :occurrences): remove attributes starting with \"on\", they run code",
+  "style with :name not allowed (:count :occurrences): in style do not use url(, image-set(, expression(, @import, javascript:, backslashes or comments": "style with :name not allowed (:count :occurrences): in style do not use url(, image-set(, expression(, @import, javascript:, backslashes or comments",
+  "link not allowed (:count :occurrences): href must start with https://, http://, mailto: or #": "link not allowed (:count :occurrences): href must start with https://, http://, mailto: or #",
+  "image not allowed (:count :occurrences): src must be a path under /storage/ (e.g. /storage/tiptap/logo.png) or a URL on :host under /storage/; srcset is not supported": "image not allowed (:count :occurrences): src must be a path under /storage/ (e.g. /storage/tiptap/logo.png) or a URL on :host under /storage/; srcset is not supported",
+  "...and :count more kinds of elements not allowed": "...and :count more kinds of elements not allowed",
+  "occurrence": "occurrence",
+  "occurrences": "occurrences",
+  "The :attribute field is not valid: :details.": "The :attribute field is not valid: :details.",
+  ":attribute must be an object {\"description\": price}, not a list (e.g. {\"Initial setup\": 1500})": ":attribute must be an object {\"description\": price}, not a list (e.g. {\"Initial setup\": 1500})",
+  "every service must have a non-empty description": "every service must have a non-empty description",
+  "the price of service \":service\" is not valid (received: :value): use a number without thousands separator and at most two decimals. Valid examples: 1234.56, 1234,56, 1234": "the price of service \":service\" is not valid (received: :value): use a number without thousands separator and at most two decimals. Valid examples: 1234.56, 1234,56, 1234",
+  "...and :count more problems": "...and :count more problems",
+  "Billing plan": "Billing plan",
+  "tag <:name> not supported (:count :occurrences): remove it or replace it with a supported tag (p, span, strong, em, ul, ol, li, table)": "tag <:name> not supported (:count :occurrences): remove it or replace it with a supported tag (p, span, strong, em, ul, ol, li, table)"
 }
