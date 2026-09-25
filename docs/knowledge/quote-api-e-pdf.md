@@ -28,7 +28,47 @@ organizzata la Resource Nova.
 - **`company_name` nell'API Customer non è una colonna**: alias di sola lettura su
   `full_name`, calcolato nel controller.
 
-### PDF del preventivo (oc:8291, oc:8413, oc:8047)
+### Campi rich-text e validazione dell'HTML (oc:8631)
+- `additional_info`, `delivery_time`, `payment_plan`, `billing_plan` sono esposti in lettura e
+  scrittura da `/api/quotes` **solo nella lingua di default** (`QuoteController::RICH_TEXT_FIELDS`,
+  aggiunti a `TRANSLATABLE_FIELDS`). `null` e `""` fanno `forgetTranslation()` invece di salvare
+  una stringa vuota, così `@if ($quote->campo)` nel PDF nasconde la sezione; in lettura un campo
+  senza traduzione `it` torna `null`.
+- **Il valore accettato si salva byte per byte, senza ripulitura**: la regola `SafeRichTextHtml`
+  rifiuta con 422, non corregge. Motivo: una risposta che conferma un testo diverso da quello
+  mandato è proprio il difetto che il ticket voleva eliminare.
+- **Si rifiuta solo ciò che è pericoloso, non ciò che non è in elenco.** Il Tiptap di Nova ha
+  `editHtml` fra i pulsanti, quindi da Nova si può salvare HTML libero: un elenco chiuso di tag
+  farebbe fallire il PATCH di un campo letto e rimandato senza modifiche. `RichTextHtmlInspector`
+  rifiuta tag che eseguono codice o incorporano contenuti, `on*`, URL non sicuri e `style` con
+  `url(`/`image-set(`/`expression(`/`@import`/`javascript:`/backslash/commenti.
+- **L'HTML si analizza con `masterminds/html5`, lo stesso parser di DomPDF**, e URL e `style` si
+  normalizzano come li leggono browser e DomPDF prima del controllo (tab e a capo tolti, `\` letto
+  come `/`, commenti CSS rimossi). Senza normalizzazione passavano `java\tscript:`,
+  `url/**/(http://…)` (DomPDF toglie i commenti e con `enable_remote => true` scarica l'URL dal
+  server) e `/\host`. Ogni variante trovata è un caso in `RichTextHtmlInspectorTest`.
+- **Immagini solo sotto `/storage/`**, relative o su host e porta di `APP_URL`: un `src` sullo
+  stesso host ma su un altro percorso (es. `/quote/218`) farebbe richiamare a DomPDF la rotta
+  pubblica del PDF, in ricorsione. Conseguenza accettata: un'immagine da URL esterno inserita da
+  Nova (`tt-mode="url"`) viene rifiutata dall'API, quindi il client deve mandare nel PATCH solo i
+  campi che modifica.
+- **`additional_services`** (`AdditionalServicesMap`): oggetto `{descrizione: prezzo}`, non lista;
+  prezzo numero JSON o stringa `^-?\d+([.,]\d{1,2})?$`, senza separatore delle migliaia, cioè
+  esattamente ciò che `number_format(str_replace(',', '.', …))` nel template e
+  `getTotalAdditionalServicesPrice()` sanno leggere (`"1.234,56"` romperebbe il PDF e darebbe 1.234
+  nel totale). Nova non applica la stessa regola al KeyValue.
+- **I messaggi 422 dicono cosa è sbagliato e cosa fare**, raggruppati per tipo con il numero di
+  occorrenze e al massimo 10 voci per campo: un HTML incollato da Word non deve produrre una
+  risposta da decine di KB.
+- **Le regole sono descritte anche in `/docs/api`** (pagina pubblica): `RICH_TEXT_DESCRIPTION` in
+  `Api\QuoteController`, applicata con `#[BodyParameter]` ai quattro campi di `store`/`update` e
+  verificata da `QuoteApiDocsTest`. Quando la regola cambia va aggiornata insieme; elenca le
+  categorie rifiutate, non come funziona il controllo.
+- **`php artisan quotes:check-rich-text`** (sola lettura) applica le due regole a tutti i
+  preventivi e a tutte le lingue: exit 1 se qualcosa verrebbe rifiutato. Va lanciato sui dati di
+  produzione prima di rilasciare una modifica alla regola.
+
+### PDF del preventivo (oc:8291, oc:8413, oc:8047, oc:8631)
 - `GET/POST /api/quotes/{quote}/pdf(-link)` più rotta pubblica firmata in `routes/web.php`
   (`quotes.pdf.public`), middleware `['signed', 'throttle:30,1']`. Il throttle serve perché la
   rotta vive fuori da `auth:sanctum` e quindi fuori dal `throttle:api`.
@@ -58,6 +98,10 @@ organizzata la Resource Nova.
   `barryvdh/laravel-dompdf ^3.0` i data URI non vengono renderizzati. Il protocollo `file://`
   è già in `config/dompdf.php` → `allowed_protocols`. I PNG vanno ridimensionati a ≤ 400-500px
   di larghezza: le immagini ad alta risoluzione non vengono renderizzate affatto.
+- **Piano di fatturazione nel PDF** (oc:8631): `billing_plan` si compilava in Nova ma il template
+  non lo stampava. Ora è subito dopo il Piano di pagamento, con la stessa classe `payment-plan`, e
+  il titolo usa la chiave `"Billing plan"`, distinta dall'etichetta Nova `"Billing Plan"` (chiavi
+  JSON duplicate: l'ultima vince).
 
 ### Lista e dettaglio Quote in Nova (oc:8404, oc:8407)
 - Index: colonne ID (`ID::make()->sortable()`, `app/Nova/Quote.php:114`), Cliente, Titolo, Stato,
