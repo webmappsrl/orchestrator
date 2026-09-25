@@ -113,3 +113,7 @@ Doc pubblica su `/docs/api`, generata da `dedoc/scramble`, con link nel menu Nov
   posizione AST diretta — non dentro un confronto `===`, né annidata in un cast o in una funzione.
   Per ogni param letto in modo non standard si usa l'attributo PHP
   `#[QueryParameter(...)]` di `Dedoc\Scramble\Attributes` sul metodo, letto via reflection.
+- **`@response 201 array{…}` produce uno schema sbagliato** (`{"type":"integer","const":201}`)
+  invece della forma dichiarata (oc:8631). Su `Api\QuoteController::store` è stato sostituito con
+  `@status 201` + `@response array{…}`: la forma è corretta, ma Scramble la documenta sotto `200`.
+  Lo stesso difetto resta su `pdfLink` e sugli store di Customer, Story e Tag.

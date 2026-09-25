@@ -28,7 +28,61 @@ organizzata la Resource Nova.
 - **`company_name` nell'API Customer non è una colonna**: alias di sola lettura su
   `full_name`, calcolato nel controller.
 
-### PDF del preventivo (oc:8291, oc:8413, oc:8047)
+### Campi rich-text e validazione dell'HTML (oc:8631)
+- `additional_info`, `delivery_time`, `payment_plan`, `billing_plan` sono esposti in lettura e
+  scrittura da `/api/quotes` **solo nella lingua di default**. Elenco dei campi, limite di
+  lunghezza (50.000), regole e numero massimo di voci nei messaggi stanno in un posto solo,
+  `App\Services\Quotes\QuoteRichText`, usato da request, controller e comando.
+- `null` e `""` fanno `forgetTranslation()` invece di salvare una stringa vuota. **La lettura usa
+  lo stesso fallback del PDF** (`fallbackAny` in `AppServiceProvider`): se manca `it` ma c'è testo
+  in un'altra lingua, l'API restituisce quello, perché è quello che il PDF stampa; un campo
+  davvero vuoto torna `null`. Svuotare via API rimuove solo `it`, e non cancella testi scritti in
+  Nova nelle altre tab.
+- **Il valore accettato si salva byte per byte, senza ripulitura**: `SafeRichTextHtml` rifiuta con
+  422, non corregge, e i quattro campi sono esclusi da `TrimStrings`. Motivo: una risposta che
+  conferma un testo diverso da quello mandato è proprio il difetto che il ticket voleva eliminare.
+- **Si rifiutano solo i tag pericolosi** (`RichTextHtmlInspector::DANGEROUS_TAGS`: script, frame,
+  oggetti, style, link, meta, base, controlli di form, svg, math, media). I tag sconosciuti ma
+  innocui (`<o:p>` di Word, `<section>`, `<center>`) passano: il Tiptap di Nova ha `editHtml`, e un
+  campo letto e rimandato senza modifiche non deve prendere 422.
+- **L'HTML si analizza con `masterminds/html5`, lo stesso parser di DomPDF**, e gli URL si
+  normalizzano come li legge il browser prima del controllo (tab e a capo tolti, `\` letto come
+  `/`): senza, passavano `java\tscript:` e `/\host`. Ogni variante trovata è un caso in
+  `RichTextHtmlInspectorTest`.
+- **`style`**: rifiutato se contiene `url(`, `image-set(`, `expression(`, `@import`,
+  `javascript:`, backslash o `/*`. Commenti ed escape servono solo a nascondere gli altri token:
+  DomPDF toglie i commenti prima di leggere lo style e con `enable_remote => true` scarica ogni
+  `url(` dal server.
+- **Gli attributi di presentazione** (`align`, `width`, `bgcolor`, `face`, …) accettano solo valori
+  semplici: DomPDF li traduce in CSS con `sprintf('text-align: %s;', $valore)` senza escape, e un
+  `;` nel valore permetteva di aggiungere `background-image:url(…)` scaricato dal server.
+- **Immagini solo sotto `/storage/`**, relative o su host e porta di `APP_URL`: un `src` sullo
+  stesso host ma su un altro percorso (es. `/quote/218`) farebbe richiamare a DomPDF la rotta
+  pubblica del PDF, in ricorsione. Conseguenza accettata: un'immagine da URL esterno inserita da
+  Nova (`tt-mode="url"`) viene rifiutata dall'API, quindi il client deve mandare nel PATCH solo i
+  campi che modifica.
+- **Annidamento massimo 100 livelli**, con visita iterativa: la versione ricorsiva senza limite
+  costava circa 2 s di CPU per campo con 16.000 `<b>` annidati.
+- **`additional_services`** (`AdditionalServicesMap`): oggetto `{descrizione: prezzo}`, non lista;
+  prezzo numero con al massimo due decimali o stringa `^-?\d+([.,]\d{1,2})?$`, senza separatore
+  delle migliaia, cioè esattamente ciò che `number_format(str_replace(',', '.', …))` nel template e
+  `getTotalAdditionalServicesPrice()` sanno leggere (`"1.234,56"` romperebbe il PDF e darebbe 1.234
+  nel totale). Un oggetto con chiavi `"0"`, `"1"`… arriva al PHP come lista: il messaggio lo
+  spiega. Nova non applica la stessa regola al KeyValue.
+- **I messaggi 422 dicono cosa è sbagliato e cosa fare**, col nome dell'attributo coinvolto,
+  raggruppati per tipo con il numero di occorrenze e al massimo 10 voci per campo. I segnaposto del
+  Validator (`:attribute`, `:input`…) scritti dall'utente vengono protetti con un word joiner
+  (U+2060), altrimenti il Validator li sostituirebbe dentro il messaggio già composto.
+- **Le regole sono descritte anche in `/docs/api`** (pagina pubblica): `RICH_TEXT_DESCRIPTION` in
+  `Api\QuoteController`, applicata con `#[BodyParameter]` ai quattro campi di `store`/`update` e
+  verificata da `QuoteApiDocsTest`. Quando la regola cambia va aggiornata insieme; elenca le
+  categorie rifiutate, non come funziona il controllo.
+- **`php artisan quotes:check-rich-text`** (sola lettura) passa dal `Validator` con le stesse Rule
+  dell'API su tutti i preventivi e tutte le lingue: exit 1 se qualcosa verrebbe rifiutato, e come
+  motivo il messaggio 422. Va lanciato sui dati di produzione prima di rilasciare una modifica alla
+  regola; esce con 1 anche per prezzi testuali già presenti, non solo per l'HTML.
+
+### PDF del preventivo (oc:8291, oc:8413, oc:8047, oc:8631)
 - `GET/POST /api/quotes/{quote}/pdf(-link)` più rotta pubblica firmata in `routes/web.php`
   (`quotes.pdf.public`), middleware `['signed', 'throttle:30,1']`. Il throttle serve perché la
   rotta vive fuori da `auth:sanctum` e quindi fuori dal `throttle:api`.
@@ -58,6 +112,10 @@ organizzata la Resource Nova.
   `barryvdh/laravel-dompdf ^3.0` i data URI non vengono renderizzati. Il protocollo `file://`
   è già in `config/dompdf.php` → `allowed_protocols`. I PNG vanno ridimensionati a ≤ 400-500px
   di larghezza: le immagini ad alta risoluzione non vengono renderizzate affatto.
+- **Piano di fatturazione nel PDF** (oc:8631): `billing_plan` si compilava in Nova ma il template
+  non lo stampava. Ora è subito dopo il Piano di pagamento, con la stessa classe `payment-plan`, e
+  il titolo usa la chiave `"Billing plan"`, distinta dall'etichetta Nova `"Billing Plan"` (chiavi
+  JSON duplicate: l'ultima vince).
 
 ### Lista e dettaglio Quote in Nova (oc:8404, oc:8407)
 - Index: colonne ID (`ID::make()->sortable()`, `app/Nova/Quote.php:114`), Cliente, Titolo, Stato,
@@ -97,6 +155,18 @@ organizzata la Resource Nova.
   progetto.
 
 ## Come ci siamo arrivati
+
+- **Elenco chiuso dei tag ammessi** (oc:8631, prima versione): superato. Rifiutava anche tag
+  innocui prodotti con `editHtml` o incollati da Word (`<o:p>`, `<section>`), facendo prendere 422 a
+  un campo letto e rimandato senza modifiche. Ora si rifiutano solo i tag pericolosi.
+- **Commenti CSS tolti prima del controllo sullo `style`** (oc:8631, dopo la prima review):
+  superato. La rimozione con una regex si aggirava con un commento dentro una stringa CSS
+  (`font-family:'/*';background:url(…);x:'*/'`), che il browser in Nova avrebbe caricato. Ora `/*`
+  è rifiutato.
+- **Lettura dei campi rich-text senza fallback** (oc:8631, prima versione): superata. L'API
+  rispondeva `null` mentre il PDF stampava il testo di un'altra lingua. Scartata anche
+  l'alternativa di cancellare tutte le lingue allo svuotamento: avrebbe eliminato senza avviso
+  testi scritti in Nova.
 
 - **`is_array($v) && count($v) > 0` come guardia su `additional_services`** (proposta nelle note
   di oc:8413): scartata. Avrebbe reso una stringa JSON "presente" per il check «No items
