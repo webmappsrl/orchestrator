@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Api;
 
 use App\Enums\QuoteStatus;
+use App\Rules\AdditionalServicesMap;
+use App\Services\Quotes\QuoteRichText;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,12 +23,12 @@ class QuoteApiRequest extends FormRequest
             'title'                => [$isCreate ? 'required' : 'sometimes', 'string', 'max:255'],
             'status'               => ['sometimes', Rule::in(array_column(QuoteStatus::cases(), 'value'))],
             'priority'             => ['sometimes', 'nullable', 'integer'],
-            'additional_services'  => ['sometimes', 'nullable', 'array'],
+            'additional_services'  => ['sometimes', 'nullable', 'array', new AdditionalServicesMap()],
             'customer_id'          => [$isCreate ? 'required' : 'sometimes', 'integer', 'exists:customers,id'],
             'google_drive_url'     => ['sometimes', 'nullable', 'string', 'max:2048'],
             'discount'             => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'notes'                => ['sometimes', 'nullable', 'string'],
             'template'             => ['sometimes', 'boolean'],
-        ];
+        ] + array_fill_keys(QuoteRichText::FIELDS, ['sometimes', ...QuoteRichText::fieldRules()]);
     }
 }
