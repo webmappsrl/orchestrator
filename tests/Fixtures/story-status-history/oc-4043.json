@@ -1,0 +1,91 @@
+{
+  "source": "oc:4043, DB locale (dump di produzione, dati fino a giugno 2025)",
+  "story": {
+    "id": 4043,
+    "status": "backlog",
+    "created_at": "2024-09-27 09:41:09"
+  },
+  "logs": [
+    {
+      "id": 4081,
+      "created_at": "2024-09-27 09:41:09",
+      "changes": {
+        "status": "new",
+        "name": null,
+        "customer_request": null,
+        "user_id": null,
+        "created_at": null,
+        "id": null,
+        "creator_id": null,
+        "type": null
+      }
+    },
+    {
+      "id": 4096,
+      "created_at": "2024-09-27 12:30:43",
+      "changes": {
+        "status": "waiting",
+        "user_id": null,
+        "customer_request": null
+      }
+    },
+    {
+      "id": 4533,
+      "created_at": "2024-10-05 15:00:48",
+      "changes": {
+        "customer_request": null
+      }
+    },
+    {
+      "id": 4537,
+      "created_at": "2024-10-06 09:11:17",
+      "changes": {
+        "customer_request": null
+      }
+    },
+    {
+      "id": 4539,
+      "created_at": "2024-10-06 09:18:27",
+      "changes": {
+        "customer_request": null
+      }
+    },
+    {
+      "id": 4639,
+      "created_at": "2024-10-10 16:49:20",
+      "changes": {
+        "customer_request": null
+      }
+    },
+    {
+      "id": 4835,
+      "created_at": "2024-10-15 18:00:05",
+      "changes": {
+        "status": "waiting"
+      }
+    },
+    {
+      "id": 5021,
+      "created_at": "2024-10-18 09:07:05",
+      "changes": {
+        "customer_request": null
+      }
+    },
+    {
+      "id": 5042,
+      "created_at": "2024-10-18 18:00:06",
+      "changes": {
+        "status": "waiting"
+      }
+    },
+    {
+      "id": 5107,
+      "created_at": "2024-10-22 12:16:18",
+      "changes": {
+        "status": "backlog",
+        "user_id": null,
+        "type": null
+      }
+    }
+  ]
+}

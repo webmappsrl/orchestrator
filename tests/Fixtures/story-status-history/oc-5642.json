@@ -1,0 +1,92 @@
+{
+  "source": "oc:5642, DB locale (dump di produzione, dati fino a giugno 2025)",
+  "story": {
+    "id": 5642,
+    "status": "released",
+    "created_at": "2025-06-02 08:49:30"
+  },
+  "logs": [
+    {
+      "id": 19329,
+      "created_at": "2025-06-02 08:49:30",
+      "changes": {
+        "status": "new",
+        "name": null,
+        "customer_request": null,
+        "user_id": null,
+        "created_at": null,
+        "id": null,
+        "creator_id": null,
+        "type": null
+      }
+    },
+    {
+      "id": 19340,
+      "created_at": "2025-06-03 08:00:53",
+      "changes": {
+        "status": "assigned",
+        "user_id": null,
+        "tester_id": null
+      }
+    },
+    {
+      "id": 19344,
+      "created_at": "2025-06-03 08:01:24",
+      "changes": {
+        "status": "todo"
+      }
+    },
+    {
+      "id": 19406,
+      "created_at": "2025-06-03 10:22:07",
+      "changes": {
+        "description": null,
+        "status": "progress"
+      }
+    },
+    {
+      "id": 19410,
+      "created_at": "2025-06-03 10:30:16",
+      "changes": {
+        "status": "todo"
+      }
+    },
+    {
+      "id": 19413,
+      "created_at": "2025-06-03 10:33:09",
+      "changes": {
+        "status": "progress"
+      }
+    },
+    {
+      "id": 19423,
+      "created_at": "2025-06-03 11:40:54",
+      "changes": {
+        "status": "waiting",
+        "customer_request": null
+      }
+    },
+    {
+      "id": 19555,
+      "created_at": "2025-06-04 18:46:22",
+      "changes": {
+        "customer_request": null
+      }
+    },
+    {
+      "id": 19602,
+      "created_at": "2025-06-05 09:23:47",
+      "changes": {
+        "status": "testing"
+      }
+    },
+    {
+      "id": 19606,
+      "created_at": "2025-06-05 09:24:36",
+      "changes": {
+        "status": "released",
+        "customer_request": null
+      }
+    }
+  ]
+}

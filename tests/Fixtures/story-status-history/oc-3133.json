@@ -1,0 +1,53 @@
+{
+  "source": "oc:3133, DB locale (dump di produzione, dati fino a giugno 2025)",
+  "story": {
+    "id": 3133,
+    "status": "done",
+    "created_at": "2024-04-24 08:56:48"
+  },
+  "logs": [
+    {
+      "id": 59,
+      "created_at": "2024-07-04 09:31:29",
+      "changes": {
+        "description": null
+      }
+    },
+    {
+      "id": 60,
+      "created_at": "2024-07-04 09:31:41",
+      "changes": {
+        "status": "waiting"
+      }
+    },
+    {
+      "id": 94,
+      "created_at": "2024-07-04 14:00:04",
+      "changes": {
+        "status": "progress"
+      }
+    },
+    {
+      "id": 151,
+      "created_at": "2024-07-05 06:21:08",
+      "changes": {
+        "status": "waiting"
+      }
+    },
+    {
+      "id": 304,
+      "created_at": "2024-07-09 11:33:43",
+      "changes": {
+        "status": "progress",
+        "tester_id": null
+      }
+    },
+    {
+      "id": 310,
+      "created_at": "2024-07-09 12:50:07",
+      "changes": {
+        "status": "released"
+      }
+    }
+  ]
+}
