@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\StoryStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoryApiRequest;
 use App\Models\Story;
 use App\Models\StoryLog;
+use App\Services\StoryStatusHistoryService;
 use App\Services\TagService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class StoryController extends Controller
 {
@@ -148,6 +151,37 @@ class StoryController extends Controller
             'data' => $paginator->getCollection()->map(fn (StoryLog $log) => $this->formatLog($log))->values(),
             'meta' => $this->formatPaginationMeta($paginator),
         ]);
+    }
+
+    /**
+     * Status history of a single story: the periods it spent in each status and, for every
+     * calendar day, the minutes spent in each status. Built to tell on which days a ticket was in
+     * which status (e.g. to pick which daily meeting transcripts to read), not to measure worked
+     * time: minutes are calendar minutes in Europe/Rome, 24 hours a day, weekends included, split
+     * at local midnight (daylight saving days count 1380 or 1500 minutes).
+     *
+     * Only story_logs rows carrying a `status` key are read; a row repeating the open status
+     * (e.g. waiting reminders) is ignored. The history always starts at the story's `created_at`.
+     * The initial status is not recorded when a story is created: if the story has status
+     * changes, the status of the first period is **assumed** to be `new` (the column default),
+     * not read from the log. If it has none, the single period carries the current status.
+     * The last period is open (`to: null`).
+     *
+     * @response array{story_id: int, timezone: string, current_status: string, intervals: array<array{status: string, from: string, to: string|null}>, days: array<array{date: string, statuses: array<string, int>}>}
+     */
+    #[QueryParameter('status', description: 'Keep only the periods in this status, the days on which it appears and, within each day, only its minutes. The history is always computed in full first, so periods keep their original from/to. A status never reached returns empty `intervals` and `days`. 422 if not a valid status. Omitted: every status.', type: 'string')]
+    public function statusHistory(Request $request, Story $story): JsonResponse
+    {
+        $this->authorize('view', $story);
+
+        $request->validate(
+            ['status' => ['sometimes', Rule::enum(StoryStatus::class)]],
+            ['status' => 'Stato non valido. Valori ammessi: ' . implode(', ', array_column(StoryStatus::cases(), 'value'))]
+        );
+
+        $status = $request->has('status') ? StoryStatus::from($request->query('status')) : null;
+
+        return response()->json(app(StoryStatusHistoryService::class)->forStory($story, $status));
     }
 
     /**
