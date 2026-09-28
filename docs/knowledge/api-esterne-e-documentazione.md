@@ -72,6 +72,34 @@ documentata.
   sulla posizione di questi stati. `sort=status`/`-status` ricade silenziosamente sul default
   (`-created_at`) finché il metodo non esiste.
 
+### Storia degli stati per giorno (oc:8636)
+- **`GET /api/stories/{story}/status-history`** risponde alla domanda "in quali giorni questa story
+  è stata in quale stato": periodi di stato (`intervals`) e, per ogni giorno di calendario, i minuti
+  per stato (`days`), con filtro facoltativo `?status=`. È nato per la skill `wm-plan`, che lo usa
+  per scegliere quali trascrizioni di scrum leggere: **non misura il tempo lavorato** (per quello
+  c'è `hours`, calcolato da `StoryTimeService` togliendo le ore non lavorative). I minuti sono di
+  calendario, 24 ore su 24, nel fuso `Europe/Rome`, divisi alle mezzanotti locali. La logica è in
+  `StoryStatusHistoryService`.
+- **Diverso da `/logs`**: `/logs` elenca ogni modifica di campo, paginata; `status-history` legge
+  solo le righe con chiave `status`, ignora quelle che ripetono lo stato aperto (i promemoria
+  `waiting` di `SendWaitingStoryReminder`) e restituisce tutta la storia in una risposta, senza
+  paginazione.
+- **Il primo stato è presunto, non registrato**: alla creazione di una story non si scrive alcun
+  cambio di stato, quindi se la story ha cambi di stato il primo periodo è assunto `new` da
+  `created_at`. Nei dati reali circa metà delle story nasce in un altro stato (`todo` via API,
+  `assigned` da `Story::boot()`). La cronologia parte comunque sempre da `created_at`: il giorno di
+  creazione compare sempre, perché è un giorno in cui del ticket si è probabilmente parlato.
+- **Limite noto sui ticket chiusi prima di oc:8137**: fino al 01/07/2026 i comandi automatici
+  (`AutoUpdateStoryStatus`, `MoveScrumStoriesInDoneCommand`) cambiavano stato con `saveQuietly()`
+  senza scrivere log, quindi circa 1239 story (DB locale, dati di stato fino a giugno 2025, da
+  riconfermare dopo `db:sync`) hanno l'ultimo periodo aperto in uno stato diverso da
+  `current_status` (quasi tutte `released` → `done`). Scelto di non correggere: sono ticket chiusi,
+  e una riapertura scrive un log nuovo. Scartata la chiusura approssimata a `updated_at`, perché il
+  ricalcolo delle ore del 10/12/2024 (oc:4432) ha spostato `updated_at` su centinaia di story.
+- **I test usano ticket veri**: `tests/Fixtures/story-status-history/oc-<ID>.json` contiene story e
+  log copiati dal DB locale, ripuliti dai testi dei clienti (di ogni riga resta il valore di
+  `status` e il solo nome delle altre chiavi).
+
 ### Accesso a Nova (oc:8161)
 - **Il wm-package resta fail-closed**: il listener condiviso `EnforceNovaAccessOnLogin` continua a
   negare il login web quando `can('access-nova')` è falso.

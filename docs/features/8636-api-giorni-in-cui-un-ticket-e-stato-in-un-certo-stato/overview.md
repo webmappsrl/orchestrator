@@ -50,7 +50,10 @@ allo scrum del 28/09/2026, dove ha aggiunto che potrebbe servire anche ad altri 
 - [ ] Si leggono solo le righe di `story_logs` della story con chiave `status` in `changes`,
       ordinate per `created_at` crescente e, a parità, per `id` crescente; le altre righe (watch,
       tag, user_id…) sono ignorate
-- [ ] La cronologia parte sempre da `stories.created_at`, mai dalla prima riga di log
+- [ ] La cronologia parte sempre da `stories.created_at`, mai dalla prima riga di log: **il giorno
+      di creazione compare sempre in `days`** (richiesto da Giuseppe Bonfanti allo scrum del
+      28/09/2026 alle 14:08: «se tu quel giorno hai creato quel ticket, probabilmente ne hai
+      parlato»)
 - [ ] Nessuna riga di stato (story mai cambiata di stato, o creata prima del 03/07/2024 quando
       `story_logs` non esisteva) → un solo periodo con `stories.status`, da `created_at` a `null`
 - [ ] Con righe di stato → primo periodo `new` (assunto) da `created_at`; poi, per ogni riga in
@@ -113,7 +116,15 @@ allo scrum del 28/09/2026, dove ha aggiunto che potrebbe servire anche ad altri 
   - **mai** cambiare stato con `save()`: le righe di stato si creano a mano con `new StoryLog([...])`,
     assegnando `created_at` a parte (non è in `$fillable`);
   - ora fissata con `Carbon::setTestNow(...)` per i periodi aperti
-- [ ] I 9 casi del ticket, ognuno con i valori attesi esatti:
+- [ ] **Casi d'uso reali** (indicazione di Giuseppe Bonfanti, scrum del 28/09/2026 alle 14:08):
+      le sequenze di stati dei test non si inventano, si copiano da ticket veri. Per ogni caso si
+      salva in un file di fixture sotto `tests/Fixtures/story-status-history/` (uno per ticket,
+      nominato `oc-<ID>.json`) il ticket (`id`, `status`, `created_at`) e le sue righe di
+      `story_logs` (`id`, `created_at`, `changes`), prese dal DB locale; il test le ricrea nel DB
+      di test e confronta la risposta con i valori attesi calcolati sulla storia reale. I ticket li
+      sceglie la dev insieme a Claude, cercando nei dati anche i casi limite
+- [ ] I 9 casi del ticket, ognuno con i valori attesi esatti (dove il caso dipende dai dati, su un
+      ticket vero; restano sintetici l'esempio del ticket e i casi di errore):
   1. l'esempio completo del ticket, con risposta identica ai due JSON del ticket (senza filtro e
      con `?status=progress`). Scenario: story creata il 21/09/2026 alle 08:00; righe di stato
      `progress` il 21 alle 09:00, `waiting` il 21 alle 17:00, `waiting` il 22 alle 10:00
@@ -129,6 +140,9 @@ allo scrum del 28/09/2026, dove ha aggiunto che potrebbe servire anche ad altri 
   7. `?status=` con stato mai raggiunto → 200, `intervals: []`, `days: []`;
   8. `?status=pippo` → 422 con l'elenco dei valori ammessi;
   9. senza token → 401; story inesistente → 404
+- [ ] Casi aggiuntivi su ticket veri: il giorno di creazione presente in `days` anche quando il
+      primo cambio di stato avviene giorni dopo; un ticket del limite noto (ultimo log diverso da
+      `current_status`) per fissare il comportamento accettato
 - [ ] Esecuzione con `docker exec php81_orchestrator php artisan test --filter=StoryStatusHistoryApiTest`,
       poi la suite completa con `docker exec php81_orchestrator php artisan test`, sempre sul DB
       `orchestrator_test` configurato in `phpunit.xml` (mai `DB_DATABASE=orchestrator`)
@@ -138,8 +152,10 @@ allo scrum del 28/09/2026, dove ha aggiunto che potrebbe servire anche ad altri 
 - [ ] Tutti i test sopra passano e la suite completa non ha nuovi fallimenti
 - [ ] L'endpoint compare nella specifica OpenAPI di Scramble, con il parametro `status` e la forma
       della risposta
-- [ ] Su un ticket vero in locale, i giorni in `days` coincidono con quelli in cui la tab Logs di
-      Nova mostra i cambi di stato
+- [ ] Su ticket veri in locale (per esempio oc:8631, indicato da Giuseppe), i giorni in `days`
+      coincidono con quelli in cui la tab Logs di Nova mostra i cambi di stato; ogni risultato che
+      non torna si segnala a Giuseppe. Richiede il DB locale aggiornato con `db:sync`: quello
+      attuale ha log di stato solo fino a giugno 2025
 
 ## Rischi
 
@@ -151,9 +167,12 @@ allo scrum del 28/09/2026, dove ha aggiunto che potrebbe servire anche ad altri 
   `progress`) l'etichetta del primo periodo conta poco.
 - **Limite noto, accettato: ultimo passaggio non registrato sui ticket vecchi.** Per circa 1239
   ticket chiusi prima di luglio 2026 l'ultimo periodo può risultare aperto in uno stato diverso da
-  `current_status` (fino a oc:8137 i comandi automatici cambiavano stato senza scrivere log);
-  nessun caso dopo il fix. Non si corregge: sono ticket chiusi, e se uno viene riaperto il nuovo
-  cambio di stato scrive un log e l'incoerenza sparisce.
+  `current_status` (fino a oc:8137 i comandi automatici cambiavano stato senza scrivere log).
+  Che dopo il fix non se ne formino più è garantito dal codice (test
+  `save_quietly_also_creates_story_log`), ma **non è ancora verificato sui dati**: il DB locale ha
+  log di stato solo fino a giugno 2025. Da ricontrollare dopo `db:sync`, e da segnalare a
+  Giuseppe, che allo scrum del 28/09 riteneva il DB già consistente. Non si corregge: sono ticket
+  chiusi, e se uno viene riaperto il nuovo cambio di stato scrive un log e l'incoerenza sparisce.
 - **Righe `waiting` ripetute** dai promemoria (69 coppie consecutive uguali nel DB locale):
   gestite ignorando le righe uguali allo stato aperto.
 - **Fuso orario**: colonne `timestamp` senza fuso, lette da Eloquent già in `Europe/Rome`
@@ -182,4 +201,5 @@ Tutto nel repo principale `orchestrator`, nessun submodule.
 - `app/Http/Controllers/Api/StoryController.php` — nuovo metodo `statusHistory()`
 - `routes/api.php` — nuova route
 - `tests/Feature/Api/StoryStatusHistoryApiTest.php` — nuovo
+- `tests/Fixtures/story-status-history/oc-<ID>.json` — nuovi, un file per ticket vero usato nei test
 - `docs/knowledge/api-esterne-e-documentazione.md` — voce del nuovo endpoint
