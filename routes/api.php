@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/stories', [StoryController::class, 'store']);
     Route::patch('/stories/{story}', [StoryController::class, 'update']);
     Route::get('/stories/{story}/logs', [StoryController::class, 'logs']);
+    Route::get('/stories/{story}/status-history', [StoryController::class, 'statusHistory']);
 
     Route::get('/tags', [TagController::class, 'index']);
     Route::get('/tags/{tag}', [TagController::class, 'show']);

@@ -1,0 +1,40 @@
+{
+  "source": "oc:3846, DB locale (dump di produzione, dati fino a giugno 2025)",
+  "story": {
+    "id": 3846,
+    "status": "done",
+    "created_at": "2024-08-26 23:08:28"
+  },
+  "logs": [
+    {
+      "id": 2372,
+      "created_at": "2024-08-26 23:08:28",
+      "changes": {
+        "status": "new",
+        "name": null,
+        "customer_request": null,
+        "user_id": null,
+        "created_at": null,
+        "id": null,
+        "creator_id": null,
+        "type": null
+      }
+    },
+    {
+      "id": 2381,
+      "created_at": "2024-08-27 05:32:22",
+      "changes": {
+        "status": "progress",
+        "user_id": null
+      }
+    },
+    {
+      "id": 2469,
+      "created_at": "2024-08-28 09:58:23",
+      "changes": {
+        "status": "released",
+        "customer_request": null
+      }
+    }
+  ]
+}
