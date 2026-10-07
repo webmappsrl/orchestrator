@@ -84,6 +84,10 @@ Verificato con `php artisan scramble:export`: il parametro `status` ha la descri
   disponibili restituisce la chiave grezza. Evita di scrivere le etichette due volte. Vale finché
   `label()` usa `__('stringa')` senza parametri: con `trans_choice`, segnaposto o chiavi di file
   PHP il test va riscritto (scritto anche in un commento nel test).
+- **`CLAUDE.md` non modificato** (scelta del dev, 07/10/2026): la pagina
+  `docs/knowledge/traduzioni-stati-enum.md` ora descrive quattro forme di chiave, mentre la regola
+  sugli enum di stato del `CLAUDE.md` ne elenca tre (non cita il valore grezzo) e la riga
+  dell'indice dice ancora «doppia chiave». La pagina di conoscenza è la fonte aggiornata.
 
 ## Follow-up
 
