@@ -434,6 +434,78 @@ class QuoteApiTest extends TestCase
     }
 
     /** @test */
+    public function index_filtra_per_status_singolo(): void
+    {
+        $this->actingAsAdmin();
+        $onHold = Quote::factory()->create(['additional_services' => [], 'status' => QuoteStatus::On_Hold->value]);
+        $presented = Quote::factory()->create(['additional_services' => [], 'status' => QuoteStatus::Presented->value]);
+
+        $response = $this->getJson('/api/quotes?' . http_build_query(['status' => QuoteStatus::On_Hold->value]))
+            ->assertStatus(200);
+
+        $ids = collect($response->json())->pluck('id')->all();
+        $this->assertContains($onHold->id, $ids);
+        $this->assertNotContains($presented->id, $ids);
+    }
+
+    /** @test */
+    public function index_con_status_sconosciuto_risponde_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson('/api/quotes?' . http_build_query(['status' => 'xyz']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['status']);
+    }
+
+    /** @test */
+    public function index_con_status_in_elenco_sconosciuto_risponde_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson('/api/quotes?' . http_build_query(['status' => [QuoteStatus::New->value, 'xyz']]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['status.1']);
+    }
+
+    /** @test */
+    public function index_con_status_vuoto_ignora_il_filtro(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['additional_services' => []]);
+
+        $response = $this->getJson('/api/quotes?status=')->assertStatus(200);
+
+        $this->assertContains($quote->id, collect($response->json())->pluck('id')->all());
+    }
+
+    /** @test */
+    public function index_con_elemento_vuoto_in_elenco_status_ignora_il_filtro(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['additional_services' => []]);
+
+        $response = $this->getJson('/api/quotes?status[]=')->assertStatus(200);
+
+        $this->assertContains($quote->id, collect($response->json())->pluck('id')->all());
+    }
+
+    /** @test */
+    public function index_con_elemento_vuoto_insieme_a_valori_validi_filtra_sui_valori(): void
+    {
+        $this->actingAsAdmin();
+        $onHold = Quote::factory()->create(['additional_services' => [], 'status' => QuoteStatus::On_Hold->value]);
+        $presented = Quote::factory()->create(['additional_services' => [], 'status' => QuoteStatus::Presented->value]);
+
+        $response = $this->getJson('/api/quotes?status[]=' . urlencode(QuoteStatus::On_Hold->value) . '&status[]=')
+            ->assertStatus(200);
+
+        $ids = collect($response->json())->pluck('id')->all();
+        $this->assertContains($onHold->id, $ids);
+        $this->assertNotContains($presented->id, $ids);
+    }
+
+    /** @test */
     public function show_espone_iva_e_final_price(): void
     {
         $this->actingAsAdmin();
