@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\QuoteStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\QuoteApiRequest;
@@ -16,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 class QuoteController extends Controller
@@ -43,13 +45,23 @@ class QuoteController extends Controller
      * @response array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>|array{data: array<array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null}>, meta: array{current_page: int, per_page: int, total: int, last_page: int}}
      */
     #[QueryParameter('customer_id', description: 'Filter quotes belonging to a specific customer.', type: 'int')]
-    #[QueryParameter('status', description: 'Filter by status. Accepts a single value (?status=new) or multiple via array syntax (?status[]=new&status[]=presented).', type: 'string|array<string>')]
+    #[QueryParameter('status', description: 'Filter by status. Accepts a single value (?status=new) or multiple via array syntax (?status[]=new&status[]=presented). 422 if a value is not a valid status.', type: 'App\\Enums\\QuoteStatus|array<App\\Enums\\QuoteStatus>')]
     #[QueryParameter('sort', description: 'Sort by created_at: "created_at" for ascending, "-created_at" for descending. Any other value (including omitting this parameter) silently falls back to descending id order (needed for deterministic pagination).', type: 'string')]
     #[QueryParameter('per_page', description: 'Enables opt-in pagination together with page. Without per_page/page the response is a plain array; with either, it becomes {data, meta}.', type: 'int', default: self::DEFAULT_PER_PAGE)]
     #[QueryParameter('page', description: 'Page number for opt-in pagination, used together with per_page.', type: 'int')]
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Quote::class);
+
+        // status accetta un valore singolo o un elenco: Rule::enum va sul valore singolo
+        // oppure su ogni elemento dell'elenco. Un valore sconosciuto risponde 422.
+        // Le regole passano da una variabile di proposito: se Scramble vedesse la chiave
+        // status.* scarterebbe il parametro status dichiarato nell'attributo, e con lui la
+        // forma singola e la descrizione (vedi docs/features/8723-trattative-nuovo-stato-in-attesa-per-eventi-esterni/notes.md).
+        $statusRules = is_array($request->input('status'))
+            ? ['status' => ['array'], 'status.*' => ['nullable', Rule::enum(QuoteStatus::class)]]
+            : ['status' => ['sometimes', 'nullable', Rule::enum(QuoteStatus::class)]];
+        $request->validate($statusRules);
 
         $query = Quote::query()->with(['products', 'recurringProducts']);
 
@@ -60,7 +72,12 @@ class QuoteController extends Controller
         if ($request->filled('status')) {
             $status = $request->input('status');
             if (is_array($status)) {
-                $query->whereIn('status', $status);
+                // Gli elementi vuoti (?status[]=) arrivano come null: si scartano, e un elenco
+                // rimasto vuoto non filtra, come ?status= vuoto.
+                $status = array_values(array_filter($status, fn ($value) => $value !== null));
+                if ($status !== []) {
+                    $query->whereIn('status', $status);
+                }
             } else {
                 $query->where('status', $status);
             }
