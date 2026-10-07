@@ -11,7 +11,7 @@ trattative da «Presentata», che così conta solo quelle su cui si può agire.
 Il nuovo stato è diverso da «In attesa di ordine», dove il cliente ha già detto sì, e da
 «Fredda», dove la trattativa è quasi persa.
 
-Nome provvisorio, da confermare in review (vedi «Domande aperte»):
+Nomi decisi in review (PR #260):
 
 | | Valore |
 |---|---|
@@ -19,9 +19,14 @@ Nome provvisorio, da confermare in review (vedi «Domande aperte»):
 | valore salvato in DB e nell'API | `on hold` |
 | etichetta EN | `On Hold` |
 | etichetta IT | `In attesa di esito` |
+| colore | azzurro `#0EA5E9` |
 
-Nel Kanban della dashboard `Sales` compare una nuova colonna fra «Presentata» e «In attesa di
-ordine», con il suo conteggio e la sua somma in euro, come le altre.
+Nel Kanban della dashboard `Sales` compare una nuova colonna azzurra fra «Presentata» e «In attesa
+di ordine», con il suo conteggio e la sua somma in euro, come le altre.
+
+Il filtro `status` di `GET /api/quotes` viene validato sui valori di `QuoteStatus`: la
+documentazione OpenAPI elenca i valori ammessi ricavandoli dall'enum, e un valore sconosciuto
+risponde con 422 invece che con un elenco vuoto.
 
 ## Perché
 
@@ -31,114 +36,66 @@ qualcosa che non dipende da te». Oggi queste trattative restano in «Presentata
 totale, quindi quel numero non dice quanto valgono le trattative su cui si sta lavorando. Nicola
 non ne sente il bisogno ma è d'accordo; Alessio lo considera un «nice to have».
 
+La validazione del filtro `status` è stata chiesta in review: oggi la documentazione del filtro
+cita solo due esempi (`app/Http/Controllers/Api/QuoteController.php:46`) e il valore arriva a
+`where`/`whereIn` senza controlli (`:60-67` su `develop`). Con la validazione `Rule::enum` e il tipo enum
+nell'attributo OpenAPI, Scramble ricava dall'enum l'elenco dei valori ammessi, che resta aggiornato
+anche con gli stati futuri (come ci si arriva è in `notes.md`, «Task 6-7»).
+
 ## Requisiti
 
-- [ ] Nuovo case in `App\Enums\QuoteStatus`, dichiarato fra `Presented` e `Waiting_For_Order`:
-      la posizione decide l'ordine della colonna nel Kanban (`app/Nova/Dashboards/Sales.php:84`).
-- [ ] Riga corrispondente in `QuoteStatus::label()`, che non ha un ramo `default`: senza la riga
-      la dashboard `Sales` va in 500.
-- [ ] Chiavi di traduzione in `lang/it.json` e `lang/en.json` nelle due forme con cui il repo
+- [ ] Nuovo case `On_Hold = 'on hold'` in `App\Enums\QuoteStatus`, dichiarato fra `Presented` e
+      `Waiting_For_Order`: la posizione decide l'ordine della colonna nel Kanban
+      (`app/Nova/Dashboards/Sales.php:84`).
+- [ ] Riga corrispondente in `QuoteStatus::label()` (`__('On Hold')`), che non ha un ramo
+      `default`: senza la riga la dashboard `Sales` va in 500.
+- [ ] Riga in `QuoteStatus::color()`: azzurro `#0EA5E9`.
+- [ ] Chiavi di traduzione in `lang/it.json` e `lang/en.json` nelle tre forme con cui il repo
       legge gli stati della trattativa: nome del case (`On_Hold`, letto da
-      `app/Nova/Filters/QuoteStatusFilter.php:41`) ed etichetta scritta in `label()` (`On Hold`,
-      letta da Kanban, elenco, scheda e form: `app/Nova/Quote.php:141,174`). Il valore grezzo
-      (`on hold`) e la sua forma `ucfirst()` non si aggiungono: per gli stati della trattativa
-      nessun codice li traduce (la forma `ucfirst()` è delle Story, il valore minuscolo dei
-      Customer). Vedi `docs/knowledge/traduzioni-stati-enum.md`.
+      `app/Nova/Filters/QuoteStatusFilter.php:41`), etichetta scritta in `label()` (`On Hold`,
+      letta da Kanban, scheda, elenco e form: `app/Nova/Quote.php:142,160,176`) e valore salvato nel
+      DB (`on hold`, letto dalla card «Quotes by Status» dell'elenco: `app/Nova/Quote.php:334-338`
+      → `app/Nova/Metrics/DynamicPartitionMetric.php:143-144`, `__($key)`). IT «In attesa di
+      esito», EN «On Hold». La forma `ucfirst()` del valore non si aggiunge: per gli stati della trattativa nessun codice
+      la usa.
+      Vedi `docs/knowledge/traduzioni-stati-enum.md`.
 - [ ] Nuovo stato aggiunto all'elenco `loadingWhen` del campo `Status` nell'elenco delle
-      trattative (`app/Nova/Quote.php:146-152`). Senza, Nova lo mostrerebbe con l'icona verde di
+      trattative (`app/Nova/Quote.php:146-154`). Senza, Nova lo mostrerebbe con l'icona verde di
       «completato», come una trattativa vinta.
 - [ ] Il nuovo stato resta fra le trattative aperte, non in archivio: `Quote::indexQuery` esclude
       solo `Closed_Won`/`Closed_Lost` e `ArchivedQuotes` include solo quelli, quindi non va toccato
       nulla. Da verificare nel test manuale.
+- [ ] Filtro `status` di `GET /api/quotes` validato con `Rule::enum(QuoteStatus::class)`, sia per
+      il valore singolo (`?status=new`) sia per l'elenco (`?status[]=…`). Un valore sconosciuto
+      risponde con 422. Un elemento vuoto nell'elenco (`?status[]=`) non filtra, come `?status=`.
+- [ ] Test su `QuoteStatus`, sul modello di `tests/Feature/PendingReleaseStatusTest.php:50` e
+      `:79`: per ogni case, `label()` non vuota, `color()` hex valido, e le chiavi nome del case ed
+      etichetta e valore presenti in `lang/it.json` e `lang/en.json`. La chiave dell'etichetta non si scrive
+      a mano: `label()` chiama già `__()` e restituisce il testo tradotto, quindi il test imposta
+      una lingua inesistente (`zz`, anche come lingua di riserva) e legge da `label()` la chiave
+      grezza. Così anche gli stati futuri sono coperti senza toccare il test.
+- [ ] Test del filtro `status` in `tests/Feature/Api/QuoteApiTest.php`: valore singolo valido,
+      elenco valido, valore sconosciuto con 422, `?status=` vuoto e
+      `?status[]=` vuoto che non filtrano, elemento vuoto insieme a valori validi.
 - [ ] Verifica manuale in Nova, in italiano e in inglese: colonna e drag & drop nel Kanban `Sales`,
       filtro per stato, Select dello stato nel form, scheda e elenco della trattativa.
 
-## Domande aperte per chi fa la review
-
-1. **Nome dello stato.** Né il ticket né il tag lo decidono. Proposta: `On_Hold` / `on hold` /
-   «In attesa di esito». Il nome `Waiting` va evitato: la chiave di traduzione `"Waiting": "In
-   attesa"` esiste già per lo stato delle Story (`lang/it.json:85`), e un case con lo stesso nome
-   condividerebbe la traduzione con le Story. Anche l'etichetta italiana va tenuta diversa da «In
-   attesa di ordine», perché nel Kanban le due colonne sono affiancate.
-
-2. **Metric-card del nuovo stato in cima al Kanban `Sales`.** In alto c'è una card per ogni stato
-   elencato in `metricStatuses` (`app/Nova/Dashboards/Sales.php:72-75`), con nome, somma in euro e
-   numero di trattative; oggi sono «Da presentare», «Presentata» e «In attesa di ordine». Non
-   esiste un totale complessivo: ogni card conta solo il suo stato.
-
-   Esempio: «Presentata» ha 32 trattative per € 400.000; se ne spostano 10, per € 150.000, nel
-   nuovo stato.
-   - **A — nessuna card:** in alto resta «Presentata € 250.000 · 22». I € 150.000 si vedono solo
-     scorrendo fino alla loro colonna. Pro: in alto solo gli stati su cui si agisce, come oggi per
-     «Fredda». Contro: soldi ancora vivi spariscono dal riepilogo.
-   - **B — card in più:** in alto compare anche «In attesa di esito € 150.000 · 10». Pro:
-     «Presentata» è pulita comunque, e il valore in attesa di eventi esterni (per esempio i bandi)
-     resta visibile. Contro: quattro card invece di tre, e uno stato non lavorabile ha lo stesso
-     peso visivo degli altri.
-
-   **Consiglio: B.** Le card sono separate per stato, quindi aggiungerne una non sporca il totale
-   di «Presentata»; l'unico effetto di A è nascondere dal riepilogo dei soldi ancora vivi. Costa
-   una riga. Da verificare in ogni caso: se le card si aggiornano subito dopo un trascinamento o
-   solo ricaricando la pagina (vale già per le card esistenti).
-
-3. **Skill Claude commerciale.** L'API accetta il nuovo stato da sola (`QuoteApiRequest.php:24`
-   prende l'elenco da `QuoteStatus::cases()`), ma la skill vive fuori da questo repo e non si sa
-   se abbia un elenco fisso degli stati nelle sue istruzioni. Se ce l'ha, finché non viene
-   aggiornata non proporrà il nuovo stato e leggerà un valore sconosciuto sulle trattative
-   spostate da Nova. Chi la mantiene?
-
-4. **Test automatico (facoltativo).** Il ticket non chiede test. Proposta: un test che, per ogni
-   case di `QuoteStatus`, verifica che `label()` risponda senza errori e che `lang/it.json` e
-   `lang/en.json` abbiano le chiavi nelle due forme lette dal codice (nome del case ed etichetta di `label()`). Copre anche gli stati aggiunti in
-   futuro: chi aggiunge un case e dimentica una traduzione lo scopre dal test, non da un utente
-   che legge il testo grezzo. Circa una decina di righe. Aggiungerlo o no?
-
-5. **Colore della colonna.** Il ticket non ne parla. Senza una riga in `QuoteStatus::color()` non
-   si rompe nulla: il ramo `default` (`app/Enums/QuoteStatus.php:29`) dà il grigio `#9CA3AF`, lo
-   stesso di «Prospect». Colori già usati, nell'ordine delle colonne:
-
-   | Stato | Colore |
-   |---|---|
-   | Prospect | grigio `#9CA3AF` |
-   | Da presentare | ambra `#F59E0B` |
-   | Presentata | viola `#8B5CF6` |
-   | *nuovo stato* | **azzurro `#0EA5E9`** (proposta) |
-   | In attesa di ordine | arancio `#F97316` |
-   | Fredda | grigio scuro `#6B7280` |
-   | Chiuso vinto | verde `#10B981` |
-   | Chiuso perso | rosso `#EF4444` |
-
-   **Consiglio: azzurro `#0EA5E9`**, per tre motivi:
-   - grigi, giallo-arancio, viola, verde e rosso sono già presi: restano blu/azzurro, indigo e rosa;
-   - la colonna sta fra il viola di «Presentata» e l'arancio di «In attesa di ordine»: l'indigo
-     sarebbe troppo vicino al viola, il rosa ricorda il rosso di «Chiuso perso»;
-   - l'azzurro non trasmette allarme né successo (rosso e verde sono già legati alla chiusura) e
-     richiama una pausa in attesa.
-
-   Aggiungere il colore o lasciare il grigio di default?
-
-6. **Valori ammessi nella documentazione OpenAPI del filtro `status`.** Il ticket non lo chiede e
-   l'API funziona anche senza. Oggi la descrizione del filtro di `GET /api/quotes`
-   (`app/Http/Controllers/Api/QuoteController.php:46`) cita solo due esempi:
-
-   > Filter by status. Accepts a single value (?status=new) or multiple via array syntax
-   > (?status[]=new&status[]=presented).
-
-   Proposta: aggiungere l'elenco completo («Allowed values: new, to present, presented, on hold,
-   waiting for order, cold, closed won, closed lost»), così chi aggiorna la skill commerciale
-   (domanda 3) trova il nuovo stato nella documentazione generata da Scramble. Aggiungerlo o no?
-
 ## Rischi
 
-- **Skill commerciale non allineata** (domanda aperta 3): il nuovo stato funziona in Orchestrator
-  ma la skill potrebbe ignorarlo. Mitigazione: verificare la skill prima del rilascio e segnalarne
-  l'aggiornamento come lavoro separato nel suo repo.
+- **Cambio di contratto dell'API sul filtro `status`:** oggi `GET /api/quotes?status=xyz` risponde
+  200 con un elenco vuoto, dopo risponde 422. Un client esterno (skill Claude commerciale, skill
+  Cowork) che manda un valore non valido, per esempio scritto in un altro formato, smette di
+  ricevere una risposta. È un effetto voluto, deciso in review. Mitigazione: segnalarlo come cambio
+  di contratto nella PR e nelle note del ticket, così chi mantiene i client lo sa prima del deploy.
 - **Traduzioni mancanti in silenzio:** una chiave dimenticata non dà errore, mostra il testo
-  grezzo. Mitigazione: checklist delle due forme nei Requisiti, verifica manuale in it/en,
-  eventuale test (domanda aperta 4).
+  grezzo. Mitigazione: il test su `QuoteStatus` controlla le tre forme per ogni case, compresi
+  quelli futuri.
 
 ## Out of scope
 
+- La metric-card del nuovo stato in cima al Kanban `Sales`: il ticket non la chiede. Se l'area
+  commerciale la vorrà, si aggiunge con una riga in `metricStatuses`
+  (`app/Nova/Dashboards/Sales.php:72-76`).
 - Spostare le trattative oggi in «Presentata» nel nuovo stato: lo fanno i commerciali a mano.
 - Salvare cosa si sta aspettando o una data di ricontrollo: il ticket chiede solo lo stato.
 - Controlli sulle transizioni di stato: oggi non esistono per nessuno stato della trattativa.
@@ -149,9 +106,9 @@ non ne sente il bisogno ma è d'accordo; Alessio lo considera un «nice to have�
 
 Tutto nel repo principale, nessun submodule.
 
-- `app/Enums/QuoteStatus.php` — case, `label()`; `color()` solo se in review si sceglie il colore (domanda 5)
+- `app/Enums/QuoteStatus.php` — case, `label()`, `color()`
 - `lang/it.json`, `lang/en.json` — chiavi di traduzione
 - `app/Nova/Quote.php` — `loadingWhen` del campo `Status`
-- `app/Http/Controllers/Api/QuoteController.php` — solo se in review si sceglie di documentare i valori (domanda 6)
-- `app/Nova/Dashboards/Sales.php` — solo se in review si sceglie la metric-card (domanda 2)
-- `tests/…` — solo se in review si sceglie il test (domanda 4)
+- `app/Http/Controllers/Api/QuoteController.php` — validazione del filtro `status`
+- `tests/Feature/QuoteStatusTest.php` — nuovo, test sull'enum e sulle traduzioni
+- `tests/Feature/Api/QuoteApiTest.php` — test del filtro `status`
