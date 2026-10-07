@@ -7,6 +7,7 @@ enum QuoteStatus: string
     case New = 'new';
     case To_Present = 'to present';
     case Presented = 'presented';
+    case On_Hold = 'on hold';
     case Waiting_For_Order = 'waiting for order';
     case Cold = 'cold';
     case Closed_Won = 'closed won';
@@ -22,6 +23,7 @@ enum QuoteStatus: string
             self::New => '#9CA3AF',
             self::To_Present => '#F59E0B',
             self::Presented => '#8B5CF6',
+            self::On_Hold => '#0EA5E9',
             self::Waiting_For_Order => '#F97316',
             self::Cold => '#6B7280',
             self::Closed_Won => '#10B981',
@@ -39,6 +41,7 @@ enum QuoteStatus: string
             self::New => __('Prospect'),
             self::To_Present => __('To Present'),
             self::Presented => __('Presented'),
+            self::On_Hold => __('On Hold'),
             self::Waiting_For_Order => __('Waiting For Order'),
             self::Cold => __('Cold'),
             self::Closed_Won => __('Closed Won'),

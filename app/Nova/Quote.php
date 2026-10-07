@@ -148,6 +148,7 @@ class Quote extends Resource
                             QuoteStatus::New->value,
                             QuoteStatus::To_Present->value,
                             QuoteStatus::Presented->value,
+                            QuoteStatus::On_Hold->value,
                             QuoteStatus::Waiting_For_Order->value,
                             QuoteStatus::Cold->value
                         ])
