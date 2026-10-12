@@ -16,8 +16,11 @@ La trattativa (Quote) ha un nuovo campo di testo semplice, **«Motivo della chiu
   archiviati» (`app/Nova/ArchivedQuotes.php:29-37`): quella risorsa estende `Quote` e ne eredita i
   campi, quindi il motivo compare lì senza modifiche. Non compare negli index.
 - **API:** `lost_reason` si può mandare in `POST /api/quotes` e `PATCH /api/quotes/{quote}` ed è
-  restituito in tutte le risposte che contengono la Quote. Proposta: obbligatorio quando la stessa
-  richiesta porta lo stato a `closed lost` (vedi «Domande aperte per il reviewer»).
+  restituito in tutte le risposte che contengono la Quote. È obbligatorio quando la stessa
+  richiesta porta lo stato a `closed lost` (risposta 2 della review).
+- **Kanban `Sales`:** il drop di una card in «Chiuso Perso» viene rifiutato. La card torna nella
+  colonna di partenza e compare un messaggio che spiega di chiudere la trattativa dal form, dove si
+  scrive il motivo (risposta 3 della review).
 
 Esempio: si apre «Portale Parco XY», si sceglie «Chiuso Perso», si scrive «Il cliente ha scelto un
 fornitore più economico» e si salva. Da quel momento la trattativa è chiusa e il motivo si legge nel
@@ -50,10 +53,14 @@ Select, e non in un'Action.
       creazione sia in modifica.
 - [ ] Model: nell'hook `saving` di `Quote`, se lo stato non è `closed lost`, `lost_reason` diventa
       null. È l'unico punto che garantisce che una trattativa aperta non abbia mai un motivo, per
-      ogni canale (form Nova, API, Kanban, comandi). Esempio: «Portale Parco XY», persa con
+      ogni canale che passa da `save()` (form Nova, API, Kanban). Esempio: «Portale Parco XY», persa con
       «prezzo troppo alto», trascinata sul Kanban in «Presentato» perde il motivo; se poi viene
       richiusa da Nova la Textarea è vuota e il motivo va riscritto. Va in un listener a sé: quello
       già presente esce subito se la Quote non è un template (`app/Models/Quote.php:232-235`).
+- [ ] Verifica manuale in Nova di `dependsOn` (richiesta dal reviewer): scegliere «Chiuso Perso»
+      nella Select, scrivere un testo nella Textarea che compare, cambiare stato in modo che la
+      Textarea sparisca e salvare. Nel DB `lost_reason` deve restare null. Il motivo finisce nel DB
+      solo se è scritto nella Textarea visibile, con la Select su «Chiuso Perso».
 - [ ] Nova, dettaglio: motivo in sola lettura solo se lo stato è `closed lost` **e** il motivo è
       compilato (le trattative perse prima di questa feature non mostrano un campo vuoto); mai
       nell'index.
@@ -81,13 +88,13 @@ Select, e non in un'Action.
   della skill è a carico di chi la gestisce (Alessio), non di questo ticket.
 - **`dependsOn` non è mai stato usato dentro i `Tab` di una risorsa.** Nel repo c'è in
   `app/Nova/User.php:119` e in due Action (`ExportProductsToPdf`, `MoveStoriesFromEpic`), ma i
-  campi della Quote stanno dentro i `Tab` nativi di Nova 5 (`Laravel\Nova\Tabs\Tab`). Va verificato a mano in Nova che il campo
-  compaia e scompaia cambiando stato (un testo rimasto nascosto lo azzera comunque l'hook del
+  campi della Quote stanno dentro i `Tab` nativi di Nova 5 (`Laravel\Nova\Tabs\Tab`). Va
+  verificato a mano in Nova che il campo compaia e scompaia cambiando stato (un testo rimasto nascosto lo azzera comunque l'hook del
   model). La Select «Status» e il nuovo campo stanno fuori da `NovaTabTranslatable`, quindi
   `->rules()` si può usare normalmente (il problema di `strpos()` visto in oc:8734 riguarda solo i
   campi dentro `NovaTabTranslatable`).
 
-## Domande aperte per il reviewer
+## Domande per il reviewer, con le risposte
 
 1. **Dove si scrive il motivo in Nova.** Proposta: nel form, legato alla Select «Status»
    (`dependsOn`). L'alternativa è un'Action «Chiudi come persa» come in Forestas: impone di

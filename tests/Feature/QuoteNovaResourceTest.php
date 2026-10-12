@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\QuoteStatus;
 use App\Models\Customer;
 use App\Models\Quote;
 use App\Models\Task;
@@ -10,10 +11,12 @@ use App\Nova\QuoteNoFilter;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
 use Tests\TestCase;
@@ -321,5 +324,114 @@ class QuoteNovaResourceTest extends TestCase
                 );
             }
         }
+    }
+
+    /**
+     * Valida il motivo come lo valida Nova al salvataggio del form (oc:8732): campi di update e
+     * dependsOn applicato sui dati inviati, come in Resource::rulesForUpdate().
+     */
+    private function validateQuoteUpdate(Quote $quote, array $payload): void
+    {
+        $request = NovaRequest::create('/nova-api/quotes/' . $quote->id, 'PUT', $payload);
+
+        $rules = (new QuoteResource($quote))
+            ->updateFields($request)
+            ->applyDependsOn($request)
+            // Solo il campo del motivo: le regole dei BelongsTo vogliono la rotta Nova completa.
+            ->filter(fn ($field) => $field->attribute === 'lost_reason')
+            ->mapWithKeys(fn ($field) => $field->getUpdateRules($request))
+            ->all();
+
+        $this->assertArrayHasKey('lost_reason', $rules);
+
+        \Illuminate\Support\Facades\Validator::make($request->all(), $rules)->validate();
+    }
+
+    public function test_lost_reason_is_required_when_closing_as_lost()
+    {
+        $quote = $this->makeQuote();
+
+        try {
+            $this->validateQuoteUpdate($quote, ['status' => QuoteStatus::Closed_Lost->value, 'lost_reason' => '']);
+            $this->fail('Expected a validation error on lost_reason.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('lost_reason', $e->errors());
+        }
+    }
+
+    public function test_lost_reason_passes_validation_when_filled()
+    {
+        $quote = $this->makeQuote();
+
+        $this->validateQuoteUpdate($quote, [
+            'status' => QuoteStatus::Closed_Lost->value,
+            'lost_reason' => 'Il cliente ha scelto un fornitore più economico',
+        ]);
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function test_lost_reason_is_not_required_for_other_statuses()
+    {
+        $quote = $this->makeQuote();
+
+        $this->validateQuoteUpdate($quote, ['status' => QuoteStatus::Presented->value]);
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function test_lost_reason_longer_than_2000_characters_is_rejected()
+    {
+        $quote = $this->makeQuote();
+
+        try {
+            $this->validateQuoteUpdate($quote, [
+                'status' => QuoteStatus::Closed_Lost->value,
+                'lost_reason' => str_repeat('a', 2001),
+            ]);
+            $this->fail('Expected a validation error on lost_reason.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('lost_reason', $e->errors());
+        }
+    }
+
+    /**
+     * Il campo di dettaglio del motivo, così come lo vede l'utente per la Quote indicata.
+     */
+    private function lostReasonDetailField(Quote $quote): ?Textarea
+    {
+        $request = NovaRequest::create('/');
+        $fields = $this->flattenFields((new QuoteResource($quote))->fields($request));
+
+        return collect($fields)->first(fn ($f) => $f instanceof Textarea
+            && $f->attribute === 'lost_reason'
+            && $f->isShownOnDetail($request, $quote)
+            && $f->authorizedToSee($request));
+    }
+
+    public function test_lost_reason_is_shown_on_detail_only_for_lost_quotes_with_a_reason()
+    {
+        $lost = $this->makeQuote();
+        $lost->forceFill(['status' => QuoteStatus::Closed_Lost->value, 'lost_reason' => 'Prezzo troppo alto'])->save();
+        $this->assertNotNull($this->lostReasonDetailField($lost));
+
+        $lostWithoutReason = $this->makeQuote();
+        $lostWithoutReason->forceFill(['status' => QuoteStatus::Closed_Lost->value])->save();
+        $this->assertNull($this->lostReasonDetailField($lostWithoutReason));
+
+        $open = $this->makeQuote();
+        $this->assertNull($this->lostReasonDetailField($open));
+    }
+
+    public function test_lost_reason_is_never_shown_on_index()
+    {
+        $request = NovaRequest::create('/');
+        $quote = $this->makeQuote();
+        $quote->forceFill(['status' => QuoteStatus::Closed_Lost->value, 'lost_reason' => 'Prezzo troppo alto'])->save();
+
+        $onIndex = collect($this->flattenFields((new QuoteResource($quote))->fields($request)))
+            ->filter(fn ($f) => ($f->attribute ?? null) === 'lost_reason' && $f->isShownOnIndex($request, $quote));
+
+        $this->assertCount(0, $onIndex);
     }
 }

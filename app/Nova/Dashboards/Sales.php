@@ -68,6 +68,10 @@ class Sales extends Dashboard
                 ])
                 ->priorityField('priority')
                 ->enableIntraColumnReorder(true)
+                // Una trattativa persa si chiude solo dal form, dove il motivo è obbligatorio (oc:8732).
+                ->deniedDropStatuses([
+                    QuoteStatus::Closed_Lost->value => 'To close a quote as lost, open it and write the reason in the edit form.',
+                ])
                 ->limitPerColumn(5)
                 ->metricStatuses([
                     QuoteStatus::To_Present->value,

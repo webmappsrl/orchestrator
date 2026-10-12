@@ -29,6 +29,12 @@ class QuoteApiRequest extends FormRequest
             'discount'             => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'notes'                => ['sometimes', 'nullable', 'string'],
             'template'             => ['sometimes', 'boolean'],
+            // Obbligatorio quando la stessa richiesta chiude la trattativa come persa: dopo la
+            // chiusura la policy non permette più di modificarla (oc:8732).
+            'lost_reason'          => [
+                Rule::requiredIf(fn () => $this->input('status') === QuoteStatus::Closed_Lost->value),
+                'nullable', 'string', 'max:2000',
+            ],
         ] + array_fill_keys(QuoteRichText::FIELDS, ['sometimes', ...QuoteRichText::fieldRules()]);
     }
 }

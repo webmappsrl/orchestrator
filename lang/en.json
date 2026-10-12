@@ -774,5 +774,7 @@
   "link not allowed (:count :occurrences): href must start with https://, http://, mailto:, # or be a relative path": "link not allowed (:count :occurrences): href must start with https://, http://, mailto:, # or be a relative path",
   "attribute :name not allowed (:count :occurrences): images and resources must be a path under /storage/ (e.g. /storage/tiptap/logo.png) or a URL on :host under /storage/": "attribute :name not allowed (:count :occurrences): images and resources must be a path under /storage/ (e.g. /storage/tiptap/logo.png) or a URL on :host under /storage/",
   "attribute :name not allowed (:count :occurrences): remove it, URLs are accepted only in href and in the src of images": "attribute :name not allowed (:count :occurrences): remove it, URLs are accepted only in href and in the src of images",
-  "it must be an object {\"description\": price}, not a list (e.g. {\"Initial setup\": 1500}); if the descriptions are numbers such as \"0\", \"1\", add some text (e.g. \"Voce 1\")": "it must be an object {\"description\": price}, not a list (e.g. {\"Initial setup\": 1500}); if the descriptions are numbers such as \"0\", \"1\", add some text (e.g. \"Voce 1\")"
+  "it must be an object {\"description\": price}, not a list (e.g. {\"Initial setup\": 1500}); if the descriptions are numbers such as \"0\", \"1\", add some text (e.g. \"Voce 1\")": "it must be an object {\"description\": price}, not a list (e.g. {\"Initial setup\": 1500}); if the descriptions are numbers such as \"0\", \"1\", add some text (e.g. \"Voce 1\")",
+  "Lost reason": "Lost reason",
+  "To close a quote as lost, open it and write the reason in the edit form.": "To close a quote as lost, open it and write the reason in the edit form."
 }

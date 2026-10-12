@@ -14,6 +14,8 @@ use App\Nova\Metrics\NewQuotes;
 use App\Nova\Metrics\WonQuotes;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Fields\FormData;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\KeyValue;
@@ -178,6 +180,26 @@ class Quote extends Resource
                     )
                         ->onlyOnForms()
                         ->default(QuoteStatus::New->value),
+
+                    // Obbligatorio solo con «Chiuso Perso»: una trattativa chiusa non è più
+                    // modificabile, quindi il motivo va scritto nello stesso salvataggio (oc:8732).
+                    Textarea::make(__('Lost reason'), 'lost_reason')
+                        ->onlyOnForms()
+                        ->hide()
+                        ->rules('nullable', 'max:2000')
+                        ->dependsOn(['status'], function (Textarea $field, NovaRequest $request, FormData $formData) {
+                            if ($formData->status === QuoteStatus::Closed_Lost->value) {
+                                $field->show()->rules('required', 'max:2000');
+                            } else {
+                                $field->hide();
+                            }
+                        }),
+
+                    Textarea::make(__('Lost reason'), 'lost_reason')
+                        ->onlyOnDetail()
+                        ->alwaysShow()
+                        ->canSee(fn () => $this->resource->status === QuoteStatus::Closed_Lost->value
+                            && filled($this->resource->lost_reason)),
 
                     Text::make('Google Drive Url', 'google_drive_url')->nullable()->hideFromIndex()->displayUsing(function () {
                         return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\QuoteStatus;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Customer;
@@ -44,6 +45,7 @@ class Quote extends Model implements HasMedia
         'discount',
         'notes',
         'template',
+        'lost_reason',
     ];
 
     public $translatable = [
@@ -242,6 +244,14 @@ class Quote extends Model implements HasMedia
                 ->where('template', true)
                 ->whereKeyNot($quote->getKey())
                 ->update(['template' => false]);
+        });
+
+        // Il motivo della chiusura persa esiste solo sulle trattative perse: si azzera da ogni
+        // canale (form Nova, API, Kanban) quando lo stato è un altro (oc:8732).
+        static::saving(function (Quote $quote) {
+            if ($quote->status !== QuoteStatus::Closed_Lost->value) {
+                $quote->lost_reason = null;
+            }
         });
     }
 }

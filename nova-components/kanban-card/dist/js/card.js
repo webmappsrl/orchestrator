@@ -1083,7 +1083,19 @@ Nova.booting((app) => {
                         }),
                     });
 
-                    if (!response.ok) throw new Error('Update failed: ' + response.status);
+                    if (!response.ok) {
+                        // Show the server message when there is one (e.g. a column that refuses the drop, oc:8732).
+                        var serverError = null;
+                        try {
+                            var errorBody = await response.json();
+                            serverError = errorBody && typeof errorBody.error === 'string' ? errorBody.error : null;
+                        } catch (parseError) {
+                            serverError = null;
+                        }
+                        var updateError = new Error('Update failed: ' + response.status);
+                        updateError.serverMessage = serverError;
+                        throw updateError;
+                    }
                     var limit = parseInt(this.statusColumnLimits[newStatus], 10);
                     if (!isNaN(limit) && limit > 0) {
                         await this.fetchItems();
@@ -1096,7 +1108,7 @@ Nova.booting((app) => {
                     this.showSuccess(this.translations.statusUpdated);
                 } catch (e) {
                     item.status = oldStatus;
-                    this.showError(this.translations.errorUpdating);
+                    this.showError(e && e.serverMessage ? e.serverMessage : this.translations.errorUpdating);
                     console.error('Kanban update error:', e);
                 } finally {
                     this.updatingIds = this.updatingIds.filter(function (id) {

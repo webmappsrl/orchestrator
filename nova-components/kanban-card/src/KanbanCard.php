@@ -220,6 +220,14 @@ class KanbanCard extends Card
     public array $allowedUpdateRoles = [];
 
     /**
+     * Columns where a drop is refused: status value => translation key of the message shown
+     * to the user (e.g. a quote can be closed as lost only from its form, oc:8732).
+     *
+     * @var array<string, string>
+     */
+    public array $deniedDropStatuses = [];
+
+    /**
      * Exclude from status update (drag & drop) users who have any of these roles.
      * Pass enum (e.g. UserRole::Editor) or strings; no Gate required.
      *
@@ -246,6 +254,23 @@ class KanbanCard extends Card
             fn($r) => $r instanceof \BackedEnum ? $r->value : (string) $r,
             array_filter($roles, fn($r) => $r !== null && $r !== '')
         ));
+
+        return $this;
+    }
+
+    /**
+     * Refuse the drop into the given columns. The server answers 422 with the translated message
+     * and the card goes back to its column.
+     *
+     * @param  array<string, string>  $statusToMessage  status value => translation key
+     */
+    public function deniedDropStatuses(array $statusToMessage): self
+    {
+        $this->deniedDropStatuses = array_filter(
+            $statusToMessage,
+            fn($message, $status) => is_string($status) && $status !== '' && is_string($message) && $message !== '',
+            ARRAY_FILTER_USE_BOTH
+        );
 
         return $this;
     }
@@ -723,6 +748,7 @@ class KanbanCard extends Card
             'limitPerColumn' => $this->limitPerColumn,
             'deniedUpdateRoles' => $this->deniedUpdateRoles,
             'allowedUpdateRoles' => $this->allowedUpdateRoles,
+            'deniedDropStatuses' => $this->deniedDropStatuses,
             'scopeName' => $this->scopeName,
             'queryApplierClass' => $this->queryApplierClass,
             'columnAggregatorClass' => $this->columnAggregatorClass,
