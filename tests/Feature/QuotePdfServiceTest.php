@@ -124,6 +124,20 @@ class QuotePdfServiceTest extends TestCase
     }
 
     /** @test */
+    public function stream_non_esplode_con_un_prezzo_non_valido_gia_salvato(): void
+    {
+        $customer = Customer::factory()->create(['full_name' => 'Cliente Di Prova']);
+        $quote = Quote::factory()->create([
+            'customer_id' => $customer->id,
+            'additional_services' => ['it' => ['Formazione' => 'da definire']],
+        ]);
+
+        $response = (new QuotePdfService())->stream($quote, 'it');
+
+        $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
+    }
+
+    /** @test */
     public function stream_non_esplode_con_additional_services_stringa_json(): void
     {
         $customer = Customer::factory()->create(['full_name' => 'Cliente Di Prova']);

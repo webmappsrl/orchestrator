@@ -66,9 +66,10 @@ organizzata la Resource Nova.
 - **`additional_services`** (`AdditionalServicesMap`): oggetto `{descrizione: prezzo}`, non lista;
   prezzo numero con al massimo due decimali o stringa `^-?\d+([.,]\d{1,2})?$`, senza separatore
   delle migliaia, cioè esattamente ciò che `number_format(str_replace(',', '.', …))` nel template e
-  `getTotalAdditionalServicesPrice()` sanno leggere (`"1.234,56"` romperebbe il PDF e darebbe 1.234
-  nel totale). Un oggetto con chiavi `"0"`, `"1"`… arriva al PHP come lista: il messaggio lo
-  spiega. Nova non applica la stessa regola al KeyValue.
+  `getTotalAdditionalServicesPrice()` sanno leggere (`"1.234,56"` verrebbe stampato così com'è e
+  darebbe 1.234 nel totale). Un oggetto con chiavi `"0"`, `"1"`… arriva al PHP come lista: il
+  messaggio lo spiega. Nova applica la stessa regola al salvataggio della risorsa (oc:8734): vedi
+  «Lista e dettaglio Quote in Nova».
 - **I messaggi 422 dicono cosa è sbagliato e cosa fare**, col nome dell'attributo coinvolto,
   raggruppati per tipo con il numero di occorrenze e al massimo 10 voci per campo. I segnaposto del
   Validator (`:attribute`, `:input`…) scritti dall'utente vengono protetti con un word joiner
@@ -82,7 +83,7 @@ organizzata la Resource Nova.
   motivo il messaggio 422. Va lanciato sui dati di produzione prima di rilasciare una modifica alla
   regola; esce con 1 anche per prezzi testuali già presenti, non solo per l'HTML.
 
-### PDF del preventivo (oc:8291, oc:8413, oc:8047, oc:8631)
+### PDF del preventivo (oc:8291, oc:8413, oc:8047, oc:8631, oc:8734)
 - `GET/POST /api/quotes/{quote}/pdf(-link)` più rotta pubblica firmata in `routes/web.php`
   (`quotes.pdf.public`), middleware `['signed', 'throttle:30,1']`. Il throttle serve perché la
   rotta vive fuori da `auth:sanctum` e quindi fuori dal `throttle:api`.
@@ -116,8 +117,11 @@ organizzata la Resource Nova.
   non lo stampava. Ora è subito dopo il Piano di pagamento, con la stessa classe `payment-plan`, e
   il titolo usa la chiave `"Billing plan"`, distinta dall'etichetta Nova `"Billing Plan"` (chiavi
   JSON duplicate: l'ultima vince).
+- **Prezzo non valido già salvato** (oc:8734): la riga di un servizio aggiuntivo formatta il prezzo
+  solo se passa `AdditionalServicesMap`; altrimenti stampa il valore così com'è, senza €, invece di
+  mandare il PDF in 500. Il totale non cambia: «da definire» vale 0, «1.500» vale 1,5.
 
-### Lista e dettaglio Quote in Nova (oc:8404, oc:8407)
+### Lista e dettaglio Quote in Nova (oc:8404, oc:8407, oc:8734)
 - Index: colonne ID (`ID::make()->sortable()`, `app/Nova/Quote.php:114`), Cliente, Titolo, Stato,
   Proprietario, Scadenza, Totale, PDF; Prodotti e Recurring nascosti. La colonna **Scadenza** mostra il task `todo` con `due_date` più vicina,
   **scaduta o futura** — nessun filtro "solo futuro": con `due_date` non nullable, quel vincolo
@@ -126,6 +130,11 @@ organizzata la Resource Nova.
   (uno per locale). Il titolo in index è un campo separato `onlyOnIndex()` che riusa l'accessor
   Spatie `$model->title`. Coesistono quindi tre punti di risoluzione del titolo (accessor,
   field form, field index-only): possono divergere su edge case futuri.
+- **Nessuna regola-oggetto su un campo dentro `NovaTabTranslatable`** (oc:8734): il package passa
+  ogni regola (`rules`, `creationRules`, `updateRules`) a `strpos()` e riconosce come oggetto solo il
+  vecchio `Illuminate\Contracts\Validation\Rule`. Una `ValidationRule` o una closure dà `TypeError`
+  e 500 su tutta la risorsa, elenco compreso. Per questo i servizi aggiuntivi si validano con
+  `AdditionalServicesMap` in `Quote::afterValidation()`, non con `->rules()` sul `KeyValue`.
 - **Eager loading filtrato per la colonna Scadenza, così da evitare l'N+1**: `Quote::indexQuery()`
   (`app/Nova/Quote.php:380-389`) chiama `->withNextTodoTask()`, e il `with(['tasks' => …])` filtrato
   su `status = 'todo'` con `orderBy('due_date')` vive nello scope `Quote::scopeWithNextTodoTask()`,
@@ -173,6 +182,15 @@ organizzata la Resource Nova.
   available» del template e "assente" per lista servizi e tabella costi — un PDF che dichiara
   servizi aggiuntivi ma ne omette il costo. Su un documento commerciale è peggio del 500: il 500
   si vede e viene segnalato, un totale mancante no.
+  **Eccezione (oc:8734):** un prezzo non valido già salvato non manda più il PDF in 500, ma viene
+  stampato così com'è. Si accetta sapendo che il totale non lo conta («da definire» vale 0,
+  «1.500» vale 1,5), e che prima la riga stessa stampava «1,50 €»: in compenso il preventivo torna
+  scaricabile e la riga rende visibile il valore anomalo. Per trovare i preventivi con prezzi non
+  validi c'è `php artisan quotes:check-rich-text`.
+- **`AdditionalServicesMap` che legge anche la stringa JSON di Nova, applicata con `->rules()`**
+  (oc:8734, prima versione dell'overview): scartata. Dentro `NovaTabTranslatable` qualsiasi
+  regola-oggetto manda in 500 la risorsa; decodificando in `afterValidation()` la regola resta
+  quella dell'API, invariata.
 - **`Quote::normalizedAdditionalServices()` sul modello** (oc:8413): scartato per tenere minimo
   il diff su un bugfix urgente; centralizzazione annotata come follow-up in
   `docs/features/8413-quote-generazione-pdf/notes.md`.

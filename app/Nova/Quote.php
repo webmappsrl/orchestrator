@@ -6,6 +6,7 @@ use Laravel\Nova\Panel;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
+use App\Rules\AdditionalServicesMap;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -229,6 +230,7 @@ class Quote extends Resource
                             return number_format($this->getQuoteNetPrice() + $iva, 2, ',', '.') . ' €';
                         }),
 
+                    // Validato in afterValidation(), non con ->rules(): vedi il commento lì (oc:8734).
                     NovaTabTranslatable::make([
                         KeyValue::make(__('Additional Services'), 'additional_services')
                             ->hideFromIndex()
@@ -386,6 +388,28 @@ class Quote extends Resource
         return $query
             ->whereNotIn('status', $whereNotIn)
             ->withNextTodoTask();
+    }
+
+    /**
+     * I servizi aggiuntivi si validano qui e non con ->rules() sul KeyValue: NovaTabTranslatable
+     * passa ogni regola a strpos() e con una ValidationRule va in TypeError, cioè 500 su tutta la
+     * risorsa (oc:8734). La stringa JSON inviata da Nova viene decodificata e passata alla stessa
+     * regola dell'API.
+     */
+    protected static function afterValidation(NovaRequest $request, $validator)
+    {
+        foreach (config('tab-translatable.locales') as $locale) {
+            $key = "translations_additional_services_{$locale}";
+            if (! $request->has($key)) {
+                continue;
+            }
+
+            (new AdditionalServicesMap())->validate(
+                __('Additional Services') . " [{$locale}]",
+                json_decode((string) $request->input($key), true),
+                fn (string $message) => $validator->errors()->add($key, $message),
+            );
+        }
     }
 
     public function authorizedToReplicate(Request $request)

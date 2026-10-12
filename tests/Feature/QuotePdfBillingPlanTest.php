@@ -39,4 +39,24 @@ class QuotePdfBillingPlanTest extends TestCase
 
         $this->assertStringNotContainsString('Piano di fatturazione', $this->html($quote));
     }
+
+    /**
+     * Un prezzo non valido salvato prima di oc:8734 (da Nova non c'era controllo) viene stampato
+     * così com'è, senza €, invece di mandare il PDF in errore.
+     *
+     * @test
+     */
+    public function un_prezzo_non_valido_gia_salvato_compare_cosi_com_e(): void
+    {
+        $quote = Quote::factory()->create([
+            'additional_services' => ['it' => ['Formazione' => 'da definire', 'Hosting' => '1500']],
+            'discount' => 0,
+        ]);
+
+        $html = $this->html($quote->fresh());
+
+        $this->assertStringContainsString('da definire', $html);
+        $this->assertDoesNotMatchRegularExpression('/da definire\s*€/', $html);
+        $this->assertStringContainsString('1.500,00 €', $html);
+    }
 }
