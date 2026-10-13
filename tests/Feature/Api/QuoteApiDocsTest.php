@@ -192,4 +192,17 @@ class QuoteApiDocsTest extends TestCase
             }
         }
     }
+
+    public function test_all_full_quote_responses_and_bodies_document_lost_reason(): void
+    {
+        foreach ($this->allFullQuoteSchemas() as $operation => $schema) {
+            foreach ($this->quotePropertySets($schema) as $variant => $properties) {
+                $this->assertArrayHasKey('lost_reason', $properties, "Expected lost_reason in response variant {$variant} of {$operation}.");
+            }
+        }
+
+        foreach ([['/quotes', 'post'], ['/quotes/{quote}', 'patch']] as [$path, $method]) {
+            $this->assertArrayHasKey('lost_reason', $this->requestBodyProperties($path, $method), "Expected lost_reason in the request body of {$method} {$path}.");
+        }
+    }
 }

@@ -481,4 +481,78 @@ class QuoteApiTest extends TestCase
         $response->assertJsonPath('products.0.quantity', 2);
         $this->assertArrayNotHasKey('recurringProducts', $response->json());
     }
+
+    /** @test */
+    public function update_closed_lost_senza_motivo_risponde_422(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['status' => QuoteStatus::Presented->value]);
+
+        $this->patchJson("/api/quotes/{$quote->id}", ['status' => QuoteStatus::Closed_Lost->value])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('lost_reason');
+
+        $this->assertEquals(QuoteStatus::Presented->value, $quote->fresh()->status);
+    }
+
+    /** @test */
+    public function update_closed_lost_con_motivo_lo_salva_e_lo_restituisce(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['status' => QuoteStatus::Presented->value]);
+
+        $this->patchJson("/api/quotes/{$quote->id}", [
+            'status'      => QuoteStatus::Closed_Lost->value,
+            'lost_reason' => 'Il cliente ha scelto un fornitore più economico',
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('lost_reason', 'Il cliente ha scelto un fornitore più economico');
+
+        $this->assertEquals('Il cliente ha scelto un fornitore più economico', $quote->fresh()->lost_reason);
+    }
+
+    /** @test */
+    public function store_closed_lost_senza_motivo_risponde_422(): void
+    {
+        $this->actingAsAdmin();
+        $customer = Customer::factory()->create();
+
+        $this->postJson('/api/quotes', [
+            'title'       => 'Persa subito',
+            'customer_id' => $customer->id,
+            'status'      => QuoteStatus::Closed_Lost->value,
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('lost_reason');
+    }
+
+    /** @test */
+    public function update_motivo_con_altro_stato_viene_scartato(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['status' => QuoteStatus::New->value]);
+
+        $this->patchJson("/api/quotes/{$quote->id}", [
+            'status'      => QuoteStatus::Presented->value,
+            'lost_reason' => 'Non dovrebbe essere salvato',
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('lost_reason', null);
+
+        $this->assertNull($quote->fresh()->lost_reason);
+    }
+
+    /** @test */
+    public function motivo_oltre_2000_caratteri_risponde_422(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['status' => QuoteStatus::Presented->value]);
+
+        $this->patchJson("/api/quotes/{$quote->id}", [
+            'status'      => QuoteStatus::Closed_Lost->value,
+            'lost_reason' => str_repeat('a', 2001),
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('lost_reason');
+    }
 }
