@@ -163,6 +163,32 @@ organizzata la Resource Nova.
   visibile dal restringimento imposto da `Tab::group`. Da ticket dedicato, riguarda tutto il
   progetto.
 
+### Motivo della chiusura persa (oc:8732)
+- Colonna `lost_reason` (text, nullable) su `quotes`, non traducibile. Esiste solo sulle trattative
+  in `closed lost`: un secondo listener `saving` in `Quote::booted()` la azzera per ogni altro stato,
+  da ogni canale che passa da `save()` (form Nova, API, Kanban `Sales`). Non scatta su
+  `Quote::query()->update()`, che non lancia gli eventi del model. È un listener a sé perché quello
+  del template esce subito se la Quote non è un template.
+- **Va scritto nello stesso salvataggio che chiude la trattativa**: dopo, `QuotePolicy::update()`
+  blocca le modifiche sia in Nova sia via API.
+- Nova: Textarea solo nei form, subito dopo la Select «Status», nascosta di default; con
+  `dependsOn(['status'])` compare ed è `required|max:2000` solo con «Chiuso Perso». Nova applica
+  `dependsOn` anche lato server, in validazione (`PerformsValidation`) e nel fill (`FillsFields`).
+  Nel dettaglio una seconda Textarea in sola lettura, visibile solo se la trattativa è persa e il
+  motivo è compilato (le trattative perse prima di oc:8732 non ce l'hanno); `ArchivedQuotes` la
+  eredita.
+- API: `lost_reason` in `POST`/`PATCH` e in tutte le risposte di `formatQuote()`. **Obbligatorio
+  (422) quando la stessa richiesta porta `status` a `closed lost`**: cambio di contratto per la
+  skill commerciale, che deve chiedere il motivo all'utente invece di inventarlo. Mandato con un
+  altro stato viene azzerato dall'hook del model.
+- **Il Kanban `Sales` rifiuta il drop in «Chiuso Perso»**: lì non c'è dove scrivere il motivo,
+  quindi una trattativa persa si chiude solo dal form. È un'opzione del componente condiviso,
+  `KanbanCard::deniedDropStatuses([stato => chiave del messaggio])`, attiva solo in
+  `app/Nova/Dashboards/Sales.php`: `KanbanController::updateStatus()` risponde 422 con il messaggio
+  tradotto e `card.js` lo mostra al posto di «Error updating status.». Il drop *fuori* da
+  «Chiuso Perso» resta permesso, e l'hook del model azzera il motivo. Come `deniedUpdateRoles`,
+  l'opzione arriva al server dentro il `config` mandato dal browser.
+
 ## Come ci siamo arrivati
 
 - **Elenco chiuso dei tag ammessi** (oc:8631, prima versione): superato. Rifiutava anche tag
@@ -201,3 +227,7 @@ organizzata la Resource Nova.
   modo organico per tutte le entità, non come piccola aggiunta a `Api/QuoteController.php`.
 - **Rotta web `/quote/{id}` senza alcuna autorizzazione** (`QuoteController@show` fa un
   `findOrFail` nudo): gap preesistente, lasciato fuori scope in oc:8291, da ticket dedicato.
+- **Action «Chiudi come persa», come il respingimento di Forestas (oc:8567)** (oc:8732): scartata,
+  scelta confermata in review. In Orchestrator lo stato si cambia con la Select del form, non con
+  Action: avrebbe obbligato a togliere «Chiuso Perso» dalla Select, con due modi diversi di
+  cambiare stato nella stessa schermata, e l'API avrebbe comunque avuto bisogno della sua regola.

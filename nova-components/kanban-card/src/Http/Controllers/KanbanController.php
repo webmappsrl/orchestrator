@@ -422,6 +422,11 @@ class KanbanController extends Controller
             return response()->json(['error' => __('Status is required')], 422);
         }
 
+        $deniedDropStatuses = $config['deniedDropStatuses'] ?? [];
+        if (is_array($deniedDropStatuses) && isset($deniedDropStatuses[$newStatus])) {
+            return response()->json(['error' => __((string) $deniedDropStatuses[$newStatus])], 422);
+        }
+
         $item = $modelClass::findOrFail($id);
         $item->{$statusField} = $newStatus;
         $priorityField = $this->resolvePriorityField($config);
