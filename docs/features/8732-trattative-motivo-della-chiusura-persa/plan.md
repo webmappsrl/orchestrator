@@ -154,8 +154,6 @@ Commit insieme al task 2.
 
 ## Task 6 — Documentazione e note
 
-> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#deviazioni-dal-piano)
-
 - `docs/knowledge/quote-api-e-pdf.md`: il campo `lost_reason`, la regola nel model, l'obbligo
   nell'API e il blocco del drop in «Chiuso Perso» sul Kanban (task 7).
 - `docs/features/8732-trattative-motivo-della-chiusura-persa/notes.md`: deviazioni, decisioni, e
@@ -165,6 +163,8 @@ Commit insieme al task 2.
 Commit: `docs(oc:8732): pagina di conoscenza delle quote, piano e note`
 
 ## Task 7 — Kanban `Sales`: drop in «Chiuso Perso» rifiutato
+
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#deviazioni-dal-piano)
 
 Aggiunto dopo la risposta 3 della review (12/10/2026), che porta il Kanban dentro questo ticket.
 

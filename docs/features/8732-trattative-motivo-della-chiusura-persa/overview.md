@@ -163,7 +163,8 @@ Tutto nel repo principale (`orchestrator`), nessun submodule.
 - `app/Http/Controllers/Api/QuoteController.php` — `formatQuote()` e shape `@response`
 - `lang/en.json`, `lang/it.json`
 - `tests/Feature/QuoteNovaResourceTest.php`, `tests/Feature/Api/QuoteApiTest.php`,
-  `tests/Feature/Api/QuoteApiDocsTest.php`, più un test nuovo per l'hook del model
+  `tests/Feature/Api/QuoteApiDocsTest.php`, `tests/Feature/QuoteLostReasonTest.php` (nuovo, hook
+  del model), `tests/Feature/KanbanCardDeniedDropTest.php` (nuovo, drop rifiutato sul Kanban)
 - `nova-components/kanban-card/src/KanbanCard.php` — opzione per gli stati in cui il drop è rifiutato
 - `nova-components/kanban-card/src/Http/Controllers/KanbanController.php` — controllo in `updateStatus()`
 - `nova-components/kanban-card/dist/js/card.js` — messaggio del server nel toast d'errore

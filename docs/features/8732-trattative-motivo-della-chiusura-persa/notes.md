@@ -16,7 +16,13 @@ Un dettaglio dei test Nova del task 2: la validazione non passa da
 
 ## Bug trovati
 
-Nessuno.
+- **Errore nel dettaglio dei «Preventivi archiviati», preesistente ed estraneo al ticket** (trovato
+  nel test manuale del 13/10/2026): il toast «Call to undefined method App\Models\Quote::newModel()»
+  e «Unable to load actions». L'Action `EditFields` teneva la classe della risorsa nella proprietà
+  `$resource`, che Nova sovrascrive con il model nel dettaglio e sulle righe dell'index
+  (`vendor/laravel/nova/src/ResolvesActions.php`). Corretto rinominandola in `$resourceClass`
+  (`app/Nova/Actions/EditFields.php`). L'Action resta comunque inefficace: non trova `status`,
+  che in `Quote` sta dentro `Tab::group`, e la policy vieta la modifica delle trattative chiuse.
 
 ## Decisioni
 

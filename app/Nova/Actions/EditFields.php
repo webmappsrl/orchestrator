@@ -20,12 +20,14 @@ class EditFields extends Action
      */
     public $name = 'Edit';
     protected $fields = [];
-    public $resource = null;
+    // Classe della risorsa Nova da cui leggere i campi: non si chiama $resource perché Nova usa
+    // quella proprietà per il model su cui gira l'Action e la sovrascrive nel dettaglio.
+    protected $resourceClass = null;
     public function __construct($name = 'Edit', array $fields = [], $resource = null)
     {
         $this->fields = $fields;
         $this->name = __($name);
-        $this->resource = $resource;
+        $this->resourceClass = $resource;
     }
     /**
      * Perform the action on the given models.
@@ -54,9 +56,9 @@ class EditFields extends Action
      */
     public function fields(NovaRequest $request)
     {
-        // Se $this->resource è impostato, crea un'istanza della risorsa
-        if ($this->resource) {
-            $resourceInstance = new $this->resource($this->resource::newModel());
+        // Se $this->resourceClass è impostato, crea un'istanza della risorsa
+        if ($this->resourceClass) {
+            $resourceInstance = new $this->resourceClass($this->resourceClass::newModel());
 
             // Recupera i campi dalla risorsa
             $resourceFields = $resourceInstance->fields($request);
