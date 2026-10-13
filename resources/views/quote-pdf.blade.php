@@ -269,7 +269,14 @@ $normalizeAdditionalServices = function ($value): array {
                     <td class="td"></td>
                     <td class="td"></td>
                     <td class="td"></td>
-                    <td class="aligned-right td">{{ number_format(str_replace(',', '.', $price), 2, ',', '.') }} €</td>
+                    {{-- Un prezzo non valido salvato prima di oc:8734 si stampa così com'è, senza mandare il PDF in errore. --}}
+                    <td class="aligned-right td">
+                        @if (\App\Rules\AdditionalServicesMap::isValidPrice($price))
+                            {{ number_format(str_replace(',', '.', $price), 2, ',', '.') }} €
+                        @else
+                            {{ is_scalar($price) ? $price : '' }}
+                        @endif
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
