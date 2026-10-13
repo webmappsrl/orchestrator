@@ -8,12 +8,14 @@ use App\Models\Task;
 use App\Nova\Quote as QuoteResource;
 use App\Nova\QuoteNoFilter;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Status;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Nova;
 use Tests\TestCase;
 
 class QuoteNovaResourceTest extends TestCase
@@ -231,5 +233,93 @@ class QuoteNovaResourceTest extends TestCase
         DB::disableQueryLog();
 
         $this->assertCount(0, $queries);
+    }
+
+    /**
+     * Payload dei servizi aggiuntivi come lo invia il KeyValue di Nova dentro
+     * NovaTabTranslatable: una stringa JSON per ogni lingua (oc:8734).
+     */
+    private function additionalServicesPayload(array $servicesByLocale): array
+    {
+        $payload = [];
+        foreach (config('tab-translatable.locales') as $locale) {
+            $payload["translations_additional_services_{$locale}"] = json_encode(
+                $servicesByLocale[$locale] ?? new \stdClass(),
+                JSON_UNESCAPED_UNICODE
+            );
+        }
+
+        return $payload;
+    }
+
+    /**
+     * NovaRequest con la rotta risolta come in una richiesta vera: senza il parametro
+     * {resource}, e senza la risorsa registrata in Nova, il validator risponde 404.
+     */
+    private function novaRequest(string $method, string $uri, array $payload): NovaRequest
+    {
+        Nova::resources([QuoteResource::class]);
+        $request = NovaRequest::create($uri, $method, $payload);
+        $route = new Route($method, str_contains($uri, 'quotes/') ? 'nova-api/{resource}/{resourceId}' : 'nova-api/{resource}', []);
+        $request->setRouteResolver(fn () => $route->bind($request));
+
+        return $request;
+    }
+
+    public function test_creation_rejects_non_numeric_additional_service_price()
+    {
+        $request = $this->novaRequest('POST', '/nova-api/quotes', $this->additionalServicesPayload([
+            'it' => ['Formazione' => 'da definire'],
+        ]));
+
+        $errors = QuoteResource::validatorForCreation($request)->errors();
+
+        $this->assertTrue($errors->has('translations_additional_services_it'));
+        $message = $errors->first('translations_additional_services_it');
+        $this->assertStringContainsString('Servizi aggiuntivi [it]', $message);
+        $this->assertStringContainsString('Formazione', $message);
+    }
+
+    public function test_update_rejects_non_numeric_additional_service_price()
+    {
+        $quote = $this->makeQuote();
+        $request = $this->novaRequest('PUT', "/nova-api/quotes/{$quote->id}", $this->additionalServicesPayload([
+            'it' => ['Formazione' => 'da definire'],
+        ]));
+
+        $errors = QuoteResource::validatorForUpdate($request, new QuoteResource($quote))->errors();
+
+        $this->assertTrue($errors->has('translations_additional_services_it'));
+    }
+
+    public function test_additional_service_price_error_is_reported_on_its_locale()
+    {
+        $request = $this->novaRequest('POST', '/nova-api/quotes', $this->additionalServicesPayload([
+            'it' => ['Formazione' => '1500'],
+            'en' => ['Training' => 'tbd'],
+        ]));
+
+        $errors = QuoteResource::validatorForCreation($request)->errors();
+
+        $this->assertTrue($errors->has('translations_additional_services_en'));
+        $this->assertFalse($errors->has('translations_additional_services_it'));
+    }
+
+    public function test_numeric_additional_service_prices_are_accepted()
+    {
+        foreach (['1500', '1500,50', '1500.50'] as $price) {
+            $request = $this->novaRequest('POST', '/nova-api/quotes', $this->additionalServicesPayload([
+                'it' => ['Formazione' => $price],
+            ]));
+
+            $errors = QuoteResource::validatorForCreation($request)->errors();
+
+            foreach (config('tab-translatable.locales') as $locale) {
+                $this->assertFalse(
+                    $errors->has("translations_additional_services_{$locale}"),
+                    "prezzo {$price} rifiutato in {$locale}"
+                );
+            }
+        }
     }
 }
