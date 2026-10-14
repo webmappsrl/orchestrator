@@ -571,5 +571,9 @@
   "My tasks": "I miei task",
   "Assigned to me": "Assegnati a me",
   "Created by me": "Creati da me",
-  "Which tasks": "Quali task"
+  "Which tasks": "Quali task",
+  "Mark as completed": "Segna come completato",
+  "Reopen": "Riapri",
+  "Next task (optional)": "Task successivo (facoltativo)",
+  "Only one task at a time can be closed or reopened.": "Si può chiudere o riaprire un solo task per volta."
 }
