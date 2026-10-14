@@ -45,11 +45,11 @@ Tutti i comandi PHP girano **dentro il container Docker** `php81_orchestrator`.
   [docs/howto/eseguire-i-test.md](docs/howto/eseguire-i-test.md).
 
 - **Quando aggiungi un `case` a un enum di stato, aggiungi nello stesso lavoro la riga in `label()`
-  e una chiave di traduzione per ogni forma con cui il repo costruisce la chiave** — il nome del
-  case (`"To_Present"`, nei Filter Nova), `ucfirst()` del valore (`"Pending_release"`) e la stringa
-  scritta a mano in `label()` (`"Pending Release"`). Senza `label()` il dashboard Kanban va in 500; senza le altre chiavi l'utente legge
-  il valore grezzo, in silenzio. Quali punti usano quale forma è in
-  [docs/knowledge/traduzioni-stati-enum.md](docs/knowledge/traduzioni-stati-enum.md).
+  e le chiavi di traduzione in tutte le forme che il repo usa per quell'enum**, descritte, con i
+  punti in cui si usano, in
+  [docs/knowledge/traduzioni-stati-enum.md](docs/knowledge/traduzioni-stati-enum.md). Senza
+  `label()` il dashboard Kanban va in 500; senza le chiavi l'utente legge il valore grezzo, in
+  silenzio.
 
 - **Quando modifichi un bundle sotto `nova-components/*/dist/`, validalo con `node --check` prima di
   dichiarare il lavoro pronto**, e rollbacka sempre insieme il PHP e il JS corrispondente. Quei file
@@ -99,7 +99,7 @@ Tutti i comandi PHP girano **dentro il container Docker** `php81_orchestrator`.
 | Customer: API e validazione | whitelist anti mass-assignment, generazione di `name`, telefoni e backfill P.IVA | [docs/knowledge/customer-api-e-validazione.md](docs/knowledge/customer-api-e-validazione.md) |
 | API esterne e documentazione OpenAPI | token Sanctum, endpoint Story e `/me`, override accesso Nova, limiti di Scramble | [docs/knowledge/api-esterne-e-documentazione.md](docs/knowledge/api-esterne-e-documentazione.md) |
 | Tag: API e tagging automatico | relazioni morfiche, autorizzazione per ruolo, hook Nova | [docs/knowledge/tag-e-tagging-automatico.md](docs/knowledge/tag-e-tagging-automatico.md) |
-| Traduzione degli stati enum | doppia chiave, `match` senza `default` | [docs/knowledge/traduzioni-stati-enum.md](docs/knowledge/traduzioni-stati-enum.md) |
+| Traduzione degli stati enum | forme della chiave di traduzione e dove si usano, `match` senza `default` | [docs/knowledge/traduzioni-stati-enum.md](docs/knowledge/traduzioni-stati-enum.md) |
 | Nova components: bundle scritti a mano | `node --check`, rollback non atomico, metric-card del Kanban | [docs/knowledge/nova-components-bundle.md](docs/knowledge/nova-components-bundle.md) |
 | Sync distribuita delle App multi-shard | identità `(shard, app_id)`, proprietà delle colonne, guardie, report store | [docs/knowledge/sync-shard-app.md](docs/knowledge/sync-shard-app.md) |
 | Sync del Google Calendar | job con debounce, cascade demote, coda e fallback | [docs/knowledge/sync-google-calendar.md](docs/knowledge/sync-google-calendar.md) |

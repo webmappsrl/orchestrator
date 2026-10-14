@@ -36,11 +36,14 @@ qualcosa che non dipende da te». Oggi queste trattative restano in «Presentata
 totale, quindi quel numero non dice quanto valgono le trattative su cui si sta lavorando. Nicola
 non ne sente il bisogno ma è d'accordo; Alessio lo considera un «nice to have».
 
-La validazione del filtro `status` è stata chiesta in review: oggi la documentazione del filtro
-cita solo due esempi (`app/Http/Controllers/Api/QuoteController.php:46`) e il valore arriva a
-`where`/`whereIn` senza controlli (`:60-67` su `develop`). Con la validazione `Rule::enum` e il tipo enum
-nell'attributo OpenAPI, Scramble ricava dall'enum l'elenco dei valori ammessi, che resta aggiornato
-anche con gli stati futuri (come ci si arriva è in `notes.md`, «Task 6-7»).
+La validazione del filtro `status` è stata chiesta in review: prima di questo lavoro la
+documentazione del filtro citava solo due esempi e il valore arrivava a `where`/`whereIn` senza
+controlli (`app/Http/Controllers/Api/QuoteController.php`, `index`). Ora i due compiti sono
+separati: `Rule::enum` rifiuta i valori sconosciuti, mentre l'elenco dei valori ammessi nella
+documentazione OpenAPI viene dal tipo enum dichiarato nell'attributo, da cui Scramble lo ricava, e
+resta aggiornato anche con gli stati futuri. La regola di validazione non contribuisce alla
+documentazione: Scramble non la legge, di proposito (come ci si arriva è in `notes.md`,
+«Task 6-7»).
 
 ## Requisiti
 
@@ -112,3 +115,6 @@ Tutto nel repo principale, nessun submodule.
 - `app/Http/Controllers/Api/QuoteController.php` — validazione del filtro `status`
 - `tests/Feature/QuoteStatusTest.php` — nuovo, test sull'enum e sulle traduzioni
 - `tests/Feature/Api/QuoteApiTest.php` — test del filtro `status`
+- `docs/knowledge/traduzioni-stati-enum.md` — quarta forma di chiave (valore grezzo) e dove si usa
+- `CLAUDE.md` — la regola sugli enum di stato rimanda alla pagina invece di elencare le forme;
+  riga dell'indice in «Conoscenza»

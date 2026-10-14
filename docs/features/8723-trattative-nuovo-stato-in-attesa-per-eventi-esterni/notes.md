@@ -84,20 +84,25 @@ Verificato con `php artisan scramble:export`: il parametro `status` ha la descri
   disponibili restituisce la chiave grezza. Evita di scrivere le etichette due volte. Vale finché
   `label()` usa `__('stringa')` senza parametri: con `trans_choice`, segnaposto o chiavi di file
   PHP il test va riscritto (scritto anche in un commento nel test).
-- **`CLAUDE.md` non modificato** (scelta del dev, 07/10/2026): la pagina
-  `docs/knowledge/traduzioni-stati-enum.md` ora descrive quattro forme di chiave, mentre la regola
-  sugli enum di stato del `CLAUDE.md` ne elenca tre (non cita il valore grezzo) e la riga
-  dell'indice dice ancora «doppia chiave». La pagina di conoscenza è la fonte aggiornata.
+- **Elenco delle forme di chiave tolto dal `CLAUDE.md`** (review del 14/10/2026 su `663db51`): la
+  regola sugli enum di stato elencava tre forme, mentre `docs/knowledge/traduzioni-stati-enum.md`
+  ne descrive quattro (mancava il valore grezzo, la forma dimenticata in pianificazione). Ora la
+  regola dice solo «tutte le forme che il repo usa per quell'enum» e rimanda alla pagina, che è
+  l'unico posto in cui le forme sono elencate. Allineata anche la riga dell'indice in «Conoscenza»
+  («doppia chiave» → «forme della chiave di traduzione e dove si usano»).
+  Supera la scelta del 07/10/2026 di lasciare il `CLAUDE.md` com'era: due elenchi da tenere
+  allineati a mano si erano già separati una volta.
 
 ## Follow-up
 
-- **Ticket separato sul repo `claude-marketplace`:** lo strumento dei preventivi del server MCP
-  `orchestrator` nel plugin `wm-skills` descrive `status` solo come «filtro sullo stato del
-  preventivo», senza i valori ammessi (`mcp/internal/tools/crm.go:54`, versione 1.5.1). L'LLM che lo
-  usa indovina il valore (per esempio `On_Hold` invece di `on hold`): oggi riceve un elenco vuoto e
-  risponde «non ce ne sono», dopo questo lavoro riceve 422. Far elencare alla descrizione i valori
-  ammessi, o leggerli dalla documentazione OpenAPI. **Da aprire prima del deploy** di questo
-  lavoro, non dopo.
+- **Strumento dei preventivi del server MCP sul repo `claude-marketplace`:** nella versione 1.5.1
+  di `wm-skills` descrive `status` solo come «filtro sullo stato del preventivo», senza i valori
+  ammessi (`mcp/internal/tools/crm.go:54`). L'LLM che lo usa indovina il valore (per esempio
+  `On_Hold` invece di `on hold`): prima di questo lavoro riceveva un elenco vuoto e rispondeva «non
+  ce ne sono», dopo riceve 422. La correzione è in
+  [webmappsrl/claude-marketplace#28](https://github.com/webmappsrl/claude-marketplace/pull/28)
+  (valori ammessi letti da `QuoteStatus.php`). **Il rilascio di `wm-skills` che la contiene deve
+  uscire insieme al deploy di questo lavoro o prima**, non dopo.
 - **Nessun test protegge la documentazione OpenAPI del filtro `status`:** un aggiornamento di
   Scramble che iniziasse a leggere le regole da una variabile farebbe sparire di nuovo la forma
   singola. Valutare un test su `scramble:export` per i parametri documentati a mano.
