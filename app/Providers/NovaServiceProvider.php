@@ -19,6 +19,7 @@ use App\Nova\Dashboards\Sales;
 use App\Nova\Documentation;
 use App\Nova\Layer;
 use App\Nova\LostCustomers;
+use App\Nova\MyTask;
 use App\Nova\Product;
 use App\Nova\Quote;
 use App\Nova\RecurringProduct;
@@ -131,6 +132,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::link(__('Sales'), '/dashboards/sales'),
                     MenuItem::resource(Quote::class),
                     MenuItem::resource(Task::class),
+                    MenuItem::resource(MyTask::class),
                     MenuItem::resource(Renewals::class)->canSee(function ($request) {
                         if ($request->user() == null) {
                             return false;

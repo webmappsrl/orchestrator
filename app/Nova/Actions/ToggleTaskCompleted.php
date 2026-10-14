@@ -17,9 +17,12 @@ class ToggleTaskCompleted extends Action
 
     public $name = 'Segna come completato / Riapri';
 
+    /**
+     * Stessa regola dell'API: TaskPolicy::updateStatus() (oc:8722).
+     */
     public function authorizedToRun(Request $request, $model)
     {
-        return $model->creator_id !== null && $model->creator_id === $request->user()?->id;
+        return $request->user()?->can('updateStatus', $model) ?? false;
     }
 
     public function handle(ActionFields $fields, Collection $models)

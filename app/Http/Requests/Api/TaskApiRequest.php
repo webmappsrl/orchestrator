@@ -3,9 +3,11 @@
 namespace App\Http\Requests\Api;
 
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 
 class TaskApiRequest extends FormRequest
 {
@@ -24,18 +26,31 @@ class TaskApiRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return [
-                'quote_id' => ['required', 'integer', 'exists:quotes,id'],
-                'title'    => ['required', 'string', 'max:255'],
-                'notes'    => ['sometimes', 'nullable', 'string'],
-                'due_date' => ['required', 'date'],
+                'quote_id'    => ['required', 'integer', 'exists:quotes,id'],
+                'title'       => ['required', 'string', 'max:255'],
+                'notes'       => ['sometimes', 'nullable', 'string'],
+                'due_date'    => ['required', 'date'],
+                // Assente o null: vale il default di Task::defaultAssigneeId().
+                'assignee_id' => ['sometimes', 'nullable', 'integer', $this->assigneeExists()],
             ];
         }
 
         return [
-            'status'   => ['sometimes', Rule::in([Task::STATUS_TODO, Task::STATUS_COMPLETED])],
-            'notes'    => ['sometimes', 'string'],
-            'due_date' => ['sometimes', 'date'],
+            'status'      => ['sometimes', Rule::in([Task::STATUS_TODO, Task::STATUS_COMPLETED])],
+            'notes'       => ['sometimes', 'string'],
+            'due_date'    => ['sometimes', 'date'],
+            // L'assegnatario si cambia ma non si svuota (oc:8722).
+            'assignee_id' => ['sometimes', 'required', 'integer', $this->assigneeExists()],
         ];
+    }
+
+    /**
+     * Assegnatario ammesso: utente esistente con un ruolo che accede ai
+     * task (User::scopeWithTaskAccess()).
+     */
+    private function assigneeExists(): Exists
+    {
+        return Rule::exists('users', 'id')->where(fn ($query) => (new User)->scopeWithTaskAccess($query));
     }
 
     /**

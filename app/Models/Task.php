@@ -22,6 +22,7 @@ class Task extends Model
         'status',
         'completed_at',
         'creator_id',
+        'assignee_id',
     ];
 
     protected $casts = [
@@ -43,9 +44,32 @@ class Task extends Model
         return $this->belongsTo(User::class, 'creator_id');
     }
 
-    public function getAssigneeAttribute(): ?User
+    /**
+     * Assegnatario del task, salvato in `assignee_id` e indipendente
+     * dall'owner della Quote (oc:8722): l'owner conta solo come default
+     * alla creazione, vedi defaultAssigneeId().
+     */
+    public function assignee(): BelongsTo
     {
-        return $this->quote?->user;
+        return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    /**
+     * Assegnatario di default (oc:8722, review del 14/10/2026): l'owner
+     * della Quote; se manca, o non ha un ruolo che accede ai task, l'utente
+     * che agisce. Unico punto della regola: lo usano l'hook di creazione,
+     * il campo Nova precompilato, la riassegnazione alla cancellazione di
+     * un utente e il popup di chiusura di oc:8730.
+     */
+    public static function defaultAssigneeId(?Quote $quote, ?User $actor): ?int
+    {
+        $owner = $quote?->user;
+
+        if ($owner !== null && $owner->canAccessTasks()) {
+            return $owner->id;
+        }
+
+        return $actor?->id;
     }
 
     /**
@@ -70,12 +94,16 @@ class Task extends Model
         }
     }
 
+    /**
+     * Task di un utente: quelli assegnati a lui oppure creati da lui
+     * (oc:8722). L'owner della Quote non conta più: i task della sua
+     * trattativa assegnati e creati da altri restano visibili nel tab Task
+     * della Quote.
+     */
     public function scopeForUser($query, User $user)
     {
         return $query->where(function ($q) use ($user) {
-            $q->whereHas('quote', function ($quoteQuery) use ($user) {
-                $quoteQuery->where('user_id', $user->id);
-            })->orWhere('creator_id', $user->id);
+            $q->where('assignee_id', $user->id)->orWhere('creator_id', $user->id);
         });
     }
 
@@ -107,6 +135,10 @@ class Task extends Model
         static::creating(function (Task $task) {
             if ($task->creator_id === null && auth()->check()) {
                 $task->creator_id = auth()->id();
+            }
+
+            if ($task->assignee_id === null) {
+                $task->assignee_id = self::defaultAssigneeId($task->quote, auth()->user());
             }
         });
 

@@ -11,12 +11,20 @@ use App\Models\User;
 class TaskPolicy
 {
     /**
+     * Unico punto in cui sono elencati i ruoli che accedono ai Task: lo
+     * usano before(), le opzioni del campo Assegnatario in Nova e la
+     * validazione di `assignee_id` nell'API (oc:8722). Per aprire i task a
+     * un altro ruolo si cambia solo qui.
+     */
+    public const ROLES = [UserRole::Admin, UserRole::Manager, UserRole::Developer];
+
+    /**
      * Stesso perimetro ruoli di QuotePolicy: solo Admin, Manager, Developer
      * possono accedere alle API Task, indipendentemente dall'ability.
      */
     public function before(User $user)
     {
-        if (!($user->hasRole(UserRole::Admin) || $user->hasRole(UserRole::Manager) || $user->hasRole(UserRole::Developer))) {
+        if (! $user->canAccessTasks()) {
             return false;
         }
     }
@@ -29,8 +37,8 @@ class TaskPolicy
     /**
      * Ruolo-only, nessuno scoping ownership: mirror esatto di
      * QuotePolicy::view(). Il dettaglio di un Task è visibile a chiunque
-     * abbia un ruolo abilitato, anche se non è owner della Quote né
-     * creatore del Task — la lista (GET /api/tasks) resta invece filtrata
+     * abbia un ruolo abilitato, anche se non ne è assegnatario né
+     * creatore — la lista (GET /api/tasks) resta invece filtrata
      * via Task::scopeForUser() nel controller.
      */
     public function view(User $user, Task $task)
@@ -72,16 +80,12 @@ class TaskPolicy
      * `due_date` (chiunque abbia un ruolo abilitato può aggiungere una nota,
      * mirror di Story::addDevNote() dove qualunque utente autorizzato può
      * annotare, e riprogrammare la scadenza, come già in Nova — oc:8625).
-     * Il campo `status` NON è coperto qui: richiede il check aggiuntivo
-     * updateStatus(), invocato esplicitamente da TaskController::update()
-     * SOLO quando il payload contiene la chiave `status`, PRIMA di
-     * applicare qualsiasi modifica — questo realizza il comportamento
-     * "tutto o niente" quando un payload misto {status, notes} o
-     * {status, due_date} arriva da un utente che non è il creator: la
-     * richiesta fallisce con 403 prima che qualsiasi campo venga persistito. Questa autorizzazione differenziata
-     * per campo diverge intenzionalmente dal pattern "un verdetto per
-     * endpoint" usato da QuotePolicy — decisione presa in Fase: challenge
-     * di oc:8403.
+     * Il campo `status` ha un check a sé, updateStatus(), invocato da
+     * TaskController::update() SOLO quando il payload contiene la chiave
+     * `status`, PRIMA di applicare qualsiasi modifica (oc:8403). Da oc:8722
+     * updateStatus() è aperto a chiunque acceda ai task, quindi oggi i due
+     * check coincidono; la separazione resta come punto in cui restringere
+     * di nuovo il cambio di stato senza toccare `notes` e `due_date`.
      */
     public function update(User $user, Task $task)
     {
@@ -89,14 +93,15 @@ class TaskPolicy
     }
 
     /**
-     * Solo il creatore del Task può cambiarne lo status (mirror esatto di
-     * App\Nova\Actions\ToggleTaskCompleted::authorizedToRun()). Un Task
-     * con creator_id nullo (utente creatore eliminato, nullOnDelete) non è
-     * completabile/riapribile da nessuno — limite ereditato dal
-     * comportamento Nova esistente, non introdotto da questa API.
+     * Chiunque acceda ai Task può completarli e riaprirli, non più solo il
+     * creatore (oc:8722: «Chiunque crea i task e chiunque li può chiudere»).
+     * Il filtro sui ruoli è in before(); stessa regola di
+     * App\Nova\Actions\ToggleTaskCompleted::authorizedToRun(). Resta un
+     * metodo a sé perché TaskController::update() lo invoca solo quando il
+     * payload contiene `status`.
      */
     public function updateStatus(User $user, Task $task)
     {
-        return $task->creator_id !== null && $task->creator_id === $user->id;
+        return true;
     }
 }

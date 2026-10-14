@@ -12,14 +12,12 @@ class TaskAssigneeFilter extends Filter
 
     public function apply(NovaRequest $request, $query, $value)
     {
-        return $query->whereHas('quote', function ($q) use ($value) {
-            $q->where('user_id', $value);
-        });
+        return $query->where('assignee_id', $value);
     }
 
     public function options(NovaRequest $request)
     {
-        return User::whereHas('quotes.tasks')
+        return User::whereHas('assignedTasks')
             ->orderBy('name')
             ->get()
             ->mapWithKeys(fn (User $user) => [$user->name => $user->id])

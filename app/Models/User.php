@@ -5,9 +5,11 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Enums\UserRole;
+use App\Policies\TaskPolicy;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Auth\Impersonatable;
 use Laravel\Sanctum\HasApiTokens;
 use Wm\WmPackage\Models\User as Authenticatable;
@@ -51,12 +53,69 @@ class User extends Authenticatable
         'roles' => AsEnumCollection::class.':'.UserRole::class,
     ];
 
+    protected static function booted()
+    {
+        // I task di un utente cancellato si riassegnano con la regola del
+        // default (oc:8722): owner della Quote, altrimenti il creatore del
+        // task. Se il creatore è lo stesso utente e la Quote non ha owner,
+        // il task resta senza assegnatario (nullOnDelete).
+        static::deleting(function (User $user) {
+            $tasks = $user->assignedTasks()->with(['quote.user', 'creator'])->get();
+
+            foreach ($tasks as $task) {
+                $creator = $task->creator?->is($user) ? null : $task->creator;
+                $task->assignee_id = Task::defaultAssigneeId($task->quote, $creator);
+                $task->saveQuietly();
+            }
+        });
+    }
+
+    /**
+     * La cancellazione gira in una transazione: se la DELETE fallisce (per
+     * esempio per la FK di quotes.user_id), si annulla anche la
+     * riassegnazione dei task fatta nell'hook `deleting`. Nova non apre
+     * transazioni quando cancella (Laravel\Nova\Jobs\DeleteResources).
+     */
+    public function delete()
+    {
+        return DB::transaction(fn () => parent::delete());
+    }
+
     public function hasRole($roles, ?string $guard = null): bool
     {
         if ($roles instanceof UserRole) {
-            return $this->roles->contains($roles);
+            // `roles` è nullable: un utente senza ruoli non ha nessun ruolo.
+            return $this->roles?->contains($roles) ?? false;
         }
         return parent::hasRole($roles, $guard);
+    }
+
+    /**
+     * Vero se l'utente ha almeno uno dei ruoli che accedono ai Task
+     * (TaskPolicy::ROLES).
+     */
+    public function canAccessTasks(): bool
+    {
+        foreach (TaskPolicy::ROLES as $role) {
+            if ($this->hasRole($role)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Utenti con almeno uno dei ruoli che accedono ai Task
+     * (TaskPolicy::ROLES): sono gli unici assegnatari ammessi.
+     */
+    public function scopeWithTaskAccess($query)
+    {
+        return $query->where(function ($q) {
+            foreach (TaskPolicy::ROLES as $role) {
+                $q->orWhereJsonContains('roles', $role->value);
+            }
+        });
     }
 
     public function can($abilities, $arguments = []): bool
@@ -96,6 +155,11 @@ class User extends Authenticatable
     public function quotes()
     {
         return $this->hasMany(Quote::class);
+    }
+
+    public function assignedTasks()
+    {
+        return $this->hasMany(Task::class, 'assignee_id');
     }
 
     /**

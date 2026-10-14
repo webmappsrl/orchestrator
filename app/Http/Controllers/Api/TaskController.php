@@ -14,7 +14,8 @@ class TaskController extends Controller
 {
     /**
      * List the authenticated user's tasks — Task::scopeForUser() returns
-     * tasks where the user owns the linked quote OR is the task creator.
+     * tasks where the user is the assignee OR the task creator (oc:8722:
+     * the quote owner no longer counts).
      * Sorted by `due_date` ascending by default; opt-in `?sort=created_at`
      * (ascending) / `?sort=-created_at` (descending) mirrors the sort
      * syntax already used by QuoteController::index(). No pagination.
@@ -26,7 +27,7 @@ class TaskController extends Controller
     {
         $this->authorize('viewAny', Task::class);
 
-        $query = Task::query()->forUser($request->user())->with('quote.user');
+        $query = Task::query()->forUser($request->user())->with(['quote', 'assignee']);
 
         if ($request->get('sort') === '-created_at') {
             $query->orderByDesc('created_at')->orderByDesc('id');
@@ -44,8 +45,8 @@ class TaskController extends Controller
     /**
      * Retrieve a single task's detail. Role-only authorization — no
      * ownership scoping (mirror QuotePolicy::view()): any Admin/Manager/
-     * Developer can view any task's detail, even if not its quote owner
-     * nor its creator.
+     * Developer can view any task's detail, even if not its assignee nor
+     * its creator.
      *
      * @response array{id: int, quote_id: int, quote_title: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}
      */
@@ -53,7 +54,7 @@ class TaskController extends Controller
     {
         $this->authorize('view', $task);
 
-        $task->load('quote.user');
+        $task->load(['quote', 'assignee']);
 
         return response()->json($this->formatTask($task));
     }
@@ -63,8 +64,12 @@ class TaskController extends Controller
      * as a plain task on the same quote — no explicit link to the
      * originating task is stored). `creator_id` is never accepted from
      * input: it is set automatically to the authenticated user by
-     * Task::booted(). Denied (403) when the target quote is closed_won or
-     * closed_lost (see TaskPolicy::create()).
+     * Task::booted(). `assignee_id` is optional: when omitted or null the
+     * assignee is the quote owner, or the authenticated user when the
+     * quote has no owner (Task::defaultAssigneeId()); 422 when the user
+     * does not exist or has no role with task access. Denied (403) when
+     * the target quote is closed_won or closed_lost (see
+     * TaskPolicy::create()).
      *
      * @response array{id: int, quote_id: int, quote_title: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}
      */
@@ -79,24 +84,22 @@ class TaskController extends Controller
         $task->title = $request->input('title');
         $task->notes = $request->input('notes');
         $task->due_date = $request->dueDate();
+        $task->assignee_id = $request->input('assignee_id');
         $task->save();
 
-        $task->load('quote.user');
+        $task->load(['quote', 'assignee']);
 
         return response()->json($this->formatTask($task), 201);
     }
 
     /**
-     * Update a task, limited to three fields with per-field authorization
-     * (documented in TaskPolicy): `status` requires the authenticated user
-     * to be the task's creator (mirror of
-     * App\Nova\Actions\ToggleTaskCompleted::authorizedToRun()); `notes` and
-     * `due_date` are open to any Admin/Manager/Developer. The `status`
-     * authorization check runs BEFORE any mutation is applied, so a mixed
-     * payload {status, notes} or {status, due_date} from a non-creator
-     * fails the entire request with 403 — nothing is persisted in that
-     * case, even the fields that would have been allowed on their own.
-     * All fields are written with a single save(). `due_date` is converted
+     * Update a task, limited to four fields: `status`, `notes`,
+     * `due_date` and `assignee_id`, all open to any Admin/Manager/Developer
+     * (oc:8722: anyone with task access can complete or reopen a task, not
+     * only its creator). `assignee_id` can be changed but not cleared: null
+     * returns 422, as does a user without a role with task access. The
+     * `status` authorization (TaskPolicy::updateStatus()) still runs BEFORE
+     * any mutation is applied. All fields are written with a single save(). `due_date` is converted
      * to the application timezone (TaskApiRequest::dueDate()).
      * `completed_at` is updated automatically by the existing
      * Task::booted() hook.
@@ -120,9 +123,13 @@ class TaskController extends Controller
             $task->appendNote($request->input('notes'), false);
         }
 
+        if ($request->has('assignee_id')) {
+            $task->assignee_id = $request->input('assignee_id');
+        }
+
         $task->save();
 
-        $task->load('quote.user');
+        $task->load(['quote', 'assignee']);
 
         return response()->json($this->formatTask($task));
     }

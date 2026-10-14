@@ -4,21 +4,26 @@
 
 ## Cosa cambia
 
-Ogni Task collegato a una Quote può avere un **proprio assegnatario**, scelto in Nova o via API.
-Se alla creazione nessuno lo sceglie, l'assegnatario è **chi crea il task**; si può cambiare in
-ogni momento. I task senza assegnatario seguono l'owner della trattativa: i task vecchi non
-toccati dalla migrazione (domanda aperta 4), quelli il cui assegnatario è stato cancellato o
-rimosso, quelli senza creatore.
+Ogni Task collegato a una Quote ha un **proprio assegnatario**, salvato nel task e scelto in Nova
+o via API. Se alla creazione nessuno lo sceglie, l'assegnatario è l'**owner della trattativa**;
+se la trattativa non ha owner, è **chi crea il task**. Nel form «Crea Task» di Nova il campo
+compare già compilato con questo default e si può cambiare prima di salvare. L'assegnatario resta
+modificabile ma non si può svuotare; se l'utente assegnatario viene cancellato, i suoi task si
+riassegnano con la stessa regola del default.
+
 Il cambio di stato di un task (completa / riapri) non è più riservato a chi l'ha creato: lo può
-fare chiunque abbia accesso ai task. La lista "i miei task" e il filtro assegnatario di Nova
-seguono l'assegnatario effettivo.
+fare chiunque abbia accesso ai task. Una nuova vista **«I miei task»** mostra i task assegnati
+all'utente loggato e quelli creati da lui, con un filtro «Assegnati a me» / «Creati da me»
+(default «Assegnati a me»). Il filtro «Assegnatario» dell'elenco Task filtra sull'assegnatario
+del task e non più sull'owner della trattativa.
 
 ## Perché
 
 Sulle trattative grandi lavorano due persone: una tiene i contatti via mail, l'altra fa le
 presentazioni. Oggi tutti i task di una trattativa sono per forza dell'owner
-(`Task::getAssigneeAttribute()`, `app/Models/Task.php:46-49`), e solo chi ha creato un task lo
-può chiudere (`app/Policies/TaskPolicy.php:98-101`, `app/Nova/Actions/ToggleTaskCompleted.php:20-23`).
+(`Task::getAssigneeAttribute()`, `app/Models/Task.php:46-49`: `return $this->quote?->user;`), e
+solo chi ha creato un task lo può chiudere (`app/Policies/TaskPolicy.php:98-101`,
+`app/Nova/Actions/ToggleTaskCompleted.php:20-23`).
 
 Fonti:
 - ticket, `customer_request`: «ogni task deve poter avere un proprio assegnatario. Se non viene
@@ -27,198 +32,173 @@ Fonti:
 - call del 30/09/2026 (citata nel ticket e nella descrizione del tag; trascrizione non
   verificabile, vedi Rischi): «l'assegnatario del task svincolato da l'assegnatario della
   trattativa»; «di default se non c'è messo niente prenda quello della trattativa».
-- scrum del 13/10/2026 08:36, Giuseppe Bonfanti (verificata su Drive): «chiunque può creare e
-  chiudere i task di chiunque. Prima non era così»; «quindi uno glielo chiude, glielo può aprire
-  e via dicendo»; «ogni volta che crei un task di default va assegnata al creatore, ma lo puoi
-  cambiare».
+- review della PR #266 (peppedeka, 14/10/2026) e description del ticket, sezione «Risposte del
+  reviewer alle domande aperte — da implementare (review del 14/10/2026)»: ruoli confermati
+  (punto 1), default owner → creatore (punto 2), vista «I miei task» e filtro Assegnatario sul
+  task (punto 3), migrazione con la stessa regola del default (punto 4).
+- aggiunta del reviewer al punto 2 (ticket, 14/10/2026; messaggio delle 10:17): «in Nova il form
+  «Crea Task» mostra il campo Assegnatario già compilato con questo default, modificabile prima di
+  salvare; lo stesso campo precompilato compare nel popup di chiusura di oc:8730».
+- decisione della dev in pianificazione (14/10/2026): assegnatario obbligatorio, senza ripiego
+  calcolato alla lettura; alla cancellazione dell'utente i task si riassegnano col default.
 
 ## Requisiti
 
 **Dati**
-- [ ] Nuova colonna `tasks.assignee_id`, nullable, FK verso `users` con `nullOnDelete`
-  (stesso schema di `creator_id`).
-- [ ] **Default al creatore:** alla creazione, se `assignee_id` non è indicato, vale
-  `creator_id` (in Nova l'utente loggato, via API l'utente del token). *Fonte: scrum del
-  13/10/2026 08:36, Giuseppe Bonfanti: «ogni volta che crei un task di default va assegnata al
-  creatore, ma lo puoi cambiare». Il ticket diceva invece «Se non viene indicato, vale l'owner
-  della trattativa»: decisione della dev di seguire lo scrum, da confermare in review (domanda
-  aperta 2).*
-- [ ] **Migrazione dei task esistenti:** in una migration a sé (separata da quella che aggiunge la
-  colonna), così la scelta del reviewer (domanda aperta 4) cambia solo la condizione `WHERE`.
-  Punto di partenza implementato: **solo i task delle trattative senza owner**
-  (`assignee_id = creator_id` dove `creator_id` non è nullo e `quotes.user_id` è nullo). I task
-  vecchi delle trattative con owner restano senza `assignee_id` e seguono l'owner come oggi.
-  *Scelta come punto di partenza perché si può estendere a tutti i task senza perdere nulla; la
-  decisione finale è del reviewer.*
-- [ ] L'assegnatario effettivo è `assignee_id` se valorizzato, altrimenti `quote->user`.
-  L'accessor `assignee` restituisce l'effettivo. Il ripiego sull'owner vale per i task senza
-  `assignee_id`: task vecchi non toccati dalla migrazione, task senza creatore, assegnatario
-  cancellato (`nullOnDelete`), o reset esplicito a `null`.
-- [ ] Il default al creatore si applica nell'hook `creating` di `Task::booted()`, dopo
-  l'assegnazione di `creator_id` (`app/Models/Task.php:107-110`), così vale per Nova, API e
-  `Task::create()`.
-  *Motivo per non fermarsi all'owner: una Quote creata via API non ha mai owner
-  (`QuoteController::store()`, `app/Http/Controllers/Api/QuoteController.php:201-211`, nessun
-  `user_id` in `QuoteApiRequest`), e in Nova l'owner è facoltativo
-  (`app/Nova/Quote.php:166-169`).*
+- [ ] Nuova colonna `tasks.assignee_id`, FK verso `users` con `nullOnDelete`. Nullable a livello
+  di database solo per i casi residui (vedi «Cancellazione di un utente» e «Migrazione»); in Nova
+  e nell'API il campo è obbligatorio.
+- [ ] L'assegnatario è **solo** `assignee_id`: nessun ripiego sull'owner calcolato alla lettura.
+  `Task::getAssigneeAttribute()` viene sostituito da una relazione `assignee()` verso `User`, così
+  `$task->assignee` continua a funzionare per l'API e per l'indice Nova.
+- [ ] **Default in un solo punto**, riusabile da oc:8730 (popup di chiusura con task successivo):
+  un metodo che, data una Quote e l'utente che agisce, restituisce l'owner della Quote oppure,
+  se manca, l'utente che agisce. Un owner senza ruolo ammesso conta come mancante (il campo Owner
+  della Quote non filtra i ruoli, `app/Nova/Quote.php:166-169`). Lo usano l'hook di creazione, il campo Nova e la riassegnazione
+  alla cancellazione.
+- [ ] **Default alla creazione:** nell'hook `creating` di `Task::booted()`, dopo l'assegnazione di
+  `creator_id` (`app/Models/Task.php:105-111`), se `assignee_id` è vuoto si applica il default.
+  Vale per Nova, API e `Task::create()`.
+- [ ] **Migrazione dei task esistenti** (migration a sé, separata da quella della colonna):
+  `assignee_id` = owner della trattativa; se manca, `creator_id`. I task senza owner e senza
+  creatore restano con `assignee_id` vuoto. Prima del deploy rifare in produzione il conteggio
+  (sola lettura), per sapere quanti task finiscono a chi:
+  ```sql
+  SELECT count(*) FILTER (WHERE q.user_id IS NOT NULL)                         AS all_owner,
+         count(*) FILTER (WHERE q.user_id IS NULL AND t.creator_id IS NOT NULL) AS al_creatore,
+         count(*) FILTER (WHERE q.user_id IS NULL AND t.creator_id IS NULL)     AS vuoti
+  FROM tasks t JOIN quotes q ON q.id = t.quote_id;
+  ```
+- [ ] **Cancellazione di un utente:** prima della cancellazione (evento `deleting` di `User`), i
+  task di cui è assegnatario si riassegnano col default: owner della trattativa, altrimenti
+  creatore del task. Se anche il creatore è l'utente cancellato e la trattativa non ha owner, il
+  campo resta vuoto (`nullOnDelete`). Una cancellazione che non passa da Eloquent salta l'hook e
+  lascia il campo vuoto.
 
 **Chi può essere assegnatario**
-- [ ] Si possono scegliere solo utenti con ruolo Admin, Manager o Developer, cioè chi può vedere
-  i task. *Decisione della dev in pianificazione; ticket e call non lo specificano.*
+- [ ] Solo utenti con ruolo Admin, Manager o Developer, cioè chi accede ai task. Editor e Customer
+  esclusi. *Fonte: review, punto 1.*
 - [ ] La lista dei ruoli che accedono ai task è definita **in un solo punto** e usata da
-  `TaskPolicy::before()`, dalle opzioni del campo Nova e dalla validazione API: per estenderla a
-  un altro ruolo si cambia solo lì. *Decisione della dev in pianificazione.*
+  `TaskPolicy::before()`, dalle opzioni del campo Nova e dalla validazione API.
 
 **Permessi**
 - [ ] Completare e riaprire un task (`TaskPolicy::updateStatus`, `ToggleTaskCompleted`) è
-  permesso a ogni utente che accede ai task (Admin, Manager, Developer), non più solo al creatore.
-  Editor e Customer restano esclusi come oggi da `TaskPolicy::before()`. *Fonte: ticket «aperti a
-  ogni utente commerciale invece del solo creator»; scrum 13/10 «chiunque può creare e chiudere i
-  task di chiunque». Decisione della dev: "chiunque" = chi oggi accede ai task.*
-- [ ] Cambiare l'assegnatario segue la stessa regola di `notes` e `due_date`
-  (`TaskPolicy::update()`): qualsiasi Admin/Manager/Developer.
+  permesso a ogni Admin, Manager e Developer, non più solo al creatore. *Fonte: ticket «Chiunque
+  può creare e chiudere i task di chiunque»; review, punto 1.*
+- [ ] Cambiare l'assegnatario segue la regola di `notes` e `due_date` (`TaskPolicy::update()`):
+  qualsiasi Admin, Manager o Developer.
 
-**"I miei task"**
-- [ ] `Task::scopeForUser()` restituisce i task di cui l'utente è **assegnatario effettivo**
-  (`assignee_id` = utente, oppure `assignee_id` vuoto e owner della Quote = utente) **oppure
-  creatore**. L'owner della trattativa non vede più un task della sua trattativa assegnato
-  esplicitamente a un altro. *Decisione della dev in pianificazione; il ticket non ne parla.*
+**Lista dei task dell'utente (`Task::scopeForUser()`)**
+- [ ] `scopeForUser()` restituisce i task con `assignee_id` = utente **oppure** `creator_id` =
+  utente. L'owner della trattativa non vede più un task della sua trattativa assegnato a un altro
+  e creato da un altro. *Fonte: review, punto 3.*
+- [ ] Conseguenza (nessuna scelta nuova): l'elenco Task generale di un Developer, che oggi usa
+  `scopeForUser()` (`app/Nova/Task.php:246`), mostra gli stessi task. Admin e Manager continuano a
+  vedere tutto.
 
 **Nova**
-- [ ] Campo Assegnatario nel form del Task: `BelongsTo` verso User, nullable, ricercabile, con le
-  sole opzioni dei ruoli ammessi. Lasciato vuoto in creazione = chi crea il task; svuotato in
-  modifica = segue l'owner. Il campo è in **entrambi i rami** di
-  `App\Nova\Task::fields()`: sia nel form della vista globale sia in quello aperto dal tab Task
-  della Quote (`viaResource === 'quotes'`), da cui i task si creano di solito. *Fonte: ticket,
-  «Campo in Nova»; emerso in challenge.*
-- [ ] La colonna Assegnatario nell'indice mostra l'assegnatario effettivo (comportamento attuale,
-  invariato per i task senza `assignee_id`).
-- [ ] `TaskAssigneeFilter` filtra sull'assegnatario effettivo; le opzioni sono gli utenti che sono
-  assegnatari effettivi di almeno un task. *Fonte: ticket, «Filtro assegnatario in Nova basato sul
-  nuovo campo»; filtrare sull'effettivo (col ripiego sull'owner) invece che sulla sola colonna è
-  decisione della dev, coerente con la colonna dell'indice.*
+- [ ] Campo Assegnatario nel form del Task: `BelongsTo` verso User, obbligatorio, ricercabile, con
+  le sole opzioni dei ruoli ammessi, in **entrambi i rami** di `App\Nova\Task::fields()`
+  (`app/Nova/Task.php:34`): form della vista globale e form aperto dal tab Task della Quote.
+- [ ] **Precompilato in creazione** con il default. Dal tab Task della Quote la trattativa è già
+  nota. Nella vista globale la trattativa si sceglie nello stesso form
+  (`app/Nova/Task.php:63-65`): l'Assegnatario si calcola dopo la scelta e si ricalcola se la
+  trattativa cambia (`dependsOn`, già usato in `app/Nova/Quote.php:190`). Il ricalcolo vale **solo
+  in creazione**: nel form di modifica non tocca mai l'assegnatario salvato. Cambiare trattativa
+  durante la creazione rimette il default della nuova trattativa anche se l'assegnatario era stato
+  scelto a mano. *Fonte: aggiunta del reviewer al punto 2.*
+- [ ] La colonna Assegnatario nell'indice mostra `assignee`.
+- [ ] `TaskAssigneeFilter` filtra su `tasks.assignee_id`; le opzioni sono gli utenti assegnatari
+  di almeno un task. *Fonte: review, punto 3.*
+- [ ] **Nuova vista «I miei task»**: resource che estende `App\Nova\Task`, sul modello di
+  `AssignedToMeStory` (`app/Nova/AssignedToMeStory.php`), con `indexQuery` su `scopeForUser()`
+  dell'utente loggato per ogni ruolo, ordinata per `due_date`. Filtro a due valori «Assegnati a
+  me» / «Creati da me», default «Assegnati a me» (select con `default()`, come
+  `ShardStatusFilter`). Voce di menu nella sezione CRM, subito dopo Task
+  (`app/Providers/NovaServiceProvider.php:130-133`). *Fonte: review, punto 3.*
 - [ ] La creazione dei task resta invariata: chiunque acceda ai task li crea su qualsiasi Quote,
-  tranne quelle chiuse (`TaskPolicy::create()`), coerente con «Chiunque crea i task».
+  tranne quelle chiuse (`TaskPolicy::create()`).
 - [ ] Nella **lista** del tab Task della Quote non cambia nulla: niente colonna né filtro
   Assegnatario, come oggi (decisione di oc:8402, `docs/knowledge/task-e-quote.md`).
 
 **API**
-- [ ] `POST /api/tasks` e `PATCH /api/tasks/{task}` accettano `assignee_id` (nullable,
-  `exists:users,id`, ruolo ammesso; altrimenti 422). In POST, senza `assignee_id` o con
-  `assignee_id: null` vale l'utente del token. `assignee_id: null` in PATCH fa seguire al task
-  l'owner della trattativa. *Fonte: ticket, «Campo in Nova e nell'API (store / update / index)».*
-- [ ] Aggiornare i docblock Scramble di `TaskController` che descrivono la regola vecchia
-  (`index`: «owns the linked quote OR is the task creator»; `update`: «`status` requires the
-  authenticated user to be the task's creator»).
-- [ ] La risposta JSON **non cambia forma**: `assignee` = `{id, name, email}` dell'assegnatario
-  effettivo, oppure `null`. Nessun campo nuovo. *Decisione della dev in pianificazione: il
+- [ ] `POST /api/tasks` accetta `assignee_id` facoltativo (`exists:users,id`, ruolo ammesso;
+  altrimenti 422). Se assente o `null` si applica il default.
+- [ ] `PATCH /api/tasks/{task}` accetta `assignee_id` (`required` se presente, `exists`, ruolo
+  ammesso): non si può svuotare.
+- [ ] `GET /api/tasks` restituisce `scopeForUser()`: task assegnati all'utente del token oppure
+  creati da lui. Nessun parametro nuovo. *Fonte: review, «Requisiti … per l'API `GET /api/tasks`,
+  che oggi restituisce owner + creatore».*
+- [ ] La risposta JSON **non cambia forma**: `assignee` = `{id, name, email}` oppure `null`. Il
   contratto è consumato fuori da questo repo (skill Cowork; server MCP `orchestrator` di
-  `claude-marketplace`, che restituisce la risposta così com'è e non legge `assignee`). Un campo
-  `assignee_id` nella risposta, per distinguere "assegnato a mano" da "segue l'owner", si può
-  aggiungere in seguito senza rompere i client.*
-- [ ] `GET /api/tasks` usa il nuovo `scopeForUser()`.
+  `claude-marketplace`).
+- [ ] Aggiornare i docblock Scramble di `TaskController` che descrivono la regola vecchia
+  (`index`, `show`: «owns the linked quote OR is the task creator»; `update`: «`status` requires
+  the authenticated user to be the task's creator») e il docblock di `TaskPolicy::updateStatus()`.
 
 **Traduzioni**
-- [ ] La chiave `Assignee` esiste già (`lang/it.json:544`, `lang/en.json:756`); ogni nuova stringa
-  va in entrambi i file (lingua di default `it`, fallback `en`).
+- [ ] La chiave `Assignee` esiste già (`lang/it.json`, `lang/en.json`). Le stringhe nuove (titolo
+  della vista, nome e valori del filtro) vanno in entrambi i file.
 
 **Test**
-- [ ] Aggiornare i test che verificano le regole vecchie:
-  - "solo il creatore cambia lo stato": `tests/Feature/Api/TaskApiTest.php` (`non_creator_non_puo_cambiare_status`),
-    `tests/Feature/Api/TaskPolicyTest.php`, `tests/Feature/TaskTest.php`
-    (`test_toggle_action_authorized_only_for_creator`, da riscrivere con utenti con ruolo);
-  - "assegnatario = owner": `index_assignee_null_se_quote_senza_owner` (`TaskApiTest.php`),
-    `test_assignee_filter_apply_filters_by_quote_owner` e
-    `test_assignee_filter_options_only_include_users_with_assigned_tasks`
-    (`tests/Feature/TaskNovaResourceTest.php`), `test_for_user_scope_filters_by_quote_owner`
-    (`TaskTest.php`).
-- [ ] Aggiungere: default al creatore (Nova e API, anche con `null` esplicito in POST),
-  migrazione dei task esistenti, fallback all'owner, assegnatario esplicito, reset a `null` in
-  PATCH, 422 su utente con ruolo non ammesso, `scopeForUser` con assegnatario esplicito, filtro
-  Nova sull'assegnatario effettivo, campo presente in entrambi i rami del form Nova.
+- [ ] Aggiornare i test delle regole vecchie: «solo il creatore cambia lo stato»
+  (`TaskApiTest::non_creator_non_puo_cambiare_status`, `TaskPolicyTest`,
+  `TaskTest::test_toggle_action_authorized_only_for_creator`) e «assegnatario = owner»
+  (`TaskTest::test_assignee_accessor_resolves_via_quote_user`,
+  `TaskTest::test_for_user_scope_filters_by_quote_owner`,
+  `TaskNovaResourceTest::test_assignee_filter_apply_filters_by_quote_owner`,
+  `TaskNovaResourceTest::test_assignee_filter_options_only_include_users_with_assigned_tasks`,
+  `TaskApiTest::index_assignee_null_se_quote_senza_owner`).
+- [ ] Aggiungere: default all'owner e al creatore (Nova, API, anche con `null` in POST),
+  migrazione, riassegnazione alla cancellazione dell'utente, 422 su ruolo non ammesso e su
+  `assignee_id: null` in PATCH, `scopeForUser` su assegnatario e creatore, vista «I miei task» con
+  il filtro e il suo default, filtro Assegnatario su `assignee_id`, campo presente e precompilato
+  in entrambi i rami del form.
 
 ## Rischi
 
-- **Documento della call del 30/09 non verificato.** La fonte del tag
-  (`1VA2MqI-ADkYRIbrQZ5xFvj9WxSe7Cr01nMPsK_glTow`) e il suo notebook non sono condivisi con
-  l'account della dev: le citazioni del 30/09 vengono dalla descrizione del tag e dal ticket, non
-  dalla trascrizione. Richiesto l'accesso a Giuseppe Bonfanti.
-- **L'owner perde di vista i task assegnati ad altri** nella lista "i miei task" (API e Nova per i
-  Developer). Il quadro completo resta nel tab Task dentro la Quote; chi lavora solo dalla skill
-  non ha questo ripiego. Vedi domande aperte.
-- **Campo mancante nel form del tab Quote** (emerso in challenge): `App\Nova\Task::fields()` ha due
-  rami (`app/Nova/Task.php:34`); il campo Assegnatario va in entrambi. Recepito nei Requisiti.
-- **Trattative senza owner** (emerso in challenge): le Quote create via API non hanno mai owner
-  (`app/Http/Controllers/Api/QuoteController.php:201-211`), quindi un default all'owner
-  lascerebbe i task senza assegnatario. Mitigato col default al creatore (domanda aperta 2).
-- **Task vecchi e nuovi seguono regole diverse** (emerso nella review dell'overview): con la
-  migrazione parziale, i task vecchi delle trattative con owner seguono l'owner, i nuovi il
-  creatore. Con la migrazione completa, invece, l'owner perderebbe i task creati da altri.
-  Scelta lasciata al reviewer (domanda aperta 4).
-- **Toggle concorrente** (emerso in challenge): l'azione "Segna come completato / Riapri"
-  inverte lo stato che trova nel DB (`ToggleTaskCompleted::handle()`). Aperta a tutti, due
-  persone con la pagina non aggiornata possono annullarsi a vicenda (A completa, B clicca per
-  completare e il task si riapre) senza traccia. Non mitigato per scelta della dev, per restare nel
-  perimetro del ticket; la correzione possibile è dividerla in due azioni con stato esplicito.
+- **Documento della call del 30/09 non verificato.** La fonte del tag e il suo notebook non sono
+  condivisi con l'account della dev: le citazioni del 30/09 vengono dalla descrizione del tag e
+  dal ticket. Le decisioni del reviewer del 14/10 le confermano.
+- **Conteggio della migrazione solo in produzione.** La copia locale oggi ha 1 task: i numeri
+  della review (29 task al 28/08) non sono più riproducibili in locale. Il conteggio in produzione
+  prima del deploy è l'unica verifica.
+- **Il cambio di owner della trattativa non sposta i task** (emerso in challenge). Oggi
+  l'assegnatario si calcola dalla trattativa, quindi cambiare owner sposta tutti i task; dopo
+  questo ticket i task restano a chi è scritto. È la conseguenza della decisione del reviewer
+  (valore scritto alla creazione, «svincolato» dalla trattativa): chi cambia owner riassegna a mano
+  i task aperti.
+- **Riassegnazione alla cancellazione: caso quasi teorico** (emerso in challenge). Un utente non
+  si può cancellare se è owner di una trattativa o creatore di una Story: `quotes.user_id` e
+  `stories.creator_id` hanno FK senza regola di cancellazione
+  (`database/migrations/2023_09_25_123252_add_user_id_to_quotes_table.php:15`,
+  `database/migrations/2023_10_06_071507_add_creator_id_to_stories_table.php:23`). La logica resta
+  per decisione della dev, coperta da test, e gira nella stessa transazione della cancellazione.
+- **Owner senza ruolo ammesso** (emerso in challenge): il campo Owner della Quote accetta
+  qualsiasi utente. Nei dati locali 0 owner su 4 sono fuori dai ruoli ammessi; il default li
+  tratta come owner mancante.
+- **Precompilazione nella vista globale.** Il ricalcolo con `dependsOn` va limitato alla creazione
+  e verificato nel form reale, non solo nei test.
+- **Toggle concorrente:** l'azione «Segna come completato / Riapri» inverte lo stato che trova nel
+  DB. Aperta a tutti, due persone con la pagina non aggiornata possono annullarsi a vicenda. Caso
+  ipotetico, lasciato com'è (stessa decisione del reviewer su oc:8730).
 - **Server MCP `orchestrator` (repo `claude-marketplace`) da allineare:** il tool sui task descrive
-  `status` come «modificabile solo da chi lo ha creato»
-  (`plugins/wm-skills/mcp/internal/tools/tasks.go:25`) e non espone `assignee_id`. Dopo questo
-  ticket la descrizione è falsa e dal tool non si assegna un task. Fuori perimetro (altro repo):
-  follow-up.
-- **In Nova la spunta "Completato" del form cambiava già lo stato per chiunque potesse modificare
-  il task** (`app/Nova/Task.php:116-126`): la restrizione al creatore valeva solo per l'azione e per
-  l'API. Dopo questo ticket le tre strade si comportano allo stesso modo.
-- **Rollback:** il `down()` della migration cancella le assegnazioni esplicite; un rollback del
-  solo codice, lasciando la colonna, è sicuro. I task chiusi da non creatori nel periodo aperto
-  restano chiusi.
-- **Il comportamento della skill Cowork cambia senza che la risposta cambi**: `GET /api/tasks`
-  mostrerà task diversi (scoping per assegnatario effettivo) e un `PATCH` di `status` da un non
-  creatore non darà più 403.
-
-## Domande aperte per il reviewer
-
-1. **"Chiunque" e i ruoli.** Il cambio di stato è aperto ad Admin, Manager e Developer (chi già
-   accede ai task). Va bene così, o va esteso anche ad altri ruoli (Editor)? In quel caso si
-   cambia la lista unica dei ruoli. La stessa lista limita chi si può scegliere come
-   assegnatario: l'API risponde 422 a un `assignee_id` con ruolo diverso. *Fonte: ticket «senza
-   controlli»; scrum 13/10 «chiunque può creare e chiudere i task di chiunque».* Nel DB locale
-   i commerciali noti hanno già questi ruoli (Alessio Piccioli e Giuseppe Bonfanti:
-   `admin, developer, manager, editor`); Nicola Verdini non è nella copia locale: se in
-   produzione è Admin, Manager o Developer, la domanda si chiude.
-2. **Conferma: default al creatore invece che all'owner.** L'idea è presa dallo scrum di
-   stamattina (13/10/2026 08:36), dove Giuseppe Bonfanti ha detto: «ogni volta che crei un task di
-   default va assegnata al creatore, ma lo puoi cambiare». Il ticket (call del 30/09) diceva
-   invece «se non c'è messo niente prenda quello della trattativa». Implementato: creatore per i
-   task nuovi; per i task esistenti vedi domanda 4. Motivo in più: le trattative
-   create dalla skill non hanno owner, quindi col default all'owner i loro task resterebbero
-   senza assegnatario. Va confermato con chi ha chiesto la funzione?
-3. **L'owner deve vedere tutti i task delle sue trattative** in "i miei task", anche quelli
-   assegnati ad altri? Implementato: no. Né il ticket né le call ne parlano.
-4. **Quali task esistenti migrare al creatore?** Emerso nella review dell'overview. Oggi ogni
-   task risulta dell'owner della trattativa (`app/Models/Task.php:48`). Due strade:
-   - **migrazione parziale** (implementata come punto di partenza): solo i task delle trattative
-     senza owner, che oggi non sono di nessuno. Nessuno perde task che vede oggi; i task vecchi
-     con owner seguono l'owner, i nuovi il creatore.
-   - **migrazione completa:** tutti i task con un creatore. Una regola sola, ma ogni task creato da
-     una persona diversa dall'owner passa al creatore, e l'owner lo perde da "i miei task" senza
-     che nessuno l'abbia riassegnato. Prima di sceglierla, verificare quanti task sono coinvolti
-     in produzione (sola lettura):
-     ```sql
-     SELECT count(*) FROM tasks t JOIN quotes q ON q.id = t.quote_id
-     WHERE q.user_id IS NOT NULL AND t.creator_id IS NOT NULL AND t.creator_id <> q.user_id;
-     ```
-   Per passare dall'una all'altra si cambia solo la condizione della migration di backfill. Se la
-   query restituisce 0 le due strade coincidono e la domanda si chiude da sola.
+  `status` come «modificabile solo da chi lo ha creato» e non espone `assignee_id`. Follow-up in
+  quel repo.
+- **Il comportamento della skill Cowork cambia senza che la risposta cambi forma:** `GET
+  /api/tasks` restituisce task diversi (assegnati + creati invece di owner + creati) e un `PATCH`
+  di `status` da un non creatore non dà più 403.
+- **Rollback:** il `down()` della migration della colonna cancella tutte le assegnazioni; un
+  rollback del solo codice, lasciando la colonna, è sicuro. I task chiusi da non creatori nel
+  periodo restano chiusi.
 
 ## Out of scope
 
 - Storico delle assegnazioni (chi ha assegnato cosa e quando).
 - Notifiche all'assegnatario.
-- Creazione automatica di un nuovo task alla chiusura (oc:8730).
-- Allineamento del server MCP `orchestrator` in `claude-marketplace` (descrizione di `status`,
-  parametro `assignee_id`): altro repo, da ticket dedicato (vedi Rischi).
-- Divisione dell'azione "Segna come completato / Riapri" in due azioni con stato esplicito (vedi
-  Rischi, toggle concorrente).
+- Creazione del task successivo alla chiusura e campo Assegnatario nel popup di chiusura
+  (oc:8730, che dipende da questo ticket).
+- Allineamento del server MCP `orchestrator` in `claude-marketplace`: altro repo.
 - Il bug di scoping del sub-panel Task raggiunto via `QuoteNoFilter`
   (`docs/knowledge/task-e-quote.md`, «Come ci siamo arrivati»).
 
@@ -226,21 +206,24 @@ Fonti:
 
 Tutto nel repo principale `orchestrator` (nessun submodule):
 
-- `database/migrations/<nuova>_add_assignee_id_to_tasks_table.php` (nuovo) — colonna e FK
-- `database/migrations/<nuova>_backfill_tasks_assignee_id.php` (nuovo) — migrazione dei task
-  esistenti, condizione secondo la domanda aperta 4
-- `app/Models/Task.php` — `$fillable`, relazione `assigneeUser`, accessor `assignee`,
-  `scopeForUser()`, default al creatore in `booted()`
-- `app/Models/User.php` — relazione inversa verso i task assegnati (opzioni del filtro)
-- `app/Policies/TaskPolicy.php` — `before()` sulla lista unica dei ruoli, `updateStatus()`
-- `app/Nova/Actions/ToggleTaskCompleted.php` — `authorizedToRun()`
-- `app/Nova/Task.php` — campo Assegnatario in entrambi i rami del form, eager load di
-  `assigneeUser` in `indexQuery()`
-- `app/Nova/Filters/TaskAssigneeFilter.php` — query e opzioni sull'assegnatario effettivo
-- `app/Http/Requests/Api/TaskApiRequest.php` — regola `assignee_id`
-- `app/Http/Controllers/Api/TaskController.php` — store/update di `assignee_id`, eager load, docblock
-- punto unico della lista dei ruoli (es. costante su `TaskPolicy` o metodo su `User`)
-- `lang/it.json`, `lang/en.json` — solo se servono stringhe nuove
+- `database/migrations/<nuova>_add_assignee_id_to_tasks_table.php` (nuovo): colonna e FK
+- `database/migrations/<nuova>_backfill_tasks_assignee_id.php` (nuovo): migrazione dei task
+  esistenti
+- `app/Models/Task.php`: `$fillable`, relazione `assignee()` al posto dell'accessor, metodo del
+  default, `scopeForUser()`, default in `booted()`
+- `app/Models/User.php`: relazione verso i task assegnati, riassegnazione in `deleting`, punto
+  unico della lista dei ruoli che accedono ai task (o costante su `TaskPolicy`)
+- `app/Policies/TaskPolicy.php`: `before()` sulla lista unica dei ruoli, `updateStatus()`
+- `app/Nova/Actions/ToggleTaskCompleted.php`: `authorizedToRun()`
+- `app/Nova/Task.php`: campo Assegnatario precompilato in entrambi i rami, eager load di
+  `assignee` in `indexQuery()`
+- `app/Nova/MyTask.php` (nuovo): vista «I miei task»
+- `app/Nova/Filters/MyTaskScopeFilter.php` (nuovo): filtro «Assegnati a me» / «Creati da me»
+- `app/Nova/Filters/TaskAssigneeFilter.php`: query e opzioni su `assignee_id`
+- `app/Providers/NovaServiceProvider.php`: voce di menu
+- `app/Http/Requests/Api/TaskApiRequest.php`: regola `assignee_id`
+- `app/Http/Controllers/Api/TaskController.php`: store/update di `assignee_id`, eager load, docblock
+- `lang/it.json`, `lang/en.json`: stringhe della vista e del filtro
 - test in `tests/Feature/Api/TaskApiTest.php`, `tests/Feature/Api/TaskPolicyTest.php`,
   `tests/Feature/TaskTest.php`, `tests/Feature/TaskNovaResourceTest.php`
-- `docs/knowledge/task-e-quote.md` — aggiornamento a fine lavoro
+- `docs/knowledge/task-e-quote.md`: aggiornamento a fine lavoro
