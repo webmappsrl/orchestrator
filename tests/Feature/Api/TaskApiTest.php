@@ -57,7 +57,7 @@ class TaskApiTest extends TestCase
     }
 
     /** @test */
-    public function index_mostra_solo_task_di_cui_lutente_e_owner_o_creatore(): void
+    public function index_mostra_solo_task_di_cui_lutente_e_assegnatario_o_creatore(): void
     {
         $owner = $this->loginAs([UserRole::Admin]);
         $quoteMia = $this->makeQuote();
@@ -66,8 +66,11 @@ class TaskApiTest extends TestCase
         $taskMio = $this->makeTask($quoteMia);
 
         $quoteAltrui = $this->makeQuote();
-        $altroCreator = User::factory()->create();
-        $taskAltrui = $this->makeTask($quoteAltrui, ['creator_id' => $altroCreator->id]);
+        $altroCreator = User::factory()->create(['roles' => [UserRole::Developer]]);
+        $taskAltrui = $this->makeTask($quoteAltrui, [
+            'creator_id' => $altroCreator->id,
+            'assignee_id' => $altroCreator->id,
+        ]);
 
         $response = $this->getJson('/api/tasks')->assertStatus(200);
 
@@ -141,17 +144,36 @@ class TaskApiTest extends TestCase
     }
 
     /** @test */
-    public function index_assignee_null_se_quote_senza_owner(): void
+    public function index_assignee_e_il_creatore_se_quote_senza_owner(): void
     {
         $creator = $this->loginAs([UserRole::Admin]);
         $quoteSenzaOwner = $this->makeQuote();
-        $this->makeTask($quoteSenzaOwner, ['creator_id' => $creator->id]);
+        $this->makeTask($quoteSenzaOwner);
 
         $response = $this->getJson('/api/tasks')->assertStatus(200);
 
         $item = collect($response->json())->firstWhere('quote_id', $quoteSenzaOwner->id);
-        $this->assertArrayHasKey('assignee', $item);
-        $this->assertNull($item['assignee']);
+        $this->assertEquals(
+            ['id' => $creator->id, 'name' => $creator->name, 'email' => $creator->email],
+            $item['assignee']
+        );
+    }
+
+    /** @test */
+    public function index_non_mostra_allowner_i_task_assegnati_e_creati_da_altri(): void
+    {
+        $owner = $this->loginAs([UserRole::Developer]);
+        $quote = $this->makeQuote();
+        $quote->user_id = $owner->id;
+        $quote->save();
+        $collega = User::factory()->create(['roles' => [UserRole::Developer]]);
+        $taskDelCollega = $this->makeTask($quote, ['creator_id' => $collega->id, 'assignee_id' => $collega->id]);
+        $taskAssegnatoAMe = $this->makeTask($quote, ['creator_id' => $collega->id, 'assignee_id' => $owner->id]);
+
+        $ids = collect($this->getJson('/api/tasks')->assertStatus(200)->json())->pluck('id');
+
+        $this->assertFalse($ids->contains($taskDelCollega->id));
+        $this->assertTrue($ids->contains($taskAssegnatoAMe->id));
     }
 
     /** @test */
@@ -275,15 +297,15 @@ class TaskApiTest extends TestCase
     }
 
     /** @test */
-    public function non_creator_non_puo_cambiare_status(): void
+    public function chi_non_ha_creato_il_task_puo_cambiare_status(): void
     {
-        $this->loginAs([UserRole::Admin]);
+        $this->loginAs([UserRole::Developer]);
         $quote = $this->makeQuote();
         $altroCreator = User::factory()->create();
         $task = $this->makeTask($quote, ['creator_id' => $altroCreator->id]);
 
-        $this->patchJson("/api/tasks/{$task->id}", ['status' => Task::STATUS_COMPLETED])->assertStatus(403);
-        $this->assertEquals(Task::STATUS_TODO, $task->fresh()->status);
+        $this->patchJson("/api/tasks/{$task->id}", ['status' => Task::STATUS_COMPLETED])->assertStatus(200);
+        $this->assertEquals(Task::STATUS_COMPLETED, $task->fresh()->status);
     }
 
     /** @test */
@@ -302,7 +324,7 @@ class TaskApiTest extends TestCase
     }
 
     /** @test */
-    public function payload_misto_da_non_creator_fallisce_tutto_o_niente(): void
+    public function payload_con_status_e_notes_da_chi_non_ha_creato_il_task_salva_entrambi(): void
     {
         $this->loginAs([UserRole::Admin]);
         $quote = $this->makeQuote();
@@ -311,12 +333,12 @@ class TaskApiTest extends TestCase
 
         $this->patchJson("/api/tasks/{$task->id}", [
             'status' => Task::STATUS_COMPLETED,
-            'notes'  => 'Questa nota non deve essere salvata',
-        ])->assertStatus(403);
+            'notes'  => 'Chiuso da un collega',
+        ])->assertStatus(200);
 
         $fresh = $task->fresh();
-        $this->assertEquals(Task::STATUS_TODO, $fresh->status);
-        $this->assertEquals('Nota preesistente', $fresh->notes);
+        $this->assertEquals(Task::STATUS_COMPLETED, $fresh->status);
+        $this->assertStringContainsString('Chiuso da un collega', $fresh->notes);
     }
 
     /** @test */
@@ -387,22 +409,21 @@ class TaskApiTest extends TestCase
     }
 
     /** @test */
-    public function payload_misto_status_e_due_date_da_non_creator_non_salva_niente(): void
+    public function payload_con_status_e_due_date_da_chi_non_ha_creato_il_task_salva_entrambi(): void
     {
         $this->loginAs([UserRole::Admin]);
         $quote = $this->makeQuote();
         $altroCreator = User::factory()->create();
         $task = $this->makeTask($quote, ['creator_id' => $altroCreator->id]);
-        $scadenzaOriginale = $task->fresh()->due_date;
 
         $this->patchJson("/api/tasks/{$task->id}", [
             'status'   => Task::STATUS_COMPLETED,
             'due_date' => '2026-10-20',
-        ])->assertStatus(403);
+        ])->assertStatus(200);
 
         $fresh = $task->fresh();
-        $this->assertEquals(Task::STATUS_TODO, $fresh->status);
-        $this->assertEquals($scadenzaOriginale, $fresh->due_date);
+        $this->assertEquals(Task::STATUS_COMPLETED, $fresh->status);
+        $this->assertEquals('2026-10-20', $fresh->due_date->toDateString());
     }
 
     /** @test */
@@ -457,5 +478,97 @@ class TaskApiTest extends TestCase
         $this->assertEquals('2026-10-20', $fresh->due_date->format('Y-m-d'));
         $this->assertStringContainsString('Scadenza spostata su richiesta del cliente', $fresh->notes);
         $this->assertStringContainsString('Nota preesistente', $fresh->notes);
+    }
+    /** @test */
+    public function store_senza_assignee_id_assegna_allowner_della_trattativa(): void
+    {
+        $this->loginAs([UserRole::Developer]);
+        $owner = User::factory()->create(['roles' => [UserRole::Manager]]);
+        $quote = $this->makeQuote();
+        $quote->user_id = $owner->id;
+        $quote->save();
+
+        foreach ([[], ['assignee_id' => null]] as $extra) {
+            $response = $this->postJson('/api/tasks', array_merge([
+                'quote_id' => $quote->id,
+                'title'    => 'Task',
+                'due_date' => now()->addDay()->toDateString(),
+            ], $extra))->assertStatus(201);
+
+            $this->assertEquals($owner->id, $response->json('assignee.id'));
+        }
+    }
+
+    /** @test */
+    public function store_su_quote_senza_owner_assegna_allutente_del_token(): void
+    {
+        $user = $this->loginAs([UserRole::Developer]);
+        $quote = $this->makeQuote();
+
+        $response = $this->postJson('/api/tasks', [
+            'quote_id' => $quote->id,
+            'title'    => 'Task',
+            'due_date' => now()->addDay()->toDateString(),
+        ])->assertStatus(201);
+
+        $this->assertEquals($user->id, $response->json('assignee.id'));
+    }
+
+    /** @test */
+    public function store_con_assignee_id_esplicito_lo_rispetta(): void
+    {
+        $this->loginAs([UserRole::Admin]);
+        $collega = User::factory()->create(['roles' => [UserRole::Developer]]);
+        $quote = $this->makeQuote();
+
+        $response = $this->postJson('/api/tasks', [
+            'quote_id'    => $quote->id,
+            'title'       => 'Task',
+            'due_date'    => now()->addDay()->toDateString(),
+            'assignee_id' => $collega->id,
+        ])->assertStatus(201);
+
+        $this->assertEquals($collega->id, $response->json('assignee.id'));
+        $this->assertDatabaseHas('tasks', ['id' => $response->json('id'), 'assignee_id' => $collega->id]);
+    }
+
+    /** @test */
+    public function assignee_id_con_ruolo_non_ammesso_o_inesistente_ritorna_422(): void
+    {
+        $this->loginAs([UserRole::Admin]);
+        $customer = User::factory()->create(['roles' => [UserRole::Customer]]);
+        $editor = User::factory()->create(['roles' => [UserRole::Editor]]);
+        $quote = $this->makeQuote();
+        $task = $this->makeTask($quote);
+
+        foreach ([$customer->id, $editor->id, 999999999] as $assigneeId) {
+            $this->postJson('/api/tasks', [
+                'quote_id'    => $quote->id,
+                'title'       => 'Task',
+                'due_date'    => now()->addDay()->toDateString(),
+                'assignee_id' => $assigneeId,
+            ])->assertStatus(422)->assertJsonValidationErrors('assignee_id');
+
+            $this->patchJson("/api/tasks/{$task->id}", ['assignee_id' => $assigneeId])
+                ->assertStatus(422)->assertJsonValidationErrors('assignee_id');
+        }
+    }
+
+    /** @test */
+    public function patch_cambia_assignee_ma_non_lo_svuota(): void
+    {
+        $this->loginAs([UserRole::Developer]);
+        $collega = User::factory()->create(['roles' => [UserRole::Manager]]);
+        $quote = $this->makeQuote();
+        $task = $this->makeTask($quote);
+
+        $this->patchJson("/api/tasks/{$task->id}", ['assignee_id' => $collega->id])
+            ->assertStatus(200)
+            ->assertJsonPath('assignee.id', $collega->id);
+
+        $this->patchJson("/api/tasks/{$task->id}", ['assignee_id' => null])
+            ->assertStatus(422)->assertJsonValidationErrors('assignee_id');
+
+        $this->assertEquals($collega->id, $task->fresh()->assignee_id);
     }
 }

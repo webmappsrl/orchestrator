@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Enums\UserRole;
+use App\Models\Quote as QuoteModel;
 use App\Models\Task as TaskModel;
 use App\Nova\Actions\ToggleTaskCompleted;
 use App\Nova\Filters\TaskAssigneeFilter;
@@ -13,6 +14,7 @@ use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\DateTime;
+use Laravel\Nova\Fields\FormData;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -53,6 +55,10 @@ class Task extends Resource
 
                 $this->completedField(),
 
+                // Solo nel form: la lista del tab Task della Quote resta
+                // senza colonna Assegnatario (oc:8402).
+                $this->assigneeField()->onlyOnForms(),
+
                 $this->notesField(),
             ];
         }
@@ -78,12 +84,39 @@ class Task extends Resource
 
             $this->completedField(),
 
-            Text::make(__('Assignee'), function () {
-                return $this->assignee?->name ?? '—';
-            })->exceptOnForms(),
+            $this->assigneeField(),
 
             $this->notesField(),
         ];
+    }
+
+    /**
+     * Assegnatario del task (oc:8722): obbligatorio, scelto fra gli utenti
+     * che accedono ai task. In creazione è precompilato con
+     * TaskModel::defaultAssigneeId(): dal tab Task della Quote la trattativa
+     * è già nota; nella vista globale si ricalcola a ogni cambio di
+     * trattativa. In modifica il valore salvato non viene mai ricalcolato.
+     */
+    private function assigneeField(): BelongsTo
+    {
+        return BelongsTo::make(__('Assignee'), 'assignee', User::class)
+            ->searchable()
+            ->rules('required')
+            ->relatableQueryUsing(fn (NovaRequest $request, $query) => $query->withTaskAccess())
+            ->default(function (NovaRequest $request) {
+                if ($request->viaResource !== 'quotes' || ! $request->viaResourceId) {
+                    return null;
+                }
+
+                return TaskModel::defaultAssigneeId(QuoteModel::find($request->viaResourceId), $request->user());
+            })
+            ->dependsOn(['quote'], function (BelongsTo $field, NovaRequest $request, FormData $formData) {
+                if (! $request->isCreateOrAttachRequest() || ! $formData->quote) {
+                    return;
+                }
+
+                $field->setValue(TaskModel::defaultAssigneeId(QuoteModel::find($formData->quote), $request->user()));
+            });
     }
 
     private function customerField(): Text
@@ -231,7 +264,7 @@ class Task extends Resource
             return $query;
         }
 
-        $query->with(['quote.user', 'quote.customer']);
+        $query->with(['quote.customer', 'assignee']);
 
         $user = $request->user();
 
