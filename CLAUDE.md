@@ -95,7 +95,7 @@ Tutti i comandi PHP girano **dentro il container Docker** `php81_orchestrator`.
 | Relazione padre-figlio fra Story | `stories.parent_id` come fonte unica, pivot deprecato, rollup di tempo e stima | [docs/knowledge/story-parent-child.md](docs/knowledge/story-parent-child.md) |
 | Ore stimate ed effettive | le tre misure di "ore effettive", quale leggere, stato reale dei dati, metrica Todo >1g | [docs/knowledge/ore-stimate-ed-effettive.md](docs/knowledge/ore-stimate-ed-effettive.md) |
 | Quote: API, PDF e viste Nova | CRUD preventivi, link pubblico firmato, rendering DomPDF, tab e colonne Nova | [docs/knowledge/quote-api-e-pdf.md](docs/knowledge/quote-api-e-pdf.md) |
-| Task collegati alle Quote | assegnatario derivato, policy per campo, scoping delle viste Nova | [docs/knowledge/task-e-quote.md](docs/knowledge/task-e-quote.md) |
+| Task collegati alle Quote | assegnatario salvato e suo default, permessi sullo stato, viste Nova e «I miei task» | [docs/knowledge/task-e-quote.md](docs/knowledge/task-e-quote.md) |
 | Customer: API e validazione | whitelist anti mass-assignment, generazione di `name`, telefoni e backfill P.IVA | [docs/knowledge/customer-api-e-validazione.md](docs/knowledge/customer-api-e-validazione.md) |
 | API esterne e documentazione OpenAPI | token Sanctum, endpoint Story e `/me`, override accesso Nova, limiti di Scramble | [docs/knowledge/api-esterne-e-documentazione.md](docs/knowledge/api-esterne-e-documentazione.md) |
 | Tag: API e tagging automatico | relazioni morfiche, autorizzazione per ruolo, hook Nova | [docs/knowledge/tag-e-tagging-automatico.md](docs/knowledge/tag-e-tagging-automatico.md) |

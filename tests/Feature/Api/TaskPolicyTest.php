@@ -95,24 +95,34 @@ class TaskPolicyTest extends TestCase
     }
 
     /** @test */
-    public function non_creator_non_puo_aggiornare_status(): void
+    public function chi_non_ha_creato_il_task_puo_aggiornare_status(): void
     {
         $creator = User::factory()->create(['roles' => [UserRole::Developer]]);
         $altro = User::factory()->create(['roles' => [UserRole::Admin]]);
         $quote = $this->makeQuote();
         $task = $this->makeTask($quote, ['creator_id' => $creator->id]);
 
-        $this->assertFalse($altro->can('updateStatus', $task));
+        $this->assertTrue($altro->can('updateStatus', $task));
     }
 
     /** @test */
-    public function nessuno_puo_aggiornare_status_di_un_task_senza_creator(): void
+    public function anche_un_task_senza_creator_puo_cambiare_status(): void
     {
         $admin = User::factory()->create(['roles' => [UserRole::Admin]]);
         $quote = $this->makeQuote();
         $task = $this->makeTask($quote, ['creator_id' => null]);
 
-        $this->assertFalse($admin->can('updateStatus', $task));
+        $this->assertTrue($admin->can('updateStatus', $task));
+    }
+
+    /** @test */
+    public function editor_non_puo_aggiornare_status(): void
+    {
+        $editor = User::factory()->create(['roles' => [UserRole::Editor]]);
+        $quote = $this->makeQuote();
+        $task = $this->makeTask($quote);
+
+        $this->assertFalse($editor->can('updateStatus', $task));
     }
 
     /** @test */
@@ -124,5 +134,35 @@ class TaskPolicyTest extends TestCase
         $task = $this->makeTask($quote, ['creator_id' => $creator->id]);
 
         $this->assertTrue($altro->can('update', $task));
+    }
+
+    /** @test */
+    public function accedono_ai_task_solo_admin_manager_e_developer(): void
+    {
+        foreach ([UserRole::Admin, UserRole::Manager, UserRole::Developer] as $role) {
+            $user = User::factory()->create(['roles' => [$role]]);
+            $this->assertTrue($user->canAccessTasks(), $role->value);
+        }
+
+        foreach ([[UserRole::Editor], [UserRole::Customer], []] as $roles) {
+            $user = User::factory()->create(['roles' => $roles]);
+            $this->assertFalse($user->canAccessTasks());
+        }
+    }
+
+    /** @test */
+    public function scope_with_task_access_esclude_editor_e_customer(): void
+    {
+        $dev = User::factory()->create(['roles' => [UserRole::Developer]]);
+        $multi = User::factory()->create(['roles' => [UserRole::Editor, UserRole::Manager]]);
+        $editor = User::factory()->create(['roles' => [UserRole::Editor]]);
+        $customer = User::factory()->create(['roles' => [UserRole::Customer]]);
+
+        $ids = User::withTaskAccess()->pluck('id');
+
+        $this->assertTrue($ids->contains($dev->id));
+        $this->assertTrue($ids->contains($multi->id));
+        $this->assertFalse($ids->contains($editor->id));
+        $this->assertFalse($ids->contains($customer->id));
     }
 }
