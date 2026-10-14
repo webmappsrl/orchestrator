@@ -73,8 +73,9 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   Nova richiama gli stessi metodi per la vista globale e per il sub-panel Task dentro il
   dettaglio Quote. Scopare solo `indexQuery()` fa trapelare riordino colonne e colonna/filtro
   Assegnatario anche nel sub-panel. I campi condivisi fra i due rami stanno in metodi privati
-  (`statusBadgeField()`, `completedField()`, `notesField()`, `assigneeField()`); nel sub-panel il
-  campo Assegnatario è `onlyOnForms()`, così la lista resta senza colonna.
+  (`statusBadgeField()`, `completedField()`, `assigneeField()`) e in `notesField()`, che è
+  `public static` perché lo riusa il popup di chiusura (oc:8730); nel sub-panel il campo
+  Assegnatario è `onlyOnForms()`, così la lista resta senza colonna.
 - **Campo Assegnatario precompilato in creazione** (oc:8722): dal tab Task della Quote con
   `default()`, nella vista globale con `dependsOn(['quote'])`, che lo ricalcola a ogni cambio di
   trattativa ma solo se `isCreateOrAttachRequest()`: in modifica il valore salvato non si tocca.
@@ -94,11 +95,34 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   mutare l'attributo `due_date`): un confronto su datetime completo classificava come "scaduto"
   un task in scadenza oggi non appena l'orario corrente superava quello di scadenza,
   disallineandosi dalla semantica a livello di giorno usata da scope e filtro.
-- **L'azione "Segna come completato/Riapri"** sostituisce l'azione "Replica" di default
-  (`authorizedToReplicate() => false`).
+- **L'azione di chiusura** («Segna come completato» / «Riapri», `ToggleTaskCompleted`) sostituisce
+  l'azione "Replica" di default (`authorizedToReplicate() => false`); come funziona è nella
+  sezione sotto.
 - **`App\Nova\Quote::title()` ha il fallback `$this->name ?: $this->title`**: la Resource usa
   `$title = 'name'`, ma `name` è un fillable morto (vedi [Quote: API, PDF e viste Nova](quote-api-e-pdf.md)) —
   senza fallback il `BelongsTo` verso Quote nel form Task mostra un'etichetta vuota.
+
+### Chiusura con task successivo (oc:8730)
+- **Un'azione sola per chiudere e riaprire**: su un task aperto si chiama «Segna come completato» e
+  il popup ha i campi del task successivo (Titolo, Scadenza, Assegnatario, Note); su un task chiuso
+  si chiama «Riapri» e non ha campi. Con il titolo nasce un task sulla stessa Quote, nella stessa
+  transazione della chiusura; senza titolo il task si chiude e basta. Scadenza e Assegnatario sono
+  obbligatori solo con il titolo (`required_with:title`).
+- **`uriKey` fisso e campi restituiti quando il task non c'è**: all'esecuzione Nova ricostruisce
+  l'azione su un modello vuoto e la ritrova per `uriKey`. Un `uriKey` ricavato dal nome, che cambia
+  con lo stato, darebbe 404; dei campi tolti «quando il task è chiuso» sparirebbero anche
+  all'esecuzione, e il task successivo non nascerebbe senza errore. Il test passa dall'endpoint
+  `POST /nova-api/tasks/action` per vedere proprio questo.
+- **Un task per volta**: `sole()` nasconde l'azione con più task selezionati, ma agisce solo
+  sull'interfaccia; `handle()` rifiuta più di un task.
+- **L'Assegnatario del popup è precompilato con `Task::defaultAssigneeId()`**, calcolato solo
+  all'apertura del popup. La ricerca degli utenti nel popup passa dal campo `assignee` della
+  risorsa (`/nova-api/tasks/associatable/assignee`), non da quello dell'azione: i due campi devono
+  restare con lo stesso attributo e lo stesso filtro `withTaskAccess()`.
+- **Il task successivo nasce anche su una Quote chiusa**, come dalla tab Task: il blocco su
+  «Chiuso Vinto»/«Chiuso Perso» resta solo nell'API.
+- **Nello storico delle azioni Nova una riapertura risulta «Segna come completato»**: all'esecuzione
+  `name()` non conosce il task. Accettato: il modello `Task` non mostra lo storico.
 
 ## Come ci siamo arrivati
 
