@@ -8,7 +8,9 @@ use App\Models\Customer;
 use App\Models\Quote;
 use App\Models\Task;
 use App\Models\User;
+use App\Nova\Actions\ToggleTaskCompleted;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Tests\TestCase;
 
 /**
@@ -76,6 +78,34 @@ class ToggleTaskCompletedClosedQuoteTest extends TestCase
         ])->assertOk();
 
         $this->assertSame(Task::STATUS_COMPLETED, $task->fresh()->status);
+        $this->assertSame($before, Task::count());
+    }
+
+    public function test_su_trattativa_chiusa_il_popup_non_ha_campi()
+    {
+        $task = $this->makeOpenTaskOnClosedQuote();
+
+        $action = new ToggleTaskCompleted();
+        $action->resource = $task->fresh();
+
+        $this->assertSame([], $action->fields(NovaRequest::create('/')));
+        $this->assertSame(__('Mark as completed'), $action->name());
+    }
+
+    public function test_su_trattativa_chiusa_il_titolo_lascia_il_task_aperto()
+    {
+        $task = $this->makeOpenTaskOnClosedQuote();
+        $before = Task::count();
+
+        $this->actingAs($this->actor)->postJson(self::ENDPOINT, [
+            'resources' => [$task->id],
+            'title' => 'Follow-up su trattativa chiusa',
+            'due_date' => '2026-10-21 09:00:00',
+            'assignee' => $this->actor->id,
+        ])->assertOk()
+            ->assertJson(['danger' => __('The quote is closed: the next task cannot be created.')]);
+
+        $this->assertSame(Task::STATUS_TODO, $task->fresh()->status);
         $this->assertSame($before, Task::count());
     }
 }

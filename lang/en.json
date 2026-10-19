@@ -787,5 +787,6 @@
   "Mark as completed": "Mark as completed",
   "Reopen": "Reopen",
   "Next task (optional)": "Next task (optional)",
-  "Only one task at a time can be closed or reopened.": "Only one task at a time can be closed or reopened."
+  "Only one task at a time can be closed or reopened.": "Only one task at a time can be closed or reopened.",
+  "The quote is closed: the next task cannot be created.": "The quote is closed: the next task cannot be created."
 }

@@ -11,6 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Fields\BelongsTo;
@@ -27,6 +28,9 @@ use Laravel\Nova\Http\Requests\NovaRequest;
  * All'esecuzione Nova ricostruisce l'action senza task e la ritrova per
  * uriKey: per questo l'uriKey è fisso, mentre il nome segue lo stato del
  * task, e fields() restituisce i campi quando il task non c'è.
+ *
+ * Su una trattativa chiusa il task successivo non nasce: decide
+ * TaskPolicy::create() con la Quote, come nell'API (review del 19/10/2026).
  */
 class ToggleTaskCompleted extends Action
 {
@@ -65,6 +69,11 @@ class ToggleTaskCompleted extends Action
             return;
         }
 
+        // Prima della transazione: se la policy nega, il task resta aperto.
+        if (filled($fields->title) && $this->isQuoteClosedFor($task)) {
+            return Action::danger(__('The quote is closed: the next task cannot be created.'));
+        }
+
         DB::transaction(function () use ($task, $fields) {
             $task->status = Task::STATUS_COMPLETED;
             $task->save();
@@ -85,7 +94,7 @@ class ToggleTaskCompleted extends Action
 
     public function fields(NovaRequest $request)
     {
-        if ($this->isClosedTask()) {
+        if ($this->isClosedTask() || $this->isOnClosedQuote()) {
             return [];
         }
 
@@ -120,5 +129,20 @@ class ToggleTaskCompleted extends Action
     {
         return $this->resource instanceof Task
             && $this->resource->status === Task::STATUS_COMPLETED;
+    }
+
+    private function isOnClosedQuote(): bool
+    {
+        return $this->resource instanceof Task
+            && $this->isQuoteClosedFor($this->resource);
+    }
+
+    /**
+     * Unico punto in cui l'action chiede a TaskPolicy::create() se sulla
+     * trattativa del task può nascere un task nuovo.
+     */
+    private function isQuoteClosedFor(Task $task): bool
+    {
+        return Gate::denies('create', [Task::class, $task->quote]);
     }
 }
