@@ -14,3 +14,8 @@
   dedicato con `Action::modal()` (componente Vue scritto a mano in `nova-components/`, più lavoro
   per un'action che resta la strada di riserva rispetto alla skill Claude). Passare al popup in
   seguito non richiede di cambiare i dati salvati.
+- **Link generabili anche dalle trattative chiuse, quindi action anche in «Archived quotes»**
+  (challenge del 19/10/2026). Il ticket non distingue fra trattative aperte e chiuse. Si è scelto
+  di allinearsi all'endpoint, che già genera link su qualunque stato: per esempio una trattativa
+  vinta di cui il cliente chiede di nuovo il PDF. Scartata l'alternativa «solo trattative aperte»,
+  che avrebbe fatto comportare Nova e API in modo diverso.

@@ -48,6 +48,11 @@ skill Claude: Nova deve restare utilizzabile da sola.
       `QuotePolicy::update()`, che rifiuta le trattative chiuse
       (`vendor/laravel/nova/src/Actions/ActionModelCollection.php:28-31`,
       `app/Policies/QuotePolicy.php:47-52`).
+- [ ] L'action è registrata anche sulla risorsa `ArchivedQuotes` (menu «Archived quotes»), da cui
+      si aprono le trattative chiuse: l'elenco «Quotes» le esclude (`app/Nova/Quote.php:405-412`) e
+      `ArchivedQuotes::actions()` sostituisce le action ereditate con il solo «Edit»
+      (`app/Nova/ArchivedQuotes.php:39-44`). Così Nova si comporta come l'endpoint, che genera link
+      anche sulle trattative chiuse.
 - [ ] L'action agisce su una sola Quote alla volta (`->sole()`): non si lancia su una selezione
       multipla dall'elenco.
 - [ ] Campi del popup: lingua (`it`/`en`, default `it`), durata in giorni (1–90, default 30), e
@@ -66,7 +71,7 @@ skill Claude: Nova deve restare utilizzabile da sola.
 **Traduzioni e test**
 - [ ] Le stringhe nuove hanno la chiave inglese e la traduzione in `lang/it.json` e
       `lang/en.json`.
-- [ ] Test: l'endpoint salva il link; l'action salva il link, anche su una Quote `closed won`; un Developer non vede l'action né i
+- [ ] Test: l'endpoint salva il link; l'action salva il link, anche su una Quote `closed won` aperta da `archived-quotes`; un Developer non vede l'action né i
       campi; un link scaduto non compare fra gli attivi ma resta nello storico; la copia di
       una trattativa con link ha `pdf_links` vuoto.
 
@@ -108,6 +113,7 @@ Tutto nel repo principale `orchestrator`; nessun submodule coinvolto.
 - `app/Http/Controllers/Api/QuoteController.php` — `pdfLink()` usa il metodo condiviso
 - `app/Nova/Actions/GenerateQuotePublicPdfLink.php` — nuovo
 - `app/Nova/Quote.php` — action e campi nella tab Main
+- `app/Nova/ArchivedQuotes.php` — l'action accanto a «Edit»
 - `lang/it.json`, `lang/en.json`
 - `tests/Feature/Api/QuotePdfApiTest.php`, nuovo test per l'action e la visibilità Nova
 - `docs/knowledge/quote-api-e-pdf.md` — la scelta «link stateless» di oc:8291 è superata
