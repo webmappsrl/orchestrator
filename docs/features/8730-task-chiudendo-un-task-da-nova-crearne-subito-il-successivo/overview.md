@@ -172,9 +172,10 @@ implementare»:
 - **Con il titolo, anche l'assegnatario è obbligatorio**, come nel form «Crea Task» di oc:8722
   (`->rules('required')`, sopra). Arriva già compilato, quindi lo si trova vuoto solo se qualcuno lo
   svuota a mano.
-- **Il task successivo si crea anche su una trattativa chiusa**, come fa oggi Nova dalla tab «Task».
-  Che Nova non applichi il blocco dell'API sulle trattative «Chiuso Vinto»/«Chiuso Perso» è una
-  scelta già documentata in `docs/knowledge/task-e-quote.md` e nella policy:
+- **Il task successivo non nasce su una trattativa chiusa** (review del 19/10/2026, vedi «Correzione
+  dopo la review del 19/10/2026»). La prima versione lo creava, come fa Nova dalla tab «Task», che
+  non applica il blocco dell'API sulle trattative «Chiuso Vinto»/«Chiuso Perso» perché lì la Quote
+  non arriva alla policy. Nell'action invece la Quote è nota, quindi la regola si applica:
 
   ```php
   // app/Policies/TaskPolicy.php:68-76 (su develop)
@@ -205,7 +206,59 @@ implementare»:
   });
   ```
 
+### Correzione dopo la review del 19/10/2026
+
+La review del commit `784a358` (ticket, sezione «Primo ciclo — da fare») ha trovato un bloccante:
+`handle()` crea il task successivo con `Task::create()` senza passare da `TaskPolicy::create($user,
+$quote)`, che vieta i task sulle trattative «Chiuso Vinto»/«Chiuso Perso». L'API la applica e
+risponde 403 (`app/Http/Controllers/Api/TaskController.php:80`), l'action no: la stessa operazione
+dà esiti opposti da Nova e dalla skill Claude. È lo scenario del cliente («la trattativa è persa o
+vinta»): chiudere una trattativa non chiude i suoi task, quindi l'ultimo task rimasto aperto si
+chiude dopo, con il popup che propone il successivo.
+
+Il reviewer ha scritto il test che lo riproduce (`tests/Feature/ToggleTaskCompletedClosedQuoteTest.php`,
+commit `3977d68`): con il titolo su una trattativa chiusa il numero dei task non deve cambiare;
+senza titolo il task deve chiudersi.
+
+Cosa cambia:
+
+- **Popup:** su un task aperto di una trattativa chiusa il popup non mostra i campi del task
+  successivo, come per la riapertura. Si conferma e il task si chiude e basta.
+- **`handle()`:** se il titolo è compilato, prima della transazione controlla la policy con la
+  Quote del task (`Gate::denies('create', [Task::class, $task->quote])`). Se nega, l'action
+  risponde con un messaggio di errore (`Action::danger`) e **non modifica nulla**: il task resta
+  aperto e non nasce nessun task. È il caso della pagina rimasta aperta mentre un collega chiudeva
+  la trattativa (decisione della dev, 19/10/2026: blocco totale, come la 403 dell'API sulla creazione, invece di
+  chiudere il task scartando il titolo).
+- **Senza titolo** il task si chiude anche su una trattativa chiusa («io quella comunque la chiudo
+  sempre»).
+
+Esempio: la trattativa «Sito Rossi» è «Chiuso Vinto» e il task «Mandare la fattura» è ancora
+aperto. Si lancia «Segna come completato»: il popup chiede solo conferma, senza Titolo, Scadenza,
+Assegnatario e Note, e il task si chiude. Se invece la pagina era aperta da prima che la
+trattativa venisse chiusa e si compila «Richiamare il cliente», l'action risponde «Il preventivo è
+chiuso: non si può creare il task successivo.» e il task resta aperto.
+
+La regola resta in un punto solo, `TaskPolicy::create()`: l'action non ripete il confronto con
+gli stati chiusi.
+
 ## Requisiti
+
+Correzione dopo la review del 19/10/2026:
+
+- [ ] Su un task aperto di una trattativa «Chiuso Vinto» o «Chiuso Perso» il popup non mostra campi
+      (`fields()` restituisce `[]`, deciso da `TaskPolicy::create()` con la Quote del task).
+- [ ] Titolo compilato su una trattativa chiusa → `handle()` risponde con `Action::danger` prima
+      della transazione: task ancora aperto, nessun task nuovo.
+- [ ] Titolo vuoto su una trattativa chiusa → il task si chiude, nessun task nuovo.
+- [ ] Le trattative non chiuse, compresa «In attesa di esito» (`On_Hold`), si comportano come prima.
+- [ ] Messaggio di errore tradotto in `lang/it.json` e `lang/en.json`.
+- [ ] Test: i due test del reviewer verdi senza modificarli; in più, nello stesso file, il popup senza
+      campi su trattativa chiusa e il task ancora aperto dopo il rifiuto (il test del reviewer
+      controlla solo il numero dei task).
+
+Primo ciclo:
+
 
 - [ ] L'action resta una sola (`ToggleTaskCompleted`): chiude un task aperto e riapre un task chiuso.
 - [ ] L'action lavora su un solo task: è registrata con `sole()`, quindi Nova la mostra sulla riga e
@@ -250,6 +303,14 @@ implementare»:
     (`tests/Feature/ExportStoriesToExcelActionTest.php:86-89`), non li vedrebbero.
 
 ## Rischi
+
+- **Controllo della policy dentro la transazione** (correzione del 19/10/2026). Se il rifiuto
+  avvenisse dentro `DB::transaction` con un semplice `return`, la chiusura verrebbe comunque
+  salvata: il test del reviewer resterebbe verde (conta solo i task) ma il task si chiuderebbe
+  scartando il titolo. Gestito facendo il controllo prima della transazione e con un test che
+  verifica il task ancora aperto.
+- **All'esecuzione `fields()` non vede il task** (vedi sotto): il popup senza campi vale solo
+  all'apertura, quindi il blocco vero è quello in `handle()`, non quello nel popup.
 
 - **Quando si preme «Esegui», Nova non sa più su quale task si è.** All'apertura del popup Nova passa
   il task all'action (vedi «Cosa cambia»), ma all'esecuzione la ricostruisce su un modello vuoto:
@@ -308,4 +369,7 @@ Tutto nel repo principale `orchestrator`, nessun submodule. Dipende da oc:8722, 
   `public static`, riusato dall'action (vedi `notes.md`)
 - `lang/it.json`, `lang/en.json` — nomi dell'action, etichette, messaggi
 - `tests/Feature/ToggleTaskCompletedActionTest.php` — nuovo, test dell'action
-- `docs/knowledge/task-e-quote.md` — aggiornamento a fine lavoro
+- `tests/Feature/ToggleTaskCompletedClosedQuoteTest.php` — test del reviewer (19/10/2026), più i due
+  test della correzione
+- `docs/knowledge/task-e-quote.md` — aggiornamento a fine lavoro; dopo la correzione la voce «Il
+  task successivo nasce anche su una Quote chiusa» va spostata fra le scelte superate

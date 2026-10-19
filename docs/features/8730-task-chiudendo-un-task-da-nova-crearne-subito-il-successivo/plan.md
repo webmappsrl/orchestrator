@@ -135,3 +135,80 @@ Dalla riga della lista Task, dal dettaglio del task e dalla tab «Task» della t
 3. `docs(oc:8730): note e pagina di conoscenza sui task` — notes, `docs/knowledge/task-e-quote.md`
 
 Dopo il rebase del 14/10/2026 il push del branch va fatto con `--force-with-lease`.
+
+---
+
+# Correzione dopo la review del 19/10/2026
+
+Riferimento: sezione «Correzione dopo la review del 19/10/2026» dell'overview e ticket, sezione
+«Primo ciclo — da fare». Perimetro: solo quello che chiede la review. Tutto nel repo principale.
+
+```bash
+docker exec php81_orchestrator php artisan test --filter=ToggleTaskCompleted
+```
+
+## Task C1 — Test, prima del codice
+
+**File:** `tests/Feature/ToggleTaskCompletedClosedQuoteTest.php` (del reviewer, commit `3977d68`).
+
+I due test esistenti **non si modificano**. Si aggiungono nello stesso file, riusando
+`makeOpenTaskOnClosedQuote()`:
+
+1. `test_su_trattativa_chiusa_il_popup_non_ha_campi`: `$action = new ToggleTaskCompleted()`,
+   `$action->resource = $task`, `assertSame([], $action->fields(NovaRequest::create('/')))` (stesso
+   modello di `ToggleTaskCompletedActionTest.php:166-176`). Il nome resta «Segna come completato».
+2. `test_su_trattativa_chiusa_il_titolo_lascia_il_task_aperto`: stessa richiesta del primo test del
+   reviewer; verifica che il task sia ancora `todo` e che nessun task sia nato.
+
+Eseguire: falliscono il primo test del reviewer e i due nuovi; il secondo del reviewer passa.
+
+## Task C2 — Action
+
+**File:** `app/Nova/Actions/ToggleTaskCompleted.php`.
+
+- `handle()`: dopo il ramo della riapertura e **prima** di `DB::transaction`, se `$fields->title`
+  è compilato e `Gate::denies('create', [Task::class, $task->quote])` →
+  `return Action::danger(__('The quote is closed: the next task cannot be created.'))`. Nessuna
+  modifica: il task resta aperto.
+- `fields()`: restituisce `[]` anche quando `$this->resource` è un Task aperto la cui Quote non
+  ammette nuovi task (`Gate::denies('create', [Task::class, $this->resource->quote])`). Senza task
+  (esecuzione) i campi restano quelli di oggi. Nessun confronto con gli stati della Quote
+  nell'action: la regola resta in `TaskPolicy::create()`.
+- Docblock della classe: una riga sul blocco per le trattative chiuse (oc:8730, review del
+  19/10/2026).
+
+`TaskPolicy::before()` restituisce solo `false` per i ruoli senza accesso ai task
+(`app/Policies/TaskPolicy.php:25-30`), quindi per un Admin decide `create()`.
+
+Eseguire i test dell'action: tutti verdi, compresi i 9 di `ToggleTaskCompletedActionTest`.
+
+## Task C3 — Traduzioni
+
+| Chiave | it | en |
+|---|---|---|
+| `The quote is closed: the next task cannot be created.` | Il preventivo è chiuso: non si può creare il task successivo. | The quote is closed: the next task cannot be created. |
+
+Verificare che i due JSON restino validi, poi la suite completa:
+
+```bash
+docker exec php81_orchestrator php artisan test
+```
+
+## Task C4 — Note e pagina di conoscenza
+
+- `notes.md`: decisioni del ciclo (blocco totale con il titolo; popup vuoto senza riga di
+  spiegazione, per restare nel perimetro della review).
+- `docs/knowledge/task-e-quote.md`: «Il task successivo nasce anche su una Quote chiusa» passa fra
+  le scelte superate, con il motivo; lo stato attuale dice che l'action applica
+  `TaskPolicy::create()` con la Quote.
+
+## Task C5 — Verifica manuale in Nova
+
+Su un task aperto di una trattativa «Chiuso Vinto»: «Segna come completato» senza campi, il task si
+chiude. Su una trattativa aperta: i campi ci sono come prima.
+
+## Commit (istruzioni per la dev, nessun commit automatico)
+
+1. `fix(oc:8730): nessun task successivo su una trattativa chiusa` — action, lang, test
+2. `docs(oc:8730): overview, piano e note della correzione dopo la review` — overview, plan, notes,
+   `docs/knowledge/task-e-quote.md`

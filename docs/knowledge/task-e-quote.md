@@ -42,7 +42,8 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   `Gate::authorize('create', Task::class)` con un solo argomento per decidere se mostrare
   l'azione "crea". Una firma a due parametri obbligatori rompe **l'intera creazione di Task via
   Nova** con `ArgumentCountError`. Quando `$quote` è assente il blocco su quote chiuse non si
-  applica; il controller API passa sempre la Quote esplicitamente.
+  applica; il controller API e `ToggleTaskCompleted` (oc:8730) passano sempre la Quote
+  esplicitamente. Il form «Crea Task» di Nova resta l'unico senza blocco.
 - **Chiunque acceda ai task li completa e li riapre** (oc:8722): `TaskPolicy::updateStatus()`
   restituisce `true` e il filtro sui ruoli è in `before()`; `ToggleTaskCompleted` usa la stessa
   policy. Resta un check a sé, invocato da `TaskController::update()` solo se il payload contiene
@@ -119,8 +120,12 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   all'apertura del popup. La ricerca degli utenti nel popup passa dal campo `assignee` della
   risorsa (`/nova-api/tasks/associatable/assignee`), non da quello dell'azione: i due campi devono
   restare con lo stesso attributo e lo stesso filtro `withTaskAccess()`.
-- **Il task successivo nasce anche su una Quote chiusa**, come dalla tab Task: il blocco su
-  «Chiuso Vinto»/«Chiuso Perso» resta solo nell'API.
+- **Su una Quote chiusa il task successivo non nasce** (oc:8730, review del 19/10/2026): l'azione
+  chiede a `TaskPolicy::create()` con la Quote del task, come l'API, senza ripetere gli stati
+  chiusi. All'apertura il popup non ha campi e la conferma chiude il task e basta; se un titolo
+  arriva lo stesso (pagina aperta da prima della chiusura della Quote) `handle()` risponde con un
+  errore **prima** della transazione e il task resta aperto. Il controllo che conta è quello in
+  `handle()` (vedi la voce sull'`uriKey` fisso, sopra).
 - **Nello storico delle azioni Nova una riapertura risulta «Segna come completato»**: all'esecuzione
   `name()` non conosce il task. Accettato: il modello `Task` non mostra lo storico.
 
@@ -143,6 +148,12 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   cancellato non era più completabile da nessuno, e un payload `{status, notes}` da un
   non-creatore falliva con 403 sull'intera richiesta. Superato da «chiunque crea i task e
   chiunque li può chiudere».
+- **Task successivo creato anche su una Quote chiusa** (oc:8730, primo ciclo, superato dalla
+  review del 19/10/2026): l'azione faceva come il form «Crea Task» di Nova, dove la policy non
+  riceve la Quote. Abbandonato perché la stessa operazione dava esiti opposti da Nova e
+  dall'API/skill Claude, e perché è lo scenario normale del cliente: chiudere una Quote non chiude
+  i suoi task, quindi l'ultimo task di una trattativa vinta si chiude dopo. Il form «Crea Task» di
+  Nova resta senza blocco.
 - **Bug di scoping Task via `QuoteNoFilter`, noto e non risolto**: il bypass di `indexQuery()`
   scatta su `viaResource === 'quotes'`, ma l'uriKey di `QuoteNoFilter` è `quote-no-filters`,
   quindi il sub-panel Task raggiunto da Customer → tab Preventivi non ne beneficia. Preesistente,

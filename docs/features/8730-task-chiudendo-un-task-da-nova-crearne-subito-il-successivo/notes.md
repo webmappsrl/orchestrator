@@ -36,6 +36,19 @@ richiesta.
   scrivere codice. Il push va fatto con `--force-with-lease`.
 - **Stima rivista da 5h a 4h** (14/10/2026): misurato 1,3h (pianificazione di oggi; quella del 13/10
   non è misurata) + stimato 2,75h.
+- **Correzione dopo la review del 19/10/2026** (bloccante: task successivo creato su trattativa
+  chiusa). Con il titolo su una trattativa chiusa l'action **blocca tutto**: errore prima della
+  transazione, task ancora aperto (scelta della dev, come la 403 dell'API sulla creazione, invece di
+  chiudere scartando il titolo). Popup **senza campi** su trattativa chiusa, senza riga di
+  spiegazione: una riga proposta dopo la revisione critica è stata tolta dalla dev per restare nel
+  perimetro della review. Il controllo della policy è in un solo metodo, `isQuoteClosedFor()`.
+- **Test della correzione**: i due test del reviewer (commit `3977d68`) restano invariati; nello
+  stesso file il test sul popup chiesto dalla review e uno sul task ancora aperto con il messaggio
+  di errore, che protegge la scelta del blocco totale (i test del reviewer contano solo i task).
+- **Stima rivista a 6,77h** (19/10/2026): 4h del primo ciclo + misurato 1,92h + stimato 0,85h per la
+  correzione.
+- **Trascrizioni non disponibili il 19/10/2026**: l'account Google Drive collegato non vede la
+  cartella delle call; il ciclo di correzione è stato pianificato su ticket, review e codice.
 - **Scadenza e Assegnatario obbligatori solo con il titolo** (`required_with:title`): con il titolo
   vuoto il task si chiude e basta, anche se l'Assegnatario precompilato resta nel popup.
 
