@@ -13,8 +13,8 @@ seguendo. Dopo questa feature:
   `customer_id` vale per tutti i clienti. È la strada da usare per questa domanda.
 - **API dei task** — `GET /api/tasks` accetta filtri per stato, scadenza e trattativa, e ogni task
   riporta lo stato della trattativa a cui appartiene. Era la strada decisa nella call del 30/09 (il
-  client confronta trattative e task); resta per gli altri usi dell'API dei task, salvo esito della
-  domanda aperta per il reviewer «Modifiche a `/api/tasks`: tenerle o toglierle».
+  client confronta trattative e task); resta per gli altri usi dell'API dei task, confermata dal
+  reviewer il 20/10.
 - **Nova** — una Lens sulle Quote, «Trattative senza task attivi», elenca le trattative aperte che non
   hanno nessun task in stato `todo`. Restituisce le stesse trattative del parametro dell'API.
 - Nessuna trattativa viene chiusa in automatico: la chiusura resta manuale.
@@ -63,8 +63,9 @@ aggiungere il filtro direttamente su `/api/quotes` — Alessandro Peci: «metter
 parametro in più per tornarmi quelli che non hanno task attivi. Lo metterei direttamente a sto punto
 dentro le pie di quot» — perché `/api/quotes` senza `customer_id` restituisce già le trattative di tutti
 («se non ce lo metti ti torna già quello di tutti»). Le modifiche a `/api/tasks` chieste da Giuseppe
-restano, perché il riepilogo dello scrum non le toglie esplicitamente: la conferma è chiesta al
-reviewer.
+restano anche se non servono alle trattative scoperte — Alessandro Peci, Slack del 20/10/2026: «visto
+che le modifiche ad /api/tasks le aveva comunque chieste peppe anche se non servono ora per le quote
+senza task falle comunque che possono essere utili lo stesso».
 
 Sulla chiusura: «non deve essere assolutamente chiusa automaticamente» (call del 30/09/2026, citata
 nel ticket).
@@ -73,8 +74,9 @@ nel ticket).
 
 ### `GET /api/quotes`
 
-- [ ] Accetta il parametro opzionale `without_active_tasks` con i valori della regola `boolean` di
-      Laravel (`1`, `0`, `true`, `false`); un valore diverso (es. `si`) risponde 422. Il valore si legge
+- [ ] Accetta il parametro opzionale `without_active_tasks` con i valori `1`, `0`, `true`, `false`
+      (regola `in:0,1,true,false`: la regola `boolean` di Laravel rifiuterebbe la stringa `true`, vedi
+      `notes.md`); vuoto equivale ad assente; un valore diverso (es. `si`) risponde 422. Il valore si legge
       come booleano, non con `filled()`: `?without_active_tasks=0` non attiva il filtro. La regola
       passa da una variabile, come `$statusRules`, perché Scramble non scarti i parametri dichiarati
       negli attributi (`QuoteController.php:58-64`).
@@ -88,7 +90,7 @@ nel ticket).
       trattative aperte senza task attivi; `QuoteApiDocsTest` verifica che il parametro sia
       documentato.
 
-### `GET /api/tasks` (salvo esito della domanda aperta per il reviewer)
+### `GET /api/tasks`
 
 - [ ] Accetta il filtro `status` (`todo` o `completed`); un valore diverso risponde 422.
 - [ ] Accetta il filtro `quote_id`: restituisce solo i task di quella trattativa. Un valore non intero
@@ -134,25 +136,14 @@ nel ticket).
 
 ## Rischi
 
-- **Due strade per la stessa domanda.** Se restano le modifiche a `/api/tasks`, le trattative scoperte
-  si possono cercare anche confrontando `/api/quotes` e `/api/tasks`, e quel confronto sbaglia quando il
+- **Due strade per la stessa domanda.** Con le modifiche a `/api/tasks` le trattative scoperte si
+  possono cercare anche confrontando `/api/quotes` e `/api/tasks`, e quel confronto sbaglia quando il
   task è di un altro utente (esempio «Parco Alpi» sopra). Mitigazione: la documentazione Scramble di
   entrambi gli endpoint indica il parametro su `/api/quotes` come la strada per questa domanda.
 - **Contratto esterno.** `/api/tasks` è consumato dalla skill Cowork e dal server MCP `orchestrator` di
   `claude-marketplace` (`docs/knowledge/task-e-quote.md:59-62`), e `/api/quotes` dalla skill
   commerciale. Le modifiche sono solo aggiuntive (parametri opzionali, un campo in più), quindi non
   rompono chi li usa oggi.
-
-## Domande aperte per il reviewer
-
-- **Modifiche a `/api/tasks`: tenerle o toglierle.** Con il parametro su `/api/quotes` deciso allo scrum
-  del 20/10 l'obiettivo del ticket è raggiunto anche senza toccare `/api/tasks`. Le modifiche descritte
-  sopra vengono dalla call del 30/09 (proposta di Giuseppe, assente allo scrum) e servono ad altre
-  domande sui propri task — «quali miei task scadono questa settimana?». Non servono invece a domande
-  su tutti i task di una trattativa, perché lo scoping `forUser` resta (`TaskController.php:30`).
-  Proposta:
-  tenerle, perché il riepilogo dello scrum non le toglie esplicitamente. Al reviewer: confermare, oppure
-  indicare di toglierle da questo ticket.
 
 ## Out of scope
 
@@ -171,7 +162,7 @@ Tutto nel repo principale `orchestrator` (nessun submodule):
 - `app/Models/Quote.php` — definizione unica di «trattativa aperta senza task attivi», usata da API e
   Lens
 - `app/Http/Controllers/Api/TaskController.php` — filtri in `index()`, `quote_status` in `formatTask()`,
-  attributi Scramble (salvo esito della domanda aperta per il reviewer)
+  attributi Scramble
 - `app/Nova/Lenses/QuotesWithoutActiveTasks.php` — nuova Lens
 - `app/Nova/Quote.php` — registrazione della Lens in `lenses()`
 - `app/Nova/ArchivedQuotes.php`, `app/Nova/QuoteNoFilter.php` — `lenses()` vuoto, per non ereditare
@@ -179,8 +170,7 @@ Tutto nel repo principale `orchestrator` (nessun submodule):
 - `lang/it.json`, `lang/en.json` — nome della Lens
 - `tests/Feature/Api/QuoteApiTest.php` — test del parametro
 - `tests/Feature/Api/QuoteApiDocsTest.php` — `without_active_tasks` fra i parametri documentati
-- `tests/Feature/Api/TaskApiTest.php` — test dei filtri e del nuovo campo (salvo esito della domanda
-  aperta per il reviewer)
+- `tests/Feature/Api/TaskApiTest.php` — test dei filtri e del nuovo campo
 - `tests/Feature/` — test della Lens
 - `docs/knowledge/quote-api-e-pdf.md` (parametro e Lens) e `docs/knowledge/task-e-quote.md`
   (modifiche a `/api/tasks`) — aggiornamento a fine lavoro
