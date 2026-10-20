@@ -36,6 +36,14 @@ class ArchivedQuotes extends Quote
             ->whereIn('status', $whereIn);
     }
 
+    /**
+     * The QuotesWithoutActiveTasks Lens belongs to Nova\Quote only (oc:8729).
+     */
+    public function lenses(NovaRequest $request)
+    {
+        return [];
+    }
+
     public function actions(NovaRequest $request)
     {
         return [

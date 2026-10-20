@@ -11,4 +11,12 @@ class QuoteNoFilter extends Quote
     {
         return $query->withNextTodoTask();
     }
+
+    /**
+     * The QuotesWithoutActiveTasks Lens belongs to Nova\Quote only (oc:8729).
+     */
+    public function lenses(NovaRequest $request)
+    {
+        return [];
+    }
 }

@@ -43,7 +43,7 @@ class QuoteApiDocsTest extends TestCase
     {
         $names = $this->queryParameterNames('/quotes', 'get');
 
-        foreach (['customer_id', 'status', 'sort', 'per_page', 'page'] as $expected) {
+        foreach (['customer_id', 'status', 'without_active_tasks', 'sort', 'per_page', 'page'] as $expected) {
             $this->assertContains($expected, $names, "Expected query parameter \"{$expected}\" to be documented on GET /quotes.");
         }
     }

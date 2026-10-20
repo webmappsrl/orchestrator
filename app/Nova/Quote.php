@@ -6,6 +6,7 @@ use Laravel\Nova\Panel;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
+use App\Nova\Lenses\QuotesWithoutActiveTasks;
 use App\Rules\AdditionalServicesMap;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -385,7 +386,7 @@ class Quote extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [];
+        return [new QuotesWithoutActiveTasks];
     }
 
     /**

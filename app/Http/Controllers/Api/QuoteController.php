@@ -46,6 +46,7 @@ class QuoteController extends Controller
      */
     #[QueryParameter('customer_id', description: 'Filter quotes belonging to a specific customer.', type: 'int')]
     #[QueryParameter('status', description: 'Filter by status. Accepts a single value (?status=new) or multiple via array syntax (?status[]=new&status[]=presented). 422 if a value is not a valid status.', type: 'App\\Enums\\QuoteStatus|array<App\\Enums\\QuoteStatus>')]
+    #[QueryParameter('without_active_tasks', description: 'With 1/true, only open quotes (status other than closed won/closed lost) without any todo task, whoever its assignee or creator: the way to find quotes nobody is following. Combines with the other filters and with pagination; 0/false or omitted leaves the list unchanged. Any other value returns 422.', type: 'bool')]
     #[QueryParameter('sort', description: 'Sort by created_at: "created_at" for ascending, "-created_at" for descending. Any other value (including omitting this parameter) silently falls back to descending id order (needed for deterministic pagination).', type: 'string')]
     #[QueryParameter('per_page', description: 'Enables opt-in pagination together with page. Without per_page/page the response is a plain array; with either, it becomes {data, meta}.', type: 'int', default: self::DEFAULT_PER_PAGE)]
     #[QueryParameter('page', description: 'Page number for opt-in pagination, used together with per_page.', type: 'int')]
@@ -61,6 +62,9 @@ class QuoteController extends Controller
         $statusRules = is_array($request->input('status'))
             ? ['status' => ['array'], 'status.*' => ['nullable', Rule::enum(QuoteStatus::class)]]
             : ['status' => ['sometimes', 'nullable', Rule::enum(QuoteStatus::class)]];
+        // Non la regola `boolean`: rifiuterebbe la stringa "true" che un client JS manda
+        // serializzando un booleano in query string (oc:8729).
+        $statusRules['without_active_tasks'] = ['sometimes', 'nullable', 'in:0,1,true,false'];
         $request->validate($statusRules);
 
         $query = Quote::query()->with(['products', 'recurringProducts']);
@@ -81,6 +85,11 @@ class QuoteController extends Controller
             } else {
                 $query->where('status', $status);
             }
+        }
+
+        // boolean() e non filled(): con ?without_active_tasks=0 il filtro resta spento.
+        if ($request->boolean('without_active_tasks')) {
+            $query->openWithoutActiveTasks();
         }
 
         if ($request->get('sort') === '-created_at') {
