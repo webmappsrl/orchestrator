@@ -83,7 +83,7 @@ organizzata la Resource Nova.
   motivo il messaggio 422. Va lanciato sui dati di produzione prima di rilasciare una modifica alla
   regola; esce con 1 anche per prezzi testuali già presenti, non solo per l'HTML.
 
-### PDF del preventivo (oc:8291, oc:8413, oc:8047, oc:8631, oc:8734)
+### PDF del preventivo (oc:8291, oc:8413, oc:8047, oc:8631, oc:8734, oc:8733)
 - `GET/POST /api/quotes/{quote}/pdf(-link)` più rotta pubblica firmata in `routes/web.php`
   (`quotes.pdf.public`), middleware `['signed', 'throttle:30,1']`. Il throttle serve perché la
   rotta vive fuori da `auth:sanctum` e quindi fuori dal `throttle:api`.
@@ -93,6 +93,17 @@ organizzata la Resource Nova.
 - **`expires_in_days`**: `integer|min:1|max:90`, default 30. **Non esiste revoca del singolo
   link** prima della scadenza: solo la rotazione di `APP_KEY`, che invalida tutti i link
   firmati del progetto.
+- **Ogni link generato resta in `quotes.pdf_links`** (oc:8733), scritto solo da
+  `QuotePdfLinks::generate()` (endpoint e action Nova). Generarli e vederli è solo per Admin e
+  Manager (`QuotePdfLinks::canShare()`), perché l'URL apre il PDF senza login; per lo stesso motivo
+  il campo non esce dall'API (`formatQuote` elenca i campi uno per uno). Non è in `$fillable`, quindi
+  `DuplicateQuote` non copia i link nella copia.
+- **Nova:** action «Genera link pubblico» solo dal dettaglio, anche sulle trattative chiuse (è
+  registrata anche su `ArchivedQuotes`; `canRun` evita `QuotePolicy::update()`, che le rifiuta);
+  l'URL compare nel messaggio di conferma, che è una notifica temporanea. Nella tab Main «Link
+  attivi» e «Storico dei link» mostrano l'indirizzo per intero. **`->help()` non si vede nel
+  dettaglio Nova**, solo nei form: l'avvertenza «il link apre sempre la versione attuale» è nel
+  contenuto dello Storico. I link generati prima di oc:8733 non sono mai stati salvati.
 - **`QuotePdfService::stream(Quote $quote, string $lang, bool $persist = true)`** è condiviso
   fra rotta web Nova (`persist: true`), rotta API bearer e rotta pubblica firmata (entrambe
   `persist: false`). Senza `persist: false` ogni download di un preventivo `template=true`
@@ -191,6 +202,9 @@ organizzata la Resource Nova.
 
 ## Come ci siamo arrivati
 
+- **Link pubblici non salvati** (oc:8291): superato da oc:8733. Il link firmato «viveva solo nelle
+  mail» e la scheda non diceva se il preventivo era già stato mandato; ora ogni link resta in
+  `pdf_links`.
 - **Elenco chiuso dei tag ammessi** (oc:8631, prima versione): superato. Rifiutava anche tag
   innocui prodotti con `editHtml` o incollati da Word (`<o:p>`, `<section>`), facendo prendere 422 a
   un campo letto e rimandato senza modifiche. Ora si rifiutano solo i tag pericolosi.
