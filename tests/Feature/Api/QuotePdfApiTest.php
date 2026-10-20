@@ -188,4 +188,37 @@ class QuotePdfApiTest extends TestCase
             'Bearer PDF download must not write to the database: updated_at changed.'
         );
     }
+
+    /** @test */
+    public function pdf_link_salva_il_link_generato_in_pdf_links(): void
+    {
+        $user = $this->actingAsAdmin();
+        $customer = Customer::factory()->create();
+        $quote = Quote::factory()->create(['customer_id' => $customer->id, 'additional_services' => []]);
+
+        $response = $this->postJson("/api/quotes/{$quote->id}/pdf-link", ['lang' => 'en', 'expires_in_days' => 5])
+            ->assertStatus(201)
+            ->assertExactJson([
+                'url' => $quote->fresh()->pdf_links[0]['url'],
+                'expires_at' => $quote->fresh()->pdf_links[0]['expires_at'],
+            ]);
+
+        $links = $quote->fresh()->pdf_links;
+        $this->assertCount(1, $links);
+        $this->assertSame($response->json('url'), $links[0]['url']);
+        $this->assertSame('en', $links[0]['lang']);
+        $this->assertSame($user->id, $links[0]['created_by']);
+    }
+
+    /** @test */
+    public function pdf_link_rifiutato_non_salva_nulla(): void
+    {
+        $this->actingAsAdmin();
+        $customer = Customer::factory()->create();
+        $quote = Quote::factory()->create(['customer_id' => $customer->id, 'additional_services' => []]);
+
+        $this->postJson("/api/quotes/{$quote->id}/pdf-link", ['expires_in_days' => 91])->assertStatus(422);
+
+        $this->assertNull($quote->fresh()->pdf_links);
+    }
 }
