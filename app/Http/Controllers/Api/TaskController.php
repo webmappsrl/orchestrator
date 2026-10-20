@@ -9,6 +9,7 @@ use App\Models\Task;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TaskController extends Controller
 {
@@ -20,14 +21,48 @@ class TaskController extends Controller
      * (ascending) / `?sort=-created_at` (descending) mirrors the sort
      * syntax already used by QuoteController::index(). No pagination.
      *
-     * @response array<array{id: int, quote_id: int, quote_title: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}>
+     * Optional filters (oc:8729), combinable: `status`, `quote_id`,
+     * `due_from`/`due_to` (YYYY-MM-DD, inclusive, compared on the date only).
+     * They all apply on top of the forUser() scoping: `?quote_id=` does NOT
+     * return the colleagues' tasks on that quote. To find open quotes
+     * without any todo task use GET /api/quotes?without_active_tasks=1.
+     *
+     * @response array<array{id: int, quote_id: int, quote_title: string|null, quote_status: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}>
      */
+    #[QueryParameter('status', description: 'Filter by task status: todo or completed. 422 for any other value. Applies only to the tasks of the authenticated user (assignee or creator).', type: 'string')]
+    #[QueryParameter('quote_id', description: 'Only the tasks of this quote, among the tasks of the authenticated user (assignee or creator): colleagues\' tasks on the same quote are not returned. 422 if not an integer.', type: 'int')]
+    #[QueryParameter('due_from', description: 'Only tasks due on or after this date (YYYY-MM-DD, compared on the date only). 422 for another format.', type: 'string')]
+    #[QueryParameter('due_to', description: 'Only tasks due on or before this date (YYYY-MM-DD, compared on the date only, so 18:00 of that day is included). 422 for another format; due_from after due_to returns an empty list.', type: 'string')]
     #[QueryParameter('sort', description: 'Sort by created_at: "created_at" for ascending, "-created_at" for descending. Any other value (including omitting this parameter) falls back to due_date ascending.', type: 'string')]
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Task::class);
 
+        // nullable: un parametro vuoto (?status=) non filtra, come ?status= su /api/quotes.
+        $request->validate([
+            'status'   => ['sometimes', 'nullable', Rule::in([Task::STATUS_TODO, Task::STATUS_COMPLETED])],
+            'quote_id' => ['sometimes', 'nullable', 'integer'],
+            'due_from' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+            'due_to'   => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+        ]);
+
         $query = Task::query()->forUser($request->user())->with(['quote', 'assignee']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('quote_id')) {
+            $query->where('quote_id', $request->integer('quote_id'));
+        }
+
+        if ($request->filled('due_from')) {
+            $query->whereDate('due_date', '>=', $request->input('due_from'));
+        }
+
+        if ($request->filled('due_to')) {
+            $query->whereDate('due_date', '<=', $request->input('due_to'));
+        }
 
         if ($request->get('sort') === '-created_at') {
             $query->orderByDesc('created_at')->orderByDesc('id');
@@ -48,7 +83,7 @@ class TaskController extends Controller
      * Developer can view any task's detail, even if not its assignee nor
      * its creator.
      *
-     * @response array{id: int, quote_id: int, quote_title: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}
+     * @response array{id: int, quote_id: int, quote_title: string|null, quote_status: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}
      */
     public function show(Task $task): JsonResponse
     {
@@ -71,7 +106,7 @@ class TaskController extends Controller
      * the target quote is closed_won or closed_lost (see
      * TaskPolicy::create()).
      *
-     * @response array{id: int, quote_id: int, quote_title: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}
+     * @response array{id: int, quote_id: int, quote_title: string|null, quote_status: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}
      */
     public function store(TaskApiRequest $request): JsonResponse
     {
@@ -104,7 +139,7 @@ class TaskController extends Controller
      * `completed_at` is updated automatically by the existing
      * Task::booted() hook.
      *
-     * @response array{id: int, quote_id: int, quote_title: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}
+     * @response array{id: int, quote_id: int, quote_title: string|null, quote_status: string|null, title: string, notes: string|null, due_date: string, status: string, completed_at: string|null, creator_id: int|null, assignee: array{id: int, name: string, email: string}|null, created_at: string|null, updated_at: string|null}
      */
     public function update(TaskApiRequest $request, Task $task): JsonResponse
     {
@@ -142,6 +177,7 @@ class TaskController extends Controller
             'id'           => $task->id,
             'quote_id'     => $task->quote_id,
             'quote_title'  => $task->quote?->title,
+            'quote_status' => $task->quote?->status,
             'title'        => $task->title,
             'notes'        => $task->notes,
             'due_date'     => optional($task->due_date)->toIso8601String(),

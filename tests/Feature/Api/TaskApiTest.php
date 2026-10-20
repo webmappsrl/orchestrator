@@ -571,4 +571,170 @@ class TaskApiTest extends TestCase
 
         $this->assertEquals($collega->id, $task->fresh()->assignee_id);
     }
+
+    /** @test */
+    public function index_filtra_per_status(): void
+    {
+        $this->loginAs();
+        $quote = $this->makeQuote();
+        $todo = $this->makeTask($quote);
+        $done = $this->makeTask($quote, ['status' => Task::STATUS_COMPLETED, 'completed_at' => now()]);
+
+        $todoIds = collect($this->getJson('/api/tasks?status=todo')->assertStatus(200)->json())->pluck('id')->all();
+        $doneIds = collect($this->getJson('/api/tasks?status=completed')->assertStatus(200)->json())->pluck('id')->all();
+
+        $this->assertSame([$todo->id], $todoIds);
+        $this->assertSame([$done->id], $doneIds);
+    }
+
+    /** @test */
+    public function index_con_status_non_valido_risponde_422(): void
+    {
+        $this->loginAs();
+
+        $this->getJson('/api/tasks?status=altro')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('status');
+    }
+
+    /** @test */
+    public function index_filtra_per_quote_id(): void
+    {
+        $this->loginAs();
+        $quote = $this->makeQuote();
+        $otherQuote = $this->makeQuote();
+        $task = $this->makeTask($quote);
+        $this->makeTask($otherQuote);
+
+        $ids = collect($this->getJson("/api/tasks?quote_id={$quote->id}")->assertStatus(200)->json())->pluck('id')->all();
+
+        $this->assertSame([$task->id], $ids);
+    }
+
+    /** @test */
+    public function index_con_quote_id_non_intero_risponde_422(): void
+    {
+        $this->loginAs();
+
+        $this->getJson('/api/tasks?quote_id=abc')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('quote_id');
+    }
+
+    /** @test */
+    public function index_con_quote_id_non_mostra_i_task_dei_colleghi(): void
+    {
+        $this->loginAs();
+        $quote = $this->makeQuote();
+        $mine = $this->makeTask($quote);
+        $colleague = User::factory()->create(['roles' => [UserRole::Admin]]);
+        $this->makeTask($quote, ['creator_id' => $colleague->id, 'assignee_id' => $colleague->id]);
+
+        $ids = collect($this->getJson("/api/tasks?quote_id={$quote->id}")->assertStatus(200)->json())->pluck('id')->all();
+
+        $this->assertSame([$mine->id], $ids);
+    }
+
+    /** @test */
+    public function index_filtra_per_scadenza_con_estremi_inclusi_sulla_sola_data(): void
+    {
+        $this->loginAs();
+        $quote = $this->makeQuote();
+        $before = $this->makeTask($quote, ['due_date' => '2026-10-18 09:00:00']);
+        $from = $this->makeTask($quote, ['due_date' => '2026-10-19 08:00:00']);
+        $to = $this->makeTask($quote, ['due_date' => '2026-10-20 18:00:00']);
+        $after = $this->makeTask($quote, ['due_date' => '2026-10-21 09:00:00']);
+
+        $range = collect($this->getJson('/api/tasks?due_from=2026-10-19&due_to=2026-10-20')->assertStatus(200)->json())->pluck('id')->all();
+        $onlyFrom = collect($this->getJson('/api/tasks?due_from=2026-10-20')->assertStatus(200)->json())->pluck('id')->all();
+        $onlyTo = collect($this->getJson('/api/tasks?due_to=2026-10-18')->assertStatus(200)->json())->pluck('id')->all();
+
+        $this->assertSame([$from->id, $to->id], $range);
+        $this->assertSame([$to->id, $after->id], $onlyFrom);
+        $this->assertSame([$before->id], $onlyTo);
+    }
+
+    /** @test */
+    public function index_con_data_non_nel_formato_aaaa_mm_gg_risponde_422(): void
+    {
+        $this->loginAs();
+
+        $this->getJson('/api/tasks?due_to=20-10-2026')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('due_to');
+    }
+
+    /** @test */
+    public function index_con_due_from_successiva_a_due_to_restituisce_elenco_vuoto(): void
+    {
+        $this->loginAs();
+        $this->makeTask($this->makeQuote(), ['due_date' => '2026-10-20 10:00:00']);
+
+        $this->getJson('/api/tasks?due_from=2026-10-21&due_to=2026-10-19')
+            ->assertStatus(200)
+            ->assertExactJson([]);
+    }
+
+    /** @test */
+    public function index_combina_i_filtri(): void
+    {
+        $this->loginAs();
+        $quote = $this->makeQuote();
+        $match = $this->makeTask($quote, ['due_date' => '2026-10-20 10:00:00']);
+        $this->makeTask($quote, ['due_date' => '2026-10-20 11:00:00', 'status' => Task::STATUS_COMPLETED, 'completed_at' => now()]);
+        $this->makeTask($quote, ['due_date' => '2026-11-20 10:00:00']);
+        $this->makeTask($this->makeQuote(), ['due_date' => '2026-10-20 10:00:00']);
+
+        $ids = collect($this->getJson("/api/tasks?status=todo&quote_id={$quote->id}&due_from=2026-10-01&due_to=2026-10-31")
+            ->assertStatus(200)->json())->pluck('id')->all();
+
+        $this->assertSame([$match->id], $ids);
+    }
+
+    /** @test */
+    public function index_senza_filtri_restituisce_l_elenco_di_prima(): void
+    {
+        $this->loginAs();
+        $quote = $this->makeQuote();
+        $later = $this->makeTask($quote, ['due_date' => now()->addDays(3)]);
+        $sooner = $this->makeTask($quote, ['due_date' => now()->addDay()]);
+        $done = $this->makeTask($quote, ['due_date' => now()->addDays(2), 'status' => Task::STATUS_COMPLETED, 'completed_at' => now()]);
+
+        $ids = collect($this->getJson('/api/tasks')->assertStatus(200)->json())->pluck('id')->all();
+
+        $this->assertSame([$sooner->id, $done->id, $later->id], $ids);
+    }
+
+    /** @test */
+    public function ogni_task_riporta_lo_stato_della_trattativa(): void
+    {
+        $this->loginAs();
+        $quote = $this->makeQuote(['status' => QuoteStatus::Presented->value]);
+        $task = $this->makeTask($quote);
+
+        $this->getJson('/api/tasks')->assertStatus(200)
+            ->assertJsonFragment(['id' => $task->id, 'quote_status' => QuoteStatus::Presented->value]);
+        $this->getJson("/api/tasks/{$task->id}")->assertStatus(200)
+            ->assertJson(['quote_status' => QuoteStatus::Presented->value]);
+        $this->patchJson("/api/tasks/{$task->id}", ['title' => 'Titolo nuovo'])->assertStatus(200)
+            ->assertJson(['quote_status' => QuoteStatus::Presented->value]);
+        $this->postJson('/api/tasks', [
+            'quote_id' => $quote->id,
+            'title'    => 'Richiamare il cliente',
+            'due_date' => now()->addDay()->toDateString(),
+        ])->assertStatus(201)
+            ->assertJson(['quote_status' => QuoteStatus::Presented->value]);
+    }
+
+    /** @test */
+    public function index_con_filtri_vuoti_li_ignora(): void
+    {
+        $this->loginAs();
+        $task = $this->makeTask($this->makeQuote());
+
+        $ids = collect($this->getJson('/api/tasks?status=&quote_id=&due_from=&due_to=')
+            ->assertStatus(200)->json())->pluck('id')->all();
+
+        $this->assertSame([$task->id], $ids);
+    }
 }
