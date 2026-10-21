@@ -71,17 +71,23 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
 - **`Task::appendNote()` prepende, non accoda**, mirror del comportamento reale di
   `Story::addDevNote()` (che nonostante il nome storico prepende sempre).
 
-### Viste Nova (oc:8327, oc:8402, oc:8722)
+### Viste Nova (oc:8327, oc:8402, oc:8722, oc:8815)
 - **Vista globale come Nova Filter, non Kanban né Lens**: le colonne
   scaduto/oggi/imminente/completato sono proiezioni calcolate da una data, non stati persistiti,
   quindi un drag&drop fra loro non avrebbe un'azione di scrittura naturale. Confermato dal
   comportamento reale di HubSpot (fonte del requisito): tab di filtro più tabella.
 - **`fields()`, `filters()` e `indexQuery()` vanno tutti scoped su `$request->viaResource === 'quotes'`**:
   Nova richiama gli stessi metodi per la vista globale e per il sub-panel Task dentro il
-  dettaglio Quote. Scopare solo `indexQuery()` fa trapelare riordino colonne e colonna/filtro
+  dettaglio Quote. Scopare solo `indexQuery()` fa trapelare riordino colonne e filtro
   Assegnatario anche nel sub-panel. I campi condivisi fra i due rami stanno in metodi privati
-  (`statusBadgeField()`, `completedField()`, `notesField()`, `assigneeField()`); nel sub-panel il
-  campo Assegnatario è `onlyOnForms()`, così la lista resta senza colonna.
+  (`statusBadgeField()`, `completedField()`, `notesField()`, `assigneeField()`).
+- **Nel sub-panel la colonna Assegnatario prende il posto del Cliente** (oc:8815): il cliente è
+  quello della Quote ed è già nella tab Principale, l'assegnatario cambia da task a task. Sono due
+  campi nati dallo stesso `assigneeField()`: `exceptOnForms()` nella posizione del Cliente (link
+  alla scheda utente solo per gli admin, per `UserPolicy::before()`; non ordinabile) e
+  `onlyOnForms()` in fondo, così il form non cambia. Nei test vanno cercati per visibilità
+  (`showOnIndex` / `showOnCreation`), non con `firstWhere('attribute', 'assignee')`, che
+  restituisce la colonna e lascia il form senza controllo.
 - **Campo Assegnatario precompilato in creazione** (oc:8722): dal tab Task della Quote con
   `default()`, nella vista globale con `dependsOn(['quote'])`, che lo ricalcola a ogni cambio di
   trattativa ma solo se `isCreateOrAttachRequest()`: in modifica il valore salvato non si tocca.
@@ -109,6 +115,11 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
 
 ## Come ci siamo arrivati
 
+- **Sub-panel Task della Quote senza colonna Assegnatario** (oc:8402/oc:8722, superato da
+  oc:8815): la lista restava identica al layout originale, con la colonna Cliente, e
+  l'assegnatario compariva solo nel form. Superato perché nella scheda di una Quote il cliente è
+  sempre lo stesso, mentre serve sapere a chi tocca ogni task.
+
 - **Assegnatario derivato da `quote->user`** (oc:8327, superato da oc:8722): nessuna colonna, tutti
   i task di una Quote avevano lo stesso assegnatario e una riassegnazione della Quote riscriveva
   retroattivamente anche i task completati. Abbandonato perché sulle trattative grandi lavorano
@@ -129,7 +140,9 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
 - **Bug di scoping Task via `QuoteNoFilter`, noto e non risolto**: il bypass di `indexQuery()`
   scatta su `viaResource === 'quotes'`, ma l'uriKey di `QuoteNoFilter` è `quote-no-filters`,
   quindi il sub-panel Task raggiunto da Customer → tab Preventivi non ne beneficia. Preesistente,
-  reso più probabile da scoprire da oc:8407 (Task è ora un tab di primo piano). Da ticket
-  dedicato.
+  reso più probabile da scoprire da oc:8407 (Task è ora un tab di primo piano). Lo stesso vale
+  per `ArchivedQuotes` (uriKey `archived-quotes`): in entrambi i percorsi il tab Task usa il ramo
+  globale di `fields()`, quindi mostra ancora la colonna Cliente anziché l'Assegnatario di
+  oc:8815. Da ticket dedicato.
 - **`docs/features/8402-.../overview.md` è scritto prima del merge di oc:8403** e non riflette
   il fatto che `TaskPolicy` sia il vero argine: il dettaglio è nel `notes.md` di quella feature.
