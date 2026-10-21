@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\QuoteStatus;
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\QuoteApiRequest;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Services\Quotes\QuotePdfLinks;
 use App\Services\Quotes\QuoteRichText;
 use App\Models\RecurringProduct;
 use App\Services\QuotePdfService;
@@ -16,7 +16,6 @@ use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -177,10 +176,12 @@ class QuoteController extends Controller
      * customer). expires_in_days is capped at 90 to avoid a de-facto
      * permanent link; the signature cannot be revoked before expiry short
      * of rotating APP_KEY (which invalidates every signed link project-wide).
+     * Every generated link is appended to quotes.pdf_links by QuotePdfLinks
+     * (oc:8733), the same writer used by the Nova action.
      *
      * @response 201 array{url: string, expires_at: string}
      */
-    public function pdfLink(Request $request, Quote $quote): JsonResponse
+    public function pdfLink(Request $request, Quote $quote, QuotePdfLinks $pdfLinks): JsonResponse
     {
         $this->authorize('view', $quote);
 
@@ -189,27 +190,23 @@ class QuoteController extends Controller
         // QuotePolicy::view() has no per-quote ownership check, so it alone
         // isn't a tight enough gate for an action with this blast radius.
         // Restrict it to Admin/Manager, same set as CustomerPolicy.
-        abort_unless(
-            $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager),
-            403
-        );
+        abort_unless(QuotePdfLinks::canShare($request->user()), 403);
 
         $validated = $request->validate([
             'lang'             => ['sometimes', 'string', 'max:5'],
-            'expires_in_days'  => ['sometimes', 'integer', 'min:1', 'max:90'],
+            'expires_in_days'  => ['sometimes', 'integer', 'min:1', 'max:' . QuotePdfLinks::MAX_DAYS],
         ]);
 
-        $lang = $validated['lang'] ?? self::DEFAULT_LANG;
-        $expiresAt = now()->addDays($validated['expires_in_days'] ?? 30);
-
-        $url = URL::temporarySignedRoute('quotes.pdf.public', $expiresAt, [
-            'quote' => $quote->id,
-            'lang'  => $lang,
-        ]);
+        $link = $pdfLinks->generate(
+            $quote,
+            $validated['lang'] ?? QuotePdfLinks::DEFAULT_LANG,
+            $validated['expires_in_days'] ?? QuotePdfLinks::DEFAULT_DAYS,
+            $request->user(),
+        );
 
         return response()->json([
-            'url'        => $url,
-            'expires_at' => $expiresAt->toIso8601String(),
+            'url'        => $link['url'],
+            'expires_at' => $link['expires_at']->toIso8601String(),
         ], 201);
     }
 

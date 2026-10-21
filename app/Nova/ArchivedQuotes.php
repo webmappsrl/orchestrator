@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Enums\QuoteStatus;
 use App\Nova\Actions\EditFields;
+use App\Nova\Actions\GenerateQuotePublicPdfLink;
 use App\Nova\Metrics\StatusQuotes;
 use Google\Service\AIPlatformNotebooks\Status;
 use Illuminate\Http\Request;
@@ -48,6 +49,8 @@ class ArchivedQuotes extends Quote
     {
         return [
             EditFields::make('Edit', ['status'], ArchivedQuotes::class),
+            // Le trattative chiuse si aprono da qui: il link si genera anche su quelle (oc:8733).
+            new GenerateQuotePublicPdfLink,
         ];
     }
 
