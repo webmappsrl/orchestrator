@@ -31,6 +31,8 @@ class Quote extends Model implements HasMedia
         'additional_services' => 'array',
         'template' => 'bool',
         'priority' => 'int',
+        // Storico dei link pubblici al PDF (oc:8733): si scrive solo da QuotePdfLinks, mai via fillable.
+        'pdf_links' => 'array',
     ];
 
     protected $fillable = [
