@@ -516,6 +516,7 @@
   "Template": "Template",
   "Open Template Quote": "Apri Template Preventivo",
   "Archived quotes": "Preventivi archiviati",
+  "Quotes without active tasks": "Trattative senza task attivi",
   "Generate public link": "Genera link pubblico",
   "Public link (expires on :date): :url": "Link pubblico (scade il :date): :url",
   "Links already sent stay valid until they expire: they cannot be revoked.": "I link già inviati restano validi fino alla loro scadenza: non si possono revocare.",

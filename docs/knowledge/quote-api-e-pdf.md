@@ -174,6 +174,26 @@ organizzata la Resource Nova.
   visibile dal restringimento imposto da `Tab::group`. Da ticket dedicato, riguarda tutto il
   progetto.
 
+### Trattative aperte senza task attivi (oc:8729)
+- **Definizione unica** in `Quote::scopeOpenWithoutActiveTasks()`: stato diverso da `closed won`/
+  `closed lost` e nessun task `todo`. Passa da `Quote::tasks()`, che non filtra per utente: conta il
+  task di qualunque assegnatario o creatore. La usano sia l'API sia la Lens, che restituiscono le
+  stesse trattative.
+- **API:** `GET /api/quotes?without_active_tasks=1` (o `true`), combinabile con `customer_id`,
+  `status`, `sort` e paginazione; senza `customer_id` vale per tutti i clienti. La validazione è
+  `in:0,1,true,false`, non `boolean`: quella di Laravel rifiuta la stringa `true` che arriva da una
+  query string.
+- **Nova:** Lens «Trattative senza task attivi» (`QuotesWithoutActiveTasks`), solo su `Nova\Quote`:
+  `ArchivedQuotes` e `QuoteNoFilter` la estendono e ridefiniscono `lenses()` vuoto. La Lens non passa
+  da `indexQuery()`, quindi l'esclusione delle chiuse le arriva dallo scope. Ordina per `id`
+  decrescente se l'utente non sceglie una colonna: senza `ORDER BY` PostgreSQL non tiene lo stesso
+  ordine fra le pagine.
+- **Come si usa:** Preventivi → menu a tendina delle Lens in cima all'elenco → «Trattative senza task
+  attivi». Dalla Lens non c'è un comando per toglierla: si torna con «Preventivi» nella barra laterale
+  o con il pulsante indietro del browser (comportamento standard delle Lens Nova).
+- **Non escluse le Quote `template`**: un modello aperto e senza task compare fra le trattative
+  scoperte, come compare nell'elenco Preventivi. Non verificato su dati reali.
+
 ### Motivo della chiusura persa (oc:8732)
 - Colonna `lost_reason` (text, nullable) su `quotes`, non traducibile. Esiste solo sulle trattative
   in `closed lost`: un secondo listener `saving` in `Quote::booted()` la azzera per ogni altro stato,
@@ -202,6 +222,11 @@ organizzata la Resource Nova.
 
 ## Come ci siamo arrivati
 
+- **Trattative scoperte ricavate dal client** confrontando `/api/quotes` e `/api/tasks` (oc:8729,
+  call del 30/09/2026): superato allo scrum del 20/10/2026 dal parametro `without_active_tasks`.
+  `/api/tasks` restituisce solo i task di chi chiede (`forUser`), quindi una trattativa seguita da un
+  collega risultava scoperta. I filtri di `/api/tasks` sono rimasti per altri usi
+  (vedi [task-e-quote.md](task-e-quote.md)).
 - **Link pubblici non salvati** (oc:8291): superato da oc:8733. Il link firmato «viveva solo nelle
   mail» e la scheda non diceva se il preventivo era già stato mandato; ora ogni link resta in
   `pdf_links`.

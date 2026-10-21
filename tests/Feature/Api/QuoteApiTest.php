@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\RecurringProduct;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Sanctum\Sanctum;
@@ -626,5 +627,131 @@ class QuoteApiTest extends TestCase
         ])
             ->assertStatus(422)
             ->assertJsonValidationErrors('lost_reason');
+    }
+
+    /**
+     * Tre trattative dello stesso cliente (oc:8729): una aperta senza task, una aperta con un
+     * task todo di un collega, una chiusa senza task.
+     */
+    private function makeQuotesForActiveTasksFilter(): array
+    {
+        $customer = Customer::factory()->create();
+        $colleague = User::factory()->create();
+
+        $uncovered = Quote::factory()->create(['customer_id' => $customer->id, 'status' => QuoteStatus::New->value]);
+        $followed = Quote::factory()->create(['customer_id' => $customer->id, 'status' => QuoteStatus::Presented->value]);
+        Task::create([
+            'quote_id' => $followed->id,
+            'title' => 'Richiamare il cliente',
+            'due_date' => now()->addDay(),
+            'creator_id' => $colleague->id,
+            'assignee_id' => $colleague->id,
+        ]);
+        $closed = Quote::factory()->create(['customer_id' => $customer->id, 'status' => QuoteStatus::Closed_Won->value]);
+
+        return [$customer, $uncovered, $followed, $closed];
+    }
+
+    /** @test */
+    public function without_active_tasks_restituisce_solo_le_trattative_aperte_senza_task_todo(): void
+    {
+        $this->actingAsAdmin();
+        [, $uncovered, $followed, $closed] = $this->makeQuotesForActiveTasksFilter();
+
+        $ids = collect($this->getJson('/api/quotes?without_active_tasks=1')->assertStatus(200)->json())->pluck('id');
+
+        $this->assertContains($uncovered->id, $ids);
+        $this->assertNotContains($followed->id, $ids);
+        $this->assertNotContains($closed->id, $ids);
+    }
+
+    /** @test */
+    public function without_active_tasks_a_zero_o_assente_lascia_la_risposta_invariata(): void
+    {
+        $this->actingAsAdmin();
+        [$customer] = $this->makeQuotesForActiveTasksFilter();
+
+        $without = $this->getJson("/api/quotes?customer_id={$customer->id}")->assertStatus(200)->json();
+        $zero = $this->getJson("/api/quotes?customer_id={$customer->id}&without_active_tasks=0")->assertStatus(200)->json();
+
+        $this->assertCount(3, $without);
+        $this->assertSame($without, $zero);
+    }
+
+    /** @test */
+    public function without_active_tasks_accetta_true(): void
+    {
+        $this->actingAsAdmin();
+        [$customer, $uncovered] = $this->makeQuotesForActiveTasksFilter();
+
+        $ids = collect($this->getJson("/api/quotes?customer_id={$customer->id}&without_active_tasks=true")
+            ->assertStatus(200)->json())->pluck('id')->all();
+
+        $this->assertSame([$uncovered->id], $ids);
+    }
+
+    /** @test */
+    public function without_active_tasks_con_valore_non_booleano_risponde_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson('/api/quotes?without_active_tasks=si')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('without_active_tasks');
+    }
+
+    /** @test */
+    public function without_active_tasks_si_combina_con_customer_id(): void
+    {
+        $this->actingAsAdmin();
+        [$customer, $uncovered] = $this->makeQuotesForActiveTasksFilter();
+        // customer_id esplicito: QuoteFactory sceglie un cliente a caso fra quelli esistenti.
+        $otherCustomerQuote = Quote::factory()->create([
+            'customer_id' => Customer::factory()->create()->id,
+            'status' => QuoteStatus::New->value,
+        ]);
+
+        $ids = collect($this->getJson("/api/quotes?customer_id={$customer->id}&without_active_tasks=1")
+            ->assertStatus(200)->json())->pluck('id')->all();
+
+        $this->assertSame([$uncovered->id], $ids);
+        $this->assertNotContains($otherCustomerQuote->id, $ids);
+    }
+
+    /** @test */
+    public function without_active_tasks_con_solo_stati_chiusi_restituisce_elenco_vuoto(): void
+    {
+        $this->actingAsAdmin();
+        [$customer] = $this->makeQuotesForActiveTasksFilter();
+
+        $this->getJson("/api/quotes?customer_id={$customer->id}&status=closed%20won&without_active_tasks=1")
+            ->assertStatus(200)
+            ->assertExactJson([]);
+    }
+
+    /** @test */
+    public function without_active_tasks_si_combina_con_la_paginazione(): void
+    {
+        $this->actingAsAdmin();
+        [$customer, $uncovered] = $this->makeQuotesForActiveTasksFilter();
+
+        $response = $this->getJson("/api/quotes?customer_id={$customer->id}&without_active_tasks=1&per_page=10")
+            ->assertStatus(200)
+            ->json();
+
+        $this->assertSame(1, $response['meta']['total']);
+        $this->assertSame([$uncovered->id], collect($response['data'])->pluck('id')->all());
+    }
+
+    /** @test */
+    public function without_active_tasks_vuoto_equivale_ad_assente(): void
+    {
+        $this->actingAsAdmin();
+        [$customer] = $this->makeQuotesForActiveTasksFilter();
+
+        $without = $this->getJson("/api/quotes?customer_id={$customer->id}")->assertStatus(200)->json();
+        $empty = $this->getJson("/api/quotes?customer_id={$customer->id}&without_active_tasks=")->assertStatus(200)->json();
+
+        $this->assertSame($without, $empty);
     }
 }

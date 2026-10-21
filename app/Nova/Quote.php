@@ -6,6 +6,7 @@ use Laravel\Nova\Panel;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
+use App\Nova\Lenses\QuotesWithoutActiveTasks;
 use App\Services\Quotes\QuotePdfLinks;
 use App\Models\User as UserModel;
 use Illuminate\Support\Carbon;
@@ -401,7 +402,7 @@ class Quote extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [];
+        return [new QuotesWithoutActiveTasks];
     }
 
     /**

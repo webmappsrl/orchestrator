@@ -728,6 +728,7 @@
   "Template": "Template",
   "Open Template Quote": "Open Template Quote",
   "Archived quotes": "Archived quotes",
+  "Quotes without active tasks": "Quotes without active tasks",
   "Generate public link": "Generate public link",
   "Public link (expires on :date): :url": "Public link (expires on :date): :url",
   "Links already sent stay valid until they expire: they cannot be revoked.": "Links already sent stay valid until they expire: they cannot be revoked.",

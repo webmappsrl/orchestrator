@@ -57,10 +57,17 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   asimmetria intenzionale, coerente col resto del progetto — la lista filtra "i miei task", il
   dettaglio (raggiungibile solo conoscendo l'id) resta visibile a chi ha un ruolo abilitato.
 - **Nessuna paginazione e nessun `?include=` opt-in** sull'API Task: ogni Task include sempre
-  `assignee` (`{id, name, email}` o `null`), `quote_id` e `quote_title`. Il contratto è consumato
+  `assignee` (`{id, name, email}` o `null`), `quote_id`, `quote_title` e `quote_status`
+  (oc:8729). Il contratto è consumato
   da un client esterno (skill Cowork, server MCP `orchestrator` di `claude-marketplace`) fuori da
   questo repo: introdurre paginazione o opt-in sarebbe un breaking change cross-repo. Nessun
   `DELETE`.
+- **Filtri di `GET /api/tasks`** (oc:8729): `status` (`todo`/`completed`), `quote_id`,
+  `due_from`/`due_to` (`AAAA-MM-GG`, estremi inclusi, confronto sulla sola data perché `due_date` è
+  un `dateTime`). Opzionali e combinabili; vuoti non filtrano; valori non validi → 422. Si applicano
+  **dopo** `forUser()`: `?quote_id=42` non restituisce i task dei colleghi su quella trattativa. Per
+  le trattative senza task attivi si usa `GET /api/quotes?without_active_tasks=1`
+  (vedi [quote-api-e-pdf.md](quote-api-e-pdf.md)).
 - **`Task::appendNote()` prepende, non accoda**, mirror del comportamento reale di
   `Story::addDevNote()` (che nonostante il nome storico prepende sempre).
 
