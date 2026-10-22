@@ -59,7 +59,7 @@ class Task extends Resource
                 // senza colonna Assegnatario (oc:8402).
                 $this->assigneeField()->onlyOnForms(),
 
-                $this->notesField(),
+                self::notesField(),
             ];
         }
 
@@ -86,7 +86,7 @@ class Task extends Resource
 
             $this->assigneeField(),
 
-            $this->notesField(),
+            self::notesField(),
         ];
     }
 
@@ -96,6 +96,10 @@ class Task extends Resource
      * TaskModel::defaultAssigneeId(): dal tab Task della Quote la trattativa
      * è già nota; nella vista globale si ricalcola a ogni cambio di
      * trattativa. In modifica il valore salvato non viene mai ricalcolato.
+     *
+     * Serve anche al popup di ToggleTaskCompleted (oc:8730): Nova cerca gli
+     * utenti del suo campo Assegnatario tramite questo campo. Se si cambia
+     * attributo o filtro, va cambiato anche lì.
      */
     private function assigneeField(): BelongsTo
     {
@@ -158,7 +162,11 @@ class Task extends Resource
             ->hideWhenCreating();
     }
 
-    private function notesField(): Tiptap
+    /**
+     * Campo note Tiptap, riusato dal popup di chiusura del task
+     * (ToggleTaskCompleted, oc:8730) perché le note abbiano lo stesso formato.
+     */
+    public static function notesField(): Tiptap
     {
         return Tiptap::make(__('Notes'), 'notes')
             ->hideFromIndex()
@@ -249,7 +257,7 @@ class Task extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            (new ToggleTaskCompleted())->showInline(),
+            (new ToggleTaskCompleted())->sole(),
         ];
     }
 
