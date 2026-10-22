@@ -1,4 +1,4 @@
-FROM php:8.4-fpm
+FROM php:8.4.27-fpm
 
 USER root
 
@@ -80,7 +80,7 @@ RUN apt-get update && apt-get install -y \
         python3-dev \
         libfreetype6-dev \
         pkg-config \
-    && pip3 install --break-system-packages \
+    && pip3 install --break-system-packages --ignore-installed \
         matplotlib \
         requests \
         PyJWT \
