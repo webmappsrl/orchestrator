@@ -37,9 +37,23 @@ disinstallare un pacchetto apt). Aggiunto `--ignore-installed` alla riga pip: re
 sopra senza tentare la disinstallazione. Una riga oltre il pin previsto dal piano,
 necessaria perché il build completi.
 
+### Task 4 — applicazione su geobox: ricreati anche redis e postgres
+
+`docker compose up -d phpfpm` sul server ha ricreato **anche** `redis` e `db` nonostante il
+nome servizio: i container vecchi erano stati creati con un compose precedente e le
+definizioni differivano, e `depends_on` li ha portati alla forma nuova. Redis non partiva —
+il publish `6379:6379` del compose collide con un redis-server **dell'host** su
+`127.0.0.1:6379` — e phpfpm è rimasto giù qualche minuto. Fix: tolto il publish della 6379
+dal compose (orchestrator parla col suo redis via rete Docker; il publish non serviva a
+nessuno ed era già nei follow-up come hardening), prima sul server per riportare su la
+produzione, poi nel repo con lo stesso identico contenuto. Postgres ricreato senza perdita:
+dati su volume (7953 stories dopo il recreate).
+
 ## Bug trovati
 
-(nessuno finora)
+- Il publish `6379:6379` del servizio redis nel compose non è mai stato applicabile su
+  geobox (porta occupata dal redis-server dell'host): nessuno se n'era accorto perché i
+  container non venivano ricreati da tempo. Rimosso (vedi deviazione Task 4).
 
 ## Follow-up
 
