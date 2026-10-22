@@ -31,6 +31,8 @@ class Quote extends Model implements HasMedia
         'additional_services' => 'array',
         'template' => 'bool',
         'priority' => 'int',
+        // Storico dei link pubblici al PDF (oc:8733): si scrive solo da QuotePdfLinks, mai via fillable.
+        'pdf_links' => 'array',
     ];
 
     protected $fillable = [
@@ -96,6 +98,20 @@ class Quote extends Model implements HasMedia
         return $query->with(['tasks' => function ($tasksQuery) {
             $tasksQuery->where('status', Task::STATUS_TODO)->orderBy('due_date', 'asc');
         }]);
+    }
+
+    /**
+     * Open quotes (not `closed won`/`closed lost`) without any `todo` task,
+     * i.e. quotes nobody is following (oc:8729). Single definition shared by
+     * GET /api/quotes?without_active_tasks=1 and the Nova Lens
+     * QuotesWithoutActiveTasks. Goes through `tasks()`, which is not scoped
+     * by user: a `todo` task of any assignee or creator counts.
+     */
+    public function scopeOpenWithoutActiveTasks($query)
+    {
+        return $query
+            ->whereNotIn('status', [QuoteStatus::Closed_Won->value, QuoteStatus::Closed_Lost->value])
+            ->whereDoesntHave('tasks', fn ($tasksQuery) => $tasksQuery->where('status', Task::STATUS_TODO));
     }
 
     /**

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\QuoteStatus;
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\QuoteApiRequest;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Services\Quotes\QuotePdfLinks;
 use App\Services\Quotes\QuoteRichText;
 use App\Models\RecurringProduct;
 use App\Services\QuotePdfService;
@@ -16,7 +16,6 @@ use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -46,6 +45,7 @@ class QuoteController extends Controller
      */
     #[QueryParameter('customer_id', description: 'Filter quotes belonging to a specific customer.', type: 'int')]
     #[QueryParameter('status', description: 'Filter by status. Accepts a single value (?status=new) or multiple via array syntax (?status[]=new&status[]=presented). 422 if a value is not a valid status.', type: 'App\\Enums\\QuoteStatus|array<App\\Enums\\QuoteStatus>')]
+    #[QueryParameter('without_active_tasks', description: 'With 1/true, only open quotes (status other than closed won/closed lost) without any todo task, whoever its assignee or creator: the way to find quotes nobody is following. Combines with the other filters and with pagination; 0/false or omitted leaves the list unchanged. Any other value returns 422.', type: 'bool')]
     #[QueryParameter('sort', description: 'Sort by created_at: "created_at" for ascending, "-created_at" for descending. Any other value (including omitting this parameter) silently falls back to descending id order (needed for deterministic pagination).', type: 'string')]
     #[QueryParameter('per_page', description: 'Enables opt-in pagination together with page. Without per_page/page the response is a plain array; with either, it becomes {data, meta}.', type: 'int', default: self::DEFAULT_PER_PAGE)]
     #[QueryParameter('page', description: 'Page number for opt-in pagination, used together with per_page.', type: 'int')]
@@ -61,6 +61,9 @@ class QuoteController extends Controller
         $statusRules = is_array($request->input('status'))
             ? ['status' => ['array'], 'status.*' => ['nullable', Rule::enum(QuoteStatus::class)]]
             : ['status' => ['sometimes', 'nullable', Rule::enum(QuoteStatus::class)]];
+        // Non la regola `boolean`: rifiuterebbe la stringa "true" che un client JS manda
+        // serializzando un booleano in query string (oc:8729).
+        $statusRules['without_active_tasks'] = ['sometimes', 'nullable', 'in:0,1,true,false'];
         $request->validate($statusRules);
 
         $query = Quote::query()->with(['products', 'recurringProducts']);
@@ -81,6 +84,11 @@ class QuoteController extends Controller
             } else {
                 $query->where('status', $status);
             }
+        }
+
+        // boolean() e non filled(): con ?without_active_tasks=0 il filtro resta spento.
+        if ($request->boolean('without_active_tasks')) {
+            $query->openWithoutActiveTasks();
         }
 
         if ($request->get('sort') === '-created_at') {
@@ -168,10 +176,12 @@ class QuoteController extends Controller
      * customer). expires_in_days is capped at 90 to avoid a de-facto
      * permanent link; the signature cannot be revoked before expiry short
      * of rotating APP_KEY (which invalidates every signed link project-wide).
+     * Every generated link is appended to quotes.pdf_links by QuotePdfLinks
+     * (oc:8733), the same writer used by the Nova action.
      *
      * @response 201 array{url: string, expires_at: string}
      */
-    public function pdfLink(Request $request, Quote $quote): JsonResponse
+    public function pdfLink(Request $request, Quote $quote, QuotePdfLinks $pdfLinks): JsonResponse
     {
         $this->authorize('view', $quote);
 
@@ -180,27 +190,23 @@ class QuoteController extends Controller
         // QuotePolicy::view() has no per-quote ownership check, so it alone
         // isn't a tight enough gate for an action with this blast radius.
         // Restrict it to Admin/Manager, same set as CustomerPolicy.
-        abort_unless(
-            $request->user()->hasRole(UserRole::Admin) || $request->user()->hasRole(UserRole::Manager),
-            403
-        );
+        abort_unless(QuotePdfLinks::canShare($request->user()), 403);
 
         $validated = $request->validate([
             'lang'             => ['sometimes', 'string', 'max:5'],
-            'expires_in_days'  => ['sometimes', 'integer', 'min:1', 'max:90'],
+            'expires_in_days'  => ['sometimes', 'integer', 'min:1', 'max:' . QuotePdfLinks::MAX_DAYS],
         ]);
 
-        $lang = $validated['lang'] ?? self::DEFAULT_LANG;
-        $expiresAt = now()->addDays($validated['expires_in_days'] ?? 30);
-
-        $url = URL::temporarySignedRoute('quotes.pdf.public', $expiresAt, [
-            'quote' => $quote->id,
-            'lang'  => $lang,
-        ]);
+        $link = $pdfLinks->generate(
+            $quote,
+            $validated['lang'] ?? QuotePdfLinks::DEFAULT_LANG,
+            $validated['expires_in_days'] ?? QuotePdfLinks::DEFAULT_DAYS,
+            $request->user(),
+        );
 
         return response()->json([
-            'url'        => $url,
-            'expires_at' => $expiresAt->toIso8601String(),
+            'url'        => $link['url'],
+            'expires_at' => $link['expires_at']->toIso8601String(),
         ], 201);
     }
 

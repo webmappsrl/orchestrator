@@ -6,6 +6,10 @@ use Laravel\Nova\Panel;
 use Laravel\Nova\Tabs\Tab;
 use Marshmallow\Tiptap\Tiptap;
 use App\Enums\QuoteStatus;
+use App\Nova\Lenses\QuotesWithoutActiveTasks;
+use App\Services\Quotes\QuotePdfLinks;
+use App\Models\User as UserModel;
+use Illuminate\Support\Carbon;
 use App\Rules\AdditionalServicesMap;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
@@ -23,6 +27,7 @@ use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\HasMany;
 use App\Nova\Actions\DuplicateQuote;
+use App\Nova\Actions\GenerateQuotePublicPdfLink;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\BelongsToMany;
 use App\Nova\Filters\QuoteStatusFilter;
@@ -206,6 +211,18 @@ class Quote extends Resource
                         return '<a class="link-default" target="_blank" href="' . $this->google_drive_url . '">' . $this->google_drive_url . '</a>';
                     })->asHtml(),
 
+                    // Link pubblici al PDF (oc:8733): l'URL apre il PDF senza login, quindi solo
+                    // Admin e Manager, come POST /api/quotes/{quote}/pdf-link.
+                    Text::make(__('Active links'), fn () => $this->pdfLinksHtml(activeOnly: true))
+                        ->asHtml()
+                        ->onlyOnDetail()
+                        ->canSee(fn (Request $request) => static::canSeePdfLinks($request)),
+
+                    Text::make(__('Links history'), fn () => $this->pdfLinksHtml(activeOnly: false))
+                        ->asHtml()
+                        ->onlyOnDetail()
+                        ->canSee(fn (Request $request) => static::canSeePdfLinks($request)),
+
                     Boolean::make(__('Template'), 'template')
                         ->help(__('Only one template per customer. If you enable this, it becomes the current template and the previous one will be automatically disabled.'))
                         ->hideFromIndex(),
@@ -385,7 +402,7 @@ class Quote extends Resource
      */
     public function lenses(NovaRequest $request)
     {
-        return [];
+        return [new QuotesWithoutActiveTasks];
     }
 
     /**
@@ -398,8 +415,57 @@ class Quote extends Resource
     {
         return [
             (new DuplicateQuote)
-                ->showInline()
+                ->showInline(),
+            new GenerateQuotePublicPdfLink,
         ];
+    }
+
+    public static function canSeePdfLinks(Request $request): bool
+    {
+        return QuotePdfLinks::canShare($request->user());
+    }
+
+    /**
+     * Elenco HTML dei link in pdf_links (oc:8733), dal più recente: solo quelli non scaduti per
+     * «Active links», tutti con data di generazione e autore per «Links history».
+     */
+    public function pdfLinksHtml(bool $activeOnly): string
+    {
+        $links = collect($this->resource->pdf_links ?? [])->reverse()->values();
+
+        if ($activeOnly) {
+            $links = $links->filter(fn (array $link) => Carbon::parse($link['expires_at'])->isFuture());
+        }
+
+        if ($links->isEmpty()) {
+            return '—';
+        }
+
+        $authors = $activeOnly ? collect() : UserModel::whereIn('id', $links->pluck('created_by')->filter()->unique())
+            ->pluck('name', 'id');
+
+        $html = $links->map(function (array $link) use ($activeOnly, $authors) {
+            $text = e($link['lang']) . ', ' . e(__('expires on :date', [
+                'date' => Carbon::parse($link['expires_at'])->format('d/m/Y'),
+            ]));
+
+            if (! $activeOnly) {
+                $text .= ' · ' . e(__('generated on :date by :name', [
+                    'date' => Carbon::parse($link['created_at'])->format('d/m/Y H:i'),
+                    'name' => $authors[$link['created_by']] ?? '—',
+                ]));
+            }
+
+            // L'indirizzo si mostra per intero: il cliente vuole vederlo e copiarlo dalla scheda.
+            return $text . '<br><a class="link-default break-all" target="_blank" rel="noopener" href="'
+                . e($link['url']) . '">' . e($link['url']) . '</a>';
+        })->implode('<br>');
+
+        // Nel dettaglio Nova non mostra ->help(): l'avvertenza va nel contenuto del campo.
+        return $activeOnly
+            ? $html
+            : $html . '<br><span class="text-xs text-gray-500">'
+                . e(__('The link always opens the current version of the quote.')) . '</span>';
     }
 
     public static function indexQuery(NovaRequest $request, $query)
