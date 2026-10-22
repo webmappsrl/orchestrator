@@ -38,6 +38,8 @@ proprio a scoprire eventuali regressioni prima del server.
 
 ## Task 4 — Applicazione su geobox (produzione, repo in `/var/www/html/orchestrator`, branch `main`)
 
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#task-4--applicazione-su-geobox-ricreati-anche-redis-e-postgres)
+
 Pre-condizioni già soddisfatte il 22/10: snapshot fatto dal dev; immagine in esecuzione
 taggata `wm-phpfpm:pre-8844` (`bd8abb1f34e2`); disco a 8,5GB liberi.
 
