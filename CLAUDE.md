@@ -83,6 +83,12 @@ Tutti i comandi PHP girano **dentro il container Docker** `php81_orchestrator`.
   inglese: commit, branch, merge, gate, build, deploy, review. Nomi di file, slug e identificatori
   seguono la stessa regola.
 
+- **Quando aggiorni l'immagine PHP, cambia il pin nel Dockerfile e il tag nel compose nello
+  stesso commit e ricostruisci sempre con `--pull`**; sul server segui
+  [docs/howto/aggiornare-immagine-php.md](docs/howto/aggiornare-immagine-php.md) — il rebuild
+  senza `--pull` su tag mobile è un no-op silenzioso, e il container può girare su
+  un'immagine diversa da quella che il compose nomina.
+
 - **Ogni documento sotto `docs/features/` inizia con `> Ticket: oc:<ID>`**; lo slug di una feature è
   `<ID>-<titolo-in-kebab-case>` e lo scope dei commit è `feat(oc:<ID>): …` / `fix(oc:<ID>): …` /
   `refactor(oc:<ID>): …`.
@@ -105,3 +111,4 @@ Tutti i comandi PHP girano **dentro il container Docker** `php81_orchestrator`.
 | Sync del Google Calendar | job con debounce, cascade demote, coda e fallback | [docs/knowledge/sync-google-calendar.md](docs/knowledge/sync-google-calendar.md) |
 | Media Library e allegati | override del wm-package, tre layout su disco, path generator ibrido | [docs/knowledge/media-library-path-generator.md](docs/knowledge/media-library-path-generator.md) |
 | Monitoraggio costi Hetzner | token per progetto, cache, prezzi hardcodati | [docs/knowledge/hetzner-monitoring.md](docs/knowledge/hetzner-monitoring.md) |
+| Immagine PHP: pin e PHP2Shell | perché il pin esplicito, predis senza estensione redis, il nome del container non indica la versione | [docs/knowledge/8844-messa-in-sicurezza-php2shell-orchestrator.md](docs/knowledge/8844-messa-in-sicurezza-php2shell-orchestrator.md) |
