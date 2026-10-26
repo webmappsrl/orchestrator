@@ -39,6 +39,21 @@ class TaskNovaResourceTest extends TestCase
         return NovaRequest::create('/')->setUserResolver(fn () => $user);
     }
 
+    /**
+     * Nel tab Task della Quote l'Assegnatario è dichiarato due volte (colonna
+     * in lista e campo in fondo al form, oc:8815): firstWhere('attribute')
+     * troverebbe la colonna, quindi i due campi si distinguono per visibilità.
+     */
+    private function assigneeIndexField(array $fields)
+    {
+        return collect($fields)->first(fn ($field) => $field->attribute === 'assignee' && $field->showOnIndex);
+    }
+
+    private function assigneeFormField(array $fields)
+    {
+        return collect($fields)->first(fn ($field) => $field->attribute === 'assignee' && $field->showOnCreation);
+    }
+
     public function test_admin_sees_all_tasks_in_global_index()
     {
         $quoteA = $this->makeQuoteWithOwner();
@@ -129,7 +144,7 @@ class TaskNovaResourceTest extends TestCase
         $this->assertTrue($results->first()->is($toOwner));
     }
 
-    public function test_quote_subpanel_fields_keep_original_layout_without_assignee_column()
+    public function test_quote_subpanel_shows_assignee_column_instead_of_customer()
     {
         $quote = $this->makeQuoteWithOwner();
         $task = Task::create(['quote_id' => $quote->id, 'title' => 'Task', 'due_date' => now()->addDay()]);
@@ -138,24 +153,28 @@ class TaskNovaResourceTest extends TestCase
         $fields = (new TaskResource($task))->fields($request);
         $names = collect($fields)->pluck('name');
 
-        // La lista del sub-panel resta identica al layout pre-oc:8402: il
-        // campo Assegnatario c'è solo nel form (oc:8722), non come colonna.
-        $this->assertContains(__('Customer'), $names);
+        // Nella lista del tab l'Assegnatario prende il posto del Cliente
+        // (oc:8815); nel form resta in fondo, come prima.
+        $this->assertNotContains(__('Customer'), $names);
         $this->assertContains(__('Quote'), $names);
         $this->assertCount(9, $fields);
+        $this->assertCount(2, collect($fields)->where('attribute', 'assignee'));
 
-        $assignee = collect($fields)->firstWhere('attribute', 'assignee');
-        $this->assertNotNull($assignee);
-        $this->assertFalse($assignee->showOnIndex);
-        $this->assertTrue($assignee->showOnCreation);
-        $this->assertTrue($assignee->showOnUpdate);
+        $column = $this->assigneeIndexField($fields);
+        $this->assertNotNull($column);
+        $this->assertFalse($column->showOnCreation);
+        $this->assertFalse($column->showOnUpdate);
+        $this->assertFalse($column->sortable);
 
-        // Ordine esatto pre-oc:8402: Task, Quote, Customer (non l'ordine
-        // Customer-first introdotto per la vista globale). Il primo campo
-        // (ID) e' escluso: la sua label e' un oggetto PendingTranslation,
-        // non una stringa comparabile direttamente.
+        $formField = $this->assigneeFormField($fields);
+        $this->assertNotNull($formField);
+        $this->assertFalse($formField->showOnIndex);
+        $this->assertTrue($formField->showOnUpdate);
+
+        // Il primo campo (ID) e' escluso: la sua label e' un oggetto
+        // PendingTranslation, non una stringa comparabile direttamente.
         $this->assertSame(
-            [__('Task'), __('Quote'), __('Customer'), __('Due date'), __('Status'), __('Completed'), __('Assignee'), __('Notes')],
+            [__('Task'), __('Quote'), __('Assignee'), __('Due date'), __('Status'), __('Completed'), __('Assignee'), __('Notes')],
             $names->slice(1)->values()->all()
         );
 
@@ -167,7 +186,7 @@ class TaskNovaResourceTest extends TestCase
     {
         foreach (['/', '/?viaResource=quotes'] as $url) {
             $fields = (new TaskResource(new Task()))->fields(NovaRequest::create($url));
-            $assignee = collect($fields)->firstWhere('attribute', 'assignee');
+            $assignee = $this->assigneeFormField($fields);
 
             $this->assertNotNull($assignee, $url);
             $this->assertContains('required', $assignee->rules, $url);
@@ -190,7 +209,7 @@ class TaskNovaResourceTest extends TestCase
         $request = NovaRequest::create("/?viaResource=quotes&viaResourceId={$quote->id}&editing=true&editMode=create")
             ->setUserResolver(fn () => $creator);
 
-        $assignee = collect((new TaskResource(new Task()))->fields($request))->firstWhere('attribute', 'assignee');
+        $assignee = $this->assigneeFormField((new TaskResource(new Task()))->fields($request));
 
         $this->assertSame($quote->user_id, $assignee->resolveDefaultValue($request));
     }

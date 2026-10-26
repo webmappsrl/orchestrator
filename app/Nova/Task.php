@@ -45,7 +45,9 @@ class Task extends Resource
                     ->searchable()
                     ->rules('required'),
 
-                $this->customerField(),
+                // Nella lista l'Assegnatario prende il posto del Cliente, già
+                // visibile nella tab Principale della Quote (oc:8815).
+                $this->assigneeField()->exceptOnForms(),
 
                 DateTime::make(__('Due date'), 'due_date')
                     ->sortable()
@@ -55,8 +57,8 @@ class Task extends Resource
 
                 $this->completedField(),
 
-                // Solo nel form: la lista del tab Task della Quote resta
-                // senza colonna Assegnatario (oc:8402).
+                // Nel form l'Assegnatario resta in fondo (oc:8815): è un
+                // secondo campo, nato dallo stesso assigneeField() della colonna.
                 $this->assigneeField()->onlyOnForms(),
 
                 self::notesField(),
