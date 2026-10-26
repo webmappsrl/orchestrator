@@ -46,42 +46,41 @@ magari facciamo proprio una validazione».
       1. il pezzo, tolti spazi e a capo ai bordi, sia **esattamente** `Nome <email>`, senza testo
          prima o dopo e senza a capo all'interno;
       2. il nome non sia vuoto;
-      3. l'email sia valida, con `Symfony\Component\Mime\Address::create()` (già disponibile tramite
-         Laravel).
+      3. l'email sia valida, con `new Symfony\Component\Mime\Address($email)` (già disponibile
+         tramite Laravel).
       `Address::create()` da solo non basta: accetta testo dopo `>`, ignora le righe successive alla
       prima e restituisce un nome vuoto senza errore (`vendor/symfony/mime/Address.php:34`).
       Una persona senza nome (`m.rossi@comune.pisa.it`), con un'email non valida
       (`Mario Rossi <m.rossi@>`) o con testo in più fa rifiutare l'intero valore con un errore che
       indica la persona sbagliata.
 - [ ] La stessa validazione vale in Nova e nell'API (un'unica Rule riusata nei due punti).
-- [ ] Il valore valido viene salvato così com'è scritto, senza riscriverlo.
+- [ ] Il valore valido viene salvato così com'è scritto, senza riscriverlo. Fa eccezione il
+      middleware globale `TrimStrings`, che toglie spazi e a capo all'inizio e alla fine dell'intero
+      valore, come per ogni campo.
+- [ ] Al massimo 2000 caratteri (`max:2000`, come `lost_reason`), in Nova e nell'API.
 - [ ] API: il campo è accettato in `POST /api/quotes` e `PATCH /api/quotes/{quote}`
       (`QuoteApiRequest`, `sometimes` + `nullable`), compare in tutte le risposte di `formatQuote()`
       ed è documentato nelle annotazioni Scramble del controller.
 - [ ] Nova: campo `Textarea` nella tab Main, subito sotto il Cliente, visibile nel dettaglio e nel
       form, nascosto nell'elenco delle trattative. Con `->alwaysShow()`, come `lost_reason`
-      (`app/Nova/Quote.php:205`): senza, nel dettaglio il valore resta chiuso dietro «Show content».
+      (`app/Nova/Quote.php:206`): senza, nel dettaglio il valore resta chiuso dietro «Show content».
+      Posizione e nome `customer_contacts` approvati in review (scrum 26/10/2026 08:27, Alessandro
+      Peci: «Comunque va il nome va bene e la posizione sì, … è andata bene sotto cliente»).
 - [ ] Testi: etichetta e messaggi di errore con chiave inglese, tradotti in `lang/it.json` (lingua di
       default `it`) e presenti in `lang/en.json`.
-- [ ] Test feature su API (creazione, modifica, azzeramento, valori rifiutati) e su Nova, sul modello
-      di `tests/Feature/QuoteLostReasonTest.php`.
+- [ ] Test della Rule in `tests/Unit/Rules/`, test feature su API (creazione, modifica,
+      azzeramento, valori rifiutati) in `QuoteApiTest` e `QuoteApiDocsTest`, e su Nova in
+      `QuoteNovaResourceTest`.
 - [ ] Pagina `docs/knowledge/quote-api-e-pdf.md` aggiornata con il nuovo campo del contratto API.
-
-## Domande aperte per il reviewer
-
-- **Posizione in Nova.** Entrambe valide, si implementa la prima; spostarlo è una riga:
-  - subito sotto il Cliente: si legge l'ente e subito dopo la persona da contattare in quell'ente;
-  - subito sotto il Proprietario: referente interno ed esterni vicini, si vede insieme chi segue la
-    trattativa per Webmapp e chi per il cliente.
 
 ## Rischi
 
 - **Validazione troppo permissiva** (verificato nel container): `Address::fromString()` non esiste
   in `symfony/mime` 7.4.9, e `Address::create()` accetta valori malformati purché contengano un
   `<email>` valido. Mitigazione: Rule nostra che controlla la forma esatta di ogni persona e usa
-  `Address::create()` solo per l'email (vedi Requisiti).
+  `new Address()` solo per l'email (vedi Requisiti).
 - **Ordine dei deploy con la skill.** `store()` e `update()` salvano solo `$request->validated()`
-  (`app/Http/Controllers/Api/QuoteController.php:219,244`): se la skill manda `customer_contacts`
+  (`app/Http/Controllers/Api/QuoteController.php:228,253`): se la skill manda `customer_contacts`
   prima che l'orchestrator lo conosca, la chiave viene ignorata con risposta 200 e il dato si perde
   senza errori. Mitigazione: rilasciare l'orchestrator prima di attivare il campo nella skill.
 
@@ -98,12 +97,14 @@ magari facciamo proprio una validazione».
 
 Tutti nel repo `orchestrator` (nessun submodule).
 
-- `database/migrations/<data>_add_<campo>_to_quotes_table.php` — nuova
+- `database/migrations/2026_10_26_120000_add_customer_contacts_to_quotes_table.php` — nuova
 - `app/Models/Quote.php` — `$fillable`
-- `app/Rules/<NomeRule>.php` — nuova Rule di validazione dell'elenco di persone
+- `app/Rules/CustomerContacts.php` — nuova Rule di validazione dell'elenco di persone
 - `app/Http/Requests/Api/QuoteApiRequest.php` — regola del campo
 - `app/Http/Controllers/Api/QuoteController.php` — `formatQuote()` e annotazioni Scramble
 - `app/Nova/Quote.php` — campo nella tab Main
 - `lang/it.json`, `lang/en.json` — etichetta e messaggi
-- `tests/Feature/...` — test API e Nova del nuovo campo
+- `tests/Unit/Rules/CustomerContactsRuleTest.php` — nuovo, test della Rule
+- `tests/Feature/Api/QuoteApiTest.php`, `tests/Feature/Api/QuoteApiDocsTest.php`,
+  `tests/Feature/QuoteNovaResourceTest.php` — test API e Nova del nuovo campo
 - `docs/knowledge/quote-api-e-pdf.md` — contratto API aggiornato

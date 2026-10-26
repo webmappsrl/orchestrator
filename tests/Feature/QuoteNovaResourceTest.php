@@ -327,22 +327,22 @@ class QuoteNovaResourceTest extends TestCase
     }
 
     /**
-     * Valida il motivo come lo valida Nova al salvataggio del form (oc:8732): campi di update e
+     * Valida un campo come lo valida Nova al salvataggio del form (oc:8732): campi di update e
      * dependsOn applicato sui dati inviati, come in Resource::rulesForUpdate().
      */
-    private function validateQuoteUpdate(Quote $quote, array $payload): void
+    private function validateQuoteUpdate(Quote $quote, array $payload, string $attribute = 'lost_reason'): void
     {
         $request = NovaRequest::create('/nova-api/quotes/' . $quote->id, 'PUT', $payload);
 
         $rules = (new QuoteResource($quote))
             ->updateFields($request)
             ->applyDependsOn($request)
-            // Solo il campo del motivo: le regole dei BelongsTo vogliono la rotta Nova completa.
-            ->filter(fn ($field) => $field->attribute === 'lost_reason')
+            // Solo il campo indicato: le regole dei BelongsTo vogliono la rotta Nova completa.
+            ->filter(fn ($field) => $field->attribute === $attribute)
             ->mapWithKeys(fn ($field) => $field->getUpdateRules($request))
             ->all();
 
-        $this->assertArrayHasKey('lost_reason', $rules);
+        $this->assertArrayHasKey($attribute, $rules);
 
         \Illuminate\Support\Facades\Validator::make($request->all(), $rules)->validate();
     }
@@ -433,5 +433,66 @@ class QuoteNovaResourceTest extends TestCase
             ->filter(fn ($f) => ($f->attribute ?? null) === 'lost_reason' && $f->isShownOnIndex($request, $quote));
 
         $this->assertCount(0, $onIndex);
+    }
+
+    public function test_customer_contacts_come_right_after_the_customer()
+    {
+        $request = NovaRequest::create('/');
+        $fields = $this->flattenFields((new QuoteResource(new Quote()))->fields($request));
+
+        $customerPos = $this->fieldPosition($fields, fn ($f) => $f instanceof BelongsTo && $f->attribute === 'customer');
+        $contactsPos = $this->fieldPosition($fields, fn ($f) => $f instanceof Textarea && $f->attribute === 'customer_contacts');
+
+        $this->assertSame($customerPos + 1, $contactsPos);
+    }
+
+    public function test_customer_contacts_are_shown_on_detail_and_forms_but_not_on_index()
+    {
+        $request = NovaRequest::create('/');
+        $quote = $this->makeQuote();
+
+        $field = collect($this->flattenFields((new QuoteResource($quote))->fields($request)))
+            ->first(fn ($f) => $f instanceof Textarea && $f->attribute === 'customer_contacts');
+
+        $this->assertNotNull($field);
+        $this->assertFalse($field->isShownOnIndex($request, $quote));
+        $this->assertTrue($field->isShownOnDetail($request, $quote));
+        $this->assertTrue($field->isShownOnCreation($request));
+        $this->assertTrue($field->isShownOnUpdate($request, $quote));
+        // Senza, nel dettaglio il valore resta chiuso dietro «Show content».
+        $this->assertTrue($field->alwaysShow);
+    }
+
+    public function test_malformed_customer_contacts_are_rejected()
+    {
+        $quote = $this->makeQuote();
+
+        try {
+            $this->validateQuoteUpdate($quote, ['customer_contacts' => 'Mario Rossi <m.rossi@>'], 'customer_contacts');
+            $this->fail('Expected a validation error on customer_contacts.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('customer_contacts', $e->errors());
+        }
+    }
+
+    public function test_valid_or_empty_customer_contacts_pass_validation()
+    {
+        $quote = $this->makeQuote();
+
+        foreach (['"Rossi, Mario" <m.rossi@comune.pisa.it>, Anna Bianchi <a.bianchi@comune.pisa.it>', '', null] as $value) {
+            $this->validateQuoteUpdate($quote, ['customer_contacts' => $value], 'customer_contacts');
+        }
+    }
+
+    public function test_customer_contacts_help_keeps_the_email_placeholder_visible()
+    {
+        $request = NovaRequest::create('/');
+
+        $field = collect($this->flattenFields((new QuoteResource(new Quote()))->fields($request)))
+            ->first(fn ($f) => $f instanceof Textarea && $f->attribute === 'customer_contacts');
+
+        // Nova rende l'help con v-html: `<email>` non scappato sparirebbe come tag sconosciuto.
+        $this->assertStringContainsString('&lt;email&gt;', $field->helpText);
+        $this->assertStringNotContainsString('<email>', $field->helpText);
     }
 }
