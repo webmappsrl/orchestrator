@@ -225,24 +225,14 @@ organizzata la Resource Nova.
   da contattare **per quella trattativa**, quando non coincidono con il referente del Customer
   (`customers.email`, che resta com'era). Il dato è della singola Quote, non del Customer.
 - Formato `Nome Cognome <email>` separati da virgola, controllato da `App\Rules\CustomerContacts`,
-  la stessa Rule in Nova e nell'API:
-  - si divide sulle virgole fuori dalle virgolette, quindi `"Rossi, Mario" <m.rossi@…>` (forma
-    tipica delle intestazioni mail) è una persona sola; dentro le virgolette `\"` è una virgoletta
-    scritta;
-  - ogni persona, tolti spazi e a capo ai bordi, deve essere esattamente `Nome <email>`: si rifiuta
-    se manca il nome, se c'è testo dopo `>` o un a capo dentro (anche dentro un nome fra
-    virgolette), se c'è una persona vuota (virgola finale o doppia) o se le virgolette non sono
-    chiuse;
-  - l'email si controlla con `new Symfony\Component\Mime\Address($email)`;
-  - la Rule va preceduta da `string` e `max:2000`: ignora i valori che non sono stringhe, e la regex
-    usa quantificatori possessivi, che con il limite di lunghezza tengono il controllo veloce anche
-    su testi costruiti apposta;
-  - il valore valido si salva così com'è scritto, senza riscriverlo. Fa eccezione il middleware
-    globale `TrimStrings`, che toglie spazi e a capo all'inizio e alla fine dell'intero valore.
+  la stessa Rule in Nova e nell'API; il nome può stare fra virgolette (`"Rossi, Mario" <…>`).
+  I casi rifiutati sono nella Rule e nei suoi test. La Rule va preceduta da `string` e `max:2000`:
+  ignora i valori che non sono stringhe.
+- Il valore valido si salva com'è scritto, senza riscriverlo; fa eccezione `TrimStrings`, che toglie
+  spazi e a capo ai bordi dell'intero valore.
 - Nova: `Textarea` nella tab Main subito sotto il Cliente, nascosta nell'elenco, con `alwaysShow()`
-  e un testo di aiuto sul formato. Posizione e nome approvati allo scrum del 26/10/2026. **Nova rende
-  l'help come HTML** (`v-html`): il testo passa da `e()`, altrimenti `<email>` sparisce come tag
-  sconosciuto.
+  e un testo di aiuto sul formato. **Nova rende l'help come HTML** (`v-html`): il testo passa da
+  `e()`, altrimenti `<email>` sparisce come tag sconosciuto.
 - API: `customer_contacts` in `POST`/`PATCH` (`sometimes` + `nullable`, 422 se malformato) e in
   tutte le risposte di `formatQuote()`. **Una chiave che l'orchestrator non conosce viene ignorata
   con 200** (`store()`/`update()` salvano solo `validated()`): l'orchestrator va rilasciato prima di
