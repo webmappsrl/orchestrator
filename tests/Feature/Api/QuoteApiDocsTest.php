@@ -205,4 +205,19 @@ class QuoteApiDocsTest extends TestCase
             $this->assertArrayHasKey('lost_reason', $this->requestBodyProperties($path, $method), "Expected lost_reason in the request body of {$method} {$path}.");
         }
     }
+
+    public function test_all_full_quote_responses_and_bodies_document_customer_contacts(): void
+    {
+        foreach ($this->allFullQuoteSchemas() as $operation => $schema) {
+            foreach ($this->quotePropertySets($schema) as $variant => $properties) {
+                $this->assertArrayHasKey('customer_contacts', $properties, "Expected customer_contacts in response variant {$variant} of {$operation}.");
+            }
+        }
+
+        foreach ([['/quotes', 'post'], ['/quotes/{quote}', 'patch']] as [$path, $method]) {
+            $properties = $this->requestBodyProperties($path, $method);
+            $this->assertArrayHasKey('customer_contacts', $properties, "Expected customer_contacts in the request body of {$method} {$path}.");
+            $this->assertStringContainsString('<email>', $properties['customer_contacts']['description'] ?? '', "Expected {$method} {$path} to describe the customer_contacts format.");
+        }
+    }
 }

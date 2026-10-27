@@ -754,4 +754,97 @@ class QuoteApiTest extends TestCase
 
         $this->assertSame($without, $empty);
     }
+
+    /** @test */
+    public function store_salva_i_contatti_del_cliente_come_scritti(): void
+    {
+        $this->actingAsAdmin();
+        $customer = Customer::factory()->create();
+        $contacts = "\"Rossi, Mario\" <m.rossi@comune.pisa.it>,\nAnna Bianchi <a.bianchi@comune.pisa.it>";
+
+        $response = $this->postJson('/api/quotes', [
+            'title'             => 'Portale Parco XY',
+            'customer_id'       => $customer->id,
+            'customer_contacts' => $contacts,
+        ])->assertStatus(201)->assertJsonPath('customer_contacts', $contacts);
+
+        $this->assertSame($contacts, Quote::find($response->json('id'))->customer_contacts);
+    }
+
+    /** @test */
+    public function update_modifica_e_azzera_i_contatti_del_cliente(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['customer_contacts' => 'Mario Rossi <m.rossi@comune.pisa.it>']);
+
+        $this->patchJson("/api/quotes/{$quote->id}", ['customer_contacts' => 'Anna Bianchi <a.bianchi@comune.pisa.it>'])
+            ->assertStatus(200)
+            ->assertJsonPath('customer_contacts', 'Anna Bianchi <a.bianchi@comune.pisa.it>');
+
+        $this->patchJson("/api/quotes/{$quote->id}", ['customer_contacts' => null])
+            ->assertStatus(200)
+            ->assertJsonPath('customer_contacts', null);
+
+        $this->assertNull($quote->fresh()->customer_contacts);
+    }
+
+    /** @test */
+    public function update_senza_contatti_lascia_quelli_salvati(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create(['customer_contacts' => 'Mario Rossi <m.rossi@comune.pisa.it>']);
+
+        $this->patchJson("/api/quotes/{$quote->id}", ['title' => 'Titolo nuovo'])->assertStatus(200);
+
+        $this->assertSame('Mario Rossi <m.rossi@comune.pisa.it>', $quote->fresh()->customer_contacts);
+    }
+
+    /** @test */
+    public function contatti_malformati_rispondono_422(): void
+    {
+        $this->actingAsAdmin();
+        $customer = Customer::factory()->create();
+
+        // I casi del formato sono nel test della Rule: qui basta vedere che è collegata.
+        $this->postJson('/api/quotes', [
+            'title'             => 'Portale Parco XY',
+            'customer_id'       => $customer->id,
+            'customer_contacts' => 'Mario Rossi <m.rossi@>',
+        ])->assertStatus(422)->assertJsonValidationErrors('customer_contacts');
+    }
+
+    /** @test */
+    public function contatti_come_array_danno_un_solo_errore(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+
+        $response = $this->patchJson("/api/quotes/{$quote->id}", ['customer_contacts' => ['Mario Rossi <m.rossi@comune.pisa.it>']])
+            ->assertStatus(422);
+
+        $this->assertCount(1, $response->json('errors.customer_contacts'));
+    }
+
+    /** @test */
+    public function contatti_oltre_2000_caratteri_rispondono_422(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+
+        $this->patchJson("/api/quotes/{$quote->id}", ['customer_contacts' => str_repeat('a', 1990) . ' <m@x.it>, b <b@x.it>'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('customer_contacts');
+    }
+
+    /** @test */
+    public function show_restituisce_i_contatti_anche_se_vuoti(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+
+        $this->getJson("/api/quotes/{$quote->id}")
+            ->assertStatus(200)
+            ->assertJsonPath('customer_contacts', null)
+            ->assertJsonStructure(['customer_contacts']);
+    }
 }

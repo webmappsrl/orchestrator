@@ -11,6 +11,7 @@ use App\Services\Quotes\QuotePdfLinks;
 use App\Models\User as UserModel;
 use Illuminate\Support\Carbon;
 use App\Rules\AdditionalServicesMap;
+use App\Rules\CustomerContacts;
 use Laravel\Nova\Fields\ID;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
@@ -124,6 +125,15 @@ class Quote extends Resource
                     BelongsTo::make(__('Customer'), 'customer', 'App\nova\Customer')
                         ->filterable()
                         ->searchable(),
+
+                    // Persone del cliente da contattare per questa trattativa, non il referente del Customer (oc:8731).
+                    Textarea::make(__('Customer contacts'), 'customer_contacts')
+                        ->nullable()
+                        ->hideFromIndex()
+                        ->alwaysShow()
+                        ->rules('nullable', 'string', 'max:2000', new CustomerContacts())
+                        // Nova rende l'help come HTML: senza escape `<email>` sparisce.
+                        ->help(e(__('People to contact at the customer for this quote, as Name Surname <email>, separated by commas.'))),
 
                     Text::make(__('Title'), function () {
                         return self::wrapTitleHtml($this->title);
