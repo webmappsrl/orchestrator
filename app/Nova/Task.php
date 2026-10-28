@@ -45,7 +45,9 @@ class Task extends Resource
                     ->searchable()
                     ->rules('required'),
 
-                $this->customerField(),
+                // Nella lista l'Assegnatario prende il posto del Cliente, già
+                // visibile nella tab Principale della Quote (oc:8815).
+                $this->assigneeField()->exceptOnForms(),
 
                 DateTime::make(__('Due date'), 'due_date')
                     ->sortable()
@@ -55,11 +57,11 @@ class Task extends Resource
 
                 $this->completedField(),
 
-                // Solo nel form: la lista del tab Task della Quote resta
-                // senza colonna Assegnatario (oc:8402).
+                // Nel form l'Assegnatario resta in fondo (oc:8815): è un
+                // secondo campo, nato dallo stesso assigneeField() della colonna.
                 $this->assigneeField()->onlyOnForms(),
 
-                $this->notesField(),
+                self::notesField(),
             ];
         }
 
@@ -86,7 +88,7 @@ class Task extends Resource
 
             $this->assigneeField(),
 
-            $this->notesField(),
+            self::notesField(),
         ];
     }
 
@@ -96,6 +98,10 @@ class Task extends Resource
      * TaskModel::defaultAssigneeId(): dal tab Task della Quote la trattativa
      * è già nota; nella vista globale si ricalcola a ogni cambio di
      * trattativa. In modifica il valore salvato non viene mai ricalcolato.
+     *
+     * Serve anche al popup di ToggleTaskCompleted (oc:8730): Nova cerca gli
+     * utenti del suo campo Assegnatario tramite questo campo. Se si cambia
+     * attributo o filtro, va cambiato anche lì.
      */
     private function assigneeField(): BelongsTo
     {
@@ -158,7 +164,11 @@ class Task extends Resource
             ->hideWhenCreating();
     }
 
-    private function notesField(): Tiptap
+    /**
+     * Campo note Tiptap, riusato dal popup di chiusura del task
+     * (ToggleTaskCompleted, oc:8730) perché le note abbiano lo stesso formato.
+     */
+    public static function notesField(): Tiptap
     {
         return Tiptap::make(__('Notes'), 'notes')
             ->hideFromIndex()
@@ -249,7 +259,7 @@ class Task extends Resource
     public function actions(NovaRequest $request)
     {
         return [
-            (new ToggleTaskCompleted())->showInline(),
+            (new ToggleTaskCompleted())->sole(),
         ];
     }
 

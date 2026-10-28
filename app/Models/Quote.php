@@ -48,6 +48,7 @@ class Quote extends Model implements HasMedia
         'notes',
         'template',
         'lost_reason',
+        'customer_contacts',
     ];
 
     public $translatable = [

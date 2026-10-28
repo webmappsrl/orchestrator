@@ -42,7 +42,8 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   `Gate::authorize('create', Task::class)` con un solo argomento per decidere se mostrare
   l'azione "crea". Una firma a due parametri obbligatori rompe **l'intera creazione di Task via
   Nova** con `ArgumentCountError`. Quando `$quote` è assente il blocco su quote chiuse non si
-  applica; il controller API passa sempre la Quote esplicitamente.
+  applica; il controller API e `ToggleTaskCompleted` (oc:8730) passano sempre la Quote
+  esplicitamente. Il form «Crea Task» di Nova resta l'unico senza blocco.
 - **Chiunque acceda ai task li completa e li riapre** (oc:8722): `TaskPolicy::updateStatus()`
   restituisce `true` e il filtro sui ruoli è in `before()`; `ToggleTaskCompleted` usa la stessa
   policy. Resta un check a sé, invocato da `TaskController::update()` solo se il payload contiene
@@ -71,17 +72,24 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
 - **`Task::appendNote()` prepende, non accoda**, mirror del comportamento reale di
   `Story::addDevNote()` (che nonostante il nome storico prepende sempre).
 
-### Viste Nova (oc:8327, oc:8402, oc:8722)
+### Viste Nova (oc:8327, oc:8402, oc:8722, oc:8815)
 - **Vista globale come Nova Filter, non Kanban né Lens**: le colonne
   scaduto/oggi/imminente/completato sono proiezioni calcolate da una data, non stati persistiti,
   quindi un drag&drop fra loro non avrebbe un'azione di scrittura naturale. Confermato dal
   comportamento reale di HubSpot (fonte del requisito): tab di filtro più tabella.
 - **`fields()`, `filters()` e `indexQuery()` vanno tutti scoped su `$request->viaResource === 'quotes'`**:
   Nova richiama gli stessi metodi per la vista globale e per il sub-panel Task dentro il
-  dettaglio Quote. Scopare solo `indexQuery()` fa trapelare riordino colonne e colonna/filtro
+  dettaglio Quote. Scopare solo `indexQuery()` fa trapelare riordino colonne e filtro
   Assegnatario anche nel sub-panel. I campi condivisi fra i due rami stanno in metodi privati
-  (`statusBadgeField()`, `completedField()`, `notesField()`, `assigneeField()`); nel sub-panel il
-  campo Assegnatario è `onlyOnForms()`, così la lista resta senza colonna.
+  (`statusBadgeField()`, `completedField()`, `assigneeField()`) e in `notesField()`, che è
+  `public static` perché lo riusa il popup di chiusura (oc:8730).
+- **Nel sub-panel la colonna Assegnatario prende il posto del Cliente** (oc:8815): il cliente è
+  quello della Quote ed è già nella tab Principale, l'assegnatario cambia da task a task. Sono due
+  campi nati dallo stesso `assigneeField()`: `exceptOnForms()` nella posizione del Cliente (link
+  alla scheda utente solo per gli admin, per `UserPolicy::before()`; non ordinabile) e
+  `onlyOnForms()` in fondo, così il form non cambia. Nei test vanno cercati per visibilità
+  (`showOnIndex` / `showOnCreation`), non con `firstWhere('attribute', 'assignee')`, che
+  restituisce la colonna e lascia il form senza controllo.
 - **Campo Assegnatario precompilato in creazione** (oc:8722): dal tab Task della Quote con
   `default()`, nella vista globale con `dependsOn(['quote'])`, che lo ricalcola a ogni cambio di
   trattativa ma solo se `isCreateOrAttachRequest()`: in modifica il valore salvato non si tocca.
@@ -101,13 +109,47 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   mutare l'attributo `due_date`): un confronto su datetime completo classificava come "scaduto"
   un task in scadenza oggi non appena l'orario corrente superava quello di scadenza,
   disallineandosi dalla semantica a livello di giorno usata da scope e filtro.
-- **L'azione "Segna come completato/Riapri"** sostituisce l'azione "Replica" di default
-  (`authorizedToReplicate() => false`).
+- **L'azione di chiusura** («Segna come completato» / «Riapri», `ToggleTaskCompleted`) sostituisce
+  l'azione "Replica" di default (`authorizedToReplicate() => false`); come funziona è nella
+  sezione sotto.
 - **`App\Nova\Quote::title()` ha il fallback `$this->name ?: $this->title`**: la Resource usa
   `$title = 'name'`, ma `name` è un fillable morto (vedi [Quote: API, PDF e viste Nova](quote-api-e-pdf.md)) —
   senza fallback il `BelongsTo` verso Quote nel form Task mostra un'etichetta vuota.
 
+### Chiusura con task successivo (oc:8730)
+- **Un'azione sola per chiudere e riaprire**: su un task aperto si chiama «Segna come completato» e
+  il popup ha i campi del task successivo (Titolo, Scadenza, Assegnatario, Note); su un task chiuso
+  si chiama «Riapri» e non ha campi. Con il titolo nasce un task sulla stessa Quote, nella stessa
+  transazione della chiusura; senza titolo il task si chiude e basta. Scadenza e Assegnatario sono
+  obbligatori solo con il titolo (`required_with:title`).
+- **`uriKey` fisso e campi restituiti quando il task non c'è**: all'esecuzione Nova ricostruisce
+  l'azione su un modello vuoto e la ritrova per `uriKey`. Un `uriKey` ricavato dal nome, che cambia
+  con lo stato, darebbe 404; dei campi tolti «quando il task è chiuso» sparirebbero anche
+  all'esecuzione, e il task successivo non nascerebbe senza errore. Il test passa dall'endpoint
+  `POST /nova-api/tasks/action` per vedere proprio questo.
+- **Un task per volta**: `sole()` nasconde l'azione con più task selezionati, ma agisce solo
+  sull'interfaccia; `handle()` rifiuta più di un task.
+- **L'Assegnatario del popup è precompilato con `Task::defaultAssigneeId()`**, calcolato solo
+  all'apertura del popup. La ricerca degli utenti nel popup passa dal campo `assignee` della
+  risorsa (`/nova-api/tasks/associatable/assignee`), non da quello dell'azione: i due campi devono
+  restare con lo stesso attributo e lo stesso filtro `withTaskAccess()`. Nel tab Task della Quote
+  i campi `assignee` della risorsa sono due (oc:8815) e Nova usa il primo, la colonna: funziona
+  perché nascono entrambi da `assigneeField()`.
+- **Su una Quote chiusa il task successivo non nasce** (oc:8730, review del 19/10/2026): l'azione
+  chiede a `TaskPolicy::create()` con la Quote del task, come l'API, senza ripetere gli stati
+  chiusi. All'apertura il popup non ha campi e la conferma chiude il task e basta; se un titolo
+  arriva lo stesso (pagina aperta da prima della chiusura della Quote) `handle()` risponde con un
+  errore **prima** della transazione e il task resta aperto. Il controllo che conta è quello in
+  `handle()` (vedi la voce sull'`uriKey` fisso, sopra).
+- **Nello storico delle azioni Nova una riapertura risulta «Segna come completato»**: all'esecuzione
+  `name()` non conosce il task. Accettato: il modello `Task` non mostra lo storico.
+
 ## Come ci siamo arrivati
+
+- **Sub-panel Task della Quote senza colonna Assegnatario** (oc:8402/oc:8722, superato da
+  oc:8815): la lista restava identica al layout originale, con la colonna Cliente, e
+  l'assegnatario compariva solo nel form. Superato perché nella scheda di una Quote il cliente è
+  sempre lo stesso, mentre serve sapere a chi tocca ogni task.
 
 - **Assegnatario derivato da `quote->user`** (oc:8327, superato da oc:8722): nessuna colonna, tutti
   i task di una Quote avevano lo stesso assegnatario e una riassegnazione della Quote riscriveva
@@ -126,10 +168,18 @@ Replica della feature Task di HubSpot: promemoria (`title`, `notes` Tiptap, `due
   cancellato non era più completabile da nessuno, e un payload `{status, notes}` da un
   non-creatore falliva con 403 sull'intera richiesta. Superato da «chiunque crea i task e
   chiunque li può chiudere».
+- **Task successivo creato anche su una Quote chiusa** (oc:8730, primo ciclo, superato dalla
+  review del 19/10/2026): l'azione faceva come il form «Crea Task» di Nova, dove la policy non
+  riceve la Quote. Abbandonato perché la stessa operazione dava esiti opposti da Nova e
+  dall'API/skill Claude, e perché è lo scenario normale del cliente: chiudere una Quote non chiude
+  i suoi task, quindi l'ultimo task di una trattativa vinta si chiude dopo. Il form «Crea Task» di
+  Nova resta senza blocco.
 - **Bug di scoping Task via `QuoteNoFilter`, noto e non risolto**: il bypass di `indexQuery()`
   scatta su `viaResource === 'quotes'`, ma l'uriKey di `QuoteNoFilter` è `quote-no-filters`,
   quindi il sub-panel Task raggiunto da Customer → tab Preventivi non ne beneficia. Preesistente,
-  reso più probabile da scoprire da oc:8407 (Task è ora un tab di primo piano). Da ticket
-  dedicato.
+  reso più probabile da scoprire da oc:8407 (Task è ora un tab di primo piano). Lo stesso vale
+  per `ArchivedQuotes` (uriKey `archived-quotes`): in entrambi i percorsi il tab Task usa il ramo
+  globale di `fields()`, quindi mostra ancora la colonna Cliente anziché l'Assegnatario di
+  oc:8815. Da ticket dedicato.
 - **`docs/features/8402-.../overview.md` è scritto prima del merge di oc:8403** e non riflette
   il fatto che `TaskPolicy` sia il vero argine: il dettaglio è nel `notes.md` di quella feature.

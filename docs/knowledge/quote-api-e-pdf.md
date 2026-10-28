@@ -220,8 +220,31 @@ organizzata la Resource Nova.
   «Chiuso Perso» resta permesso, e l'hook del model azzera il motivo. Come `deniedUpdateRoles`,
   l'opzione arriva al server dentro il `config` mandato dal browser.
 
+### Contatti del cliente sulla trattativa (oc:8731)
+- Colonna `customer_contacts` (text, nullable) su `quotes`, non traducibile: le persone del cliente
+  da contattare **per quella trattativa**, quando non coincidono con il referente del Customer
+  (`customers.email`, che resta com'era). Il dato è della singola Quote, non del Customer.
+- Formato `Nome Cognome <email>` separati da virgola, controllato da `App\Rules\CustomerContacts`,
+  la stessa Rule in Nova e nell'API; il nome può stare fra virgolette (`"Rossi, Mario" <…>`).
+  I casi rifiutati sono nella Rule e nei suoi test. La Rule va preceduta da `string` e `max:2000`:
+  ignora i valori che non sono stringhe.
+- Il valore valido si salva com'è scritto, senza riscriverlo; fa eccezione `TrimStrings`, che toglie
+  spazi e a capo ai bordi dell'intero valore.
+- Nova: `Textarea` nella tab Main subito sotto il Cliente, nascosta nell'elenco, con `alwaysShow()`
+  e un testo di aiuto sul formato. **Nova rende l'help come HTML** (`v-html`): il testo passa da
+  `e()`, altrimenti `<email>` sparisce come tag sconosciuto.
+- API: `customer_contacts` in `POST`/`PATCH` (`sometimes` + `nullable`, 422 se malformato) e in
+  tutte le risposte di `formatQuote()`. **Una chiave che l'orchestrator non conosce viene ignorata
+  con 200** (`store()`/`update()` salvano solo `validated()`): l'orchestrator va rilasciato prima di
+  attivare il campo nella skill commerciale, altrimenti il dato si perde senza errori.
+- L'azione Nova «Duplica» copia il campo nella trattativa nuova, come ogni altro campo.
+
 ## Come ci siamo arrivati
 
+- **`Address::create()` di Symfony come unica validazione dei contatti** (oc:8731, overview):
+  scartato. La sua regex non è ancorata: accetta testo dopo `>`, ignora le righe dopo la prima e
+  restituisce un nome vuoto senza errore. `Address::fromString()` non esiste più in
+  `symfony/mime` 7.4. Per questo c'è una Rule nostra, e Symfony controlla solo l'email.
 - **Trattative scoperte ricavate dal client** confrontando `/api/quotes` e `/api/tasks` (oc:8729,
   call del 30/09/2026): superato allo scrum del 20/10/2026 dal parametro `without_active_tasks`.
   `/api/tasks` restituisce solo i task di chi chiede (`forUser`), quindi una trattativa seguita da un
