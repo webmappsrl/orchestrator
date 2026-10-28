@@ -9,4 +9,7 @@ return [
         ->toArray(),
 
     'cache_ttl' => env('HETZNER_CACHE_TTL', 900),
+
+    // Link al registro del censimento server (oc:8877), mostrato in testa alla dashboard
+    'censimento_url' => env('HETZNER_CENSIMENTO_URL'),
 ];

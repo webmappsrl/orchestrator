@@ -13,6 +13,10 @@ Nova.booting(function (app) {
             <p v-if="lastUpdated" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Aggiornato: {{ lastUpdated }}
             </p>
+            <p v-if="card && card.censimentoUrl" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Censimento server (accessi, PHP, siti):
+                <a :href="card.censimentoUrl" target="_blank" rel="noopener" class="text-primary-500 hover:underline">apri il registro</a>
+            </p>
         </div>
         <div class="hetzner-monitoring__actions">
             <button
@@ -513,6 +517,8 @@ Nova.booting(function (app) {
     </div>
 </div>
         `,
+
+        props: ['card'],
 
         data() {
             return {

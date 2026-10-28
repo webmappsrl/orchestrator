@@ -15,4 +15,8 @@ snapshot) ed export CSV.
 - **I prezzi di Volumes e Snapshots sono hardcodati** in `HetznerApiService`: l'API Hetzner Cloud non
   espone il pricing per queste risorse. Valori da documentazione pubblica (mag 2026): Volumes
   €0,0476/GB/mese, Snapshots €0,0119/GB/mese. Vanno aggiornati a mano se Hetzner cambia listino.
+- **Il link al censimento server sta in ENV** (`HETZNER_CENSIMENTO_URL`, letto in
+  `config/hetzner.php` come `censimento_url`) e arriva alla card come meta `censimentoUrl`: se la
+  variabile manca, la riga in testa alla dashboard non compare. Cambiare indirizzo non richiede un
+  deploy di codice (oc:8877).
 - Il componente Nova è self-contained, vedi [Nova components: bundle scritti a mano](nova-components-bundle.md).
