@@ -41,6 +41,26 @@ Nova.booting(function (app) {
         </div>
     </div>
 
+    <!-- Censimento server (oc:8877) -->
+    <div v-if="card && card.censimentoUrl" class="flex items-center justify-between p-4 mb-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700" style="border-left: 4px solid rgba(var(--colors-primary-500));">
+        <div>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Censimento server</p>
+            <p class="text-lg font-semibold text-gray-900 dark:text-white">Accessi, PHP, siti e stato di ogni server</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Registro aggiornato a ogni intervento, visibile agli account Webmapp</p>
+        </div>
+        <a
+            :href="card.censimentoUrl"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-primary-500 hover:bg-primary-600 text-white transition-colors"
+        >
+            Apri il registro
+            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+        </a>
+    </div>
+
     <!-- Global summary -->
     <div v-if="!loading && projects.length > 0" class="grid grid-cols-3 gap-4 mb-6">
         <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
@@ -513,6 +533,8 @@ Nova.booting(function (app) {
     </div>
 </div>
         `,
+
+        props: ['card'],
 
         data() {
             return {

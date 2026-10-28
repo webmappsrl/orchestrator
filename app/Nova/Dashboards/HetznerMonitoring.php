@@ -10,7 +10,9 @@ class HetznerMonitoring extends Dashboard
     public function cards(): array
     {
         return [
-            (new HetznerMonitoringCard)->width('full'),
+            (new HetznerMonitoringCard)
+                ->width('full')
+                ->withMeta(['censimentoUrl' => config('hetzner.censimento_url')]),
         ];
     }
 
