@@ -16,6 +16,14 @@ class HetznerMonitoringDashboardTest extends TestCase
         $this->assertSame('https://claude.ai/artifact/esempio', $card['censimentoUrl']);
     }
 
+    public function test_censimento_url_defaults_to_current_artifact(): void
+    {
+        $this->assertSame(
+            'https://claude.ai/artifact/AcEm6H3NptJi53dxPC1evo',
+            config('hetzner.censimento_url')
+        );
+    }
+
     public function test_card_has_no_censimento_url_when_not_configured(): void
     {
         config(['hetzner.censimento_url' => null]);

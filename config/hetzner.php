@@ -11,5 +11,5 @@ return [
     'cache_ttl' => env('HETZNER_CACHE_TTL', 900),
 
     // Link al registro del censimento server (oc:8877), mostrato in testa alla dashboard
-    'censimento_url' => env('HETZNER_CENSIMENTO_URL'),
+    'censimento_url' => env('HETZNER_CENSIMENTO_URL', 'https://claude.ai/artifact/AcEm6H3NptJi53dxPC1evo'),
 ];
