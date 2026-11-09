@@ -34,10 +34,12 @@ seconda per valore, da 44.200 euro (ticket, `customer_request`).
       (decisione del dev, domanda 1). A parità di `due_date` vince l'`id` più basso, così la
       risposta è deterministica.
       **Questo si discosta dalla lettera del ticket**, che parla di «ultimo task aperto» e di «il
-      più recente», cioè del task creato per ultimo. Si è scelta la scadenza più vicina perché è il
-      criterio che Nova già mostra, quindi API e detail view indicano lo stesso task, e perché
-      porta in evidenza i task scaduti, che il ticket dice essere «proprio quello che si ha
-      bisogno di vedere». Le due letture danno lo stesso risultato quando la quote ha un solo task
+      più recente», cioè del task creato per ultimo. Si è scelta la scadenza più vicina perché porta
+      in evidenza i task scaduti, che il ticket dice essere «proprio quello che si ha bisogno di
+      vedere», e perché la data restituita coincide con quella della colonna `Due date`
+      dell'`index` Nova delle quote (`app/Nova/Quote.php:187-190`). Nova mostra solo la data, non
+      il titolo né l'assegnatario, e solo nell'`index`, che esclude le quote `closed won` e
+      `closed lost`. Le due letture danno lo stesso risultato quando la quote ha un solo task
       `todo`; divergono solo quando ne ha più d'uno. Il nome `nextTask` segue lo scope esistente,
       non il lessico del ticket.
 - [ ] Il task si cerca fra **tutti** i task della quote, senza `scopeForUser`: conta qualsiasi
@@ -64,7 +66,8 @@ seconda per valore, da 44.200 euro (ticket, `customer_request`).
       scrivere `plan.md`; il passaggio all'altra forma tocca solo il caricamento in `show`, il
       docblock e un caso di test.
 - [ ] Test in `tests/Feature/Api/QuoteApiTest.php` per: task di un altro utente, task scaduto,
-      più task `todo` (vince la `due_date` più vicina), task `completed` ignorati, nessun task
+      più task `todo` (vince la `due_date` più vicina), task `completed` ignorati anche quando
+      hanno una `due_date` **precedente** a quella del `todo` (deve vincere il `todo`), nessun task
       `todo` (`null`), assegnatario `null`, quote chiusa, assenza della chiave senza `include`.
 
 Nessun testo traducibile: la feature aggiunge solo chiavi JSON.
@@ -79,6 +82,29 @@ Nessun testo traducibile: la feature aggiunge solo chiavi JSON.
   chiamata.
 - **Criterio diverso dalla lettera del ticket.** Chi ha scritto il ticket potrebbe aspettarsi il
   task creato per ultimo: la scelta e il motivo vanno scritti nella risposta di chiusura.
+- **Un task vecchio non chiuso nasconde quello attuale.** L'ordine crescente di `due_date` fa
+  vincere il task scaduto da più tempo: se la quote ha un follow-up di marzo rimasto `todo` e un
+  task di domani di chi la segue davvero, l'API restituisce quello di marzo, con il suo
+  assegnatario. Si accetta: il task restituito è proprio quello da chiudere, e chiuso quello
+  compare il successivo. Va scritto nella risposta di chiusura. Quanto sia frequente non è
+  verificato: il DB locale non ha task `todo`.
+- **Una chiamata per ogni trattativa.** Il dato arriva solo da `GET /api/quotes/{id}`: per fare
+  il punto su tutta la pipeline la skill fa `GET /api/quotes` e poi una
+  `GET /api/quotes/{id}?include=nextTask` per ogni quote (27 il 3 novembre). È il perimetro che
+  chiede il ticket; se servirà nell'`index`, `include=nextTask` lì sarà un'aggiunta compatibile in
+  un ticket a parte, che riusa la stessa relazione del modello.
+- **Un nome sbagliato in `include` è ignorato in silenzio.** `show` scarta senza errore i nomi
+  fuori da `ALLOWED_INCLUDES` (`QuoteController.php:144-147`): con `include=next_task`, o su un
+  ambiente dove la modifica non è ancora deployata, la chiave `nextTask` manca. Una skill che legge
+  il campo con `quote.get("nextTask")` confonde la chiave assente con `null` e vede tutte le
+  trattative senza task. Il comportamento di `include` non cambia; la risposta di chiusura indica
+  a chi aggiorna la skill di usare esattamente `include=nextTask` e di trattare la chiave assente
+  come «include non applicato», non come «nessun task».
+- **Relazione che restituisce `null` per errore.** Con `hasOne()->ofMany()`, se il filtro
+  `status = 'todo'` sta fuori dalla closure di `ofMany`, il `MIN(due_date)` si calcola anche sui
+  task `completed`: quando il task con la data minima è completato, la relazione restituisce `null`
+  anche se c'è un `todo`. Mitigato dal test con un task `completed` precedente al `todo`, che
+  fallisce con questa costruzione qualunque strada scelga il piano.
 - **Pareggio sulla `due_date` diverso da Nova.** `scopeWithNextTodoTask` ordina solo per
   `due_date`: con due task `todo` alla stessa scadenza Nova può mostrarne uno diverso da quello
   dell'API. Suppongo che il caso sia raro, non l'ho verificato: il DB locale non ha task `todo`.
