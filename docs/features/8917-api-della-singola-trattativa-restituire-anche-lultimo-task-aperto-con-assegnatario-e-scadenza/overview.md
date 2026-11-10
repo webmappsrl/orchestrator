@@ -34,9 +34,16 @@ seconda per valore, da 44.200 euro (ticket, `customer_request`).
       (decisione del dev, domanda 1). A parità di `due_date` vince l'`id` più basso, così la
       risposta è deterministica.
       **Questo si discosta dalla lettera del ticket**, che parla di «ultimo task aperto» e di «il
-      più recente», cioè del task creato per ultimo. Si è scelta la scadenza più vicina perché porta
-      in evidenza i task scaduti, che il ticket dice essere «proprio quello che si ha bisogno di
-      vedere», e perché la data restituita coincide con quella della colonna `Due date`
+      più recente», cioè del task creato per ultimo. Si è scelta la scadenza più vicina perché,
+      quando sbaglia, l'errore si vede: esce un task con la data nel passato, che va chiuso. Quando
+      sbaglia «creato per ultimo», invece, esce una data nel futuro e il task scaduto non compare
+      più. Chi pianifica i passi in anticipo crea per ultimo il passo più lontano, quindi l'errore
+      si ripeterebbe ogni volta. Sui dati di produzione al 10/11/2026 i due criteri hanno scelto
+      task diversi su 5 quote: nel caso peggiore «creato per ultimo» avrebbe mostrato una scadenza
+      futura e nascosto una call scaduta da oltre due mesi. Con più task aperti tutti e due i criteri
+      restituiscono un task, quindi il problema del 3 novembre si risolve con entrambi. La scadenza
+      più vicina porta inoltre in evidenza i task scaduti, che il ticket dice essere «proprio quello
+      che si ha bisogno di vedere», e la data restituita coincide con quella della colonna `Due date`
       dell'`index` Nova delle quote (`app/Nova/Quote.php:187-190`). Nova mostra solo la data, non
       il titolo né l'assegnatario, e solo nell'`index`, che esclude le quote `closed won` e
       `closed lost`. Le due letture danno lo stesso risultato quando la quote ha un solo task
@@ -61,10 +68,13 @@ seconda per valore, da 44.200 euro (ticket, `customer_request`).
 - [ ] Il docblock `@response` e il `#[QueryParameter('include')]` di `QuoteController::show`
       documentano `nextTask` come chiave opzionale, e `QuoteApiDocsTest` verifica che `/docs/api`
       la riporti.
-- [ ] **[DA DECIDERE con il CTO]** esposizione tramite `include` oppure sempre presente. Default
-      adottato: `include`, coerente con gli altri dati collegati dell'endpoint. Va risolto prima di
-      scrivere `plan.md`; il passaggio all'altra forma tocca solo il caricamento in `show`, il
-      docblock e un caso di test.
+- [ ] Il task si espone solo con `?include=nextTask`, non sempre (decisione della review della
+      PR #276). `formatQuote()` è condivisa da `show`, `index`, `store`, `update` e dalle action sui
+      prodotti (`QuoteController.php:115,127,242,267,302,318,334,350`): un task sempre presente lì
+      dentro costerebbe una query per ogni quote nell'`index`, e metterlo solo in `show` darebbe
+      due forme diverse della stessa quote. La skill va comunque aggiornata per leggere il campo
+      nuovo, quindi aggiungere `include=nextTask` alla chiamata non è un lavoro in più. È coerente
+      con `customer`, `products` e `recurringProducts`.
 - [ ] Test in `tests/Feature/Api/QuoteApiTest.php` per: task di un altro utente, task scaduto,
       più task `todo` (vince la `due_date` più vicina), task `completed` ignorati anche quando
       hanno una `due_date` **precedente** a quella del `todo` (deve vincere il `todo`), nessun task
@@ -86,8 +96,10 @@ Nessun testo traducibile: la feature aggiunge solo chiavi JSON.
   vincere il task scaduto da più tempo: se la quote ha un follow-up di marzo rimasto `todo` e un
   task di domani di chi la segue davvero, l'API restituisce quello di marzo, con il suo
   assegnatario. Si accetta: il task restituito è proprio quello da chiudere, e chiuso quello
-  compare il successivo. Va scritto nella risposta di chiusura. Quanto sia frequente non è
-  verificato: il DB locale non ha task `todo`.
+  compare il successivo. Va scritto nella risposta di chiusura. In produzione è capitato una volta
+  (dati al 10/11/2026): per 18 giorni una quote ha avuto due task `todo` con assegnatari diversi,
+  e il task restituito con questo criterio era davvero scaduto e ancora aperto; è stato chiuso il
+  3/11.
 - **Una chiamata per ogni trattativa.** Il dato arriva solo da `GET /api/quotes/{id}`: per fare
   il punto su tutta la pipeline la skill fa `GET /api/quotes` e poi una
   `GET /api/quotes/{id}?include=nextTask` per ogni quote (27 il 3 novembre). È il perimetro che
@@ -107,7 +119,8 @@ Nessun testo traducibile: la feature aggiunge solo chiavi JSON.
   fallisce con questa costruzione qualunque strada scelga il piano.
 - **Pareggio sulla `due_date` diverso da Nova.** `scopeWithNextTodoTask` ordina solo per
   `due_date`: con due task `todo` alla stessa scadenza Nova può mostrarne uno diverso da quello
-  dell'API. Suppongo che il caso sia raro, non l'ho verificato: il DB locale non ha task `todo`.
+  dell'API. In produzione, al 10/11/2026, non ci sono pareggi fra task `todo` della stessa quote
+  (21 task `todo` su 18 quote, una sola quote con più di un task `todo`).
 
 ## Out of scope
 
