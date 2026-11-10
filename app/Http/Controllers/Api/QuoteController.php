@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\QuoteApiRequest;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Models\Task;
 use App\Services\Quotes\QuotePdfLinks;
 use App\Services\Quotes\QuoteRichText;
 use App\Models\RecurringProduct;
@@ -32,7 +33,7 @@ class QuoteController extends Controller
         . 'Saved as sent, except leading and trailing whitespace of the whole value; null or "" removes it. Max 2000 characters. '
         . 'Rejected with 422 when a person has no name, an invalid email, text after >, a line break inside, '
         . 'an empty entry (trailing or double comma) or an unclosed quote.';
-    private const ALLOWED_INCLUDES = ['customer', 'products', 'recurringProducts'];
+    private const ALLOWED_INCLUDES = ['customer', 'products', 'recurringProducts', 'nextTask'];
     private const DEFAULT_PER_PAGE = 20;
     private const DEFAULT_LANG = 'it';
 
@@ -131,12 +132,18 @@ class QuoteController extends Controller
      * Retrieve a quote, optionally expanding relations via `?include=`.
      *
      * `?include=` accepts a comma-separated list among `customer`, `products`,
-     * `recurringProducts`; each name adds the corresponding key below to the
-     * response. Omitted names are simply absent from the response (not null).
+     * `recurringProducts`, `nextTask`; each name adds the corresponding key
+     * below to the response. Omitted names are simply absent from the
+     * response (not null).
      *
-     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, lost_reason: string|null, customer_contacts: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null, customer?: array{id: int, name: string, company_name: string|null}, products?: array<array{id: int, name: string, price: float, quantity: int}>, recurringProducts?: array<array{id: int, name: string, price: float, quantity: int}>}
+     * `nextTask` is the quote's `todo` task with the nearest `due_date`, overdue
+     * included, whoever its assignee or creator; on equal `due_date` the lowest
+     * `id` wins. When requested and the quote has no `todo` task, the key is
+     * present with value null.
+     *
+     * @response array{id: int, title: string, status: string, priority: int, customer_id: int, google_drive_url: string|null, discount: float|null, notes: string|null, lost_reason: string|null, customer_contacts: string|null, additional_info: string|null, delivery_time: string|null, payment_plan: string|null, billing_plan: string|null, additional_services: array|null, template: bool, total: float, net_total: float, iva: float, final_price: float, created_at: string|null, updated_at: string|null, customer?: array{id: int, name: string, company_name: string|null}, products?: array<array{id: int, name: string, price: float, quantity: int}>, recurringProducts?: array<array{id: int, name: string, price: float, quantity: int}>, nextTask?: array{id: int, title: string, due_date: string, status: string, assignee: array{id: int, name: string, email: string}|null}|null}
      */
-    #[QueryParameter('include', description: 'Comma-separated list of relations to expand: customer, products, recurringProducts (e.g. ?include=customer,products). Unlisted names are silently ignored; omitted relations are simply absent from the response.', type: 'string')]
+    #[QueryParameter('include', description: 'Comma-separated list of relations to expand: customer, products, recurringProducts, nextTask (e.g. ?include=customer,nextTask). Unlisted names are silently ignored; omitted relations are simply absent from the response. nextTask is the todo task with the nearest due_date (overdue included, any assignee or creator); it is null when the quote has no todo task.', type: 'string')]
     public function show(Request $request, Quote $quote): JsonResponse
     {
         $this->authorize('view', $quote);
@@ -146,7 +153,9 @@ class QuoteController extends Controller
             self::ALLOWED_INCLUDES
         ));
 
-        $relationsToLoad = array_unique(array_merge(['products', 'recurringProducts'], $include));
+        // nextTask si carica con il suo assegnatario, per non fare una query in più.
+        $relations = array_map(fn (string $name) => $name === 'nextTask' ? 'nextTask.assignee' : $name, $include);
+        $relationsToLoad = array_unique(array_merge(['products', 'recurringProducts'], $relations));
         $quote->load($relationsToLoad);
 
         return response()->json($this->formatQuote($quote, $include));
@@ -441,6 +450,34 @@ class QuoteController extends Controller
             ])->all();
         }
 
+        // A differenza di `customer`, la chiave resta anche quando vale null:
+        // chiave assente vuol dire include non applicato, null nessun task todo.
+        if (in_array('nextTask', $include, true)) {
+            $data['nextTask'] = $this->formatNextTask($quote->nextTask);
+        }
+
         return $data;
+    }
+
+    /** Stessi nomi e stessa forma di TaskController::formatTask(), ridotti ai campi di oc:8917. */
+    private function formatNextTask(?Task $task): ?array
+    {
+        if ($task === null) {
+            return null;
+        }
+
+        $assignee = $task->assignee;
+
+        return [
+            'id'       => $task->id,
+            'title'    => $task->title,
+            'due_date' => optional($task->due_date)->toIso8601String(),
+            'status'   => $task->status,
+            'assignee' => $assignee ? [
+                'id'    => $assignee->id,
+                'name'  => $assignee->name,
+                'email' => $assignee->email,
+            ] : null,
+        ];
     }
 }

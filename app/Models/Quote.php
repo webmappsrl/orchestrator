@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\RecurringProduct;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Translatable\HasTranslations;
@@ -85,6 +86,25 @@ class Quote extends Model implements HasMedia
     public function tasks()
     {
         return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Task `todo` di riferimento della quote (oc:8917): quello con la
+     * `due_date` più vicina, scaduto compreso; a parità di `due_date` l'`id`
+     * più basso. Stesso criterio di scopeWithNextTodoTask(), che alimenta la
+     * colonna `Due date` di Nova, salvo lo spareggio: lo scope ordina solo per
+     * `due_date`, quindi con due task alla stessa scadenza Nova può mostrarne
+     * uno diverso (stessa data). Non filtrata per utente: conta qualsiasi
+     * assegnatario o creatore. Il filtro su `status` deve restare dentro la
+     * closure di ofMany: fuori, il MIN(due_date) si calcolerebbe anche sui
+     * task completati e la relazione restituirebbe null pur con un `todo`.
+     */
+    public function nextTask(): HasOne
+    {
+        return $this->hasOne(Task::class)->ofMany(
+            ['due_date' => 'min', 'id' => 'min'],
+            fn ($query) => $query->where('status', Task::STATUS_TODO)
+        );
     }
 
     /**
