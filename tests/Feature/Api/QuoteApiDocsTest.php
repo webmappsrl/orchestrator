@@ -64,6 +64,23 @@ class QuoteApiDocsTest extends TestCase
         $this->assertArrayHasKey('company_name', $customerProperties, 'Expected the embedded customer object in GET /quotes/{quote} to document company_name.');
     }
 
+    public function test_quotes_show_response_schema_documents_next_task(): void
+    {
+        $schema = $this->okResponseSchema('/quotes/{quote}', 'get');
+
+        $nextTask = $schema['properties']['nextTask'] ?? null;
+        $this->assertNotNull($nextTask, 'Expected GET /quotes/{quote} to document the optional nextTask key (oc:8917).');
+
+        // Il tipo è nullable: Scramble può esprimerlo come anyOf/oneOf o come type con null.
+        $variants = $nextTask['anyOf'] ?? $nextTask['oneOf'] ?? [$nextTask];
+        $object = collect($variants)->first(fn($v) => isset($v['properties']));
+        $this->assertNotNull($object, 'Expected nextTask to be documented as an object.');
+
+        foreach (['id', 'title', 'due_date', 'status', 'assignee'] as $field) {
+            $this->assertArrayHasKey($field, $object['properties'], "Expected nextTask.{$field} in the GET /quotes/{quote} response schema.");
+        }
+    }
+
     public function test_quotes_index_response_schema_documents_both_plain_array_and_paginated_shapes(): void
     {
         $schema = $this->okResponseSchema('/quotes', 'get');
