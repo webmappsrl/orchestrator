@@ -69,12 +69,13 @@ class Quote extends Model implements HasMedia
 
     public function products()
     {
-        return $this->belongsToMany(Product::class)->withPivot('quantity');
+        // Il pivot custom fa lanciare eventi ad attach/detach/sync (attività, oc:8724).
+        return $this->belongsToMany(Product::class)->using(ProductQuote::class)->withPivot('quantity');
     }
 
     public function recurringProducts()
     {
-        return $this->belongsToMany(RecurringProduct::class)->withPivot('quantity');
+        return $this->belongsToMany(RecurringProduct::class)->using(QuoteRecurringProduct::class)->withPivot('quantity');
     }
 
     public function user()
@@ -85,6 +86,11 @@ class Quote extends Model implements HasMedia
     public function tasks()
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(QuoteActivity::class);
     }
 
     /**
