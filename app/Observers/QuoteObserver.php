@@ -56,13 +56,55 @@ class QuoteObserver
                 continue;
             }
 
-            $changes[$field] = [
-                'old' => self::readable($model, $field, $model->getRawOriginal($field)),
-                'new' => self::readable($model, $field, $model->getAttributes()[$field] ?? null),
-            ];
+            $old = self::readable($model, $field, $model->getRawOriginal($field));
+            $new = self::readable($model, $field, $model->getAttributes()[$field] ?? null);
+
+            if (in_array($field, $model->translatable ?? [], true)) {
+                $old = self::filledTranslations($old);
+                $new = self::filledTranslations($new);
+
+                if (self::sameTranslations($old, $new)) {
+                    continue;
+                }
+            }
+
+            $changes[$field] = ['old' => $old, 'new' => $new];
         }
 
         return $changes;
+    }
+
+    /**
+     * NovaTabTranslatable salva tutte le lingue, quelle vuote come `null` (campi
+     * di testo) o `[]` (KeyValue, come `additional_services`): il primo
+     * salvataggio da Nova cambia la stringa JSON anche se nessun valore è
+     * cambiato. Di un campo tradotto si tengono solo le lingue con un valore,
+     * sia per il confronto sia per ciò che si registra.
+     */
+    private static function filledTranslations(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        return array_filter($value, fn (mixed $text): bool => ! in_array($text, [null, '', []], true));
+    }
+
+    /**
+     * Confronto fra due campi tradotti già ripuliti delle lingue vuote: l'ordine
+     * delle lingue nel JSON non conta, e un campo mai valorizzato (`null`)
+     * equivale a un oggetto senza lingue.
+     */
+    private static function sameTranslations(mixed $old, mixed $new): bool
+    {
+        if (is_array($old)) {
+            ksort($old);
+        }
+        if (is_array($new)) {
+            ksort($new);
+        }
+
+        return ($old ?: []) === ($new ?: []);
     }
 
     private static function readable(Model $model, string $field, mixed $value): mixed

@@ -56,11 +56,13 @@ Le decisioni senza fonte nel ticket o negli scrum sono state prese nel dialogo `
 - [ ] Ogni riga conserva il titolo del task al momento dell'evento, così la riga resta leggibile
       anche se il task viene cancellato in seguito.
 - [ ] **Trattativa**: si registrano la creazione e la modifica di ogni campo che una persona cambia a
-      mano: titolo, nome, stato, priorità, cliente, servizi aggiuntivi, sconto, note, link Google
-      Drive, motivo di perdita, contatti del cliente.
+      mano: titolo, nome, stato, cliente, servizi aggiuntivi, sconto, note, link Google Drive,
+      motivo di perdita, contatti del cliente. Nei campi tradotti contano solo le lingue con un
+      valore: le lingue vuote che Nova aggiunge salvando (`null`, `''` o `[]`) non sono una modifica.
 - [ ] **Prodotti**: si registrano l'aggiunta e la rimozione dei prodotti e dei prodotti ricorrenti
       della trattativa, da qualunque punto avvengano (API e Nova).
-- [ ] Restano fuori i campi scritti dal sistema: `pdf_links`, `template`, `created_at`, `updated_at`.
+- [ ] Restano fuori i campi scritti dal sistema: `pdf_links`, `template`, `priority` (l'ordine
+      delle Card nel Kanban Sales), `created_at`, `updated_at`.
 - [ ] **Note della trattativa**: il campo `notes` resta com'è. La sua modifica si registra come
       qualunque altro campo, con il testo prima e dopo.
 - [ ] **Task**: si registrano creazione, chiusura, riapertura, cancellazione e la modifica di ogni

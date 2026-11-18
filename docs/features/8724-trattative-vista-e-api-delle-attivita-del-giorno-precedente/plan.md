@@ -208,6 +208,34 @@ i tipi di evento sono codici fissi, non testi.
 - Prova manuale in locale: modificare una trattativa e un task da Nova, aggiungere un prodotto,
   chiamare `GET /api/quote-activities` con un token e leggere la risposta.
 
+## Task 8 — Correzione dalla review del 17/11/2026 (campi tradotti)
+
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#task-8--lingue-vuote-anche-come-array-e-ordine-delle-lingue)
+
+Bloccante della review sul commit `2f6eb5c`: `NovaTabTranslatable` salva tutte e cinque le lingue
+(`it, en, fr, es, de`) e quelle vuote restano nel JSON come `null`. Il primo salvataggio da Nova di
+una trattativa creata via API cambia quindi la stringa di `title`, `notes` e dei campi Tiptap anche
+se il testo è identico, e `QuoteObserver` registra un `quote_updated` con prima e dopo uguali.
+
+File: `app/Observers/QuoteObserver.php` (`fieldChanges`).
+
+- Per i campi in `$translatable`, confrontare prima e dopo **dopo aver tolto le lingue con valore
+  `null` o `''`**; se coincidono, il campo non si registra. Se restano diversi, si registra come
+  oggi (oggetto per lingua decodificato).
+- `TaskObserver` usa la stessa funzione, ma `Task` non ha campi tradotti: nessun effetto.
+
+Test (`tests/Feature/QuoteActivityLogTest.php`): trattativa creata con `{"it": …}` su `title` e
+`notes`, poi le altre lingue impostate a `null` come fa Nova, cambiando solo `status` → un solo
+`quote_updated`, con il solo campo `status`. Prima il test va visto fallire, poi la correzione.
+
+Documentazione: `overview.md`, Requisiti — togliere «priorità» dai campi registrati e aggiungere
+`priority` ai campi scritti dal sistema (è in `IGNORED_FIELDS` dalla review del 16/11/2026).
+
+Verifica: `QuoteActivityLogTest` e `QuoteActivityApiTest`, poi suite completa su
+`orchestrator_test`.
+
+Commit: `fix(oc:8724): campi tradotti registrati come modificati senza modifica`.
+
 ## Commit (dopo il review-gate, su conferma)
 
 - `feat(oc:8724): registrazione delle attività su trattative, prodotti e task`

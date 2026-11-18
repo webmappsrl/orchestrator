@@ -89,6 +89,58 @@ class QuoteActivityLogTest extends TestCase
     }
 
     /** @test */
+    public function empty_locales_added_by_nova_are_not_recorded_as_changes(): void
+    {
+        // Trattativa creata via API: nel JSON dei campi tradotti c'è solo `it`.
+        $quote = $this->makeQuote(['status' => QuoteStatus::New->value, 'notes' => 'Richiamare lunedì']);
+
+        // Come NovaTabTranslatable: salva tutte le lingue, quelle vuote come null.
+        foreach (['en', 'fr', 'es', 'de'] as $locale) {
+            $quote->setTranslation('title', $locale, null);
+            $quote->setTranslation('notes', $locale, null);
+        }
+        $quote->status = QuoteStatus::Presented->value;
+        $quote->save();
+
+        $changes = $this->activities(QuoteActivity::EVENT_QUOTE_UPDATED)->sole()->changes;
+        $this->assertSame(['status'], array_keys($changes));
+    }
+
+    /** @test */
+    public function empty_key_value_locales_added_by_nova_are_not_recorded_as_changes(): void
+    {
+        $quote = $this->makeQuote(['status' => QuoteStatus::New->value]);
+        $quote->setTranslation('additional_services', 'it', ['Grafica' => '640'])->save();
+        QuoteActivity::query()->delete();
+
+        // Come NovaTabTranslatable su un KeyValue: una lingua vuota arriva come "{}" e si salva come [].
+        foreach (['en', 'fr', 'es', 'de'] as $locale) {
+            $quote->setTranslation('additional_services', $locale, json_decode('{}', true));
+        }
+        $quote->status = QuoteStatus::Presented->value;
+        $quote->save();
+
+        $changes = $this->activities(QuoteActivity::EVENT_QUOTE_UPDATED)->sole()->changes;
+        $this->assertSame(['status'], array_keys($changes));
+    }
+
+    /** @test */
+    public function real_change_on_translated_field_is_still_recorded(): void
+    {
+        $quote = $this->makeQuote(['title' => 'Preventivo A']);
+        $quote->setTranslation('title', 'de', null)->save();
+        QuoteActivity::query()->delete();
+
+        $quote->setTranslation('title', 'it', 'Preventivo B')->save();
+
+        $changes = $this->activities(QuoteActivity::EVENT_QUOTE_UPDATED)->sole()->changes;
+        $this->assertSame(['title'], array_keys($changes));
+        // Si registrano solo le lingue con un valore, senza il "de": null aggiunto da Nova.
+        $this->assertSame(['it' => 'Preventivo A'], $changes['title']['old']);
+        $this->assertSame(['it' => 'Preventivo B'], $changes['title']['new']);
+    }
+
+    /** @test */
     public function kanban_move_records_status_without_priority(): void
     {
         // Come KanbanController::updateStatus(): stato e priority cambiano nello stesso save().

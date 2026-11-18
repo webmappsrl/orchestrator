@@ -40,6 +40,16 @@
   assurdi); la transazione PostgreSQL bloccata da un INSERT fallito (nessun valore oggi supera le
   colonne copia, tutte `varchar(255)` come gli originali).
 
+- 17/11/2026, review formale sul commit `2f6eb5c` (esito «da correggere»), Task 8 del piano. Il
+  primo salvataggio da Nova di una trattativa creata via API registrava come modificati i campi
+  tradotti anche se nessun valore era cambiato, perché Nova aggiunge al JSON le lingue vuote. Nei
+  dati locali (17/11/2026) nessuna delle 123 trattative ha `en` nel titolo, e 41 hanno
+  `additional_services` uguale a `{"it":[]}`. Il test
+  `empty_locales_added_by_nova_are_not_recorded_as_changes` l'ha riprodotto prima della
+  correzione (`title`, `status` e `notes` registrati invece del solo `status`). Ora
+  `QuoteObserver::sameTranslations()` confronta i campi tradotti senza le lingue vuote. Suite
+  completa: 820 test passati su `orchestrator_test`.
+
 ## Domande aperte
 
 Le domande lasciate al reviewer il 04/11/2026 sono state chiuse nello scrum dell'11/11/2026
@@ -85,6 +95,26 @@ nessuna modifica ai file di lingua.
 
 La prova manuale da Nova con un token non è stata fatta in sessione per non scrivere dati sul DB
 locale `orchestrator`; il comportamento è coperto dai 22 test nuovi. Da fare a mano in review.
+
+### Task 8 — lingue vuote anche come array e ordine delle lingue
+
+Il piano chiedeva di togliere le lingue con valore `null` o `''`. L'implementazione fa due cose in
+più:
+
+- toglie anche le lingue con valore `[]`. `additional_services` è un `KeyValue` dentro
+  `NovaTabTranslatable` (`app/Nova/Quote.php:284`): una lingua vuota arriva come `"{}"` e si salva
+  come `[]` (`vendor/kongulov/nova-tab-translatable/src/NovaTabTranslatable.php:171-173`). Emerso
+  nella review formale del 18/11/2026 sul diff del Task 8, riprodotto con
+  `empty_key_value_locales_added_by_nova_are_not_recorded_as_changes`, che fallisce con
+  l'observer del commit `2f6eb5c`;
+- ignora l'ordine delle lingue nel JSON (`ksort`): Nova le salva nel proprio ordine, e una
+  trattativa creata via API con due lingue le può avere in un ordine diverso.
+
+Aggiunto anche `real_change_on_translated_field_is_still_recorded`: una modifica vera di un campo
+tradotto continua a registrarsi, e in `changes` finiscono solo le lingue con un valore. Prima
+entravano anche le lingue vuote aggiunte da Nova (`"de": null`), che chi legge l'API poteva
+scambiare per lingue aggiunte: emerso nella stessa review del 18/11/2026, come cleanup. Suite completa dopo la correzione, anche dopo questa modifica: 822 test passati su
+`orchestrator_test`.
 
 ## Follow-up
 

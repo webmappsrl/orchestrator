@@ -43,6 +43,13 @@ prodotti deve passare da Eloquent, altrimenti l'API non lo vede.
 - **`priority` è ignorata** (oc:8724): spostando una Card di colonna nel Kanban Sales,
   `KanbanController::updateStatus()` la ricalcola insieme allo stato, e non è una modifica decisa
   dalla persona.
+- **Nei campi tradotti contano solo le lingue con un valore** (oc:8724): `NovaTabTranslatable` salva
+  tutte e cinque le lingue (`it, en, fr, es, de`), quelle vuote come `null` nei campi di testo e
+  come `[]` nei `KeyValue` (`additional_services`). Il primo salvataggio da
+  Nova di una Quote creata via API cambia quindi il JSON di `title`, `notes`, dei campi Tiptap e di `additional_services`
+  anche se nessun valore è cambiato. `QuoteObserver::sameTranslations()` confronta prima e dopo
+  senza le lingue vuote e senza badare al loro ordine, e se coincidono il campo non si registra.
+  Quando il campo cambia davvero, in `changes` si registrano solo le lingue con un valore.
 
 ## Come ci siamo arrivati
 
