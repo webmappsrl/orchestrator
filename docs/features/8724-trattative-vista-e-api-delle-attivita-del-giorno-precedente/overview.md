@@ -59,6 +59,7 @@ Le decisioni senza fonte nel ticket o negli scrum sono state prese nel dialogo `
       mano: titolo, nome, stato, cliente, servizi aggiuntivi, sconto, note, link Google Drive,
       motivo di perdita, contatti del cliente. Nei campi tradotti contano solo le lingue con un
       valore: le lingue vuote che Nova aggiunge salvando (`null`, `''` o `[]`) non sono una modifica.
+      Nemmeno gli a capo che il browser riscrive come `\r\n` in un testo scritto via API con `\n`.
 - [ ] **Prodotti**: si registrano l'aggiunta e la rimozione dei prodotti e dei prodotti ricorrenti
       della trattativa, da qualunque punto avvengano (API e Nova).
 - [ ] Restano fuori i campi scritti dal sistema: `pdf_links`, `template`, `priority` (l'ordine

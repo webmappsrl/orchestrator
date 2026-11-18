@@ -50,6 +50,11 @@ prodotti deve passare da Eloquent, altrimenti l'API non lo vede.
   anche se nessun valore è cambiato. `QuoteObserver::sameTranslations()` confronta prima e dopo
   senza le lingue vuote e senza badare al loro ordine, e se coincidono il campo non si registra.
   Quando il campo cambia davvero, in `changes` si registrano solo le lingue con un valore.
+- **Gli a capo non sono una modifica** (oc:8724): il browser invia gli a capo dei campi di testo
+  come `\r\n`, mentre un testo scritto via API ha di solito `\n`. Il primo salvataggio da Nova
+  cambierebbe quindi la stringa di `notes` o `lost_reason` anche a testo invariato.
+  `QuoteObserver::unixLineEndings()` porta gli a capo a `\n` prima del confronto e in ciò che si
+  registra, per tutti i campi e anche dentro le lingue dei campi tradotti.
 
 ## Come ci siamo arrivati
 

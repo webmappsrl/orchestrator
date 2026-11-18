@@ -107,6 +107,41 @@ class QuoteActivityLogTest extends TestCase
     }
 
     /** @test */
+    public function line_endings_changed_by_nova_are_not_recorded_as_changes(): void
+    {
+        // Trattativa creata via API: note e motivo di perdita con a capo "\n".
+        $quote = $this->makeQuote([
+            'status' => QuoteStatus::New->value,
+            'notes' => "Richiamare lunedì.\n- punto uno\n- punto due",
+            'lost_reason' => "Budget esaurito.\nRiprovare a gennaio.",
+        ]);
+        QuoteActivity::query()->delete();
+
+        // Come un salvataggio da Nova: il browser invia gli stessi testi con "\r\n".
+        $quote->setTranslation('notes', 'it', "Richiamare lunedì.\r\n- punto uno\r\n- punto due");
+        $quote->lost_reason = "Budget esaurito.\r\nRiprovare a gennaio.";
+        $quote->status = QuoteStatus::Presented->value;
+        $quote->save();
+
+        $changes = $this->activities(QuoteActivity::EVENT_QUOTE_UPDATED)->sole()->changes;
+        $this->assertSame(['status'], array_keys($changes));
+    }
+
+    /** @test */
+    public function real_change_with_crlf_is_recorded_with_unix_line_endings(): void
+    {
+        $quote = $this->makeQuote(['notes' => "Prima riga\nSeconda riga"]);
+        QuoteActivity::query()->delete();
+
+        $quote->setTranslation('notes', 'it', "Prima riga\r\nSeconda riga corretta")->save();
+
+        $changes = $this->activities(QuoteActivity::EVENT_QUOTE_UPDATED)->sole()->changes;
+        $this->assertSame(['notes'], array_keys($changes));
+        $this->assertSame(['it' => "Prima riga\nSeconda riga"], $changes['notes']['old']);
+        $this->assertSame(['it' => "Prima riga\nSeconda riga corretta"], $changes['notes']['new']);
+    }
+
+    /** @test */
     public function empty_key_value_locales_added_by_nova_are_not_recorded_as_changes(): void
     {
         $quote = $this->makeQuote(['status' => QuoteStatus::New->value]);

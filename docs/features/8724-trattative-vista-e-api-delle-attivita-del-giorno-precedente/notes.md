@@ -116,6 +116,22 @@ entravano anche le lingue vuote aggiunte da Nova (`"de": null`), che chi legge l
 scambiare per lingue aggiunte: emerso nella stessa review del 18/11/2026, come cleanup. Suite completa dopo la correzione, anche dopo questa modifica: 822 test passati su
 `orchestrator_test`.
 
+### Fuori piano — a capo riscritti da Nova
+
+Emerso nella prova manuale da Nova della review del 18/11/2026, sul commit `71000be`: una trattativa
+creata con `POST /api/quotes`, con note su più righe, salvata da Nova cambiando solo lo stato,
+registrava anche `notes`. Il browser invia gli a capo dei campi di testo come `\r\n`, l'API li
+riceve come `\n`: la stringa cambia anche se il testo è lo stesso. Nei dati locali le 39 trattative
+con note su più righe, tutte salvate da Nova, hanno `\r\n`: il caso nasce con ogni testo scritto
+via API, cioè dalla skill Claude.
+
+`QuoteObserver::fieldChanges()` porta gli a capo a `\n` (`unixLineEndings()`), anche dentro le
+lingue dei campi tradotti, prima del confronto e in ciò che registra; un campo non tradotto che dopo
+la normalizzazione coincide non si registra (per esempio `lost_reason`). Vale anche per i Task, che
+usano lo stesso metodo. Test: `line_endings_changed_by_nova_are_not_recorded_as_changes` e
+`real_change_with_crlf_is_recorded_with_unix_line_endings`, che falliscono entrambi con l'observer
+del commit `71000be`.
+
 ## Follow-up
 
 - Da aggiungere al `CLAUDE.md` da chi lo gestisce (la dev non lo modifica):

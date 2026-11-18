@@ -56,8 +56,8 @@ class QuoteObserver
                 continue;
             }
 
-            $old = self::readable($model, $field, $model->getRawOriginal($field));
-            $new = self::readable($model, $field, $model->getAttributes()[$field] ?? null);
+            $old = self::unixLineEndings(self::readable($model, $field, $model->getRawOriginal($field)));
+            $new = self::unixLineEndings(self::readable($model, $field, $model->getAttributes()[$field] ?? null));
 
             if (in_array($field, $model->translatable ?? [], true)) {
                 $old = self::filledTranslations($old);
@@ -66,12 +66,35 @@ class QuoteObserver
                 if (self::sameTranslations($old, $new)) {
                     continue;
                 }
+            } elseif ($old === $new) {
+                // Cambiati solo gli a capo: non è una modifica.
+                continue;
             }
 
             $changes[$field] = ['old' => $old, 'new' => $new];
         }
 
         return $changes;
+    }
+
+    /**
+     * Il browser invia gli a capo dei campi di testo come `\r\n`, l'API li riceve
+     * di solito come `\n`: il primo salvataggio da Nova di un testo scritto via
+     * API cambia la stringa anche se il testo è lo stesso. Gli a capo si portano
+     * a `\n`, anche dentro le lingue dei campi tradotti, sia per il confronto
+     * sia per ciò che si registra.
+     */
+    private static function unixLineEndings(mixed $value): mixed
+    {
+        if (is_string($value)) {
+            return str_replace("\r\n", "\n", $value);
+        }
+
+        if (is_array($value)) {
+            return array_map(fn (mixed $item): mixed => self::unixLineEndings($item), $value);
+        }
+
+        return $value;
     }
 
     /**
