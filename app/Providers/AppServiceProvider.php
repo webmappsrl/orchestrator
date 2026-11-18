@@ -2,11 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Quote;
 use App\Models\Story;
 use App\Models\TagGroup;
+use App\Models\Task;
 use App\Observers\MediaObserver;
+use App\Observers\QuoteObserver;
 use App\Observers\StoryObserver;
 use App\Observers\TagGroupObserver;
+use App\Observers\TaskObserver;
 use App\Services\MediaLibrary\OrchestratorPathGenerator;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Support\ServiceProvider;
@@ -50,6 +54,8 @@ class AppServiceProvider extends ServiceProvider
         Story::observe(StoryObserver::class);
         Media::observe(MediaObserver::class);
         TagGroup::observe(TagGroupObserver::class);
+        Quote::observe(QuoteObserver::class);
+        Task::observe(TaskObserver::class);
 
         if ($this->app->runningInConsole()) {
             Actions::registerCommands();
