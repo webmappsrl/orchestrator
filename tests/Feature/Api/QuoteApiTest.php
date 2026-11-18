@@ -11,6 +11,7 @@ use App\Models\RecurringProduct;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -846,5 +847,169 @@ class QuoteApiTest extends TestCase
             ->assertStatus(200)
             ->assertJsonPath('customer_contacts', null)
             ->assertJsonStructure(['customer_contacts']);
+    }
+
+    /**
+     * Task della quote creato direttamente (le Task non hanno factory), di
+     * default assegnato e creato da un utente diverso da chi chiama l'API.
+     */
+    private function makeTask(Quote $quote, array $overrides = []): Task
+    {
+        $owner = User::factory()->create();
+
+        return Task::create(array_merge([
+            'quote_id'    => $quote->id,
+            'title'       => 'Richiamare il cliente',
+            'due_date'    => now()->addDay(),
+            'creator_id'  => $owner->id,
+            'assignee_id' => $owner->id,
+        ], $overrides));
+    }
+
+    /** `nextTask` della risposta con include=nextTask, dopo aver verificato che la chiave c'è. */
+    private function nextTaskOf(Quote $quote): ?array
+    {
+        $response = $this->getJson("/api/quotes/{$quote->id}?include=nextTask")->assertStatus(200);
+        $this->assertArrayHasKey('nextTask', $response->json());
+
+        return $response->json('nextTask');
+    }
+
+    /** @test */
+    public function next_task_restituisce_il_task_di_un_collega_con_il_suo_assegnatario(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+        $colleague = User::factory()->create();
+        $task = $this->makeTask($quote, ['creator_id' => $colleague->id, 'assignee_id' => $colleague->id]);
+
+        $nextTask = $this->nextTaskOf($quote);
+
+        $this->assertSame($task->id, $nextTask['id']);
+        $this->assertSame('Richiamare il cliente', $nextTask['title']);
+        $this->assertSame(Task::STATUS_TODO, $nextTask['status']);
+        $this->assertSame(['id' => $colleague->id, 'name' => $colleague->name, 'email' => $colleague->email], $nextTask['assignee']);
+    }
+
+    /** @test */
+    public function next_task_restituisce_anche_un_task_scaduto(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+        $task = $this->makeTask($quote, ['due_date' => now()->subDay()]);
+
+        $nextTask = $this->nextTaskOf($quote);
+
+        $this->assertSame($task->id, $nextTask['id']);
+        $this->assertSame($task->fresh()->due_date->toIso8601String(), $nextTask['due_date']);
+    }
+
+    /** @test */
+    public function next_task_con_piu_task_todo_restituisce_la_scadenza_piu_vicina(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+        $this->makeTask($quote, ['due_date' => now()->addDays(5)]);
+        $nearest = $this->makeTask($quote, ['due_date' => now()->addDay()]);
+        $this->makeTask($quote, ['due_date' => now()->addDays(10)]);
+
+        $this->assertSame($nearest->id, $this->nextTaskOf($quote)['id']);
+    }
+
+    /** @test */
+    public function next_task_ignora_i_task_completati_anche_se_scadono_prima(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+        $this->makeTask($quote, ['due_date' => now()->subDays(10), 'status' => Task::STATUS_COMPLETED]);
+        $todo = $this->makeTask($quote, ['due_date' => now()->addDays(2)]);
+
+        $this->assertSame($todo->id, $this->nextTaskOf($quote)['id']);
+    }
+
+    /** @test */
+    public function next_task_a_parita_di_scadenza_restituisce_l_id_piu_basso(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+        $dueDate = now()->addDays(3)->startOfMinute();
+        $first = $this->makeTask($quote, ['due_date' => $dueDate]);
+        $this->makeTask($quote, ['due_date' => $dueDate]);
+
+        $this->assertSame($first->id, $this->nextTaskOf($quote)['id']);
+    }
+
+    /** @test */
+    public function next_task_e_null_quando_la_quote_non_ha_task_todo(): void
+    {
+        $this->actingAsAdmin();
+        $withoutTasks = Quote::factory()->create();
+        $onlyCompleted = Quote::factory()->create();
+        $this->makeTask($onlyCompleted, ['status' => Task::STATUS_COMPLETED]);
+
+        $this->assertNull($this->nextTaskOf($withoutTasks));
+        $this->assertNull($this->nextTaskOf($onlyCompleted));
+    }
+
+    /** @test */
+    public function next_task_senza_assegnatario_e_restituito_con_assignee_null(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+        $task = $this->makeTask($quote);
+        $task->update(['assignee_id' => null]);
+
+        $nextTask = $this->nextTaskOf($quote);
+
+        $this->assertSame($task->id, $nextTask['id']);
+        $this->assertNull($nextTask['assignee']);
+    }
+
+    /** @test */
+    public function next_task_e_restituito_anche_per_una_quote_chiusa(): void
+    {
+        $this->actingAsAdmin();
+
+        foreach ([QuoteStatus::Closed_Won, QuoteStatus::Closed_Lost] as $status) {
+            $quote = Quote::factory()->create(['status' => $status->value]);
+            $task = $this->makeTask($quote);
+
+            $this->assertSame($task->id, $this->nextTaskOf($quote)['id'], "Quote in {$status->value}");
+        }
+    }
+
+    /** @test */
+    public function next_task_ha_esattamente_le_chiavi_previste(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+        $this->makeTask($quote);
+
+        $keys = array_keys($this->nextTaskOf($quote));
+        sort($keys);
+
+        $this->assertSame(['assignee', 'due_date', 'id', 'status', 'title'], $keys);
+    }
+
+    /** @test */
+    public function senza_include_next_task_la_chiave_manca_e_i_task_non_si_leggono(): void
+    {
+        $this->actingAsAdmin();
+        $quote = Quote::factory()->create();
+        $this->makeTask($quote);
+
+        $queries = [];
+        DB::listen(function ($query) use (&$queries) {
+            $queries[] = $query->sql;
+        });
+
+        $plain = $this->getJson("/api/quotes/{$quote->id}")->assertStatus(200)->json();
+        $withCustomer = $this->getJson("/api/quotes/{$quote->id}?include=customer")->assertStatus(200)->json();
+
+        $this->assertArrayNotHasKey('nextTask', $plain);
+        $this->assertArrayNotHasKey('nextTask', $withCustomer);
+        // Il listener deve aver registrato le query della richiesta, altrimenti il controllo sotto non verifica nulla.
+        $this->assertNotEmpty($queries);
+        $this->assertEmpty(array_filter($queries, fn (string $sql) => str_contains($sql, '"tasks"')));
     }
 }

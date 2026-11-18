@@ -239,8 +239,29 @@ organizzata la Resource Nova.
   attivare il campo nella skill commerciale, altrimenti il dato si perde senza errori.
 - L'azione Nova «Duplica» copia il campo nella trattativa nuova, come ogni altro campo.
 
+### Task di riferimento della singola trattativa (oc:8917)
+- `GET /api/quotes/{id}?include=nextTask` aggiunge la chiave `nextTask`, dalla relazione
+  `Quote::nextTask()`: stesso criterio della colonna Scadenza (vedi «Lista e dettaglio Quote in
+  Nova») e task di qualunque utente (vedi «Trattative aperte senza task attivi»). A parità di
+  `due_date` vince l'`id` più basso, mentre `scopeWithNextTodoTask()` non ha spareggio: con due
+  task alla stessa scadenza Nova può mostrarne uno diverso, con la stessa data. È il modo di
+  vedere i task dei colleghi su una trattativa: `/api/tasks` resta filtrato su chi chiede.
+- **Con `include=nextTask` la chiave c'è sempre, anche quando vale `null`** (nessun task `todo`),
+  a differenza di `customer` che sparisce: la chiave assente vuol dire «`include` non applicato»
+  (nome sbagliato, ignorato in silenzio, o orchestrator non ancora rilasciato), non «nessun task».
+- **Esposto solo con `include`, non sempre** (review del CTO, 10/11/2026): `formatQuote()` è
+  condivisa da `show`, `index`, `store`, `update` e dalle action sui prodotti; sempre presente
+  costerebbe una query per ogni quote nell'`index`, solo in `show` darebbe due forme della stessa
+  quote.
+- Il dato c'è solo nella singola quote: per fare il punto su tutta la pipeline serve una chiamata
+  per trattativa.
+
 ## Come ci siamo arrivati
 
+- **Task «creato per ultimo»** (oc:8917, lettera del ticket): scartato per la scadenza più vicina.
+  Quando sbaglia mostra una data futura e nasconde il task scaduto, perché chi pianifica in anticipo
+  crea per ultimo il passo più lontano; la scadenza più vicina, quando sbaglia, mostra un task
+  scaduto da chiudere. Dati e casi nell'overview di oc:8917.
 - **`Address::create()` di Symfony come unica validazione dei contatti** (oc:8731, overview):
   scartato. La sua regex non è ancorata: accetta testo dopo `>`, ignora le righe dopo la prima e
   restituisce un nome vuoto senza errore. `Address::fromString()` non esiste più in
