@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\StoryController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\QuoteController;
+use App\Http\Controllers\Api\QuoteActivityController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RecurringProductController;
 use App\Http\Controllers\Api\CustomerController;
@@ -52,6 +53,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tags/{tag}/stories/{story}', [TagController::class, 'attachStory']);
     Route::delete('/tags/{tag}/stories/{story}', [TagController::class, 'detachStory']);
 
+    // Path a sé: sotto /quotes la rotta /quotes/{quote} prenderebbe "activities" come id (oc:8724).
+    Route::get('/quote-activities', [QuoteActivityController::class, 'index']);
     Route::get('/quotes', [QuoteController::class, 'index']);
     Route::get('/quotes/{quote}', [QuoteController::class, 'show']);
     Route::get('/quotes/{quote}/pdf', [QuoteController::class, 'pdf']);
