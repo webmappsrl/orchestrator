@@ -45,6 +45,15 @@ multipla, id singolo e Resource `stories`, tutti con la Story altrui che resta i
 `resources` va passato come array: una stringa con gli id separati da virgola Nova la tratta come
 un id solo.
 
+### Task 2: notifica a dev e tester
+Il piano prevedeva un commit per task; il primo commit del branch (`f81ca3c`) contiene entrambi
+i task, notifica di [R4](overview.md#r4) compresa. Il test del piano con la Story altrui e quella
+già `done` nella stessa chiamata è diviso in due chiamate con un id ciascuna: con un id solo la
+Story altrui arriva davvero a `handle()`, quindi il test è più stringente.
+
+### Task 3: verifica a mano
+Non ancora fatta: resta al dev, in Nova, prima del passaggio a `testing`.
+
 ## Bug trovati
 
 ### 2026-11-27 — Un'affermazione sbagliata nell'overview
@@ -68,12 +77,29 @@ chiusura dell'overview.
   sarebbe possibile.
 
 ### 2026-11-27 — Il controllo resta in `handle()` anche senza conteggio
+- **Decide:** agente, nella sessione in cui il dev ha tolto il conteggio delle saltate.
 - Tolto il conteggio delle saltate, il controllo poteva passare in `canRun`. Resta in `handle()`:
   funziona allo stesso modo, è già coperto dai test, e con `canRun` una richiesta con soli id
   altrui riceverebbe un errore generico di autorizzazione invece dell'esito «0 richieste».
 - **Scartato:** spostarlo in `canRun`.
 
+### 2026-11-27 — Cleanup dopo la review formale
+- Messaggio di esito con singolare e plurale (`trans_choice`, placeholder `:count`): con una
+  Story il cliente leggeva «1 richieste».
+- L'Action non compare sulla detail view di una Story già `done`, dove non farebbe nulla; compare
+  invece su una `rejected`, perché [R1](overview.md#r1) ammette la chiusura da qualsiasi stato.
+- Link della notifica con `Nova::url()`: Nova è montato su `/` (`config/nova.php`, `NOVA_PATH`
+  non impostato), quindi un percorso `/nova/resources/…` scritto a mano non esiste.
+- Test aggiunti: singolare in italiano, `canSee` su `done`/`rejected`, nessuna mail
+  ([R4](overview.md#r4)), «seleziona tutto» (`resources=all`).
+- **Decide:** dev («fai i cleanup»), sulle proposte della review.
+- **Scartato:** nascondere l'Action anche su `rejected`, come fa `RespondToStoryRequest`: avrebbe
+  ristretto [R1](overview.md#r1).
+
 ## Follow-up
+- I link «View story» delle notifiche in `Story::updated` (`app/Models/Story.php`) puntano a
+  `/nova/resources/stories/{id}`, percorso che con `NOVA_PATH` a `/` non esiste: bug precedente a
+  questo ticket, da verificare in produzione e correggere con `Nova::url()`.
 
 - `StoryPolicy::update` restituisce sempre `true`: ogni Action lato cliente deve ripetere a mano
   il controllo su `creator_id`.

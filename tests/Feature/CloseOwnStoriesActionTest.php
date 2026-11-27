@@ -8,7 +8,9 @@ use App\Models\Story;
 use App\Models\StoryLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Testing\TestResponse;
 use Laravel\Nova\Notifications\NovaNotification;
 use Tests\TestCase;
 
@@ -26,6 +28,8 @@ class CloseOwnStoriesActionTest extends TestCase
     private const RESOURCE = 'story-showed-by-customers';
 
     private const ENDPOINT = '/nova-api/' . self::RESOURCE . '/action?action=close-own-stories';
+
+    private const CLOSED_MESSAGE = '{1} :count request marked as done.|[0,*] :count requests marked as done.';
 
     private User $customer;
 
@@ -53,11 +57,16 @@ class CloseOwnStoriesActionTest extends TestCase
         return $story->fresh();
     }
 
-    private function runAction(array $storyIds, ?User $actor = null)
+    private function runAction(array|string $storyIds, ?User $actor = null): TestResponse
     {
         return $this->actingAs($actor ?? $this->customer)->postJson(self::ENDPOINT, [
             'resources' => $storyIds,
         ]);
+    }
+
+    private function closedMessage(int $count): string
+    {
+        return trans_choice(self::CLOSED_MESSAGE, $count, ['count' => $count]);
     }
 
     public function test_customer_closes_own_stories_from_any_status()
@@ -71,7 +80,7 @@ class CloseOwnStoriesActionTest extends TestCase
             $this->assertSame(StoryStatus::Done->value, $story->fresh()->status);
         }
         $this->assertSame(
-            __(':closed request(s) marked as done.', ['closed' => 3]),
+            $this->closedMessage(3),
             $response->json('message')
         );
     }
@@ -95,7 +104,7 @@ class CloseOwnStoriesActionTest extends TestCase
         $this->assertSame(StoryStatus::Done->value, $own[1]->fresh()->status);
         $this->assertSame(StoryStatus::Progress->value, $foreign->fresh()->status);
         $this->assertSame(
-            __(':closed request(s) marked as done.', ['closed' => 2]),
+            $this->closedMessage(2),
             $response->json('message')
         );
     }
@@ -115,7 +124,7 @@ class CloseOwnStoriesActionTest extends TestCase
 
         $this->assertSame(StoryStatus::Progress->value, $foreign->fresh()->status);
         $this->assertSame(
-            __(':closed request(s) marked as done.', ['closed' => 0]),
+            $this->closedMessage(0),
             $response->json('message')
         );
     }
@@ -141,7 +150,7 @@ class CloseOwnStoriesActionTest extends TestCase
 
         $this->assertSame(StoryStatus::Done->value, $todo->fresh()->status);
         $this->assertSame(
-            __(':closed request(s) marked as done.', ['closed' => 1]),
+            $this->closedMessage(1),
             $response->json('message')
         );
     }
@@ -234,6 +243,62 @@ class CloseOwnStoriesActionTest extends TestCase
         $this->runAction([$done->id])->assertOk();
 
         Notification::assertNothingSent();
+    }
+
+    public function test_message_is_singular_for_one_story_in_italian()
+    {
+        $one = $this->makeStory($this->customer, StoryStatus::Todo);
+        $two = [
+            $this->makeStory($this->customer, StoryStatus::Todo),
+            $this->makeStory($this->customer, StoryStatus::Todo),
+        ];
+
+        $this->assertSame('1 richiesta segnata come completata.', $this->runAction([$one->id])->json('message'));
+        $this->assertSame('2 richieste segnate come completate.', $this->runAction([$two[0]->id, $two[1]->id])->json('message'));
+    }
+
+    public function test_action_is_hidden_on_a_done_story_and_shown_on_a_rejected_one()
+    {
+        $done = $this->makeStory($this->customer, StoryStatus::Done);
+        $rejected = $this->makeStory($this->customer, StoryStatus::Rejected);
+
+        $actionsFor = fn (Story $story) => $this->actingAs($this->customer)
+            ->getJson('/nova-api/stories/actions?resourceId=' . $story->id . '&display=detail')
+            ->assertOk()
+            ->json('actions.*.uriKey');
+
+        $this->assertNotContains('close-own-stories', $actionsFor($done));
+        // R1: il cliente può chiudere da qualsiasi stato, anche da rejected.
+        $this->assertContains('close-own-stories', $actionsFor($rejected));
+    }
+
+    public function test_no_mail_is_sent_on_close()
+    {
+        Mail::fake();
+        $developer = User::factory()->create(['roles' => [UserRole::Developer]]);
+        $story = $this->makeStory($this->customer, StoryStatus::Progress, ['user_id' => $developer->id]);
+
+        $this->runAction([$story->id])->assertOk();
+
+        $this->assertSame(StoryStatus::Done->value, $story->fresh()->status);
+        Mail::assertNothingOutgoing();
+    }
+
+    public function test_select_all_closes_only_own_stories()
+    {
+        $other = User::factory()->create(['roles' => [UserRole::Customer]]);
+        $own = [
+            $this->makeStory($this->customer, StoryStatus::New),
+            $this->makeStory($this->customer, StoryStatus::Progress),
+        ];
+        $foreign = $this->makeStory($other, StoryStatus::Progress);
+
+        $response = $this->runAction('all')->assertOk();
+
+        $this->assertSame(StoryStatus::Done->value, $own[0]->fresh()->status);
+        $this->assertSame(StoryStatus::Done->value, $own[1]->fresh()->status);
+        $this->assertSame(StoryStatus::Progress->value, $foreign->fresh()->status);
+        $this->assertSame($this->closedMessage(2), $response->json('message'));
     }
 
     public function test_story_log_records_the_change()

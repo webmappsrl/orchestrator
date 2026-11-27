@@ -11,6 +11,7 @@ use Laravel\Nova\Actions\ActionResponse;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Notifications\NovaNotification;
+use Laravel\Nova\Nova;
 
 /**
  * Il cliente porta a done le proprie Story, una o più alla volta (oc:9032).
@@ -44,7 +45,11 @@ class CloseOwnStoriesAction extends Action
             $this->notifyAssignees($story);
         }
 
-        return Action::message(__(':closed request(s) marked as done.', ['closed' => $closed]));
+        return Action::message(trans_choice(
+            '{1} :count request marked as done.|[0,*] :count requests marked as done.',
+            $closed,
+            ['count' => $closed]
+        ));
     }
 
     /**
@@ -64,7 +69,7 @@ class CloseOwnStoriesAction extends Action
             ->each(fn (User $user) => $user->notify(NovaNotification::make()
                 ->type('info')
                 ->message($message)
-                ->action(__('View story'), url('/nova/resources/stories/' . $story->id))
+                ->action(__('View story'), Nova::url('/resources/stories/' . $story->id))
                 ->icon('check-circle')));
     }
 
@@ -73,12 +78,12 @@ class CloseOwnStoriesAction extends Action
         return [];
     }
 
-    public function name()
+    public function name(): string
     {
         return __('Mark as done');
     }
 
-    public function uriKey()
+    public function uriKey(): string
     {
         return 'close-own-stories';
     }

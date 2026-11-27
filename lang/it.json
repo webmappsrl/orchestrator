@@ -597,7 +597,7 @@
   "The quote is closed: the next task cannot be created.": "Il preventivo è chiuso: non si può creare il task successivo.",
   "Mark as done": "Segna come completata",
   "The selected requests will be marked as done and moved to the archive. To reopen one, you will need to contact the team.": "Le richieste selezionate verranno segnate come completate e spostate nell'archivio. Per riaprirne una dovrai contattare il team.",
-  ":closed request(s) marked as done.": ":closed richieste segnate come completate.",
+  "{1} :count request marked as done.|[0,*] :count requests marked as done.": "{1} :count richiesta segnata come completata.|[0,*] :count richieste segnate come completate.",
   "The story :id has been closed by :name": "La story :id è stata chiusa da :name",
   "View story": "Vedi la story"
 }

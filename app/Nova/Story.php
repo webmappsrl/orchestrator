@@ -329,7 +329,10 @@ class Story extends Resource
                 (new actions\CloseOwnStoriesAction())
                     ->confirmText(__('The selected requests will be marked as done and moved to the archive. To reopen one, you will need to contact the team.'))
                     ->confirmButtonText(__('Confirm'))
-                    ->cancelButtonText(__('Cancel')),
+                    ->cancelButtonText(__('Cancel'))
+                    // Su una Story già done l'Action non farebbe nulla; da rejected invece
+                    // il cliente può chiudere, come da qualsiasi altro stato (oc:9032).
+                    ->canSee(fn ($request) => $this->status !== StoryStatus::Done->value),
             ];
         }
         $actions = [

@@ -134,6 +134,8 @@ git commit -m "feat(oc:9032): action del cliente per chiudere le proprie story"
 
 ### Task 2: notifica a dev e tester
 
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#task-2-notifica-a-dev-e-tester)
+
 Realizza [R4](overview.md#r4) e la parte di [R7](overview.md#r7) relativa alla notifica.
 
 **File:**
@@ -187,6 +189,8 @@ git commit -m "feat(oc:9032): notifica nova a dev e tester alla chiusura del cli
 ---
 
 ### Task 3: verifica a mano
+
+> ⚠️ L'implementazione ha deviato da questo task: [notes.md](notes.md#task-3-verifica-a-mano)
 
 Verifica [R1](overview.md#r1), [R3](overview.md#r3), [R6](overview.md#r6) nell'interfaccia.
 
