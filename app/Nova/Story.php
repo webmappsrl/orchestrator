@@ -326,6 +326,13 @@ class Story extends Resource
                             return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                         }
                     ),
+                (new actions\CloseOwnStoriesAction())
+                    ->confirmText(__('The selected tickets will be closed and moved to the archive. To reopen one, you will need to contact the team.'))
+                    ->confirmButtonText(__('Confirm'))
+                    ->cancelButtonText(__('Cancel'))
+                    // Su una Story già done l'Action non farebbe nulla; da rejected invece
+                    // il cliente può chiudere, come da qualsiasi altro stato (oc:9032).
+                    ->canSee(fn ($request) => $this->status !== StoryStatus::Done->value),
             ];
         }
         $actions = [
