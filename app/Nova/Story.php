@@ -326,6 +326,10 @@ class Story extends Resource
                             return $this->status !== StoryStatus::Done->value && $this->status !== StoryStatus::Rejected->value;
                         }
                     ),
+                (new actions\CloseOwnStoriesAction())
+                    ->confirmText(__('The selected requests will be marked as done and moved to the archive. To reopen one, you will need to contact the team.'))
+                    ->confirmButtonText(__('Confirm'))
+                    ->cancelButtonText(__('Cancel')),
             ];
         }
         $actions = [
