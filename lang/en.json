@@ -807,9 +807,9 @@
   "Next task (optional)": "Next task (optional)",
   "Only one task at a time can be closed or reopened.": "Only one task at a time can be closed or reopened.",
   "The quote is closed: the next task cannot be created.": "The quote is closed: the next task cannot be created.",
-  "Mark as done": "Mark as done",
-  "The selected requests will be marked as done and moved to the archive. To reopen one, you will need to contact the team.": "The selected requests will be marked as done and moved to the archive. To reopen one, you will need to contact the team.",
-  "{1} :count request marked as done.|[0,*] :count requests marked as done.": "{1} :count request marked as done.|[0,*] :count requests marked as done.",
+  "Close ticket": "Close ticket",
+  "The selected tickets will be closed and moved to the archive. To reopen one, you will need to contact the team.": "The selected tickets will be closed and moved to the archive. To reopen one, you will need to contact the team.",
+  "{1} :count ticket closed.|[0,*] :count tickets closed.": "{1} :count ticket closed.|[0,*] :count tickets closed.",
   "The story :id has been closed by :name": "The story :id has been closed by :name",
   "View story": "View story"
 }

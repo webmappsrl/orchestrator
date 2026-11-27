@@ -46,7 +46,7 @@ class CloseOwnStoriesAction extends Action
         }
 
         return Action::message(trans_choice(
-            '{1} :count request marked as done.|[0,*] :count requests marked as done.',
+            '{1} :count ticket closed.|[0,*] :count tickets closed.',
             $closed,
             ['count' => $closed]
         ));
@@ -80,7 +80,7 @@ class CloseOwnStoriesAction extends Action
 
     public function name(): string
     {
-        return __('Mark as done');
+        return __('Close ticket');
     }
 
     public function uriKey(): string

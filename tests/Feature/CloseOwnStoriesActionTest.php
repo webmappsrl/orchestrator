@@ -29,7 +29,7 @@ class CloseOwnStoriesActionTest extends TestCase
 
     private const ENDPOINT = '/nova-api/' . self::RESOURCE . '/action?action=close-own-stories';
 
-    private const CLOSED_MESSAGE = '{1} :count request marked as done.|[0,*] :count requests marked as done.';
+    private const CLOSED_MESSAGE = '{1} :count ticket closed.|[0,*] :count tickets closed.';
 
     private User $customer;
 
@@ -253,8 +253,8 @@ class CloseOwnStoriesActionTest extends TestCase
             $this->makeStory($this->customer, StoryStatus::Todo),
         ];
 
-        $this->assertSame('1 richiesta segnata come completata.', $this->runAction([$one->id])->json('message'));
-        $this->assertSame('2 richieste segnate come completate.', $this->runAction([$two[0]->id, $two[1]->id])->json('message'));
+        $this->assertSame('1 ticket chiuso.', $this->runAction([$one->id])->json('message'));
+        $this->assertSame('2 ticket chiusi.', $this->runAction([$two[0]->id, $two[1]->id])->json('message'));
     }
 
     public function test_action_is_hidden_on_a_done_story_and_shown_on_a_rejected_one()

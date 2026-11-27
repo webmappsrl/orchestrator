@@ -595,9 +595,9 @@
   "Next task (optional)": "Task successivo (facoltativo)",
   "Only one task at a time can be closed or reopened.": "Si può chiudere o riaprire un solo task per volta.",
   "The quote is closed: the next task cannot be created.": "Il preventivo è chiuso: non si può creare il task successivo.",
-  "Mark as done": "Segna come completata",
-  "The selected requests will be marked as done and moved to the archive. To reopen one, you will need to contact the team.": "Le richieste selezionate verranno segnate come completate e spostate nell'archivio. Per riaprirne una dovrai contattare il team.",
-  "{1} :count request marked as done.|[0,*] :count requests marked as done.": "{1} :count richiesta segnata come completata.|[0,*] :count richieste segnate come completate.",
+  "Close ticket": "Chiudi ticket",
+  "The selected tickets will be closed and moved to the archive. To reopen one, you will need to contact the team.": "I ticket selezionati verranno chiusi e spostati nell'archivio. Per riaprirne uno dovrai contattare il team.",
+  "{1} :count ticket closed.|[0,*] :count tickets closed.": "{1} :count ticket chiuso.|[0,*] :count ticket chiusi.",
   "The story :id has been closed by :name": "La story :id è stata chiusa da :name",
   "View story": "Vedi la story"
 }

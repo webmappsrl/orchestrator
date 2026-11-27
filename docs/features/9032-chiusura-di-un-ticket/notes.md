@@ -96,6 +96,13 @@ chiusura dell'overview.
 - **Scartato:** nascondere l'Action anche su `rejected`, come fa `RespondToStoryRequest`: avrebbe
   ristretto [R1](overview.md#r1).
 
+### 2026-11-27 — Testi: «Chiudi ticket» invece di «Segna come completata»
+- Nome dell'Action «Chiudi ticket» (`Close ticket`), modale «I ticket selezionati verranno chiusi
+  e spostati nell'archivio…», esito «1 ticket chiuso.» / «N ticket chiusi.».
+- **Decide:** dev, durante la prova in locale: il ticket chiede la chiusura di un ticket, e il
+  testo deve dirlo con le stesse parole.
+- **Scartato:** «Segna come completata» e «richieste segnate come completate».
+
 ## Follow-up
 - I link «View story» delle notifiche in `Story::updated` (`app/Models/Story.php`) puntano a
   `/nova/resources/stories/{id}`, percorso che con `NOVA_PATH` a `/` non esiste: bug precedente a
