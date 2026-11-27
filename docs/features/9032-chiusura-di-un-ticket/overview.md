@@ -1,5 +1,5 @@
 > Ticket: oc:9032
-> Stato: approvata il 2026-11-27
+> Stato: chiusa il 2026-11-27 · approvata il 2026-11-27
 
 # Chiusura di un ticket da parte del cliente
 
@@ -39,38 +39,42 @@ stato. La richiesta del ticket è che lo faccia da sé, anche su più ticket ins
 - <a id="r1"></a>**R1** — Un cliente porta a `done` una o più Story di cui è creatore, da
   qualsiasi stato, selezionandole nell'index di «my stories» oppure dalla detail view della
   singola Story.
+  - Verifica: [CloseOwnStoriesActionTest.php](../../../tests/Feature/CloseOwnStoriesActionTest.php) › `test_customer_closes_own_stories_from_any_status`
 - <a id="r2"></a>**R2** — Una Story di cui il cliente non è creatore non cambia stato, anche se il
-  suo id arriva nella richiesta dell'Action; le altre Story selezionate vengono chiuse, e il
-  messaggio finale dice quante sono state saltate.
+  suo id arriva nella richiesta dell'Action.
+  - Verifica: [CloseOwnStoriesActionTest.php](../../../tests/Feature/CloseOwnStoriesActionTest.php) › `test_single_story_of_another_user_is_not_closed`
 - <a id="r3"></a>**R3** — L'Action chiede solo una conferma: nessun campo nella modale. Il testo
   della conferma avvisa che le richieste vanno in archivio e che per riaprirne una bisogna
   contattare il team. Chi vuole lasciare un messaggio lo fa con `RespondToStoryRequest` sul
   singolo ticket.
+  - Verifica: [app/Nova/Story.php](../../../app/Nova/Story.php) › `CloseOwnStoriesAction`
 - <a id="r4"></a>**R4** — Per ogni Story chiusa dal cliente con l'Action parte una notifica Nova al
   dev assegnato (`user_id`) e al tester (`tester_id`): una sola se sono la stessa persona, nessuna
   a un ruolo non assegnato (una Story senza assegnatari non notifica nessuno). Nessuna mail.
+  - Verifica: [CloseOwnStoriesActionTest.php](../../../tests/Feature/CloseOwnStoriesActionTest.php) › `test_developer_and_tester_are_notified`
 - <a id="r5"></a>**R5** — Cambiano stato solo le Story selezionate: i figli (`parent_id`) di una
   Story chiusa restano nel loro stato.
+  - Verifica: [CloseOwnStoriesActionTest.php](../../../tests/Feature/CloseOwnStoriesActionTest.php) › `test_children_are_not_closed`
 - <a id="r6"></a>**R6** — L'Action è visibile solo agli utenti cliente; il team continua a usare
   `StoryToDoneStatusAction`.
+  - Verifica: [CloseOwnStoriesActionTest.php](../../../tests/Feature/CloseOwnStoriesActionTest.php) › `test_action_is_available_to_customers_only`
 - <a id="r7"></a>**R7** — Nome dell'Action, testo della modale, messaggi di esito e notifica sono
   tradotti in `it` e `en`.
+  - Verifica: [CloseOwnStoriesActionTest.php](../../../tests/Feature/CloseOwnStoriesActionTest.php) › `test_message_is_singular_for_one_story_in_italian`
 
 ## Rischi
 
-- **Chiusura di Story altrui** via chiamata diretta all'endpoint dell'Action: Nova esegue l'Action
-  sugli id ricevuti senza applicare l'`indexQuery`, e la policy non protegge nulla, quindi il
-  controllo su `creator_id` dentro l'Action è l'unica difesa ([R2](#r2)). Si verifica con un test
-  che chiama l'endpoint dell'Action, non solo la classe.
 - **Lavoro in corso chiuso dal cliente**: con la chiusura da qualsiasi stato, un dev può
   ritrovarsi chiuso un ticket in `progress`; la notifica Nova ([R4](#r4)) è la mitigazione.
-  Accettato dal dev che le Story senza assegnatario — sul DB locale tutte in `backlog` — non
-  notifichino nessuno: su di esse non lavora nessuno.
+  Le Story senza assegnatario — sul DB locale tutte in `backlog` — non notificano nessuno.
+  Accettato dal dev; riportato in
+  [docs/knowledge/story-status-e-notifiche.md](../../knowledge/story-status-e-notifiche.md).
 - **Nessun annullamento lato cliente**: una Story chiusa esce da «my stories» e nell'archivio il
   cliente non ha Action; la mitigazione è l'avviso nella conferma ([R3](#r3)), la riapertura la fa
-  il team.
+  il team. Accettato dal dev; riportato nella stessa pagina di conoscenza.
 - **Metriche del team**: una Story assegnata e chiusa dal cliente conta come chiusa per il dev
-  assegnato nelle metriche di team performance. Accettato dal dev.
+  assegnato nelle metriche di team performance. Accettato dal dev; riportato nella stessa pagina
+  di conoscenza.
 
 ## Out of scope
 
@@ -86,7 +90,8 @@ stato. La richiesta del ticket è che lo faccia da sé, anche su più ticket ins
 
 Tutto nel repo principale, nessun submodule.
 
-- `app/Nova/Actions/` — nuova Action per il cliente
+- `app/Nova/Actions/CloseOwnStoriesAction.php` — nuova Action per il cliente
 - `app/Nova/Story.php` — registrazione nel ramo cliente di `actions()`
-- `lang/it.json`, `lang/en.json` — testi
-- `tests/Feature/` — test dell'Action
+- `lang/en.json`, `lang/it.json` — testi
+- `tests/Feature/CloseOwnStoriesActionTest.php` — test dell'Action
+- `docs/features/9032-chiusura-di-un-ticket/` — overview, piano e note

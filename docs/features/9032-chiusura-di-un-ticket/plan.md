@@ -1,5 +1,5 @@
 > Ticket: oc:9032
-> Stato: approvato il 2026-11-27
+> Stato: seguito, con 3 divergenze annotate in notes.md
 
 # Chiusura di un ticket da parte del cliente — piano di implementazione
 
